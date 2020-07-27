@@ -32,7 +32,7 @@ Namespace My
 
         <Global.System.Diagnostics.DebuggerStepThroughAttribute()> _
         Protected Overrides Sub OnCreateMainForm()
-            Me.MainForm = Global.Sage200Importer.Form1
+            Me.MainForm = Global.Sage200Importer.frmImportMain
         End Sub
     End Class
 End Namespace
