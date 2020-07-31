@@ -22,24 +22,24 @@ Partial Class frmImportMain
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Me.ComboBox1 = New System.Windows.Forms.ComboBox()
+        Me.cmbBuha = New System.Windows.Forms.ComboBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.butKreditoren = New System.Windows.Forms.Button()
         Me.butDebitoren = New System.Windows.Forms.Button()
-        Me.DataGridView1 = New System.Windows.Forms.DataGridView()
+        Me.dgvDebitoren = New System.Windows.Forms.DataGridView()
         Me.butImport = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
-        CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
-        'ComboBox1
+        'cmbBuha
         '
-        Me.ComboBox1.FormattingEnabled = True
-        Me.ComboBox1.Location = New System.Drawing.Point(66, 24)
-        Me.ComboBox1.Name = "ComboBox1"
-        Me.ComboBox1.Size = New System.Drawing.Size(204, 21)
-        Me.ComboBox1.TabIndex = 0
+        Me.cmbBuha.FormattingEnabled = True
+        Me.cmbBuha.Location = New System.Drawing.Point(66, 24)
+        Me.cmbBuha.Name = "cmbBuha"
+        Me.cmbBuha.Size = New System.Drawing.Size(204, 21)
+        Me.cmbBuha.TabIndex = 0
         '
         'Label1
         '
@@ -79,13 +79,13 @@ Partial Class frmImportMain
         Me.butDebitoren.Text = "&Debitoren"
         Me.butDebitoren.UseVisualStyleBackColor = True
         '
-        'DataGridView1
+        'dgvDebitoren
         '
-        Me.DataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DataGridView1.Location = New System.Drawing.Point(12, 146)
-        Me.DataGridView1.Name = "DataGridView1"
-        Me.DataGridView1.Size = New System.Drawing.Size(1052, 445)
-        Me.DataGridView1.TabIndex = 3
+        Me.dgvDebitoren.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvDebitoren.Location = New System.Drawing.Point(12, 146)
+        Me.dgvDebitoren.Name = "dgvDebitoren"
+        Me.dgvDebitoren.Size = New System.Drawing.Size(1052, 445)
+        Me.dgvDebitoren.TabIndex = 3
         '
         'butImport
         '
@@ -102,24 +102,24 @@ Partial Class frmImportMain
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1076, 603)
         Me.Controls.Add(Me.butImport)
-        Me.Controls.Add(Me.DataGridView1)
+        Me.Controls.Add(Me.dgvDebitoren)
         Me.Controls.Add(Me.GroupBox1)
         Me.Controls.Add(Me.Label1)
-        Me.Controls.Add(Me.ComboBox1)
+        Me.Controls.Add(Me.cmbBuha)
         Me.Name = "frmImportMain"
         Me.Text = "Sage200 - Importer"
         Me.GroupBox1.ResumeLayout(False)
-        CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvDebitoren, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
 
-    Friend WithEvents ComboBox1 As ComboBox
+    Friend WithEvents cmbBuha As ComboBox
     Friend WithEvents Label1 As Label
     Friend WithEvents GroupBox1 As GroupBox
     Friend WithEvents butKreditoren As Button
     Friend WithEvents butDebitoren As Button
-    Friend WithEvents DataGridView1 As DataGridView
+    Friend WithEvents dgvDebitoren As DataGridView
     Friend WithEvents butImport As Button
 End Class
