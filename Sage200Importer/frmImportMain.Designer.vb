@@ -35,18 +35,20 @@ Partial Class frmImportMain
         '
         'cmbBuha
         '
+        Me.cmbBuha.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.cmbBuha.FormattingEnabled = True
         Me.cmbBuha.Location = New System.Drawing.Point(66, 24)
         Me.cmbBuha.Name = "cmbBuha"
-        Me.cmbBuha.Size = New System.Drawing.Size(204, 21)
+        Me.cmbBuha.Size = New System.Drawing.Size(270, 28)
         Me.cmbBuha.TabIndex = 0
         '
         'Label1
         '
         Me.Label1.AutoSize = True
+        Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Label1.Location = New System.Drawing.Point(12, 27)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(32, 13)
+        Me.Label1.Size = New System.Drawing.Size(47, 20)
         Me.Label1.TabIndex = 1
         Me.Label1.Text = "Buha"
         '
@@ -63,6 +65,7 @@ Partial Class frmImportMain
         '
         'butKreditoren
         '
+        Me.butKreditoren.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.butKreditoren.Location = New System.Drawing.Point(216, 18)
         Me.butKreditoren.Name = "butKreditoren"
         Me.butKreditoren.Size = New System.Drawing.Size(167, 42)
@@ -72,6 +75,7 @@ Partial Class frmImportMain
         '
         'butDebitoren
         '
+        Me.butDebitoren.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.butDebitoren.Location = New System.Drawing.Point(16, 19)
         Me.butDebitoren.Name = "butDebitoren"
         Me.butDebitoren.Size = New System.Drawing.Size(143, 41)
@@ -84,12 +88,13 @@ Partial Class frmImportMain
         Me.dgvDebitoren.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvDebitoren.Location = New System.Drawing.Point(12, 146)
         Me.dgvDebitoren.Name = "dgvDebitoren"
-        Me.dgvDebitoren.Size = New System.Drawing.Size(1052, 445)
+        Me.dgvDebitoren.Size = New System.Drawing.Size(1613, 445)
         Me.dgvDebitoren.TabIndex = 3
         '
         'butImport
         '
-        Me.butImport.Location = New System.Drawing.Point(884, 84)
+        Me.butImport.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.butImport.Location = New System.Drawing.Point(1445, 84)
         Me.butImport.Name = "butImport"
         Me.butImport.Size = New System.Drawing.Size(180, 41)
         Me.butImport.TabIndex = 4
@@ -100,7 +105,7 @@ Partial Class frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1076, 603)
+        Me.ClientSize = New System.Drawing.Size(1637, 603)
         Me.Controls.Add(Me.butImport)
         Me.Controls.Add(Me.dgvDebitoren)
         Me.Controls.Add(Me.GroupBox1)
