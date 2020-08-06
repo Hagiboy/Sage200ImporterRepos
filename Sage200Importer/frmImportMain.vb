@@ -87,7 +87,7 @@ Friend Class frmImportMain
 
         Call InitVar()
 
-        Call Main.fcLoginSage(objdbConn, Finanz, DbBhg, cmbBuha.SelectedValue)
+        Call Main.fcLoginSage(objdbConn, Finanz, FBhg, DbBhg, cmbBuha.SelectedValue)
 
         Call Main.fcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdbConn, objdbAccessConn)
 
@@ -100,6 +100,8 @@ Friend Class frmImportMain
         'dgvDebitoren.DataSource = objdtDebitorenHead
         'Debug.Print(objdtDebitorenHead.Rows.Count.ToString)
         'Call InitdgvDebitoren()
+
+        Call Main.fcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, Finanz, FBhg, DbBhg)
 
 
         'Debug.Print("Gewählt " + cmbBuha.SelectedValue.ToString)

@@ -136,7 +136,7 @@ Friend NotInheritable Class Main
             Return DT
         End Function
 
-    Public Shared Function fcLoginSage(ByRef objdbconn As MySqlConnection, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal intAccounting As Int16) As Int16
+    Public Shared Function fcLoginSage(ByRef objdbconn As MySqlConnection, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal intAccounting As Int16) As Int16
 
         '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
 
@@ -147,6 +147,7 @@ Friend NotInheritable Class Main
 
         objFinanz = Nothing
         objFinanz = New SBSXASLib.AXFinanz
+
 
         'On Error GoTo ErrorHandler
 
@@ -169,8 +170,13 @@ Friend NotInheritable Class Main
         End
 
 isOk:
-        'Debitor öffnen und Konto überprüfen
+        'Finanz Buha öffnen
+        objfiBuha = Nothing
+        objfiBuha = New SBSXASLib.AXiFBhg
+        objfiBuha = objFinanz.GetFibuObj
+        'Debitor öffnen
         objdbBuha = Nothing
+        objdbBuha = New SBSXASLib.AXiDbBhg
         objdbBuha = objFinanz.GetDebiObj
         'db = Main_Renamed.Finanz.GetDebiObj
         'UPGRADE_WARNING: Couldn't resolve default property of object s. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
@@ -258,6 +264,91 @@ ErrorHandler:
 
     End Function
 
+    Public Shared Function fcCheckDebit(ByVal intAccounting As Integer, ByRef objdtDebits As DataTable, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
+
+        'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
+        Dim strBitLog As String
+        Dim intReturnValue As Integer
+
+        Try
+
+            For Each row In objdtDebits.Rows
+
+                intReturnValue = fcCheckDebitor(row("lngDebNbr"), row("intBuchungsart"), objdbBuha)
+                strBitLog = Trim(intReturnValue.ToString)
+                intReturnValue = fcCheckKonto(row("lngDebKtoNbr"), objfiBuha)
+                strBitLog = strBitLog + Trim(intReturnValue.ToString)
+                intReturnValue = fcCheckCurrency(row("strDebCur"), objfiBuha)
+                strBitLog = strBitLog + Trim(intReturnValue.ToString)
+                Debug.Print("BitLog: " + strBitLog)
+            Next
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+        End Try
+
+
+    End Function
+
+    Public Shared Function fcCheckCurrency(ByVal strCurrency As String, ByRef objfiBuha As SBSXASLib.AXiFBhg) As Integer
+
+        Dim strReturn As String
+        Dim booFoundCurrency As Boolean
+
+        booFoundCurrency = False
+        strReturn = ""
+
+        Call objfiBuha.ReadWhg()
+
+        strReturn = objfiBuha.GetWhgZeile()
+        Do While strReturn <> "EOF"
+            If Left(strReturn, 3) = strCurrency Then
+                booFoundCurrency = True
+            End If
+            strReturn = objfiBuha.GetWhgZeile()
+        Loop
+
+        If booFoundCurrency Then
+            Return 0
+        Else
+            Return 1
+        End If
+
+
+    End Function
+
+    Public Shared Function fcCheckKonto(ByVal lngKtoNbr As Long, ByRef objfiBuha As SBSXASLib.AXiFBhg) As Integer
+
+        Dim strReturn As String
+
+        strReturn = objfiBuha.GetKontoInfo(lngKtoNbr.ToString)
+        If strReturn = "EOF" Then
+            Return 1
+        Else
+            Return 0
+        End If
+
+    End Function
+
+
+    Public Shared Function fcCheckDebitor(ByVal lngDebitor As Long, ByVal intBuchungsart As Integer, ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
+
+        Dim strReturn As String
+
+        If intBuchungsart = 1 Then 'OP Buchung
+
+            strReturn = objdbBuha.ReadDebitor3(lngDebitor * -1, "")
+            If strReturn = "EOF" Then
+                Return 1
+            Else
+                Return 0
+            End If
+        Else
+            Return 0
+
+        End If
+
+    End Function
     Public Shared Function InsertDataTableColumnName(ByRef dtSouce As DataTable, ByRef dtResult As DataTable) As Boolean
         Dim rowResult As DataRow
         Dim Result As Boolean = True
