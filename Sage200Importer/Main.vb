@@ -136,6 +136,76 @@ Friend NotInheritable Class Main
             Return DT
         End Function
 
+    Public Shared Function tblDebitorenSub() As DataTable
+        Dim DT As DataTable
+        DT = New DataTable("tblDebitorenSub")
+        Dim lngID As DataColumn = New DataColumn("lngID")
+        lngID.DataType = System.Type.[GetType]("System.Int32")
+        lngID.AutoIncrement = True
+        lngID.AutoIncrementSeed = 1
+        lngID.AutoIncrementStep = 1
+        DT.Columns.Add(lngID)
+        Dim strRGNr As DataColumn = New DataColumn("strRGNr")
+        strRGNr.DataType = System.Type.[GetType]("System.String")
+        strRGNr.MaxLength = 50
+        DT.Columns.Add(strRGNr)
+        Dim intSollHaben As DataColumn = New DataColumn("intSollHaben")
+        intSollHaben.DataType = System.Type.[GetType]("System.Int16")
+        DT.Columns.Add(intSollHaben)
+        Dim lngKto As DataColumn = New DataColumn("lngKto")
+        lngKto.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(lngKto)
+        Dim strKtoBez As DataColumn = New DataColumn("strKtoBez")
+        strKtoBez.DataType = System.Type.[GetType]("System.String")
+        strKtoBez.MaxLength = 50
+        DT.Columns.Add(strKtoBez)
+        Dim lngKST As DataColumn = New DataColumn("lngKST")
+        lngKST.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(lngKST)
+        Dim strKstBez As DataColumn = New DataColumn("strKstBez")
+        strKstBez.DataType = System.Type.[GetType]("System.String")
+        strKstBez.MaxLength = 50
+        DT.Columns.Add(strKstBez)
+        Dim dblNetto As DataColumn = New DataColumn("dblNetto")
+        dblNetto.DataType = System.Type.[GetType]("System.Double")
+        DT.Columns.Add(dblNetto)
+        Dim dblMwSt As DataColumn = New DataColumn("dblMwSt")
+        dblMwSt.DataType = System.Type.[GetType]("System.Double")
+        DT.Columns.Add(dblMwSt)
+        Dim dblBrutto As DataColumn = New DataColumn("dblBrutto")
+        dblBrutto.DataType = System.Type.[GetType]("System.Double")
+        DT.Columns.Add(dblBrutto)
+        Dim lngMwStSatz As DataColumn = New DataColumn("lngMwStSatz")
+        dblBrutto.DataType = System.Type.[GetType]("System.Double")
+        DT.Columns.Add(lngMwStSatz)
+        Dim strMwStKey As DataColumn = New DataColumn("strMwStKey")
+        strMwStKey.DataType = System.Type.[GetType]("System.String")
+        strMwStKey.MaxLength = 50
+        DT.Columns.Add(strMwStKey)
+        Dim strArtikel As DataColumn = New DataColumn("strArtikel")
+        strArtikel.DataType = System.Type.[GetType]("System.String")
+        strArtikel.MaxLength = 128
+        DT.Columns.Add(strArtikel)
+        Dim strDebSubText As DataColumn = New DataColumn("strDebSubText")
+        strDebSubText.DataType = System.Type.[GetType]("System.String")
+        strDebSubText.MaxLength = 50
+        DT.Columns.Add(strDebSubText)
+        Dim strStatusUBBitLog As DataColumn = New DataColumn("strStatusUBBitLog")
+        strStatusUBBitLog.DataType = System.Type.[GetType]("System.String")
+        strStatusUBBitLog.MaxLength = 50
+        DT.Columns.Add(strStatusUBBitLog)
+        Dim strStatusUBText As DataColumn = New DataColumn("strStatusUBText")
+        strStatusUBText.DataType = System.Type.[GetType]("System.String")
+        strStatusUBText.MaxLength = 255
+        DT.Columns.Add(strStatusUBText)
+        Dim strDebBookStatus As DataColumn = New DataColumn("strDebBookStatus")
+        strDebBookStatus.DataType = System.Type.[GetType]("System.String")
+        strDebBookStatus.MaxLength = 50
+        DT.Columns.Add(strDebBookStatus)
+        Return DT
+    End Function
+
+
     Public Shared Function fcLoginSage(ByRef objdbconn As MySqlConnection, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal intAccounting As Int16) As Int16
 
         '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
