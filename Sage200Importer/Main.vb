@@ -349,6 +349,7 @@ ErrorHandler:
                 strBitLog = strBitLog + Trim(intReturnValue.ToString)
                 intReturnValue = fcCheckCurrency(row("strDebCur"), objfiBuha)
                 strBitLog = strBitLog + Trim(intReturnValue.ToString)
+                intReturnValue = fcCheckIntBank()
                 Debug.Print("BitLog: " + strBitLog)
             Next
 
@@ -443,6 +444,76 @@ ErrorHandler:
             Result = False
             Return Result
         End Try
+    End Function
+
+    Public Shared Function fcSetBuchMode(ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal strMode As String) As Int16
+
+        objdbBuha.SetBuchMode(strMode)
+
+        Return 0
+
+    End Function
+
+    Public Shared Function fcSetBelegKopf4(ByRef objdbBuha As SBSXASLib.AXiDbBhg,
+                                           ByVal lngBelegNr As Long,
+                                           ByVal strValutaDatum As String,
+                                           ByVal lngDebitor As Long,
+                                           ByVal strBelegTyp As String,
+                                           ByVal strBelegDatum As String,
+                                           ByVal strVerFallDatum As String,
+                                           ByVal strBelegText As String,
+                                           ByVal strReferenz As String,
+                                           ByVal lngKondition As Long,
+                                           ByVal strSachbearbeiter As String,
+                                           ByVal strVerkaeufer As String,
+                                           ByVal strMahnSperre As String,
+                                           ByVal shrMahnstufe As Short,
+                                           ByVal strBetraBrutto As String,
+                                           ByVal strKurs As String,
+                                           ByVal strBelegExt As String,
+                                           ByVal strSKonto As String,
+                                           ByVal strDebiCur As String,
+                                           ByVal strSammelKonto As String,
+                                           ByVal strVerzugsZ As String,
+                                           ByVal strZusatzText As String,
+                                           ByVal strEBankKonto As String,
+                                           ByVal strIkoDebitor As String) As Integer
+
+
+        'Zuerst prüfen ob Zwingende Werte angegeben worden sind
+
+        'Ausführung
+        objdbBuha.SetBelegKopf4(lngBelegNr, strValutaDatum, lngDebitor, strBelegTyp, strBelegDatum, strVerFallDatum, strBelegText, strReferenz, lngKondition, strSachbearbeiter, strVerkaeufer, strMahnSperre, shrMahnstufe, strBetraBrutto,
+                                strKurs, strBelegExt, strSKonto, strDebiCur, strSammelKonto, strVerzugsZ, strZusatzText, strEBankKonto, strIkoDebitor)
+
+        Return 0
+
+    End Function
+
+    Public Shared Function fcSetVerteilung(ByRef objdbBuha As SBSXASLib.AXiDbBhg,
+                                           ByVal strGegenKonto As String,
+                                           ByVal strFibuText As String,
+                                           ByVal strNettoBetrag As String,
+                                           ByVal strArraySteuer As String,
+                                           ByVal strArrayKST As String,
+                                           ByVal strArrayKSTE As String) As Integer
+
+        'Prüfen ob Daten vollständig
+
+        'Ausführung
+        objdbBuha.SetVerteilung(strGegenKonto, strFibuText, strNettoBetrag, strArraySteuer, strArrayKST, strArrayKSTE)
+
+        Return 0
+
+    End Function
+
+    Public Shared Function fcWriteBuchung(ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
+
+        'Ausführung
+        objdbBuha.WriteBuchung()
+
+        Return 0
+
     End Function
 
 End Class
