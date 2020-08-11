@@ -389,6 +389,15 @@ Friend Class frmImportMain
 
     Private Sub butImport_Click(sender As Object, e As EventArgs) Handles butImport.Click
 
+        Dim strDebName As String
+        Dim strDebCountry As String = "CH"
+        Dim strDebOrt As String
+        Dim strDebPLZ As String
+        Dim strDebCurrency As String = "CHF"
+        Dim strDebSprachCode As String = "2055"
+        Dim intDebAdrLaufN As Int32
+        Dim intDebBankLaufNr As Int32
+
         Dim intDebBelegsNummer As Int32
 
         Dim intDebitorNbr As Int32
@@ -415,14 +424,44 @@ Friend Class frmImportMain
         Dim dblBebuBetrag As Double
         Dim strBeBuEintrag As String
         Dim strSteuerFeld As String
+        Dim intDebSammelKto As Int32
+        Dim intDebErlKto As Int32
+        Dim shrDebZahlK As Short
+        Dim strDebWerbung As String
+        Dim strDebSperren As String
+        Dim intDebToleranzNbr As Int16
+        Dim intDebMahnGroup As Int16
+        Dim strDebMahnen As String
+        Dim dblDebLimite As Double
 
         Try
+
+            'Debitor erstellen, minimal - Angaben
+            intDebitorNbr = 80083
+            strDebName = "AHZ"
+            strDebOrt = "Wallisellen"
+            strDebPLZ = "8304"
+            intDebSammelKto = 1100
+            intDebErlKto = 3200
+            shrDebZahlK = 1
+            strDebWerbung = "N"
+            strDebSperren = "N"
+            intDebToleranzNbr = 1
+            intDebMahnGroup = 1
+            strDebMahnen = "N"
+            dblDebLimite = 5000.55
+
+            Call DbBhg.SetCommonInfo2(intDebitorNbr, strDebName, "", "", "", "", "", strDebCountry, strDebPLZ, strDebOrt, "", "", "", "", "", strDebCurrency, "", "", "", strDebSprachCode, "")
+            Call DbBhg.SetExtendedInfo2(strDebSperren, dblDebLimite.ToString, intDebSammelKto.ToString, intDebErlKto.ToString, "", "", "", shrDebZahlK.ToString, intDebToleranzNbr.ToString, intDebMahnGroup.ToString, "", "", strDebWerbung, "")
+            Call DbBhg.WriteDebitor3(0)
+
+            intDebAdrLaufN = DbBhg.GetAdressLaufnr()
+            intDebBankLaufNr = DbBhg.GetZahlungsverbLaufnr()
 
             'Belegsnummer abholen
             intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
 
             'Variablen zuweisen
-            intDebitorNbr = 1001
             strBuchType = "R"
             strValutaDatum = "20200811"
             strBelegDatum = "20200811"
@@ -445,9 +484,10 @@ Friend Class frmImportMain
 
             Call DbBhg.SetVerteilung(intGegenKonto, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
 
-            intGegenKonto = 3201
+            intGegenKonto = 3400
             strFibuText = "DEBI G Bhg Möbel 2"
 
+            Call DbBhg.SetVerteilung(intGegenKonto, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
 
             Call DbBhg.WriteBuchung()
 
