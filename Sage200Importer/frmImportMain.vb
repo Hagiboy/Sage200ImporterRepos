@@ -87,9 +87,9 @@ Friend Class frmImportMain
 
         Call InitVar()
 
-        Call Main.fcLoginSage(objdbConn, Finanz, FBhg, DbBhg, cmbBuha.SelectedValue)
+        Call Main.FcLoginSage(objdbConn, Finanz, FBhg, DbBhg, cmbBuha.SelectedValue)
 
-        Call Main.fcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdbConn, objdbAccessConn)
+        Call Main.FcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdbConn, objdbAccessConn)
 
         'Call InitdgvDebitoren()
         Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead, objdtDebitorenHead)
@@ -101,7 +101,7 @@ Friend Class frmImportMain
         'Debug.Print(objdtDebitorenHead.Rows.Count.ToString)
         'Call InitdgvDebitoren()
 
-        Call Main.fcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, Finanz, FBhg, DbBhg)
+        Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, Finanz, FBhg, DbBhg)
 
         'Call 
 
@@ -384,6 +384,77 @@ Friend Class frmImportMain
         'dgvDebitoren.Columns("datBooked").Visible = False
         'dgvDebitoren.Columns("lngBelegNr").Visible = False
 
+
+    End Sub
+
+    Private Sub butImport_Click(sender As Object, e As EventArgs) Handles butImport.Click
+
+        Dim intDebBelegsNummer As Int32
+
+        Dim intDebitorNbr As Int32
+        Dim strBuchType As String
+        Dim strBelegDatum As String
+        Dim strValutaDatum As String
+        Dim strVerfallDatum As String
+        Dim strReferenz As String
+        Dim intKondition As Int32
+        Dim strSachBID As String
+        Dim strVerkID As String
+        Dim strMahnerlaubnis As String
+        Dim sngAktuelleMahnstufe As Single
+        Dim dblBetrag As Double
+        Dim dblKurs As Double
+        Dim strExtBelegNbr As String
+        Dim strSkonto As String
+        Dim strCurrency As String
+        Dim strDebiText As String
+
+        Dim intGegenKonto As Int32
+        Dim strFibuText As String
+        Dim dblNettoBetrag As Double
+        Dim dblBebuBetrag As Double
+        Dim strBeBuEintrag As String
+        Dim strSteuerFeld As String
+
+        Try
+
+            'Belegsnummer abholen
+            intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+
+            'Variablen zuweisen
+            intDebitorNbr = 1001
+            strBuchType = "R"
+            strValutaDatum = "20200811"
+            strBelegDatum = "20200811"
+            strVerfallDatum = ""
+            strReferenz = "123-223-333"
+            strMahnerlaubnis = "20200911"
+            dblBetrag = 2000.0#
+            dblKurs = 1.0#
+            strDebiText = "DEBI D Testbuchung"
+            strCurrency = "CHF"
+
+            Call DbBhg.SetBelegKopf2(intDebBelegsNummer, strValutaDatum, intDebitorNbr, strBuchType, strBelegDatum, strVerfallDatum, strDebiText, strReferenz, intKondition, strSachBID, strVerkID, strMahnerlaubnis, sngAktuelleMahnstufe, dblBetrag.ToString, dblKurs.ToString, strExtBelegNbr, strSkonto, strCurrency)
+
+            intGegenKonto = 3200
+            strFibuText = "DEBI B Bhg Möbel"
+            dblNettoBetrag = 1000.0#
+            dblBebuBetrag = 1000.0#
+            strBeBuEintrag = "PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
+            strSteuerFeld = "25{<}DEBI D Bhg Export MwSt{<}0{>}"
+
+            Call DbBhg.SetVerteilung(intGegenKonto, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
+
+            intGegenKonto = 3201
+            strFibuText = "DEBI G Bhg Möbel 2"
+
+
+            Call DbBhg.WriteBuchung()
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+
+        End Try
 
     End Sub
 End Class

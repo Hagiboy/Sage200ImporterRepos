@@ -205,7 +205,7 @@ Friend NotInheritable Class Main
     End Function
 
 
-    Public Shared Function fcLoginSage(ByRef objdbconn As MySqlConnection, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal intAccounting As Int16) As Int16
+    Public Shared Function FcLoginSage(ByRef objdbconn As MySqlConnection, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal intAccounting As Int16) As Int16
 
         '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
 
@@ -223,7 +223,7 @@ Friend NotInheritable Class Main
         'Loign
         Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"), System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"), System.Configuration.ConfigurationManager.AppSettings("OwnSageID"), System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
 
-        strMandant = fcReadFromSettings(objdbconn, "Buchh200_Name", intAccounting)
+        strMandant = FcReadFromSettings(objdbconn, "Buchh200_Name", intAccounting)
         booAccOk = objFinanz.CheckMandant(strMandant)
 
         'Check Periode
@@ -272,7 +272,7 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function fcFillDebit(ByVal intAccounting As Integer, ByRef objdtHead As DataTable, ByRef objdbconn As MySqlConnection, ByRef objdbAccessConn As OleDb.OleDbConnection) As Integer
+    Public Shared Function FcFillDebit(ByVal intAccounting As Integer, ByRef objdtHead As DataTable, ByRef objdbconn As MySqlConnection, ByRef objdbAccessConn As OleDb.OleDbConnection) As Integer
 
         Dim strSQL As String
         Dim objlocMySQLcmd As New MySqlCommand
@@ -287,7 +287,7 @@ ErrorHandler:
         'Head Debitzoren löschen
         objdtHead.Clear()
 
-        strSQL = fcReadFromSettings(objdbconn, "Buchh_SQLHead", intAccounting)
+        strSQL = FcReadFromSettings(objdbconn, "Buchh_SQLHead", intAccounting)
 
         Try
 
@@ -303,13 +303,14 @@ ErrorHandler:
 
 
         Catch ex As Exception
+            MessageBox.Show(ex.Message)
 
         End Try
 
     End Function
 
 
-    Public Shared Function fcReadFromSettings(ByRef objdbconn As MySqlConnection, ByVal strField As String, ByVal intMandant As Int16) As String
+    Public Shared Function FcReadFromSettings(ByRef objdbconn As MySqlConnection, ByVal strField As String, ByVal intMandant As Int16) As String
 
         Dim objlocdtSetting As New DataTable("tbllocSettings")
         Dim objlocMySQLcmd As New MySqlCommand
@@ -333,7 +334,7 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function fcCheckDebit(ByVal intAccounting As Integer, ByRef objdtDebits As DataTable, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
+    Public Shared Function FcCheckDebit(ByVal intAccounting As Integer, ByRef objdtDebits As DataTable, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
         Dim strBitLog As String
@@ -343,13 +344,13 @@ ErrorHandler:
 
             For Each row In objdtDebits.Rows
 
-                intReturnValue = fcCheckDebitor(row("lngDebNbr"), row("intBuchungsart"), objdbBuha)
+                intReturnValue = FcCheckDebitor(row("lngDebNbr"), row("intBuchungsart"), objdbBuha)
                 strBitLog = Trim(intReturnValue.ToString)
-                intReturnValue = fcCheckKonto(row("lngDebKtoNbr"), objfiBuha)
+                intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha)
                 strBitLog = strBitLog + Trim(intReturnValue.ToString)
-                intReturnValue = fcCheckCurrency(row("strDebCur"), objfiBuha)
+                intReturnValue = FcCheckCurrency(row("strDebCur"), objfiBuha)
                 strBitLog = strBitLog + Trim(intReturnValue.ToString)
-                intReturnValue = fcCheckIntBank()
+                'intReturnValue = fcCheckIntBank()
                 Debug.Print("BitLog: " + strBitLog)
             Next
 
@@ -360,7 +361,7 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function fcCheckCurrency(ByVal strCurrency As String, ByRef objfiBuha As SBSXASLib.AXiFBhg) As Integer
+    Public Shared Function FcCheckCurrency(ByVal strCurrency As String, ByRef objfiBuha As SBSXASLib.AXiFBhg) As Integer
 
         Dim strReturn As String
         Dim booFoundCurrency As Boolean
@@ -387,7 +388,7 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function fcCheckKonto(ByVal lngKtoNbr As Long, ByRef objfiBuha As SBSXASLib.AXiFBhg) As Integer
+    Public Shared Function FcCheckKonto(ByVal lngKtoNbr As Long, ByRef objfiBuha As SBSXASLib.AXiFBhg) As Integer
 
         Dim strReturn As String
 
@@ -401,7 +402,7 @@ ErrorHandler:
     End Function
 
 
-    Public Shared Function fcCheckDebitor(ByVal lngDebitor As Long, ByVal intBuchungsart As Integer, ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
+    Public Shared Function FcCheckDebitor(ByVal lngDebitor As Long, ByVal intBuchungsart As Integer, ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
 
         Dim strReturn As String
 
@@ -446,7 +447,7 @@ ErrorHandler:
         End Try
     End Function
 
-    Public Shared Function fcSetBuchMode(ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal strMode As String) As Int16
+    Public Shared Function FcSetBuchMode(ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal strMode As String) As Int16
 
         objdbBuha.SetBuchMode(strMode)
 
@@ -454,7 +455,7 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function fcSetBelegKopf4(ByRef objdbBuha As SBSXASLib.AXiDbBhg,
+    Public Shared Function FcSetBelegKopf4(ByRef objdbBuha As SBSXASLib.AXiDbBhg,
                                            ByVal lngBelegNr As Long,
                                            ByVal strValutaDatum As String,
                                            ByVal lngDebitor As Long,
@@ -490,7 +491,7 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function fcSetVerteilung(ByRef objdbBuha As SBSXASLib.AXiDbBhg,
+    Public Shared Function FcSetVerteilung(ByRef objdbBuha As SBSXASLib.AXiDbBhg,
                                            ByVal strGegenKonto As String,
                                            ByVal strFibuText As String,
                                            ByVal strNettoBetrag As String,
@@ -507,7 +508,7 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function fcWriteBuchung(ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
+    Public Shared Function FcWriteBuchung(ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
 
         'Ausführung
         objdbBuha.WriteBuchung()
