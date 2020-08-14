@@ -2,6 +2,7 @@
 Option Explicit On
 
 Imports MySql.Data.MySqlClient
+Imports System.Data.OracleClient
 'Imports System.Data.OleDb
 
 Friend NotInheritable Class Main
@@ -334,16 +335,26 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcCheckDebit(ByVal intAccounting As Integer, ByRef objdtDebits As DataTable, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
+    Public Shared Function FcCheckDebit(ByVal intAccounting As Integer,
+                                        ByRef objdtDebits As DataTable,
+                                        ByRef objFinanz As SBSXASLib.AXFinanz,
+                                        ByRef objfiBuha As SBSXASLib.AXiFBhg,
+                                        ByRef objdbBuha As SBSXASLib.AXiDbBhg,
+                                        ByRef objdbconn As MySqlConnection,
+                                        ByRef objsqlcommand As MySqlCommand,
+                                        ByRef objOrdbconn As OracleClient.OracleConnection,
+                                        ByRef objOrcommand As OracleClient.OracleCommand) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
         Dim strBitLog As String
         Dim intReturnValue As Integer
+        Dim strStatus As String
 
         Try
 
             For Each row In objdtDebits.Rows
 
+                'Status-String erstellen
                 intReturnValue = FcCheckDebitor(row("lngDebNbr"), row("intBuchungsart"), objdbBuha)
                 strBitLog = Trim(intReturnValue.ToString)
                 intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha)
@@ -351,13 +362,59 @@ ErrorHandler:
                 intReturnValue = FcCheckCurrency(row("strDebCur"), objfiBuha)
                 strBitLog = strBitLog + Trim(intReturnValue.ToString)
                 'intReturnValue = fcCheckIntBank()
-                Debug.Print("BitLog: " + strBitLog)
+                'Debug.Print("BitLog: " + strBitLog)
+                'Status-String auswerten
+                If Left(strBitLog, 1) <> "0" Then
+                    intReturnValue = FcIsDebitorCreatable(objdbconn, objsqlcommand, objOrdbconn, objOrcommand, row("lngDebNbr"), intAccounting)
+                End If
             Next
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
         End Try
 
+
+    End Function
+
+    Public Shared Function FcIsDebitorCreatable(ByRef objdbconn As MySqlConnection, ByRef objsqlcommand As MySqlCommand, ByRef objOrdbconn As OracleClient.OracleConnection, ByRef objOrcommand As OracleClient.OracleCommand, ByVal lngDebiNbr As Long, ByVal intAccounting As Int32) As Int16
+
+        'Return: 0=creatable und erstellt, 3=Sage - Suchtext nicht erfasst, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
+
+        Dim strTableName, strTableType, strDebFieldName, strCompFieldName, strStreetFieldName, strZIPFieldName, strTownFieldName, strSageName, strDebiAccField As String
+        Dim intCreatable As Int16
+        Dim objdtDebitor As New DataTable
+
+        strTableName = FcReadFromSettings(objdbconn, "Buchh_PKTable", intAccounting)
+        strTableType = FcReadFromSettings(objdbconn, "Buchh_PKTableType", intAccounting)
+        strDebFieldName = FcReadFromSettings(objdbconn, "Buchh_PKField", intAccounting)
+        strCompFieldName = FcReadFromSettings(objdbconn, "Buchh_PKCompany", intAccounting)
+        strStreetFieldName = FcReadFromSettings(objdbconn, "Buchh_PKStreet", intAccounting)
+        strZIPFieldName = FcReadFromSettings(objdbconn, "Buchh_PKZIP", intAccounting)
+        strTownFieldName = FcReadFromSettings(objdbconn, "Buchh_PKTown", intAccounting)
+        strSageName = FcReadFromSettings(objdbconn, "Buchh_PKSageName", intAccounting)
+        strDebiAccField = FcReadFromSettings(objdbconn, "Buchh_DPKAccount", intAccounting)
+
+        If strTableName <> "" And strDebFieldName <> "" Then
+
+            If strTableType = "O" Then 'Oracle
+                'objOrdbconn.Open()
+                objOrcommand.CommandText = "SELECT " + strDebFieldName + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+                                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
+                objdtDebitor.Load(objOrcommand.ExecuteReader)
+            Else
+                'MySQL - Tabelle einlesen
+
+            End If
+
+            'Gefunden?
+            If objdtDebitor.Rows.Count > 0 Then
+                Debug.Print("Gefunden, kann erstellt werden")
+                intCreatable = 0
+
+            End If
+
+
+        End If
 
     End Function
 

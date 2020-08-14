@@ -2,6 +2,7 @@
 Option Explicit On
 
 Imports MySql.Data.MySqlClient
+Imports System.Data.OracleClient
 'Imports System.Data.OleDb
 
 
@@ -28,14 +29,22 @@ Friend Class frmImportMain
 
     Public objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
     Public objdbAccessConn As New OleDb.OleDbConnection
+    Public objdbcommand As New MySqlCommand
     Public objDABuchhaltungen As New MySqlDataAdapter("SELECT * FROM buchhaltungen WHERE NOT Buchh200_Name IS NULL", objdbConn)
     'Public objDACarsGrid As New MySqlDataAdapter("SELECT tblcars.idCar, tblunits.strUnit, tblplates.strPlate, tblcars.strVIN, tblmodelle.strModell FROM tblcars LEFT JOIN tblunits ON tblcars.refUnit = tblunits.idUnit LEFT JOIN tblplates ON tblcars.refPlate = tblplates.idPlate LEFT JOIN tblmodelle ON tblcars.refModell = tblmodelle.idModell", objdbConn)
     'Public objdtDebitor As New DataTable("tbliDebitor")
     Public objdtBuchhaltungen As New DataTable("tbliBuchhaltungen")
     Public objdtDebitorenHead As New DataTable("tbliDebiHead")
     Public objdtDebitorenHeadRead As New DataTable("tbliDebitorenHeadR")
-
-
+    Public objOracleConn As New OracleConnection("Data Source=(DESCRIPTION=" _
+                    + "(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.0.29)(PORT=1521))" _
+                    + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
+                    + "User Id=cis;Password=sugus;")
+    Public objOracleCmd As New OracleCommand()
+    'Public strOraDB As String = "Data Source=(DESCRIPTION=" _
+    '                + "(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.0.29)(PORT=1521))" _
+    '                + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
+    '                + "User Id=cis;Password=sugus;"
 
     Public Sub InitVar()
         'UPGRADE_NOTE: Object PIFin may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
@@ -101,7 +110,7 @@ Friend Class frmImportMain
         'Debug.Print(objdtDebitorenHead.Rows.Count.ToString)
         'Call InitdgvDebitoren()
 
-        Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, Finanz, FBhg, DbBhg)
+        Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, Finanz, FBhg, DbBhg, objdbConn, objdbcommand, objOracleConn, objOracleCmd)
 
         'Call 
 
@@ -275,7 +284,12 @@ Friend Class frmImportMain
 
     Private Sub frmImportMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        'MySQL - Connection öffnen
         objdbConn.Open()
+        'Oracle - Connection öffnen
+        'objOracleConn.ConnectionString = strOraDB
+        objOracleConn.Open()
+        objOracleCmd.Connection = objOracleConn
 
         'Comboxen
         objdtBuchhaltungen.Clear()
