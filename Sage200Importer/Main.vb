@@ -281,6 +281,7 @@ ErrorHandler:
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
         Dim objDTDebiHead As New DataTable
         Dim dbProvider, dbSource, dbPathAndFile As String
+        Dim objdrSub As DataRow
 
         dbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
         dbSource = "Data Source="
@@ -304,8 +305,19 @@ ErrorHandler:
             'objDTDebiHead.Load(objlocMySQLcmd.ExecuteReader)
             'Durch die Records steppen und Sub-Tabelle füllen
             For Each row In objdtHead.Rows
+                'Debug.Print(strSQLSub)
+                If row("intBuchungsart") = 1 Then
+                    objdrSub = objdtSub.NewRow()
+                    objdrSub("strRGNr") = row("strDebRGNbr")
+                    objdrSub("intSollHaben") = 2
+                    objdrSub("lngKto") = row("lngDebKtoNbr")
+                    objdrSub("dblBrutto") = row("dblDebBrutto")
+                    objdrSub("dblNetto") = row("dblDebNetto")
+                    objdrSub("dblMwSt") = row("dblDebMwSt")
+                    objdrSub("strDebSubText") = row("Betrifft").ToString + " " + row("betrifft1").ToString
+                    objdtSub.Rows.Add(objdrSub)
+                End If
                 strSQLSub = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"))
-                Debug.Print(strSQLSub)
                 objlocOLEdbcmd.CommandText = strSQLSub
                 objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
 
