@@ -29,8 +29,10 @@ Partial Class frmImportMain
         Me.butDebitoren = New System.Windows.Forms.Button()
         Me.dgvDebitoren = New System.Windows.Forms.DataGridView()
         Me.butImport = New System.Windows.Forms.Button()
+        Me.dgvDebitorenSub = New System.Windows.Forms.DataGridView()
         Me.GroupBox1.SuspendLayout()
         CType(Me.dgvDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvDebitorenSub, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'cmbBuha
@@ -101,11 +103,20 @@ Partial Class frmImportMain
         Me.butImport.Text = "&Import"
         Me.butImport.UseVisualStyleBackColor = True
         '
+        'dgvDebitorenSub
+        '
+        Me.dgvDebitorenSub.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvDebitorenSub.Location = New System.Drawing.Point(526, 12)
+        Me.dgvDebitorenSub.Name = "dgvDebitorenSub"
+        Me.dgvDebitorenSub.Size = New System.Drawing.Size(884, 128)
+        Me.dgvDebitorenSub.TabIndex = 5
+        '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1637, 603)
+        Me.Controls.Add(Me.dgvDebitorenSub)
         Me.Controls.Add(Me.butImport)
         Me.Controls.Add(Me.dgvDebitoren)
         Me.Controls.Add(Me.GroupBox1)
@@ -115,6 +126,7 @@ Partial Class frmImportMain
         Me.Text = "Sage200 - Importer"
         Me.GroupBox1.ResumeLayout(False)
         CType(Me.dgvDebitoren, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvDebitorenSub, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -127,4 +139,5 @@ Partial Class frmImportMain
     Friend WithEvents butDebitoren As Button
     Friend WithEvents dgvDebitoren As DataGridView
     Friend WithEvents butImport As Button
+    Friend WithEvents dgvDebitorenSub As DataGridView
 End Class

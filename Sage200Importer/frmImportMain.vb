@@ -36,6 +36,7 @@ Friend Class frmImportMain
     Public objdtBuchhaltungen As New DataTable("tbliBuchhaltungen")
     Public objdtDebitorenHead As New DataTable("tbliDebiHead")
     Public objdtDebitorenHeadRead As New DataTable("tbliDebitorenHeadR")
+    Public objdtDebitorenSub As New DataTable("tbliDebiSub")
     Public objOracleConn As New OracleConnection("Data Source=(DESCRIPTION=" _
                     + "(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.0.29)(PORT=1521))" _
                     + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
@@ -98,12 +99,13 @@ Friend Class frmImportMain
 
         Call Main.FcLoginSage(objdbConn, Finanz, FBhg, DbBhg, cmbBuha.SelectedValue)
 
-        Call Main.FcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdbConn, objdbAccessConn)
+        Call Main.FcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdtDebitorenSub, objdbConn, objdbAccessConn)
 
         'Call InitdgvDebitoren()
         Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead, objdtDebitorenHead)
 
         'Grid neu aufbauen
+        dgvDebitorenSub.Update()
         dgvDebitoren.Update()
         dgvDebitoren.Refresh()
         'dgvDebitoren.DataSource = objdtDebitorenHead
@@ -299,8 +301,13 @@ Friend Class frmImportMain
         cmbBuha.DisplayMember = "Buchh_Bez"
         cmbBuha.ValueMember = "Buchh_Nr"
 
-        'Tabelle Head erstellen
+        'Tabelle Debi Head erstellen
         objdtDebitorenHead = Main.tblDebitorenHead()
+
+        'Tabelle Debi Sub erstellen
+        objdtDebitorenSub = Main.tblDebitorenSub()
+
+        dgvDebitorenSub.DataSource = objdtDebitorenSub
 
         'DGV
         dgvDebitoren.DataSource = objdtDebitorenHead
@@ -463,7 +470,7 @@ Friend Class frmImportMain
             intDebToleranzNbr = 1
             intDebMahnGroup = 1
             strDebMahnen = "N"
-            dblDebLimite = 5000.55
+            dblDebLimite = 5000
 
             Call DbBhg.SetCommonInfo2(intDebitorNbr, strDebName, "", "", "", "", "", strDebCountry, strDebPLZ, strDebOrt, "", "", "", "", "", strDebCurrency, "", "", "", strDebSprachCode, "")
             Call DbBhg.SetExtendedInfo2(strDebSperren, dblDebLimite.ToString, intDebSammelKto.ToString, intDebErlKto.ToString, "", "", "", shrDebZahlK.ToString, intDebToleranzNbr.ToString, intDebMahnGroup.ToString, "", "", strDebWerbung, "")

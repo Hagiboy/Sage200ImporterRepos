@@ -273,9 +273,10 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcFillDebit(ByVal intAccounting As Integer, ByRef objdtHead As DataTable, ByRef objdbconn As MySqlConnection, ByRef objdbAccessConn As OleDb.OleDbConnection) As Integer
+    Public Shared Function FcFillDebit(ByVal intAccounting As Integer, ByRef objdtHead As DataTable, ByRef objdtSub As DataTable, ByRef objdbconn As MySqlConnection, ByRef objdbAccessConn As OleDb.OleDbConnection) As Integer
 
         Dim strSQL As String
+        Dim strSQLSub As String
         Dim objlocMySQLcmd As New MySqlCommand
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
         Dim objDTDebiHead As New DataTable
@@ -301,12 +302,76 @@ ErrorHandler:
             objdtHead.Load(objlocOLEdbcmd.ExecuteReader)
             'objlocMySQLcmd.Connection = objdbconn
             'objDTDebiHead.Load(objlocMySQLcmd.ExecuteReader)
+            'Durch die Records steppen und Sub-Tabelle füllen
+            For Each row In objdtHead.Rows
+                strSQLSub = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"))
+                Debug.Print(strSQLSub)
+                objlocOLEdbcmd.CommandText = strSQLSub
+                objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
+
+            Next
 
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
 
         End Try
+
+    End Function
+
+    Public Shared Function FcSQLParse(ByVal strSQLToParse As String, ByVal strRGNbr As String) As String
+
+        'Funktion setzt in eingelesenem SQL wieder Variablen ein
+        Dim intPipePositionBegin, intPipePositionEnd As Integer
+        Dim strWork, strField As String
+
+        '| suchen
+        If InStr(strSQLToParse, "|") > 0 Then
+            'Vorkommen gefunden
+            intPipePositionBegin = InStr(strSQLToParse, "|")
+            intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
+            Do Until intPipePositionBegin = 0
+                strField = Mid(strSQLToParse, intPipePositionBegin + 1, intPipePositionEnd - intPipePositionBegin - 1)
+                Select Case strField
+                    Case "rsDebi.Fields(""RGNr"")"
+                        strField = strRGNbr
+                        'Case "rsDebiTemp.Fields([strDebPKBez])"
+                        '    strField = rsDebiTemp.Fields("strDebPKBez")
+                        'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
+                        '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
+                        'Case "rsDebiTemp.Fields([strRGArt])"
+                        '    strField = rsDebiTemp.Fields("strRGArt")
+                        'Case "rsDebiTemp.Fields([strRGName])"
+                        '    strField = rsDebiTemp.Fields("strRGName")
+                        'Case "rsDebiTemp.Fields([strDebIdentNbr2])"
+                        '    strField = rsDebiTemp.Fields("strDebIdentNbr2")
+                        'Case "rsDebi.Fields([RGBemerkung])"
+                        '    strField = rsDebi.Fields("RGBemerkung")
+                        'Case "rsDebi.Fields([JornalNr])"
+                        '    strField = rsDebi.Fields("JornalNr")
+                        'Case "rsDebiTemp.Fields([strRGBemerkung])"
+                        '    strField = rsDebiTemp.Fields("strRGBemerkung")
+                        'Case "rsDebiTemp.Fields(""strDebRGNbr"")"
+                        '    strField = rsDebiTemp.Fields("strDebRGNbr")
+                        'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
+                        '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
+                        'Case "rsDebiTemp.Fields([strDebText])"
+                        '    strField = rsDebiTemp.Fields("strDebText")
+                        'Case "KUNDENZEICHEN"
+                        '    strField = fcGetKundenzeichen(rsDebiTemp.Fields("lngDebIdentNbr"))
+                    Case Else
+                        strField = "unknown field"
+                End Select
+                strSQLToParse = Left(strSQLToParse, intPipePositionBegin - 1) & strField & Right(strSQLToParse, Len(strSQLToParse) - intPipePositionEnd)
+                'Neuer Anfang suchen für evtl. weitere |
+                intPipePositionBegin = InStr(strSQLToParse, "|")
+                'intPipePositionBegin = InStr(intPipePositionEnd + 1, strSQLToParse, "|")
+                intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
+            Loop
+        End If
+
+        Return strSQLToParse
+
 
     End Function
 
@@ -364,10 +429,36 @@ ErrorHandler:
                 'intReturnValue = fcCheckIntBank()
                 'Debug.Print("BitLog: " + strBitLog)
                 'Status-String auswerten
+                'Debitor
                 If Left(strBitLog, 1) <> "0" Then
-                    intReturnValue = FcIsDebitorCreatable(objdbconn, objsqlcommand, objOrdbconn, objOrcommand, row("lngDebNbr"), intAccounting)
+                    strStatus = "Deb"
+                    intReturnValue = FcIsDebitorCreatable(objdbconn, objsqlcommand, objOrdbconn, objOrcommand, row("lngDebNbr"), intAccounting, objdbBuha)
+                    If intReturnValue = 0 Then
+                        strStatus = strStatus + " erstellt"
+                    Else
+                        strStatus = strStatus + " nicht erstellt."
+                    End If
+                Else
+                    row("strDebBez") = FcReadDebitorName(objdbBuha, row("lngDebNbr"), row("strDebCur"))
                 End If
+                'Konto
+                If Mid(strBitLog, 2, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Kto"
+                    row("strDebKtoBez") = "n/a"
+                Else
+                    row("strDebKtoBez") = FcReadDebitorKName(objfiBuha, row("lngDebKtoNbr"))
+                End If
+                'Währung
+                If Mid(strBitLog, 3, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Cur"
+                End If
+                'Status schreiben
+                row("strDebStatusText") = strBitLog + ", " + strStatus
+                'Init
+                strBitLog = ""
+                strStatus = ""
             Next
+
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
@@ -376,7 +467,41 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcIsDebitorCreatable(ByRef objdbconn As MySqlConnection, ByRef objsqlcommand As MySqlCommand, ByRef objOrdbconn As OracleClient.OracleConnection, ByRef objOrcommand As OracleClient.OracleCommand, ByVal lngDebiNbr As Long, ByVal intAccounting As Int32) As Int16
+    Public Shared Function FcReadDebitorKName(ByRef objfiBuha As SBSXASLib.AXiFBhg, ByVal lngDebKtoNbr As Long) As String
+
+        Dim strDebitorKName As String
+        Dim strDebitorKAr() As String
+
+        strDebitorKName = objfiBuha.GetKontoInfo(lngDebKtoNbr)
+
+        strDebitorKAr = Split(strDebitorKName, "{>}")
+
+        Return strDebitorKAr(8)
+
+    End Function
+
+    Public Shared Function FcReadDebitorName(ByRef objDbBhg As SBSXASLib.AXiDbBhg, ByVal intDebiNbr As Int32, ByVal strCurrency As String) As String
+
+        Dim strDebitorName As String
+        Dim strDebitorAr() As String
+
+        If strCurrency = "" Then
+
+            strDebitorName = objDbBhg.ReadDebitor3(intDebiNbr * -1, strCurrency)
+
+        Else
+
+            strDebitorName = objDbBhg.ReadDebitor3(intDebiNbr, strCurrency)
+
+        End If
+
+        strDebitorAr = Split(strDebitorName, "{>}")
+
+        Return strDebitorAr(0)
+
+    End Function
+
+    Public Shared Function FcIsDebitorCreatable(ByRef objdbconn As MySqlConnection, ByRef objsqlcommand As MySqlCommand, ByRef objOrdbconn As OracleClient.OracleConnection, ByRef objOrcommand As OracleClient.OracleCommand, ByVal lngDebiNbr As Long, ByVal intAccounting As Int32, ByRef objDbBhg As SBSXASLib.AXiDbBhg) As Int16
 
         'Return: 0=creatable und erstellt, 3=Sage - Suchtext nicht erfasst, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
 
@@ -408,13 +533,58 @@ ErrorHandler:
 
             'Gefunden?
             If objdtDebitor.Rows.Count > 0 Then
-                Debug.Print("Gefunden, kann erstellt werden")
-                intCreatable = 0
+                'Debug.Print("Gefunden, kann erstellt werden")
+
+                intCreatable = FcCreateDebitor(objDbBhg,
+                                               objdtDebitor.Rows(0).Item(strDebFieldName),
+                                               objdtDebitor.Rows(0).Item(strCompFieldName),
+                                               objdtDebitor.Rows(0).Item(strStreetFieldName),
+                                               objdtDebitor.Rows(0).Item(strZIPFieldName),
+                                               objdtDebitor.Rows(0).Item(strTownFieldName),
+                                               objdtDebitor.Rows(0).Item(strDebiAccField))
+                Return 0
+            Else
+                Return 4
 
             End If
 
 
         End If
+
+    End Function
+
+    Public Shared Function FcCreateDebitor(ByRef objDbBhg As SBSXASLib.AXiDbBhg, ByVal intDebitorNbr As Int32, ByVal strDebName As String, ByVal strDebStreet As String, ByVal strDebPLZ As String, ByVal strDebOrt As String, ByVal intDebSammelKto As Int32) As Int16
+
+        Dim strDebCountry As String = "CH"
+        Dim strDebCurrency As String = "CHF"
+        Dim strDebSprachCode As String = "2055"
+        Dim strDebSperren As String = "N"
+        Dim intDebErlKto As Integer = 3200
+        Dim shrDebZahlK As Short = 1
+        Dim intDebToleranzNbr As Integer = 1
+        Dim intDebMahnGroup As Integer = 1
+        Dim strDebWerbung As String = "N"
+
+        'Debitor erstellen, minimal - Angaben
+
+        Try
+
+            Call objDbBhg.SetCommonInfo2(intDebitorNbr, strDebName, "", strDebStreet, "", "", "", strDebCountry, strDebPLZ, strDebOrt, "", "", "", "", "", strDebCurrency, "", "", "", strDebSprachCode, "")
+            Call objDbBhg.SetExtendedInfo2(strDebSperren, "", intDebSammelKto.ToString, intDebErlKto.ToString, "", "", "", shrDebZahlK.ToString, intDebToleranzNbr.ToString, intDebMahnGroup.ToString, "", "", strDebWerbung, "")
+            Call objDbBhg.WriteDebitor3(0)
+
+            Return 0
+            'intDebAdrLaufN = DbBhg.GetAdressLaufnr()
+            'intDebBankLaufNr = DbBhg.GetZahlungsverbLaufnr()
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+
+            Return 1
+
+        End Try
+
+
 
     End Function
 
