@@ -320,7 +320,6 @@ ErrorHandler:
                 strSQLSub = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"))
                 objlocOLEdbcmd.CommandText = strSQLSub
                 objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
-
             Next
 
 
@@ -414,6 +413,7 @@ ErrorHandler:
 
     Public Shared Function FcCheckDebit(ByVal intAccounting As Integer,
                                         ByRef objdtDebits As DataTable,
+                                        ByRef objdtDebitSubs As DataTable,
                                         ByRef objFinanz As SBSXASLib.AXFinanz,
                                         ByRef objfiBuha As SBSXASLib.AXiFBhg,
                                         ByRef objdbBuha As SBSXASLib.AXiDbBhg,
@@ -423,9 +423,13 @@ ErrorHandler:
                                         ByRef objOrcommand As OracleClient.OracleCommand) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
-        Dim strBitLog As String
+        Dim strBitLog As String = ""
         Dim intReturnValue As Integer
-        Dim strStatus As String
+        Dim strStatus As String = ""
+        Dim intSubNumber As Int16
+        Dim dblSubNetto As Double
+        Dim dblSubMwSt As Double
+        Dim dblSubBrutto As Double
 
         Try
 
@@ -435,9 +439,11 @@ ErrorHandler:
                 intReturnValue = FcCheckDebitor(row("lngDebNbr"), row("intBuchungsart"), objdbBuha)
                 strBitLog = Trim(intReturnValue.ToString)
                 intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha)
-                strBitLog = strBitLog + Trim(intReturnValue.ToString)
+                strBitLog += Trim(intReturnValue.ToString)
                 intReturnValue = FcCheckCurrency(row("strDebCur"), objfiBuha)
-                strBitLog = strBitLog + Trim(intReturnValue.ToString)
+                strBitLog += Trim(intReturnValue.ToString)
+                intReturnValue = FcCheckSubBookings(row("strDebRGNbr"), row("intBuchungsart"), objdtDebitSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha)
+                strBitLog += Trim(intReturnValue.ToString)
                 'intReturnValue = fcCheckIntBank()
                 'Debug.Print("BitLog: " + strBitLog)
                 'Status-String auswerten
@@ -464,8 +470,19 @@ ErrorHandler:
                 If Mid(strBitLog, 3, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Cur"
                 End If
+                'Subbuchungen
+                If Mid(strBitLog, 4, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Sub"
+                Else
+                    'Totale in Head schreiben
+                    row("intSubBookings") = intSubNumber.ToString
+                    row("dblSumSubBookings") = dblSubBrutto.ToString
+                End If
                 'Status schreiben
                 row("strDebStatusText") = strBitLog + ", " + strStatus
+                If Val(strBitLog) = 0 Then
+                    row("booDebBook") = True
+                End If
                 'Init
                 strBitLog = ""
                 strStatus = ""
@@ -476,6 +493,141 @@ ErrorHandler:
             MessageBox.Show(ex.Message)
         End Try
 
+
+    End Function
+
+    Public Shared Function FcCheckMwSt(ByRef objdbconn As MySqlConnection, ByRef objFiBhg As SBSXASLib.AXiFBhg, ByVal strStrCode As String, ByVal dblStrWert As Double, ByRef strStrCode200 As String) As Integer
+
+        'returns 0=ok, 1=nicht gefunden
+
+        Dim objlocdtMwSt As New DataTable("tbllocMwSt")
+        Dim objlocMySQLcmd As New MySqlCommand
+        Dim strSteuerRec As String = ""
+        Dim strSteuerRecAr() As String
+        Dim intLooper As Int16 = 0
+
+        Try
+
+            objlocMySQLcmd.CommandText = "SELECT  * FROM sage50mwst WHERE strKey='" + strStrCode + "' AND dblProzent=" + dblStrWert.ToString
+
+            objlocMySQLcmd.Connection = objdbconn
+            objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
+
+            If objlocdtMwSt.Rows.Count = 0 Then
+                MessageBox.Show("MwSt " + strStrCode + " ist nicht definiert.")
+                Return 1
+            Else
+                'In Sage 200 suchen
+                Do Until strSteuerRec = "EOF"
+                    strSteuerRec = objFiBhg.GetStIDListe(intLooper)
+                    If strSteuerRec <> "EOF" Then
+                        strSteuerRecAr = Split(strSteuerRec, "{>}")
+                        'Gefunden?
+                        If strSteuerRecAr(3) = dblStrWert And strSteuerRecAr(6) = objlocdtMwSt.Rows(0).Item("strBruttoNetto") And strSteuerRecAr(7) = objlocdtMwSt.Rows(0).Item("strGegenKonto") Then
+                            'Debug.Print("Found " + strSteuerRecAr(0).ToString)
+                            strStrCode200 = strSteuerRecAr(0)
+                            Return 0
+                        End If
+                    Else
+                        Return 1
+                    End If
+                    intLooper += 1
+                Loop
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+
+        End Try
+
+
+    End Function
+
+
+    Public Shared Function FcCheckSubBookings(ByVal strDebRgNbr As String,
+                                              ByVal intBuchungsart As Int16,
+                                              ByRef objDtDebiSub As DataTable,
+                                              ByRef intSubNumber As Int16,
+                                              ByRef dblSubBrutto As Double,
+                                              ByRef dblSubNetto As Double,
+                                              ByRef dblSubMwSt As Double,
+                                              ByRef objdbconn As MySqlConnection,
+                                              ByRef objFiBhg As SBSXASLib.AXiFBhg) As Int16
+
+        'Return 0=ok, 1=Diff Brutto, 2=Diff MwSt, 3=Diff Netto, 4=Unterschied Summen zu Sollbuchung, 5=Keine Subbuchungen
+
+        Dim intReturnValue As Int32
+        Dim strBitLog As String = ""
+        Dim strStrStCodeSage200 As String = ""
+
+        'Summen bilden und Angaben prüfen
+        intSubNumber = 0
+        dblSubNetto = 0
+        dblSubMwSt = 0
+        dblSubBrutto = 0
+
+
+        For Each subrow In objDtDebiSub.Rows
+
+            If subrow("strRGNr") = strDebRgNbr Then
+                strBitLog = ""
+                If subrow("intSollHaben") <> 2 Then
+                    intSubNumber = intSubNumber + 1
+                    If subrow("intSollHaben") = 1 Then
+                        dblSubNetto += IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) * -1
+                        dblSubMwSt += IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) * -1
+                        dblSubBrutto += IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) * -1
+                    Else
+                        dblSubNetto += subrow("dblNetto")
+                        dblSubMwSt += subrow("dblMwSt")
+                        dblSubBrutto += subrow("dblBrutto")
+                    End If
+                    'Konto prüfen
+                    If Not IsDBNull(subrow("lngKto")) Then
+                        intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg)
+                        If intReturnValue = 0 Then
+                            subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto"))
+                            intReturnValue = 1
+                        Else
+                            subrow("strKtoBez") = "n/a"
+                        End If
+                    Else
+                        intReturnValue = 1
+                    End If
+                    strBitLog += Trim(intReturnValue.ToString)
+
+                    'MwSt prüfen
+                    If Not IsDBNull(subrow("strMwStKey")) Then
+                        intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("lngMwStSatz"), strStrStCodeSage200)
+                        If intReturnValue = 0 Then
+                            subrow("strMwStKey") = strStrStCodeSage200
+                            intReturnValue = 1
+                        Else
+                            subrow("strMwStKey") = "n/a"
+                        End If
+                    Else
+                        intReturnValue = 1
+                    End If
+                    strBitLog += Trim(intReturnValue.ToString)
+                    'Bitlog schreiben
+                    subrow("strStatusUBBitLog") = strBitLog
+                End If
+
+
+                'BitLog und Text schreiben
+
+            End If
+
+        Next
+
+        If intSubNumber = 0 Then
+            Return 5
+        ElseIf dblSubBrutto = 0 Then
+            Return 1
+        Else
+            Return 0
+        End If
 
     End Function
 

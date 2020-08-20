@@ -112,7 +112,7 @@ Friend Class frmImportMain
         'Debug.Print(objdtDebitorenHead.Rows.Count.ToString)
         'Call InitdgvDebitoren()
 
-        Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, Finanz, FBhg, DbBhg, objdbConn, objdbcommand, objOracleConn, objOracleCmd)
+        Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, objdtDebitorenSub, Finanz, FBhg, DbBhg, objdbConn, objdbcommand, objOracleConn, objOracleCmd)
 
         'Call 
 
