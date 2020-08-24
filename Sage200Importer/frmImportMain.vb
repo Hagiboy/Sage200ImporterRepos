@@ -410,14 +410,14 @@ Friend Class frmImportMain
 
     Private Sub butImport_Click(sender As Object, e As EventArgs) Handles butImport.Click
 
-        Dim strDebName As String
-        Dim strDebCountry As String = "CH"
-        Dim strDebOrt As String
-        Dim strDebPLZ As String
-        Dim strDebCurrency As String = "CHF"
-        Dim strDebSprachCode As String = "2055"
-        Dim intDebAdrLaufN As Int32
-        Dim intDebBankLaufNr As Int32
+        'Dim strDebName As String
+        'Dim strDebCountry As String = "CH"
+        'Dim strDebOrt As String
+        'Dim strDebPLZ As String
+        'Dim strDebCurrency As String = "CHF"
+        'Dim strDebSprachCode As String = "2055"
+        'Dim intDebAdrLaufN As Int32
+        'Dim intDebBankLaufNr As Int32
 
         Dim intDebBelegsNummer As Int32
 
@@ -428,8 +428,8 @@ Friend Class frmImportMain
         Dim strVerfallDatum As String
         Dim strReferenz As String
         Dim intKondition As Int32
-        Dim strSachBID As String
-        Dim strVerkID As String
+        Dim strSachBID As String = ""
+        Dim strVerkID As String = ""
         Dim strMahnerlaubnis As String
         Dim sngAktuelleMahnstufe As Single
         Dim dblBetrag As Double
@@ -445,56 +445,69 @@ Friend Class frmImportMain
         Dim dblBebuBetrag As Double
         Dim strBeBuEintrag As String
         Dim strSteuerFeld As String
-        Dim intDebSammelKto As Int32
-        Dim intDebErlKto As Int32
-        Dim shrDebZahlK As Short
-        Dim strDebWerbung As String
-        Dim strDebSperren As String
-        Dim intDebToleranzNbr As Int16
-        Dim intDebMahnGroup As Int16
-        Dim strDebMahnen As String
-        Dim dblDebLimite As Double
+        'Dim intDebSammelKto As Int32
+        'Dim intDebErlKto As Int32
+        'Dim shrDebZahlK As Short
+        'Dim strDebWerbung As String
+        'Dim strDebSperren As String
+        'Dim intDebToleranzNbr As Int16
+        'Dim intDebMahnGroup As Int16
+        'Dim strDebMahnen As String
+        'Dim dblDebLimite As Double
 
         Try
 
             'Debitor erstellen, minimal - Angaben
-            intDebitorNbr = 80083
-            strDebName = "AHZ"
-            strDebOrt = "Wallisellen"
-            strDebPLZ = "8304"
-            intDebSammelKto = 1100
-            intDebErlKto = 3200
-            shrDebZahlK = 1
-            strDebWerbung = "N"
-            strDebSperren = "N"
-            intDebToleranzNbr = 1
-            intDebMahnGroup = 1
-            strDebMahnen = "N"
-            dblDebLimite = 5000
 
-            Call DbBhg.SetCommonInfo2(intDebitorNbr, strDebName, "", "", "", "", "", strDebCountry, strDebPLZ, strDebOrt, "", "", "", "", "", strDebCurrency, "", "", "", strDebSprachCode, "")
-            Call DbBhg.SetExtendedInfo2(strDebSperren, dblDebLimite.ToString, intDebSammelKto.ToString, intDebErlKto.ToString, "", "", "", shrDebZahlK.ToString, intDebToleranzNbr.ToString, intDebMahnGroup.ToString, "", "", strDebWerbung, "")
-            Call DbBhg.WriteDebitor3(0)
+            'strDebName = "AHZ"
+            'strDebOrt = "Wallisellen"
+            'strDebPLZ = "8304"
+            'intDebSammelKto = 1100
+            'intDebErlKto = 3200
+            'shrDebZahlK = 1
+            'strDebWerbung = "N"
+            'strDebSperren = "N"
+            'intDebToleranzNbr = 1
+            'intDebMahnGroup = 1
+            'strDebMahnen = "N"
+            'dblDebLimite = 5000
 
-            intDebAdrLaufN = DbBhg.GetAdressLaufnr()
-            intDebBankLaufNr = DbBhg.GetZahlungsverbLaufnr()
+            'Call DbBhg.SetCommonInfo2(intDebitorNbr, strDebName, "", "", "", "", "", strDebCountry, strDebPLZ, strDebOrt, "", "", "", "", "", strDebCurrency, "", "", "", strDebSprachCode, "")
+            'Call DbBhg.SetExtendedInfo2(strDebSperren, dblDebLimite.ToString, intDebSammelKto.ToString, intDebErlKto.ToString, "", "", "", shrDebZahlK.ToString, intDebToleranzNbr.ToString, intDebMahnGroup.ToString, "", "", strDebWerbung, "")
+            'Call DbBhg.WriteDebitor3(0)
 
-            'Belegsnummer abholen
-            intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+            'intDebAdrLaufN = DbBhg.GetAdressLaufnr()
+            'intDebBankLaufNr = DbBhg.GetZahlungsverbLaufnr()
 
-            'Variablen zuweisen
-            strBuchType = "R"
-            strValutaDatum = "20200811"
-            strBelegDatum = "20200811"
-            strVerfallDatum = ""
-            strReferenz = "123-223-333"
-            strMahnerlaubnis = "20200911"
-            dblBetrag = 2000.0#
-            dblKurs = 1.0#
-            strDebiText = "DEBI D Testbuchung"
-            strCurrency = "CHF"
+            'Kopfbuchung
+            For Each row In objdtDebitorenHead.Rows
 
-            Call DbBhg.SetBelegKopf2(intDebBelegsNummer, strValutaDatum, intDebitorNbr, strBuchType, strBelegDatum, strVerfallDatum, strDebiText, strReferenz, intKondition, strSachBID, strVerkID, strMahnerlaubnis, sngAktuelleMahnstufe, dblBetrag.ToString, dblKurs.ToString, strExtBelegNbr, strSkonto, strCurrency)
+                If row("booDebBook") Then
+
+                    'Belegsnummer abholen
+                    intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+
+                    'Variablen zuweisen
+                    intDebitorNbr = row("lngDebNbr")
+                    strBuchType = "R"
+                    strValutaDatum = Format(row("datDebValDatum"), "yyyyMMdd").ToString
+                    strBelegDatum = Format(row("datDebRGDatum"), "yyyyMMdd").ToString
+                    strVerfallDatum = ""
+                    strReferenz = "123-223-333"
+                    strMahnerlaubnis = "20200911"
+                    dblBetrag = 2000.0#
+                    dblKurs = 1.0#
+                    strDebiText = "DEBI D Testbuchung"
+                    strCurrency = "CHF"
+
+                    Call DbBhg.SetBelegKopf2(intDebBelegsNummer, strValutaDatum, intDebitorNbr, strBuchType, strBelegDatum, strVerfallDatum, strDebiText, strReferenz, intKondition, strSachBID, strVerkID, strMahnerlaubnis, sngAktuelleMahnstufe, dblBetrag.ToString, dblKurs.ToString, strExtBelegNbr, strSkonto, strCurrency)
+
+
+                End If
+
+            Next
+
+
 
             intGegenKonto = 3200
             strFibuText = "DEBI B Bhg Möbel"
