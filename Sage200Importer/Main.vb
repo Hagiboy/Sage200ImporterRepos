@@ -317,11 +317,11 @@ ErrorHandler:
                     objdrSub("strDebSubText") = row("Betrifft").ToString + " " + row("betrifft1").ToString
                     objdtSub.Rows.Add(objdrSub)
                 End If
-                strSQLSub = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"))
+                strSQLSub = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"), objdtHead)
                 objlocOLEdbcmd.CommandText = strSQLSub
                 objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
             Next
-
+            objdbAccessConn.Close()
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
@@ -330,11 +330,15 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcSQLParse(ByVal strSQLToParse As String, ByVal strRGNbr As String) As String
+    Public Shared Function FcSQLParse(ByVal strSQLToParse As String, ByVal strRGNbr As String, ByVal objdtDebi As DataTable) As String
 
         'Funktion setzt in eingelesenem SQL wieder Variablen ein
         Dim intPipePositionBegin, intPipePositionEnd As Integer
         Dim strWork, strField As String
+        Dim RowDebi() As DataRow
+
+        'Zuerst Datensatz in Debi-Head suchen
+        RowDebi = objdtDebi.Select("strDebRGNbr='" + strRGNbr + "'")
 
         '| suchen
         If InStr(strSQLToParse, "|") > 0 Then
@@ -345,11 +349,11 @@ ErrorHandler:
                 strField = Mid(strSQLToParse, intPipePositionBegin + 1, intPipePositionEnd - intPipePositionBegin - 1)
                 Select Case strField
                     Case "rsDebi.Fields(""RGNr"")"
-                        strField = strRGNbr
-                        'Case "rsDebiTemp.Fields([strDebPKBez])"
-                        '    strField = rsDebiTemp.Fields("strDebPKBez")
-                        'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
-                        '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
+                        strField = RowDebi(0).Item("strDebRGNbr")
+                    Case "rsDebiTemp.Fields([strDebPKBez])"
+                        strField = RowDebi(0).Item("strDebBez")
+                    Case "rsDebiTemp.Fields([lngDebIdentNbr])"
+                        strField = RowDebi(0).Item("lngDebIdentNbr")
                         'Case "rsDebiTemp.Fields([strRGArt])"
                         '    strField = rsDebiTemp.Fields("strRGArt")
                         'Case "rsDebiTemp.Fields([strRGName])"
@@ -450,9 +454,13 @@ ErrorHandler:
         Dim dblSubNetto As Double
         Dim dblSubMwSt As Double
         Dim dblSubBrutto As Double
-        Dim booAutoCorrect As Boolean = False
+        Dim booAutoCorrect As Boolean
         Dim selsubrow() As DataRow
-        Dim strDebiReferenz As String = ""
+        Dim strDebiReferenz As String
+        Dim booDiffHeadText As Boolean
+        Dim strDebiHeadText As String
+        Dim booDiffSubText As Boolean
+        Dim strDebiSubText As String
 
         Try
 
@@ -469,7 +477,7 @@ ErrorHandler:
                 intReturnValue = FcCheckCurrency(row("strDebCur"), objfiBuha)
                 strBitLog += Trim(intReturnValue.ToString)
                 'Sub 04
-                intReturnValue = FcCheckSubBookings(row("strDebRGNbr"), row("intBuchungsart"), objdtDebitSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha)
+                intReturnValue = FcCheckSubBookings(row("strDebRGNbr"), objdtDebitSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha)
                 strBitLog += Trim(intReturnValue.ToString)
                 'Autokorrektur 05
                 booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
@@ -496,9 +504,6 @@ ErrorHandler:
                     strBitLog += "0"
                 End If
                 'Diff Kopf - Sub? 06
-                'Debug.Print(IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")).ToString + ", " + dblSubBrutto.ToString)
-                'Debug.Print(IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")).ToString + ", " + dblSubNetto.ToString)
-                'Debug.Print(IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")).ToString + ", " + dblSubMwSt.ToString)
                 If row("intBuchungsart") = 1 Then 'OP
                     If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) + dblSubBrutto <> 0 _
                         Or IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) + dblSubMwSt <> 0 _
@@ -572,9 +577,28 @@ ErrorHandler:
 
                 'Status schreiben
                 row("strDebStatusText") = strBitLog + ", " + strStatus
-                If Val(strBitLog) = 0 Then
+                If Val(strBitLog) = 0 Or Val(strBitLog) = 1000 Then
                     row("booDebBook") = True
                 End If
+
+                'Wird ein anderer Text in der Head-Buchung gewünscht?
+                booDiffHeadText = IIf(FcReadFromSettings(objdbconn, "Buchh_TextSpecial", intAccounting) = "0", False, True)
+                If booDiffHeadText Then
+                    strDebiHeadText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_TextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits)
+                    row("strDebText") = strDebiHeadText
+                End If
+
+                'Wird ein anderer Text in den Sub-Buchung gewünscht?
+                booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecial", intAccounting) = "0", False, True)
+                If booDiffSubText Then
+                    strDebiSubText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits)
+                    selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
+                    For Each subrow In selsubrow
+                        subrow("strDebSubText") = strDebiSubText
+                    Next
+
+                End If
+
                 'Init
                 strBitLog = ""
                 strStatus = ""
@@ -595,17 +619,25 @@ ErrorHandler:
         Dim strTLNNr As String
         Dim strCleanedRGNr As String
 
-        If intBuchungsArt = 1 Then
-            strTLNNr = FcReadBankSettings(intAccounting, strBank, objdbconn)
-            strCleanedRGNr = FcCleanRGNrStrict(strRGNr)
+        Try
 
-            strReferenz = strTLNNr + StrDup(20 - Len(strCleanedRGNr), "0") + strCleanedRGNr + Trim(CStr(FcModulo10(strTLNNr + StrDup(20 - Len(strCleanedRGNr), "0") + strCleanedRGNr)))
-            Return 0
-            'Fehler muss noch ausgearbeitet werden
+            If intBuchungsArt = 1 Then
+                strTLNNr = FcReadBankSettings(intAccounting, strBank, objdbconn)
+                strCleanedRGNr = FcCleanRGNrStrict(strRGNr)
 
-        Else
-            Return 0
-        End If
+                strReferenz = strTLNNr + StrDup(20 - Len(strCleanedRGNr), "0") + strCleanedRGNr + Trim(CStr(FcModulo10(strTLNNr + StrDup(20 - Len(strCleanedRGNr), "0") + strCleanedRGNr)))
+                Return 0
+
+            Else
+                Return 0
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 1
+
+        End Try
+
 
     End Function
 
@@ -718,7 +750,6 @@ ErrorHandler:
 
 
     Public Shared Function FcCheckSubBookings(ByVal strDebRgNbr As String,
-                                              ByVal intBuchungsart As Int16,
                                               ByRef objDtDebiSub As DataTable,
                                               ByRef intSubNumber As Int16,
                                               ByRef dblSubBrutto As Double,
@@ -730,8 +761,8 @@ ErrorHandler:
         'Return 0=ok, 1=Diff zu Kopf, 5=Keine Subbuchungen, 6=Brutto 0, 7=Konto, 8=KstKtr, 9=Steuer, 10=Brutto + MwSt + Netto=0, 11=Netto = 0, 12=Brutto=0, 13=Brutto - MwSt <> Netto
 
         Dim intReturnValue As Int32
-        Dim strBitLog As String = ""
-        Dim strStatusText As String = ""
+        Dim strBitLog As String
+        Dim strStatusText As String
         Dim strStrStCodeSage200 As String = ""
         Dim strKstKtrSage200 As String = ""
         Dim intError As Int16 = 0
@@ -750,7 +781,7 @@ ErrorHandler:
             strBitLog = ""
             intError = 0
             'If subrow("intSollHaben") <> 2 Then
-            intSubNumber = intSubNumber + 1
+            intSubNumber += 1
             If subrow("intSollHaben") = 1 Then
                 dblSubNetto += IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) * -1
                 dblSubMwSt += IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) * -1
@@ -765,17 +796,17 @@ ErrorHandler:
             If Not IsDBNull(subrow("lngKto")) Then
                 intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg)
                 If intReturnValue = 0 Then
-                        subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto"))
-                    Else
-                        subrow("strKtoBez") = "n/a"
-                        intError = 7
-                    End If
+                    subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto"))
                 Else
-                    subrow("strKtoBez") = "null"
-                    intReturnValue = 1
+                    subrow("strKtoBez") = "n/a"
                     intError = 7
                 End If
-                strBitLog += Trim(intReturnValue.ToString)
+            Else
+                subrow("strKtoBez") = "null"
+                intReturnValue = 1
+                intError = 7
+            End If
+            strBitLog += Trim(intReturnValue.ToString)
 
             'Kst/Ktr prüfen
             If Not IsDBNull(subrow("lngKST")) Then
@@ -788,10 +819,10 @@ ErrorHandler:
                 End If
             Else
                 subrow("strKstBez") = "null"
-                    intReturnValue = 1
-                    intError = 8
-                End If
-                strBitLog += Trim(intReturnValue.ToString)
+                intReturnValue = 1
+                intError = 8
+            End If
+            strBitLog += Trim(intReturnValue.ToString)
 
             'MwSt prüfen
             If Not IsDBNull(subrow("strMwStKey")) Then
@@ -1114,6 +1145,38 @@ ErrorHandler:
         End Try
     End Function
 
+    Public Shared Function FcWriteToRGTable(ByVal intMandant As Int32, ByVal strRGNbr As String, ByVal datDate As Date, ByVal intBelegNr As Int32, ByRef objdbAccessConn As OleDb.OleDbConnection) As Int16
+
+        'Returns 0=ok, 1=Problem
+
+        Dim strSQL As String
+        Dim intAffected As Int16
+        Dim objlocOLEdbcmd As New OleDb.OleDbCommand
+
+        strSQL = "UPDATE Tab_Sesam_Europeans SET gebucht=true, gebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, Beleg=" + intBelegNr.ToString + " WHERE RGNrOrig=" + strRGNbr
+
+        Try
+
+            objdbAccessConn.Open()
+
+            objlocOLEdbcmd.CommandText = strSQL
+
+            objlocOLEdbcmd.Connection = objdbAccessConn
+            intAffected = objlocOLEdbcmd.ExecuteNonQuery()
+            objdbAccessConn.Close()
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 1
+
+        End Try
+
+
+
+    End Function
+
+
     Public Shared Function FcSetBuchMode(ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal strMode As String) As Int16
 
         objdbBuha.SetBuchMode(strMode)
@@ -1183,5 +1246,23 @@ ErrorHandler:
         Return 0
 
     End Function
+
+    Public Shared Function FcGetSteuerFeld(ByRef objFBhg As SBSXASLib.AXiFBhg, ByVal lngKto As Long, ByVal strDebiSubText As String, ByVal dblBrutto As Double, ByVal strMwStKey As String) As String
+
+        Dim strSteuerFeld As String = ""
+
+        Try
+
+            strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString, strDebiSubText, dblBrutto.ToString, strMwStKey)
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+
+        End Try
+
+        Return strSteuerFeld
+
+    End Function
+
 
 End Class

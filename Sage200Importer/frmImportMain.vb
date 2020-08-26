@@ -42,27 +42,16 @@ Friend Class frmImportMain
                     + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
                     + "User Id=cis;Password=sugus;")
     Public objOracleCmd As New OracleCommand()
-    'Public strOraDB As String = "Data Source=(DESCRIPTION=" _
-    '                + "(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.0.29)(PORT=1521))" _
-    '                + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
-    '                + "User Id=cis;Password=sugus;"
 
     Public Sub InitVar()
-        'UPGRADE_NOTE: Object PIFin may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
+
         PIFin = Nothing
-        'UPGRADE_NOTE: Object KrBhg may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
         KrBhg = Nothing
-        'UPGRADE_NOTE: Object FBhg may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
         FBhg = Nothing
-        'UPGRADE_NOTE: Object DbBhg may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
         DbBhg = Nothing
-        'UPGRADE_NOTE: Object BsExt may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
         BsExt = Nothing
-        'UPGRADE_NOTE: Object BeBu may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
         BeBu = Nothing
-        'UPGRADE_NOTE: Object Adr may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
         Adr = Nothing
-        'UPGRADE_NOTE: Object Finanz may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
         Finanz = Nothing
 
         'Call Check_CheckStateChanged(Check, New System.EventArgs())
@@ -85,6 +74,8 @@ Friend Class frmImportMain
     End Sub
 
     Private Sub butDebitoren_Click(sender As Object, e As EventArgs) Handles butDebitoren.Click
+
+        Dim strIncrBelNbr As String = ""
 
         '        Dim booAccOk As Boolean
         '        Dim strMandant As String
@@ -113,6 +104,9 @@ Friend Class frmImportMain
         'Call InitdgvDebitoren()
 
         Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, objdtDebitorenSub, Finanz, FBhg, DbBhg, objdbConn, objdbcommand, objOracleConn, objOracleCmd)
+
+        strIncrBelNbr = DbBhg.IncrBelNbr
+        Debug.Print("Increment " + strIncrBelNbr)
 
         'Call 
 
@@ -312,113 +306,14 @@ Friend Class frmImportMain
         'DGV
         dgvDebitoren.DataSource = objdtDebitorenHead
         Call InitdgvDebitoren()
-        'dgvDebitoren.AllowUserToAddRows = False
-        'dgvDebitoren.AllowUserToDeleteRows = False
-        'dgvDebitoren.Columns("booDebBook").DisplayIndex = 0
-        'dgvDebitoren.Columns("booDebBook").HeaderText = "ok"
-        'dgvDebitoren.Columns("booDebBook").Width = 40
-        'dgvDebitoren.Columns("booDebBook").HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter
-        'dgvDebitoren.Columns("booDebBook").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter
-        'dgvDebitoren.Columns("strDebRGNbr").DisplayIndex = 1
-        'dgvDebitoren.Columns("strDebRGNbr").HeaderText = "RG-Nr"
-        'dgvDebitoren.Columns("strDebRGNbr").Width = 80
-        'dgvDebitoren.Columns("lngDebNbr").DisplayIndex = 2
-        'dgvDebitoren.Columns("lngDebNbr").HeaderText = "Debitor"
-        'dgvDebitoren.Columns("lngDebNbr").Width = 80
-        'dgvDebitoren.Columns("strDebBez").DisplayIndex = 3
-        'dgvDebitoren.Columns("strDebBez").HeaderText = "Bezeichnung"
-        'dgvDebitoren.Columns("strDebBez").Width = 150
-        'dgvDebitoren.Columns("lngDebKtoNbr").DisplayIndex = 4
-        'dgvDebitoren.Columns("lngDebKtoNbr").HeaderText = "Konto"
-        'dgvDebitoren.Columns("lngDebKtoNbr").Width = 50
-        'dgvDebitoren.Columns("strDebKtoBez").DisplayIndex = 5
-        'dgvDebitoren.Columns("strDebKtoBez").HeaderText = "Bezeichnung"
-        'dgvDebitoren.Columns("strDebKtoBez").Width = 150
-        'dgvDebitoren.Columns("strDebCur").DisplayIndex = 6
-        'dgvDebitoren.Columns("strDebCur").HeaderText = "Währung"
-        'dgvDebitoren.Columns("strDebCur").Width = 60
-        'dgvDebitoren.Columns("dblDebNetto").DisplayIndex = 7
-        'dgvDebitoren.Columns("dblDebNetto").HeaderText = "Netto"
-        'dgvDebitoren.Columns("dblDebNetto").Width = 90
-        'dgvDebitoren.Columns("dblDebNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-        'dgvDebitoren.Columns("dblDebMwSt").DisplayIndex = 8
-        'dgvDebitoren.Columns("dblDebMwSt").HeaderText = "MwSt"
-        'dgvDebitoren.Columns("dblDebMwSt").Width = 80
-        'dgvDebitoren.Columns("dblDebMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-        'dgvDebitoren.Columns("dblDebBrutto").DisplayIndex = 9
-        'dgvDebitoren.Columns("dblDebBrutto").HeaderText = "Brutto"
-        'dgvDebitoren.Columns("dblDebBrutto").Width = 90
-        'dgvDebitoren.Columns("dblDebBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-        'dgvDebitoren.Columns("intSubBookings").DisplayIndex = 10
-        'dgvDebitoren.Columns("intSubBookings").HeaderText = "Sub"
-        'dgvDebitoren.Columns("intSubBookings").Width = 50
-        'dgvDebitoren.Columns("intSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-        'dgvDebitoren.Columns("dblSumSubBookings").DisplayIndex = 11
-        'dgvDebitoren.Columns("dblSumSubBookings").HeaderText = "Sub-Summe"
-        'dgvDebitoren.Columns("dblSumSubBookings").Width = 90
-        'dgvDebitoren.Columns("dblSumSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-        'dgvDebitoren.Columns("lngDebIdentNbr").DisplayIndex = 12
-        'dgvDebitoren.Columns("lngDebIdentNbr").HeaderText = "Ident"
-        'dgvDebitoren.Columns("lngDebIdentNbr").Width = 80
-        'Dim comBoxCol As DataGridViewComboBoxColumn = New DataGridViewComboBoxColumn
-        'comBoxCol.HeaderText = "Buchungsart"
-        'comBoxCol.Width = 80
-        'comBoxCol.Name = "cmbBuchungsart"
-        'comBoxCol.DataSource = objdtDebitorenHead
-        ''comBoxCol.Items.Add("OP")
-        ''comBoxCol.Items.Add("KKT")
-        ''comBoxCol.Items.Add("Sum Up")
-        ''comBoxCol.Items.Add("Cash T")
-        'comBoxCol.ValueMember = "intBuchungsart"
-        'dgvDebitoren.Columns.Add(comBoxCol)
-        'dgvDebitoren.Columns("cmbBuchungsart").DisplayIndex = 13
-        'dgvDebitoren.Columns("strOPNr").DisplayIndex = 14
-        'dgvDebitoren.Columns("strOPNr").HeaderText = "OP-Nr"
-        'dgvDebitoren.Columns("strOPNr").Width = 80
-        'dgvDebitoren.Columns("datDebRGDatum").DisplayIndex = 15
-        'dgvDebitoren.Columns("datDebRGDatum").HeaderText = "RG Datum"
-        'dgvDebitoren.Columns("datDebRGDatum").Width = 70
-        'dgvDebitoren.Columns("datDebValDatum").DisplayIndex = 16
-        'dgvDebitoren.Columns("datDebValDatum").HeaderText = "Val Datum"
-        'dgvDebitoren.Columns("datDebValDatum").Width = 70
-        'dgvDebitoren.Columns("strDebiBank").DisplayIndex = 17
-        'dgvDebitoren.Columns("strDebiBank").HeaderText = "Bank"
-        'dgvDebitoren.Columns("strDebiBank").Width = 80
-        'dgvDebitoren.Columns("strDebStatusText").DisplayIndex = 18
-        'dgvDebitoren.Columns("strDebStatusText").HeaderText = "Status"
-        'dgvDebitoren.Columns("strDebStatusText").Width = 200
-        'dgvDebitoren.Columns("intBuchhaltung").Visible = False
-        'dgvDebitoren.Columns("intBuchungsart").Visible = False
-        'dgvDebitoren.Columns("intRGArt").Visible = False
-        'dgvDebitoren.Columns("strRGArt").Visible = False
-        'dgvDebitoren.Columns("lngLinkedRG").Visible = False
-        'dgvDebitoren.Columns("booLinked").Visible = False
-        'dgvDebitoren.Columns("strRGName").Visible = False
-        'dgvDebitoren.Columns("strDebIdentnbr2").Visible = False
-        'dgvDebitoren.Columns("strDebText").Visible = False
-        'dgvDebitoren.Columns("strRGBemerkung").Visible = False
-        'dgvDebitoren.Columns("strDebRef").Visible = False
-        'dgvDebitoren.Columns("strZahlBed").Visible = False
-        'dgvDebitoren.Columns("strDebStatusBitLog").Visible = False
-        'dgvDebitoren.Columns("strDebBookStatus").Visible = False
-        'dgvDebitoren.Columns("booBooked").Visible = False
-        'dgvDebitoren.Columns("datBooked").Visible = False
-        'dgvDebitoren.Columns("lngBelegNr").Visible = False
 
 
     End Sub
 
     Private Sub butImport_Click(sender As Object, e As EventArgs) Handles butImport.Click
 
-        'Dim strDebName As String
-        'Dim strDebCountry As String = "CH"
-        'Dim strDebOrt As String
-        'Dim strDebPLZ As String
-        'Dim strDebCurrency As String = "CHF"
-        'Dim strDebSprachCode As String = "2055"
-        'Dim intDebAdrLaufN As Int32
-        'Dim intDebBankLaufNr As Int32
 
+        Dim intReturnValue As Int16
         Dim intDebBelegsNummer As Int32
 
         Dim intDebitorNbr As Int32
@@ -445,85 +340,92 @@ Friend Class frmImportMain
         Dim dblBebuBetrag As Double
         Dim strBeBuEintrag As String
         Dim strSteuerFeld As String
-        'Dim intDebSammelKto As Int32
-        'Dim intDebErlKto As Int32
-        'Dim shrDebZahlK As Short
-        'Dim strDebWerbung As String
-        'Dim strDebSperren As String
-        'Dim intDebToleranzNbr As Int16
-        'Dim intDebMahnGroup As Int16
-        'Dim strDebMahnen As String
-        'Dim dblDebLimite As Double
+
+        Dim selDebiSub() As DataRow
+
 
         Try
 
             'Debitor erstellen, minimal - Angaben
 
-            'strDebName = "AHZ"
-            'strDebOrt = "Wallisellen"
-            'strDebPLZ = "8304"
-            'intDebSammelKto = 1100
-            'intDebErlKto = 3200
-            'shrDebZahlK = 1
-            'strDebWerbung = "N"
-            'strDebSperren = "N"
-            'intDebToleranzNbr = 1
-            'intDebMahnGroup = 1
-            'strDebMahnen = "N"
-            'dblDebLimite = 5000
-
-            'Call DbBhg.SetCommonInfo2(intDebitorNbr, strDebName, "", "", "", "", "", strDebCountry, strDebPLZ, strDebOrt, "", "", "", "", "", strDebCurrency, "", "", "", strDebSprachCode, "")
-            'Call DbBhg.SetExtendedInfo2(strDebSperren, dblDebLimite.ToString, intDebSammelKto.ToString, intDebErlKto.ToString, "", "", "", shrDebZahlK.ToString, intDebToleranzNbr.ToString, intDebMahnGroup.ToString, "", "", strDebWerbung, "")
-            'Call DbBhg.WriteDebitor3(0)
-
-            'intDebAdrLaufN = DbBhg.GetAdressLaufnr()
-            'intDebBankLaufNr = DbBhg.GetZahlungsverbLaufnr()
-
             'Kopfbuchung
             For Each row In objdtDebitorenHead.Rows
 
-                If row("booDebBook") Then
+                If IIf(IsDBNull(row("booDebBook")), False, row("booDebBook")) Then
 
-                    'Belegsnummer abholen
-                    intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                    'Test ob OP - Buchung
+                    If row("intBuchungsart") = 1 Then
 
-                    'Variablen zuweisen
-                    intDebitorNbr = row("lngDebNbr")
-                    strBuchType = "R"
-                    strValutaDatum = Format(row("datDebValDatum"), "yyyyMMdd").ToString
-                    strBelegDatum = Format(row("datDebRGDatum"), "yyyyMMdd").ToString
-                    strVerfallDatum = ""
-                    strReferenz = "123-223-333"
-                    strMahnerlaubnis = "20200911"
-                    dblBetrag = 2000.0#
-                    dblKurs = 1.0#
-                    strDebiText = "DEBI D Testbuchung"
-                    strCurrency = "CHF"
+                        If IsDBNull(row("strOPNr")) Or row("strOPNr") = "" Then
+                            'Zuerst Beleg-Nummerieungung aktivieren
+                            DbBhg.IncrBelNbr = "J"
+                            'Belegsnummer abholen
+                            intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                        Else
+                            'Beleg-Nummerierung abschalten
+                            DbBhg.IncrBelNbr = "N"
+                            intDebBelegsNummer = row("strOPNr")
+                            'strExtBelegNbr = row("strOPNr")
+                        End If
 
-                    Call DbBhg.SetBelegKopf2(intDebBelegsNummer, strValutaDatum, intDebitorNbr, strBuchType, strBelegDatum, strVerfallDatum, strDebiText, strReferenz, intKondition, strSachBID, strVerkID, strMahnerlaubnis, sngAktuelleMahnstufe, dblBetrag.ToString, dblKurs.ToString, strExtBelegNbr, strSkonto, strCurrency)
+                        'Variablen zuweisen
+                        intDebitorNbr = row("lngDebNbr")
+                        strBuchType = "R"
+                        strValutaDatum = Format(row("datDebValDatum"), "yyyyMMdd").ToString
+                        strBelegDatum = Format(row("datDebRGDatum"), "yyyyMMdd").ToString
+                        strVerfallDatum = ""
+                        strReferenz = row("strDebRef")
+                        strMahnerlaubnis = "" 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
+                        dblBetrag = row("dblDebBrutto")
+                        dblKurs = 1.0#
+                        strDebiText = row("strDebText")
+                        strCurrency = "CHF"
 
+                        Call DbBhg.SetBelegKopf2(intDebBelegsNummer, strValutaDatum, intDebitorNbr, strBuchType, strBelegDatum, strVerfallDatum, strDebiText, strReferenz, intKondition, strSachBID, strVerkID, strMahnerlaubnis, sngAktuelleMahnstufe, dblBetrag.ToString, dblKurs.ToString, strExtBelegNbr, strSkonto, strCurrency)
+
+                        selDebiSub = objdtDebitorenSub.Select("strRGNr='" + row("strDebRGNbr") + "' AND intSollHaben<>2")
+
+                        For Each SubRow In selDebiSub
+
+                            intGegenKonto = SubRow("lngKto")
+                            strFibuText = SubRow("strDebSubText")
+                            dblNettoBetrag = SubRow("dblNetto")
+                            dblBebuBetrag = 1000.0#
+                            strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
+                            strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+
+                            Call DbBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
+
+                            'Status Sub schreiben
+
+                        Next
+
+
+                        Call DbBhg.WriteBuchung()
+
+                    Else
+
+                        'Buchung nur in Fibu
+                        'Prinzip Funktion WriteBuchung() anwenden mit allen Parametern
+
+                    End If
+
+                    'Status Head schreiben
+                    row("strDebBookStatus") = row("strDebStatusBitLog")
+                    row("booBooked") = True
+                    row("datBooked") = Now()
+                    row("lngBelegNr") = intDebBelegsNummer
+
+                    'Status in File RG-Tabelle schreiben
+                    intReturnValue = Main.FcWriteToRGTable(cmbBuha.SelectedValue, row("strDebRGNbr"), row("datBooked"), row("lngBelegNr"), objdbAccessConn)
+                    If intReturnValue <> 0 Then
+                        'Throw an exception
+                    End If
 
                 End If
 
             Next
 
-
-
-            intGegenKonto = 3200
-            strFibuText = "DEBI B Bhg Möbel"
-            dblNettoBetrag = 1000.0#
-            dblBebuBetrag = 1000.0#
-            strBeBuEintrag = "PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
-            strSteuerFeld = "25{<}DEBI D Bhg Export MwSt{<}0{>}"
-
-            Call DbBhg.SetVerteilung(intGegenKonto, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
-
-            intGegenKonto = 3400
-            strFibuText = "DEBI G Bhg Möbel 2"
-
-            Call DbBhg.SetVerteilung(intGegenKonto, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
-
-            Call DbBhg.WriteBuchung()
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
