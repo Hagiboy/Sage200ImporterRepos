@@ -86,9 +86,13 @@ Friend Class frmImportMain
 
         Me.Cursor = Cursors.WaitCursor
 
+        objdtDebitorenHead.Clear()
+        objdtDebitorenSub.Clear()
+        objdtDebitorenHeadRead.Clear()
+
         Call InitVar()
 
-        Call Main.FcLoginSage(objdbConn, Finanz, FBhg, DbBhg, cmbBuha.SelectedValue)
+        Call Main.FcLoginSage(objdbConn, Finanz, FBhg, DbBhg, PIFin, cmbBuha.SelectedValue)
 
         Call Main.FcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdtDebitorenSub, objdbConn, objdbAccessConn)
 
@@ -103,7 +107,7 @@ Friend Class frmImportMain
         'Debug.Print(objdtDebitorenHead.Rows.Count.ToString)
         'Call InitdgvDebitoren()
 
-        Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, objdtDebitorenSub, Finanz, FBhg, DbBhg, objdbConn, objdbcommand, objOracleConn, objOracleCmd)
+        Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, objdtDebitorenSub, Finanz, FBhg, DbBhg, PIFin, objdbConn, objdbcommand, objOracleConn, objOracleCmd)
 
         strIncrBelNbr = DbBhg.IncrBelNbr
         Debug.Print("Increment " + strIncrBelNbr)
@@ -190,13 +194,13 @@ Friend Class frmImportMain
         dgvDebitoren.Columns("booDebBook").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter
         dgvDebitoren.Columns("strDebRGNbr").DisplayIndex = 1
         dgvDebitoren.Columns("strDebRGNbr").HeaderText = "RG-Nr"
-        dgvDebitoren.Columns("strDebRGNbr").Width = 80
+        dgvDebitoren.Columns("strDebRGNbr").Width = 60
         dgvDebitoren.Columns("lngDebNbr").DisplayIndex = 2
         dgvDebitoren.Columns("lngDebNbr").HeaderText = "Debitor"
-        dgvDebitoren.Columns("lngDebNbr").Width = 80
+        dgvDebitoren.Columns("lngDebNbr").Width = 60
         dgvDebitoren.Columns("strDebBez").DisplayIndex = 3
         dgvDebitoren.Columns("strDebBez").HeaderText = "Bezeichnung"
-        dgvDebitoren.Columns("strDebBez").Width = 150
+        dgvDebitoren.Columns("strDebBez").Width = 140
         dgvDebitoren.Columns("lngDebKtoNbr").DisplayIndex = 4
         dgvDebitoren.Columns("lngDebKtoNbr").HeaderText = "Konto"
         dgvDebitoren.Columns("lngDebKtoNbr").Width = 50
@@ -208,15 +212,15 @@ Friend Class frmImportMain
         dgvDebitoren.Columns("strDebCur").Width = 60
         dgvDebitoren.Columns("dblDebNetto").DisplayIndex = 7
         dgvDebitoren.Columns("dblDebNetto").HeaderText = "Netto"
-        dgvDebitoren.Columns("dblDebNetto").Width = 90
+        dgvDebitoren.Columns("dblDebNetto").Width = 80
         dgvDebitoren.Columns("dblDebNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
         dgvDebitoren.Columns("dblDebMwSt").DisplayIndex = 8
         dgvDebitoren.Columns("dblDebMwSt").HeaderText = "MwSt"
-        dgvDebitoren.Columns("dblDebMwSt").Width = 80
+        dgvDebitoren.Columns("dblDebMwSt").Width = 70
         dgvDebitoren.Columns("dblDebMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
         dgvDebitoren.Columns("dblDebBrutto").DisplayIndex = 9
         dgvDebitoren.Columns("dblDebBrutto").HeaderText = "Brutto"
-        dgvDebitoren.Columns("dblDebBrutto").Width = 90
+        dgvDebitoren.Columns("dblDebBrutto").Width = 80
         dgvDebitoren.Columns("dblDebBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
         dgvDebitoren.Columns("intSubBookings").DisplayIndex = 10
         dgvDebitoren.Columns("intSubBookings").HeaderText = "Sub"
@@ -224,23 +228,29 @@ Friend Class frmImportMain
         dgvDebitoren.Columns("intSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
         dgvDebitoren.Columns("dblSumSubBookings").DisplayIndex = 11
         dgvDebitoren.Columns("dblSumSubBookings").HeaderText = "Sub-Summe"
-        dgvDebitoren.Columns("dblSumSubBookings").Width = 90
+        dgvDebitoren.Columns("dblSumSubBookings").Width = 80
         dgvDebitoren.Columns("dblSumSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
         dgvDebitoren.Columns("lngDebIdentNbr").DisplayIndex = 12
         dgvDebitoren.Columns("lngDebIdentNbr").HeaderText = "Ident"
         dgvDebitoren.Columns("lngDebIdentNbr").Width = 80
-        Dim comBoxCol As DataGridViewComboBoxColumn = New DataGridViewComboBoxColumn
-        comBoxCol.HeaderText = "Buchungsart"
-        comBoxCol.Width = 80
-        comBoxCol.Name = "cmbBuchungsart"
-        comBoxCol.DataSource = objdtDebitorenHead
-        'comBoxCol.Items.Add("OP")
-        'comBoxCol.Items.Add("KKT")
-        'comBoxCol.Items.Add("Sum Up")
-        'comBoxCol.Items.Add("Cash T")
-        comBoxCol.ValueMember = "intBuchungsart"
-        dgvDebitoren.Columns.Add(comBoxCol)
-        dgvDebitoren.Columns("cmbBuchungsart").DisplayIndex = 13
+        Dim cmbBuchungsart As New DataGridViewComboBoxColumn()
+        Dim objdtBA As New DataTable("objidtBA")
+        Dim objlocMySQLcmd As New MySqlCommand
+        objlocMySQLcmd.CommandText = "SELECT * FROM tblBuchungsarten"
+        objlocMySQLcmd.Connection = objdbConn
+        objdtBA.Load(objlocMySQLcmd.ExecuteReader)
+        cmbBuchungsart.DataSource = objdtBA
+        cmbBuchungsart.DisplayMember = "strBuchungsart"
+        cmbBuchungsart.ValueMember = "idBuchungsart"
+        cmbBuchungsart.HeaderText = "BA"
+        cmbBuchungsart.Name = "intBuchungsart"
+        cmbBuchungsart.DataPropertyName = "intBuchungsart"
+        cmbBuchungsart.DisplayIndex = 13
+        dgvDebitoren.Columns.Add(cmbBuchungsart)
+        'dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
+        'dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
+        'dgvDebitoren.Columns("intBuchungsart").HeaderText = "BA"
+        'dgvDebitoren.Columns("intBuchungsart").Width = 40
         dgvDebitoren.Columns("strOPNr").DisplayIndex = 14
         dgvDebitoren.Columns("strOPNr").HeaderText = "OP-Nr"
         dgvDebitoren.Columns("strOPNr").Width = 80
@@ -252,12 +262,11 @@ Friend Class frmImportMain
         dgvDebitoren.Columns("datDebValDatum").Width = 70
         dgvDebitoren.Columns("strDebiBank").DisplayIndex = 17
         dgvDebitoren.Columns("strDebiBank").HeaderText = "Bank"
-        dgvDebitoren.Columns("strDebiBank").Width = 80
+        dgvDebitoren.Columns("strDebiBank").Width = 60
         dgvDebitoren.Columns("strDebStatusText").DisplayIndex = 18
         dgvDebitoren.Columns("strDebStatusText").HeaderText = "Status"
         dgvDebitoren.Columns("strDebStatusText").Width = 200
         dgvDebitoren.Columns("intBuchhaltung").Visible = False
-        dgvDebitoren.Columns("intBuchungsart").Visible = False
         dgvDebitoren.Columns("intRGArt").Visible = False
         dgvDebitoren.Columns("strRGArt").Visible = False
         dgvDebitoren.Columns("lngLinkedRG").Visible = False

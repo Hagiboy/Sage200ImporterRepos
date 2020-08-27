@@ -23,7 +23,7 @@ Friend NotInheritable Class Main
         booDebBook.DataType = System.Type.[GetType]("System.Boolean")
         DT.Columns.Add(booDebBook)
         Dim intBuchungsart As DataColumn = New DataColumn("intBuchungsart")
-        intBuchungsart.DataType = System.Type.[GetType]("System.Int16")
+        intBuchungsart.DataType = System.Type.[GetType]("System.Int32")
         DT.Columns.Add(intBuchungsart)
         Dim intRGArt As DataColumn = New DataColumn("intRGArt")
         intRGArt.DataType = System.Type.[GetType]("System.Int32")
@@ -206,7 +206,7 @@ Friend NotInheritable Class Main
     End Function
 
 
-    Public Shared Function FcLoginSage(ByRef objdbconn As MySqlConnection, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal intAccounting As Int16) As Int16
+    Public Shared Function FcLoginSage(ByRef objdbconn As MySqlConnection, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByRef objdbPIFb As SBSXASLib.AXiPlFin, ByVal intAccounting As Int16) As Int16
 
         '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
 
@@ -248,6 +248,8 @@ isOk:
         objdbBuha = Nothing
         objdbBuha = New SBSXASLib.AXiDbBhg
         objdbBuha = objFinanz.GetDebiObj
+        objdbPIFb = Nothing
+        objdbPIFb = objfiBuha.GetCheckObj
         'db = Main_Renamed.Finanz.GetDebiObj
         'UPGRADE_WARNING: Couldn't resolve default property of object s. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
         's = db.ReadDebitor3(CInt(DebitorID.Text), WhgID.Text)
@@ -441,6 +443,7 @@ ErrorHandler:
                                         ByRef objFinanz As SBSXASLib.AXFinanz,
                                         ByRef objfiBuha As SBSXASLib.AXiFBhg,
                                         ByRef objdbBuha As SBSXASLib.AXiDbBhg,
+                                        ByRef objdbPIFb As SBSXASLib.AXiPlFin,
                                         ByRef objdbconn As MySqlConnection,
                                         ByRef objsqlcommand As MySqlCommand,
                                         ByRef objOrdbconn As OracleClient.OracleConnection,
@@ -477,7 +480,7 @@ ErrorHandler:
                 intReturnValue = FcCheckCurrency(row("strDebCur"), objfiBuha)
                 strBitLog += Trim(intReturnValue.ToString)
                 'Sub 04
-                intReturnValue = FcCheckSubBookings(row("strDebRGNbr"), objdtDebitSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha)
+                intReturnValue = FcCheckSubBookings(row("strDebRGNbr"), objdtDebitSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha, objdbPIFb)
                 strBitLog += Trim(intReturnValue.ToString)
                 'Autokorrektur 05
                 booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
@@ -521,6 +524,9 @@ ErrorHandler:
                 'Referenz 08
                 intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("intBuchungsart"), strDebiReferenz)
                 strBitLog += Trim(intReturnValue.ToString)
+                'OP - Verdopplung 09
+                intReturnValue = FcCheckOPDouble(objdbBuha, row("lngDebNbr"), row("strDebRGNbr"))
+                strBitLog += Trim(intReturnValue.ToString)
 
                 'intReturnValue = fcCheckIntBank()
 
@@ -549,12 +555,11 @@ ErrorHandler:
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Cur"
                 End If
                 'Subbuchungen
+                'Totale in Head schreiben
+                row("intSubBookings") = intSubNumber.ToString
+                row("dblSumSubBookings") = dblSubBrutto.ToString
                 If Mid(strBitLog, 4, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Sub"
-                Else
-                    'Totale in Head schreiben
-                    row("intSubBookings") = intSubNumber.ToString
-                    row("dblSumSubBookings") = dblSubBrutto.ToString
                 End If
                 'Autokorretkur
                 If Mid(strBitLog, 5, 1) <> "0" Then
@@ -574,10 +579,16 @@ ErrorHandler:
                 Else
                     row("strDebRef") = strDebiReferenz
                 End If
+                'OP
+                If Mid(strBitLog, 9, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "OPDbl"
+                    'Else
+                    '    row("strDebRef") = strDebiReferenz
+                End If
 
                 'Status schreiben
                 row("strDebStatusText") = strBitLog + ", " + strStatus
-                If Val(strBitLog) = 0 Or Val(strBitLog) = 1000 Then
+                If Val(strBitLog) = 0 Or Val(strBitLog) = 10000 Then
                     row("booDebBook") = True
                 End If
 
@@ -602,6 +613,8 @@ ErrorHandler:
                 'Init
                 strBitLog = ""
                 strStatus = ""
+                intSubNumber = 0
+
             Next
 
 
@@ -609,6 +622,29 @@ ErrorHandler:
             MessageBox.Show(ex.Message)
         End Try
 
+
+    End Function
+
+    Public Shared Function FcCheckOPDouble(ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal strDebitor As String, ByVal strOPNr As String) As Int16
+
+        'Return 0=ok, 1=Beleg existiert, 9=Problem
+
+        Dim intBelegReturn As Int16
+
+        Try
+            intBelegReturn = objdbBuha.doesBelegExist(strDebitor, "CHF", strOPNr, "", "", "")
+            If intBelegReturn = 0 Then
+                Return 0
+            Else
+                Return 1
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 9
+
+        End Try
 
     End Function
 
@@ -756,7 +792,8 @@ ErrorHandler:
                                               ByRef dblSubNetto As Double,
                                               ByRef dblSubMwSt As Double,
                                               ByRef objdbconn As MySqlConnection,
-                                              ByRef objFiBhg As SBSXASLib.AXiFBhg) As Int16
+                                              ByRef objFiBhg As SBSXASLib.AXiFBhg,
+                                              ByRef objFiPI As SBSXASLib.AXiPlFin) As Int16
 
         'Return 0=ok, 1=Diff zu Kopf, 5=Keine Subbuchungen, 6=Brutto 0, 7=Konto, 8=KstKtr, 9=Steuer, 10=Brutto + MwSt + Netto=0, 11=Netto = 0, 12=Brutto=0, 13=Brutto - MwSt <> Netto
 
@@ -774,7 +811,7 @@ ErrorHandler:
         dblSubMwSt = 0
         dblSubBrutto = 0
 
-        selsubrow = objDtDebiSub.Select("strRGNr='" + strDebRgNbr + "' AND intSollHaben<>2")
+        selsubrow = objDtDebiSub.Select("strRGNr='" + strDebRgNbr + "' AND intSollHaben<2")
 
         For Each subrow In selsubrow
 
@@ -810,9 +847,12 @@ ErrorHandler:
 
             'Kst/Ktr prüfen
             If Not IsDBNull(subrow("lngKST")) Then
-                intReturnValue = FcCheckKstKtr(subrow("lngKST"), objFiBhg, strKstKtrSage200)
+                intReturnValue = FcCheckKstKtr(subrow("lngKST"), objFiBhg, objFiPI, subrow("lngKto"), strKstKtrSage200)
                 If intReturnValue = 0 Then
                     subrow("strKstBez") = strKstKtrSage200
+                ElseIf intReturnValue = 1 Then
+                    subrow("strKstBez") = "KoArt"
+                    intError = 8
                 Else
                     subrow("strKstBez") = "n/a"
                     intError = 8
@@ -922,19 +962,42 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcCheckKstKtr(ByVal lngKST As Long, objFiBhg As SBSXASLib.AXiFBhg, ByRef strKstKtrSage200 As String) As Int16
+    Public Shared Function FcCheckKstKtr(ByVal lngKST As Long, objFiBhg As SBSXASLib.AXiFBhg, ByRef objFiPI As SBSXASLib.AXiPlFin, ByVal lngKonto As Long, ByRef strKstKtrSage200 As String) As Int16
+
+        'return 0=ok, 1=Kst existiert kene Kostenart, 2=Kst nicht defniert
 
         Dim strReturn As String
         Dim strReturnAr() As String
+        Dim booKstKAok As Boolean
+        Dim strKst, strKA As String
 
-        strReturn = objFiBhg.GetKstKtrInfo(lngKST.ToString)
-        If strReturn = "EOF" Then
+        booKstKAok = False
+        objFiPI = Nothing
+        objFiPI = objFiBhg.GetCheckObj
+
+        Try
+            strReturn = objFiBhg.GetKstKtrInfo(lngKST.ToString)
+            If strReturn = "EOF" Then
+                Return 2
+            Else
+                strReturnAr = Split(strReturn, "{>}")
+                strKstKtrSage200 = strReturnAr(1)
+                strKst = Convert.ToString(lngKST)
+                strKA = Convert.ToString(lngKonto)
+                'Ist Kst auf Kostenbart definiert?
+                booKstKAok = objFiPI.CheckKstKtr(strKst, strKA)
+
+                If booKstKAok Then
+                    Return 0
+                Else
+                    Return 1
+                End If
+            End If
+
+        Catch ex As Exception
             Return 1
-        Else
-            strReturnAr = Split(strReturn, "{>}")
-            strKstKtrSage200 = strReturnAr(1)
-            Return 0
-        End If
+
+        End Try
 
     End Function
 
