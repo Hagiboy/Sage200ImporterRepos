@@ -148,35 +148,45 @@ Friend NotInheritable Class Main
         Dim strRGNr As DataColumn = New DataColumn("strRGNr")
         strRGNr.DataType = System.Type.[GetType]("System.String")
         strRGNr.MaxLength = 50
+        strRGNr.Caption = "RG-Nr"
         DT.Columns.Add(strRGNr)
         Dim intSollHaben As DataColumn = New DataColumn("intSollHaben")
         intSollHaben.DataType = System.Type.[GetType]("System.Int16")
+        intSollHaben.Caption = "S1/H0"
         DT.Columns.Add(intSollHaben)
         Dim lngKto As DataColumn = New DataColumn("lngKto")
         lngKto.DataType = System.Type.[GetType]("System.Int32")
+        lngKto.Caption = "Konto"
         DT.Columns.Add(lngKto)
         Dim strKtoBez As DataColumn = New DataColumn("strKtoBez")
         strKtoBez.DataType = System.Type.[GetType]("System.String")
         strKtoBez.MaxLength = 50
+        strKtoBez.Caption = "Bezeichnung"
         DT.Columns.Add(strKtoBez)
         Dim lngKST As DataColumn = New DataColumn("lngKST")
         lngKST.DataType = System.Type.[GetType]("System.Int32")
+        lngKST.Caption = "KST"
         DT.Columns.Add(lngKST)
         Dim strKstBez As DataColumn = New DataColumn("strKstBez")
         strKstBez.DataType = System.Type.[GetType]("System.String")
         strKstBez.MaxLength = 50
+        strKstBez.Caption = "Bez."
         DT.Columns.Add(strKstBez)
         Dim dblNetto As DataColumn = New DataColumn("dblNetto")
         dblNetto.DataType = System.Type.[GetType]("System.Double")
+        dblNetto.Caption = "Netto"
         DT.Columns.Add(dblNetto)
         Dim dblMwSt As DataColumn = New DataColumn("dblMwSt")
         dblMwSt.DataType = System.Type.[GetType]("System.Double")
+        dblMwSt.Caption = "MwSt"
         DT.Columns.Add(dblMwSt)
         Dim dblBrutto As DataColumn = New DataColumn("dblBrutto")
         dblBrutto.DataType = System.Type.[GetType]("System.Double")
+        dblBrutto.Caption = "Brutto"
         DT.Columns.Add(dblBrutto)
         Dim lngMwStSatz As DataColumn = New DataColumn("lngMwStSatz")
-        dblBrutto.DataType = System.Type.[GetType]("System.Double")
+        lngMwStSatz.DataType = System.Type.[GetType]("System.Double")
+        lngMwStSatz.Caption = "MwStS"
         DT.Columns.Add(lngMwStSatz)
         Dim strMwStKey As DataColumn = New DataColumn("strMwStKey")
         strMwStKey.DataType = System.Type.[GetType]("System.String")
@@ -189,6 +199,7 @@ Friend NotInheritable Class Main
         Dim strDebSubText As DataColumn = New DataColumn("strDebSubText")
         strDebSubText.DataType = System.Type.[GetType]("System.String")
         strDebSubText.MaxLength = 50
+        strDebSubText.Caption = "Buch-Text"
         DT.Columns.Add(strDebSubText)
         Dim strStatusUBBitLog As DataColumn = New DataColumn("strStatusUBBitLog")
         strStatusUBBitLog.DataType = System.Type.[GetType]("System.String")
@@ -197,6 +208,7 @@ Friend NotInheritable Class Main
         Dim strStatusUBText As DataColumn = New DataColumn("strStatusUBText")
         strStatusUBText.DataType = System.Type.[GetType]("System.String")
         strStatusUBText.MaxLength = 255
+        strStatusUBText.Caption = "Status"
         DT.Columns.Add(strStatusUBText)
         Dim strDebBookStatus As DataColumn = New DataColumn("strDebBookStatus")
         strDebBookStatus.DataType = System.Type.[GetType]("System.String")
@@ -587,10 +599,12 @@ ErrorHandler:
                 End If
 
                 'Status schreiben
-                row("strDebStatusText") = strBitLog + ", " + strStatus
                 If Val(strBitLog) = 0 Or Val(strBitLog) = 10000 Then
                     row("booDebBook") = True
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
                 End If
+                row("strDebStatusText") = strStatus
+                row("strDebStatusBitLog") = strBitLog
 
                 'Wird ein anderer Text in der Head-Buchung gewünscht?
                 booDiffHeadText = IIf(FcReadFromSettings(objdbconn, "Buchh_TextSpecial", intAccounting) = "0", False, True)
@@ -941,6 +955,10 @@ ErrorHandler:
             'Diff
             If Mid(strBitLog, 7, 1) <> "0" Then
                 strStatusText += IIf(strStatusText <> "", ", ", "") + "Diff"
+            End If
+
+            If Val(strBitLog) = 0 Then
+                strStatusText = "ok"
             End If
 
             'BitLog und Text schreiben
