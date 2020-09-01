@@ -28,8 +28,10 @@ Friend Class frmImportMain
     Public nID As String
 
     Public objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
+    Public objdbConnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
     Public objdbAccessConn As New OleDb.OleDbConnection
     Public objdbcommand As New MySqlCommand
+    Public objdbcommandZHDB02 As New MySqlCommand
     Public objDABuchhaltungen As New MySqlDataAdapter("SELECT * FROM buchhaltungen WHERE NOT Buchh200_Name IS NULL", objdbConn)
     'Public objDACarsGrid As New MySqlDataAdapter("SELECT tblcars.idCar, tblunits.strUnit, tblplates.strPlate, tblcars.strVIN, tblmodelle.strModell FROM tblcars LEFT JOIN tblunits ON tblcars.refUnit = tblunits.idUnit LEFT JOIN tblplates ON tblcars.refPlate = tblplates.idPlate LEFT JOIN tblmodelle ON tblcars.refModell = tblmodelle.idModell", objdbConn)
     'Public objdtDebitor As New DataTable("tbliDebitor")
@@ -107,7 +109,7 @@ Friend Class frmImportMain
         'Debug.Print(objdtDebitorenHead.Rows.Count.ToString)
         'Call InitdgvDebitoren()
 
-        Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, objdtDebitorenSub, Finanz, FBhg, DbBhg, PIFin, objdbConn, objdbcommand, objOracleConn, objOracleCmd)
+        Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, objdtDebitorenSub, Finanz, FBhg, DbBhg, PIFin, objdbConn, objdbConnZHDB02, objdbcommand, objdbcommandZHDB02, objOracleConn, objOracleCmd)
 
         'strIncrBelNbr = DbBhg.IncrBelNbr
         'Debug.Print("Increment " + strIncrBelNbr)
@@ -309,10 +311,10 @@ Friend Class frmImportMain
     Private Sub frmImportMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         'MySQL - Connection öffnen
-        objdbConn.Open()
+        'objdbConn.Open()
         'Oracle - Connection öffnen
         'objOracleConn.ConnectionString = strOraDB
-        objOracleConn.Open()
+        'objOracleConn.Open()
         objOracleCmd.Connection = objOracleConn
 
         'Comboxen
@@ -335,8 +337,9 @@ Friend Class frmImportMain
 
         'DGV
         dgvDebitoren.DataSource = objdtDebitorenHead
+        objdbConn.Open()
         Call InitdgvDebitoren()
-
+        objdbConn.Close()
 
     End Sub
 
@@ -466,10 +469,17 @@ Friend Class frmImportMain
 
     Private Sub dgvDebitoren_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles dgvDebitoren.CellValueChanged
 
-        If e.ColumnIndex = 2 And e.RowIndex > 1 Then
+        If e.ColumnIndex = 2 And e.RowIndex >= 0 Then
 
-            MsgBox("Geändert " + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + ", " + dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value.ToString + Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value).ToString)
+            If dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value Then
 
+                'MsgBox("Geändert zu checked " + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + ", " + dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value.ToString + Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value).ToString)
+                'Zulassen? = keine Fehler
+                If Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 0 And Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 10000 Then
+                    MsgBox("Rechnung ist nicht buchbar.", vbOKOnly + vbExclamation, "Nicht buchbar")
+                    dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value = False
+                End If
+            End If
 
         End If
 

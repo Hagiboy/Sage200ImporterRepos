@@ -236,7 +236,9 @@ Friend NotInheritable Class Main
         'Loign
         Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"), System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"), System.Configuration.ConfigurationManager.AppSettings("OwnSageID"), System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
 
+        objdbconn.Open()
         strMandant = FcReadFromSettings(objdbconn, "Buchh200_Name", intAccounting)
+        objdbconn.Close()
         booAccOk = objFinanz.CheckMandant(strMandant)
 
         'Check Periode
@@ -304,6 +306,7 @@ ErrorHandler:
         'Head Debitzoren löschen
         objdtHead.Clear()
 
+        objdbconn.Open()
         strSQL = FcReadFromSettings(objdbconn, "Buchh_SQLHead", intAccounting)
 
         Try
@@ -336,6 +339,7 @@ ErrorHandler:
                 objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
             Next
             objdbAccessConn.Close()
+            objdbconn.Close()
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
@@ -457,7 +461,9 @@ ErrorHandler:
                                         ByRef objdbBuha As SBSXASLib.AXiDbBhg,
                                         ByRef objdbPIFb As SBSXASLib.AXiPlFin,
                                         ByRef objdbconn As MySqlConnection,
+                                        ByRef objdbconnZHDB02 As MySqlConnection,
                                         ByRef objsqlcommand As MySqlCommand,
+                                        ByRef objsqlcommandZHDB02 As MySqlCommand,
                                         ByRef objOrdbconn As OracleClient.OracleConnection,
                                         ByRef objOrcommand As OracleClient.OracleCommand) As Integer
 
@@ -476,14 +482,24 @@ ErrorHandler:
         Dim strDebiHeadText As String
         Dim booDiffSubText As Boolean
         Dim strDebiSubText As String
+        Dim intDebitorNew As Int32
 
         Try
+
+            objdbconn.Open()
+            objOrdbconn.Open()
 
             For Each row In objdtDebits.Rows
 
                 'Status-String erstellen
                 'Debitor 01
-                intReturnValue = FcCheckDebitor(row("lngDebNbr"), row("intBuchungsart"), objdbBuha)
+                intReturnValue = FcGetRefDebiNr(objdbconn, objdbconnZHDB02, objsqlcommand, objsqlcommandZHDB02, objOrdbconn, objOrcommand, row("lngDebNbr"), intAccounting, intDebitorNew)
+                strBitLog += Trim(intReturnValue.ToString)
+                If intDebitorNew <> 0 Then
+                    intReturnValue = FcCheckDebitor(intDebitorNew, row("intBuchungsart"), objdbBuha)
+                Else
+                    intReturnValue = 2
+                End If
                 strBitLog = Trim(intReturnValue.ToString)
                 'Kto 02
                 intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha)
@@ -546,11 +562,17 @@ ErrorHandler:
                 'Debitor
                 If Left(strBitLog, 1) <> "0" Then
                     strStatus = "Deb"
-                    intReturnValue = FcIsDebitorCreatable(objdbconn, objsqlcommand, objOrdbconn, objOrcommand, row("lngDebNbr"), intAccounting, objdbBuha)
-                    If intReturnValue = 0 Then
-                        strStatus = strStatus + " erstellt"
+                    If Left(strBitLog, 1) <> "2" Then
+                        intReturnValue = FcIsDebitorCreatable(objdbconnZHDB02, objsqlcommandZHDB02, intDebitorNew, objdbBuha)
+                        If intReturnValue = 0 Then
+                            strStatus += " erstellt"
+                        Else
+                            strStatus += " nicht erstellt."
+                        End If
+                        row("strDebBez") = FcReadDebitorName(objdbBuha, row("lngDebNbr"), row("strDebCur"))
                     Else
-                        strStatus = strStatus + " nicht erstellt."
+                        strStatus += " keine Ref"
+                        row("strDebBez") = "n/a"
                     End If
                 Else
                     row("strDebBez") = FcReadDebitorName(objdbBuha, row("lngDebNbr"), row("strDebCur"))
@@ -631,9 +653,13 @@ ErrorHandler:
 
             Next
 
-
         Catch ex As Exception
             MessageBox.Show(ex.Message)
+
+        Finally
+            objOrdbconn.Close()
+            objdbconn.Close()
+
         End Try
 
 
@@ -1053,17 +1079,28 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcIsDebitorCreatable(ByRef objdbconn As MySqlConnection, ByRef objsqlcommand As MySqlCommand, ByRef objOrdbconn As OracleClient.OracleConnection, ByRef objOrcommand As OracleClient.OracleCommand, ByVal lngDebiNbr As Long, ByVal intAccounting As Int32, ByRef objDbBhg As SBSXASLib.AXiDbBhg) As Int16
+    Public Shared Function FcGetRefDebiNr(ByRef objdbconn As MySqlConnection,
+                                          ByRef objdbconnZHDB02 As MySqlConnection,
+                                          ByRef objsqlcommand As MySqlCommand,
+                                          ByRef objsqlcommandZHDB02 As MySqlCommand,
+                                          ByRef objOrdbconn As OracleClient.OracleConnection,
+                                          ByRef objOrcommand As OracleClient.OracleCommand,
+                                          ByVal lngDebiNbr As Int32,
+                                          ByVal intAccounting As Int32,
+                                          ByRef intDebiNew As Int32) As Int16
 
-        'Return: 0=creatable und erstellt, 3=Sage - Suchtext nicht erfasst, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
+        'Return 0=ok, 1=noch nicht implementiert, 2=Rep_Ref nicht definiert, 3=Nicht in Tab_Repbetriebe, 4=keine Angaben in Tab_Repbetriebe
 
-        Dim strTableName, strTableType, strDebFieldName, strCompFieldName, strStreetFieldName, strZIPFieldName, strTownFieldName, strSageName, strDebiAccField As String
-        Dim intCreatable As Int16
+        Dim strTableName, strTableType, strDebFieldName, strDebNewField, strDebNewFieldType, strCompFieldName, strStreetFieldName, strZIPFieldName, strTownFieldName, strSageName, strDebiAccField As String
+        'Dim intCreatable As Int16
         Dim objdtDebitor As New DataTable
+        Dim intPKNewField As Int32
 
         strTableName = FcReadFromSettings(objdbconn, "Buchh_PKTable", intAccounting)
         strTableType = FcReadFromSettings(objdbconn, "Buchh_PKTableType", intAccounting)
         strDebFieldName = FcReadFromSettings(objdbconn, "Buchh_PKField", intAccounting)
+        strDebNewField = FcReadFromSettings(objdbconn, "Buchh_PKNewField", intAccounting)
+        strDebNewFieldType = FcReadFromSettings(objdbconn, "Buchh_PKNewFType", intAccounting)
         strCompFieldName = FcReadFromSettings(objdbconn, "Buchh_PKCompany", intAccounting)
         strStreetFieldName = FcReadFromSettings(objdbconn, "Buchh_PKStreet", intAccounting)
         strZIPFieldName = FcReadFromSettings(objdbconn, "Buchh_PKZIP", intAccounting)
@@ -1075,37 +1112,125 @@ ErrorHandler:
 
             If strTableType = "O" Then 'Oracle
                 'objOrdbconn.Open()
-                objOrcommand.CommandText = "SELECT " + strDebFieldName + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+                objOrcommand.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
                                             " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
                 objdtDebitor.Load(objOrcommand.ExecuteReader)
+                'Ist DebiNrNew Linked oder Direkt
+                'If strDebNewFieldType = "D" Then
+                If IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
+                    intDebiNew = 0
+                    Return 2
+                Else
+                    intPKNewField = objdtDebitor.Rows(0).Item(strDebNewField)
+                    intPKNewField = FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtDebitor.Rows(0).Item(strDebNewField))
+                    If intPKNewField = 0 Then
+                        intDebiNew = 0
+                        Return 3
+                    Else
+                        intDebiNew = intPKNewField
+                        Return 0
+                    End If
+                End If
+
+                'objOrdbconn.Close()
             Else
+                intDebiNew = 0
+                Return 1
                 'MySQL - Tabelle einlesen
 
             End If
+
+        End If
+
+        Return intPKNewField
+
+
+    End Function
+
+    Public Shared Function FcIsDebitorCreatable(ByRef objdbconnZHDB02 As MySqlConnection,
+                                                ByRef objsqlcommandZHDB02 As MySqlCommand,
+                                                ByVal lngDebiNbr As Long,
+                                                ByRef objDbBhg As SBSXASLib.AXiDbBhg) As Int16
+
+        'Return: 0=creatable und erstellt, 3=Sage - Suchtext nicht erfasst, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
+
+        Dim intCreatable As Int16
+        Dim objdtDebitor As New DataTable
+        'Dim intPKNewField As Int32
+
+        Try
+
+            'Angaben einlesen
+            objdbconnZHDB02.Open()
+            objsqlcommandZHDB02.CommandText = "SELECT Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_DebiKonto FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
+            objdtDebitor.Load(objsqlcommandZHDB02.ExecuteReader)
 
             'Gefunden?
             If objdtDebitor.Rows.Count > 0 Then
                 'Debug.Print("Gefunden, kann erstellt werden")
 
                 intCreatable = FcCreateDebitor(objDbBhg,
-                                               objdtDebitor.Rows(0).Item(strDebFieldName),
-                                               objdtDebitor.Rows(0).Item(strCompFieldName),
-                                               objdtDebitor.Rows(0).Item(strStreetFieldName),
-                                               objdtDebitor.Rows(0).Item(strZIPFieldName),
-                                               objdtDebitor.Rows(0).Item(strTownFieldName),
-                                               objdtDebitor.Rows(0).Item(strDebiAccField))
+                                          lngDebiNbr,
+                                          objdtDebitor.Rows(0).Item("Rep_Firma"),
+                                          objdtDebitor.Rows(0).Item("Rep_Strasse"),
+                                          objdtDebitor.Rows(0).Item("Rep_PLZ"),
+                                          objdtDebitor.Rows(0).Item("Rep_Ort"),
+                                          objdtDebitor.Rows(0).Item("Rep_DebiKonto"))
                 Return 0
             Else
                 Return 4
 
             End If
 
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 9
 
-        End If
+        Finally
+            objdbconnZHDB02.Close()
+
+        End Try
+
+
 
     End Function
 
-    Public Shared Function FcCreateDebitor(ByRef objDbBhg As SBSXASLib.AXiDbBhg, ByVal intDebitorNbr As Int32, ByVal strDebName As String, ByVal strDebStreet As String, ByVal strDebPLZ As String, ByVal strDebOrt As String, ByVal intDebSammelKto As Int32) As Int16
+    Public Shared Function FcGetPKNewFromRep(ByRef objdbconnZHDB02 As MySqlConnection, ByRef objsqlcommandZHDB02 As MySqlCommand, ByVal intPKRefField As Int32) As Int32
+
+        'Aus Tabelle Rep_Betriebe auf ZHDB02 auslesen
+        Dim objdtRepBetrieb As New DataTable
+
+        Try
+
+            objdbconnZHDB02.Open()
+            objsqlcommandZHDB02.Connection = objdbconnZHDB02
+            objsqlcommandZHDB02.CommandText = "SELECT PKNr From tab_repbetriebe WHERE Rep_Nr=" + intPKRefField.ToString
+            objdtRepBetrieb.Load(objsqlcommandZHDB02.ExecuteReader)
+            If objdtRepBetrieb.Rows.Count > 0 Then
+                Return objdtRepBetrieb.Rows(0).Item("PKNr")
+            Else
+                Return 0
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 0
+
+        Finally
+            objdbconnZHDB02.Close()
+
+        End Try
+
+
+    End Function
+
+    Public Shared Function FcCreateDebitor(ByRef objDbBhg As SBSXASLib.AXiDbBhg,
+                                           ByVal intDebitorNewNbr As Int32,
+                                           ByVal strDebName As String,
+                                           ByVal strDebStreet As String,
+                                           ByVal strDebPLZ As String,
+                                           ByVal strDebOrt As String,
+                                           ByVal intDebSammelKto As Int32) As Int16
 
         Dim strDebCountry As String = "CH"
         Dim strDebCurrency As String = "CHF"
@@ -1121,7 +1246,7 @@ ErrorHandler:
 
         Try
 
-            Call objDbBhg.SetCommonInfo2(intDebitorNbr, strDebName, "", strDebStreet, "", "", "", strDebCountry, strDebPLZ, strDebOrt, "", "", "", "", "", strDebCurrency, "", "", "", strDebSprachCode, "")
+            Call objDbBhg.SetCommonInfo2(intDebitorNewNbr, strDebName, "", strDebStreet, "", "", "", strDebCountry, strDebPLZ, strDebOrt, "", "", "", "", "", strDebCurrency, "", "", "", strDebSprachCode, "")
             Call objDbBhg.SetExtendedInfo2(strDebSperren, "", intDebSammelKto.ToString, intDebErlKto.ToString, "", "", "", shrDebZahlK.ToString, intDebToleranzNbr.ToString, intDebMahnGroup.ToString, "", "", strDebWerbung, "")
             Call objDbBhg.WriteDebitor3(0)
 
