@@ -46,9 +46,9 @@ Friend NotInheritable Class Main
         strOPNr.DataType = System.Type.[GetType]("System.String")
         strOPNr.MaxLength = 13
         DT.Columns.Add(strOPNr)
-        Dim lngDebPKNbr As DataColumn = New DataColumn("lngDebNbr")
-        lngDebPKNbr.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngDebPKNbr)
+        Dim lngDebNbr As DataColumn = New DataColumn("lngDebNbr")
+        lngDebNbr.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(lngDebNbr)
         Dim strDebPKBez As DataColumn = New DataColumn("strDebBez")
         strDebPKBez.DataType = System.Type.[GetType]("System.String")
         strDebPKBez.MaxLength = 50
@@ -92,7 +92,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(strDebText)
         Dim strRGBemerkung As DataColumn = New DataColumn("strRGBemerkung")
         strRGBemerkung.DataType = System.Type.[GetType]("System.String")
-        strRGBemerkung.MaxLength = 50
+        strRGBemerkung.MaxLength = 1024
         DT.Columns.Add(strRGBemerkung)
         Dim datDebRGDatum As DataColumn = New DataColumn("datDebRGDatum")
         datDebRGDatum.DataType = System.Type.[GetType]("System.DateTime")
@@ -289,35 +289,52 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcFillDebit(ByVal intAccounting As Integer, ByRef objdtHead As DataTable, ByRef objdtSub As DataTable, ByRef objdbconn As MySqlConnection, ByRef objdbAccessConn As OleDb.OleDbConnection) As Integer
+    Public Shared Function FcFillDebit(ByVal intAccounting As Integer,
+                                       ByRef objdtHead As DataTable,
+                                       ByRef objdtSub As DataTable,
+                                       ByRef objdbconn As MySqlConnection,
+                                       ByRef objdbAccessConn As OleDb.OleDbConnection) As Integer
 
         Dim strSQL As String
         Dim strSQLSub As String
+        Dim strRGTableType As String
+        Dim objRGMySQLConn As New MySqlConnection
         Dim objlocMySQLcmd As New MySqlCommand
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
+
         Dim objDTDebiHead As New DataTable
-        Dim dbProvider, dbSource, dbPathAndFile As String
+        Dim dbProvider, dbSource, dbPathAndFile, strMDBName As String
         Dim objdrSub As DataRow
 
+        objdbconn.Open()
+
+        strMDBName = FcReadFromSettings(objdbconn, "Buchh_RGTableMDB", intAccounting)
         dbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
         dbSource = "Data Source="
-        dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\Daten_Helpdata_Server.mdb;Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+        dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
 
         'Head Debitzoren löschen
         objdtHead.Clear()
-
-        objdbconn.Open()
         strSQL = FcReadFromSettings(objdbconn, "Buchh_SQLHead", intAccounting)
+        strRGTableType = FcReadFromSettings(objdbconn, "Buchh_RGTableType", intAccounting)
 
         Try
 
             'objlocMySQLcmd.CommandText = strSQL
-            'Access
-            objdbAccessConn.ConnectionString = dbProvider + dbSource + dbPathAndFile
-            objlocOLEdbcmd.CommandText = strSQL
-            objdbAccessConn.Open()
-            objlocOLEdbcmd.Connection = objdbAccessConn
-            objdtHead.Load(objlocOLEdbcmd.ExecuteReader)
+            If strRGTableType = "A" Then
+                'Access
+                objdbAccessConn.ConnectionString = dbProvider + dbSource + dbPathAndFile
+                objlocOLEdbcmd.CommandText = strSQL
+                objdbAccessConn.Open()
+                objlocOLEdbcmd.Connection = objdbAccessConn
+                objdtHead.Load(objlocOLEdbcmd.ExecuteReader)
+            ElseIf strRGTableType = "M" Then
+                objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                objlocMySQLcmd.Connection = objRGMySQLConn
+                objlocMySQLcmd.CommandText = strSQL
+                objRGMySQLConn.Open()
+                objdtHead.Load(objlocMySQLcmd.ExecuteReader)
+            End If
             'objlocMySQLcmd.Connection = objdbconn
             'objDTDebiHead.Load(objlocMySQLcmd.ExecuteReader)
             'Durch die Records steppen und Sub-Tabelle füllen
@@ -335,14 +352,27 @@ ErrorHandler:
                     objdtSub.Rows.Add(objdrSub)
                 End If
                 strSQLSub = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"), objdtHead)
-                objlocOLEdbcmd.CommandText = strSQLSub
-                objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
+                If strRGTableType = "A" Then
+                    objlocOLEdbcmd.CommandText = strSQLSub
+                    objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
+                ElseIf strRGTableType = "M" Then
+                    objlocMySQLcmd.CommandText = strSQLSub
+                    objdtSub.Load(objlocMySQLcmd.ExecuteReader)
+                End If
             Next
-            objdbAccessConn.Close()
-            objdbconn.Close()
+
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
+
+        Finally
+            If objdbAccessConn.State = ConnectionState.Open Then
+                objdbAccessConn.Close()
+            End If
+            If objRGMySQLConn.State = ConnectionState.Open Then
+                objRGMySQLConn.Close()
+            End If
+            objdbconn.Close()
 
         End Try
 
@@ -493,7 +523,7 @@ ErrorHandler:
 
                 'Status-String erstellen
                 'Debitor 01
-                intReturnValue = FcGetRefDebiNr(objdbconn, objdbconnZHDB02, objsqlcommand, objsqlcommandZHDB02, objOrdbconn, objOrcommand, row("lngDebNbr"), intAccounting, intDebitorNew)
+                intReturnValue = FcGetRefDebiNr(objdbconn, objdbconnZHDB02, objsqlcommand, objsqlcommandZHDB02, objOrdbconn, objOrcommand, IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")), intAccounting, intDebitorNew)
                 strBitLog += Trim(intReturnValue.ToString)
                 If intDebitorNew <> 0 Then
                     intReturnValue = FcCheckDebitor(intDebitorNew, row("intBuchungsart"), objdbBuha)
@@ -508,7 +538,7 @@ ErrorHandler:
                 intReturnValue = FcCheckCurrency(row("strDebCur"), objfiBuha)
                 strBitLog += Trim(intReturnValue.ToString)
                 'Sub 04
-                intReturnValue = FcCheckSubBookings(row("strDebRGNbr"), objdtDebitSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha, objdbPIFb)
+                intReturnValue = FcCheckSubBookings(row("strDebRGNbr"), objdtDebitSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha, objdbPIFb, row("intBuchungsart"))
                 strBitLog += Trim(intReturnValue.ToString)
                 'Autokorrektur 05
                 booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
@@ -553,7 +583,7 @@ ErrorHandler:
                 intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("intBuchungsart"), strDebiReferenz)
                 strBitLog += Trim(intReturnValue.ToString)
                 'OP - Verdopplung 09
-                intReturnValue = FcCheckOPDouble(objdbBuha, row("lngDebNbr"), row("strDebRGNbr"))
+                intReturnValue = FcCheckOPDouble(objdbBuha, IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")), row("strDebRGNbr"))
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'intReturnValue = fcCheckIntBank()
@@ -569,13 +599,15 @@ ErrorHandler:
                         Else
                             strStatus += " nicht erstellt."
                         End If
-                        row("strDebBez") = FcReadDebitorName(objdbBuha, row("lngDebNbr"), row("strDebCur"))
+                        row("strDebBez") = FcReadDebitorName(objdbBuha, intDebitorNew, row("strDebCur"))
+                        row("lngDebNbr") = intDebitorNew
                     Else
                         strStatus += " keine Ref"
                         row("strDebBez") = "n/a"
                     End If
                 Else
-                    row("strDebBez") = FcReadDebitorName(objdbBuha, row("lngDebNbr"), row("strDebCur"))
+                    row("strDebBez") = FcReadDebitorName(objdbBuha, intDebitorNew, row("strDebCur"))
+                    row("lngDebNbr") = intDebitorNew
                 End If
                 'Konto
                 If Mid(strBitLog, 2, 1) <> "0" Then
@@ -772,6 +804,8 @@ ErrorHandler:
             Else
                 Return 0
             End If
+        Else
+            Return 0
         End If
 
     End Function
@@ -833,9 +867,19 @@ ErrorHandler:
                                               ByRef dblSubMwSt As Double,
                                               ByRef objdbconn As MySqlConnection,
                                               ByRef objFiBhg As SBSXASLib.AXiFBhg,
-                                              ByRef objFiPI As SBSXASLib.AXiPlFin) As Int16
+                                              ByRef objFiPI As SBSXASLib.AXiPlFin,
+                                              ByVal intBuchungsArt As Int32) As Int16
 
-        'Return 0=ok, 1=Diff zu Kopf, 5=Keine Subbuchungen, 6=Brutto 0, 7=Konto, 8=KstKtr, 9=Steuer, 10=Brutto + MwSt + Netto=0, 11=Netto = 0, 12=Brutto=0, 13=Brutto - MwSt <> Netto
+        'Functin Returns 0=ok, 1=Problem sub, 2=OP Diff zu Kopf, 3=OP nicht 0, 9=keine Subs
+
+        'BitLog in Sub
+        '1: Konto
+        '2: KST
+        '3: MwST
+        '4: Brutto, Netto + MwSt 0
+        '5: Netto 0
+        '6: Brutto 0
+        '7: Brutto - MwsT <> Netto
 
         Dim intReturnValue As Int32
         Dim strBitLog As String
@@ -844,6 +888,7 @@ ErrorHandler:
         Dim strKstKtrSage200 As String = ""
         Dim intError As Int16 = 0
         Dim selsubrow() As DataRow
+        Dim strStatusOverAll As String = "0000000"
 
         'Summen bilden und Angaben prüfen
         intSubNumber = 0
@@ -851,9 +896,9 @@ ErrorHandler:
         dblSubMwSt = 0
         dblSubBrutto = 0
 
-        selsubrow = objDtDebiSub.Select("strRGNr='" + strDebRgNbr + "' AND intSollHaben<2")
+        selsubrow = objDtDebiSub.Select("strRGNr='" + strDebRgNbr + "'")
 
-        For Each subrow In selsubrow
+        For Each subrow As DataRow In selsubrow
 
             strBitLog = ""
             intError = 0
@@ -880,6 +925,7 @@ ErrorHandler:
                 End If
             Else
                 subrow("strKtoBez") = "null"
+                subrow("lngKto") = 0
                 intReturnValue = 1
                 intError = 7
             End If
@@ -991,17 +1037,33 @@ ErrorHandler:
             subrow("strStatusUBBitLog") = strBitLog
             subrow("strStatusUBText") = strStatusText
 
+            strStatusOverAll = strStatusOverAll Or strBitLog
 
         Next
 
-        If intSubNumber = 0 Then
-            Return 5
-        ElseIf dblSubBrutto = 0 Then
-            Return 6
-        ElseIf intError > 0 Then
-            Return intError
+        'Rückgabe der ganzen Funktion Sub-Prüfung
+        If intSubNumber = 0 Then 'keine Subs
+            Return 9
         Else
-            Return 0
+            If Val(strStatusOverAll) > 0 Then
+                Return 1
+            Else
+                If intBuchungsArt = 1 Then
+                    'OP - Buchung
+                    If dblSubNetto <> 0 Or dblSubBrutto <> 0 Or dblSubMwSt <> 0 Then 'Diff
+                        Return 2
+                    Else
+                        Return 0
+                    End If
+                Else
+                    'Belegsbuchung 'Nur Brutto 0 - Test
+                    If dblSubBrutto <> 0 Then
+                        Return 3
+                    Else
+                        Return 0
+                    End If
+                End If
+            End If
         End If
 
     End Function
@@ -1095,6 +1157,8 @@ ErrorHandler:
         'Dim intCreatable As Int16
         Dim objdtDebitor As New DataTable
         Dim intPKNewField As Int32
+        Dim objdbConnDeb As New MySqlConnection
+        Dim objsqlCommDeb As New MySqlCommand
 
         strTableName = FcReadFromSettings(objdbconn, "Buchh_PKTable", intAccounting)
         strTableType = FcReadFromSettings(objdbconn, "Buchh_PKTableType", intAccounting)
@@ -1117,28 +1181,36 @@ ErrorHandler:
                 objdtDebitor.Load(objOrcommand.ExecuteReader)
                 'Ist DebiNrNew Linked oder Direkt
                 'If strDebNewFieldType = "D" Then
-                If IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
-                    intDebiNew = 0
-                    Return 2
-                Else
-                    intPKNewField = objdtDebitor.Rows(0).Item(strDebNewField)
-                    intPKNewField = FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtDebitor.Rows(0).Item(strDebNewField))
-                    If intPKNewField = 0 Then
-                        intDebiNew = 0
-                        Return 3
-                    Else
-                        intDebiNew = intPKNewField
-                        Return 0
-                    End If
-                End If
 
                 'objOrdbconn.Close()
-            Else
+            ElseIf strTableType = "M" Then 'MySQL
                 intDebiNew = 0
-                Return 1
                 'MySQL - Tabelle einlesen
+                objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting))
+                objdbConnDeb.Open()
+                objsqlCommDeb.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+                                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
+                objsqlCommDeb.Connection = objdbConnDeb
+                objdtDebitor.Load(objsqlCommDeb.ExecuteReader)
+                objdbConnDeb.Close()
 
             End If
+
+            If IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
+                intDebiNew = 0
+                Return 2
+            Else
+                intPKNewField = objdtDebitor.Rows(0).Item(strDebNewField)
+                intPKNewField = FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtDebitor.Rows(0).Item(strDebNewField))
+                If intPKNewField = 0 Then
+                    intDebiNew = 0
+                    Return 3
+                Else
+                    intDebiNew = intPKNewField
+                    Return 0
+                End If
+            End If
+
 
         End If
 
@@ -1156,26 +1228,75 @@ ErrorHandler:
 
         Dim intCreatable As Int16
         Dim objdtDebitor As New DataTable
+        Dim strLand As String
+        Dim intLangauage As Int32
         'Dim intPKNewField As Int32
 
         Try
 
             'Angaben einlesen
             objdbconnZHDB02.Open()
-            objsqlcommandZHDB02.CommandText = "SELECT Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_DebiKonto FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
+            objsqlcommandZHDB02.CommandText = "SELECT Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_DebiKonto, Rep_Gruppe, Rep_Vertretung, Rep_Ansprechpartner, Rep_Land, Rep_Tel1, Rep_Fax, Rep_Mail, " +
+                                                "Rep_Language, Rep_Kredi_MWSTNr, Rep_Kreditlimite, Rep_Kred_Pay_Def, Rep_Kred_Bank_Name, Rep_Kred_Bank_PLZ, Rep_Kred_Bank_Ort, Rep_Kred_IBAN, Rep_Kred_Bank_BIC, " +
+                                                "Rep_Kred_Currency FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
             objdtDebitor.Load(objsqlcommandZHDB02.ExecuteReader)
 
             'Gefunden?
             If objdtDebitor.Rows.Count > 0 Then
                 'Debug.Print("Gefunden, kann erstellt werden")
 
+                'Land von Text auf Auto-Kennzeichen ändern
+                Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Land")), "Schweiz", objdtDebitor.Rows(0).Item("Rep_Land"))
+                    Case "Schweiz"
+                        strLand = "CH"
+                    Case "Deutschland"
+                        strLand = "D"
+                    Case "Frankreich"
+                        strLand = "F"
+                    Case "Italien"
+                        strLand = "I"
+                    Case Else
+                        strLand = "NA"
+                End Select
+
+                'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
+                Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Language")), "D", objdtDebitor.Rows(0).Item("Rep_Language"))
+                    Case "D"
+                        intLangauage = 2055
+                    Case "F"
+                        intLangauage = 4108
+                    Case "I"
+                        intLangauage = 2064
+                    Case Else
+                        intLangauage = 2057 'Englisch
+                End Select
+
                 intCreatable = FcCreateDebitor(objDbBhg,
                                           lngDebiNbr,
-                                          objdtDebitor.Rows(0).Item("Rep_Firma"),
-                                          objdtDebitor.Rows(0).Item("Rep_Strasse"),
-                                          objdtDebitor.Rows(0).Item("Rep_PLZ"),
-                                          objdtDebitor.Rows(0).Item("Rep_Ort"),
-                                          objdtDebitor.Rows(0).Item("Rep_DebiKonto"))
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Firma")), "", objdtDebitor.Rows(0).Item("Rep_Firma")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Strasse")), "", objdtDebitor.Rows(0).Item("Rep_Strasse")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_PLZ")), "", objdtDebitor.Rows(0).Item("Rep_PLZ")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Ort")), "", objdtDebitor.Rows(0).Item("Rep_Ort")),
+                                          objdtDebitor.Rows(0).Item("Rep_DebiKonto"),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Gruppe")), "", objdtDebitor.Rows(0).Item("Rep_Gruppe")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Vertretung")), "", objdtDebitor.Rows(0).Item("Rep_Vertretung")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Ansprechpartner")), "", objdtDebitor.Rows(0).Item("Rep_Ansprechpartner")),
+                                          strLand,
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Tel1")), "", objdtDebitor.Rows(0).Item("Rep_Tel1")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Fax")), "", objdtDebitor.Rows(0).Item("Rep_Fax")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Mail")), "", objdtDebitor.Rows(0).Item("Rep_Mail")),
+                                          intLangauage,
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kredi_MWStNr")), "", objdtDebitor.Rows(0).Item("Rep_Kredi_MWStNr")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kreditlimite")), "", objdtDebitor.Rows(0).Item("Rep_Kreditlimite")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Pay_Def")), 0, objdtDebitor.Rows(0).Item("Rep_Kred_Pay_Def")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Name")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Name")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_PLZ")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_PLZ")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Ort")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Ort")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_IBAN")), "", objdtDebitor.Rows(0).Item("Rep_Kred_IBAN")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_BIC")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_BIC")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Currency")), "CHF", objdtDebitor.Rows(0).Item("Rep_Kred_Currency")))
+
+
                 Return 0
             Else
                 Return 4
@@ -1230,24 +1351,51 @@ ErrorHandler:
                                            ByVal strDebStreet As String,
                                            ByVal strDebPLZ As String,
                                            ByVal strDebOrt As String,
-                                           ByVal intDebSammelKto As Int32) As Int16
+                                           ByVal intDebSammelKto As Int32,
+                                           ByVal strGruppe As String,
+                                           ByVal strVertretung As String,
+                                           ByVal strAnsprechpartner As String,
+                                           ByVal strLand As String,
+                                           ByVal strTel As String,
+                                           ByVal strFax As String,
+                                           ByVal strMail As String,
+                                           ByVal intLangauage As Int32,
+                                           ByVal strMwStNr As String,
+                                           ByVal strKreditLimite As String,
+                                           ByVal intPayDefault As Int16,
+                                           ByVal strZVBankName As String,
+                                           ByVal strZVBankPLZ As String,
+                                           ByVal strZVBankOrt As String,
+                                           ByVal strZVIBAN As String,
+                                           ByVal strZVBIC As String,
+                                           ByVal strCurrency As String) As Int16
 
-        Dim strDebCountry As String = "CH"
-        Dim strDebCurrency As String = "CHF"
-        Dim strDebSprachCode As String = "2055"
+        Dim strDebCountry As String = strLand
+        Dim strDebCurrency As String = strCurrency
+        Dim strDebSprachCode As String = intLangauage.ToString
         Dim strDebSperren As String = "N"
         Dim intDebErlKto As Integer = 3200
         Dim shrDebZahlK As Short = 1
         Dim intDebToleranzNbr As Integer = 1
         Dim intDebMahnGroup As Integer = 1
         Dim strDebWerbung As String = "N"
+        Dim strText As String
+        Dim strTelefon1 As String
+        Dim strTelefax As String
 
-        'Debitor erstellen, minimal - Angaben
+        strText = IIf(strGruppe = "", "", "Gruppe: " + strGruppe) + IIf(strVertretung = "" Or "0", "", strText + vbCrLf + "Vertretung: " + strVertretung)
+        strTelefon1 = IIf(strTel = "" Or strTel = "0", "", strTel)
+        strTelefax = IIf(strFax = "" Or strFax = "0", "", strFax)
+
+        'Debitor erstellen
 
         Try
 
-            Call objDbBhg.SetCommonInfo2(intDebitorNewNbr, strDebName, "", strDebStreet, "", "", "", strDebCountry, strDebPLZ, strDebOrt, "", "", "", "", "", strDebCurrency, "", "", "", strDebSprachCode, "")
-            Call objDbBhg.SetExtendedInfo2(strDebSperren, "", intDebSammelKto.ToString, intDebErlKto.ToString, "", "", "", shrDebZahlK.ToString, intDebToleranzNbr.ToString, intDebMahnGroup.ToString, "", "", strDebWerbung, "")
+            Call objDbBhg.SetCommonInfo2(intDebitorNewNbr, strDebName, "", strDebStreet, "", "", "", strDebCountry, strDebPLZ, strDebOrt, strTelefon1, "", strTelefax, strMail, "", strDebCurrency, "", "", strAnsprechpartner, strDebSprachCode, strText)
+            Call objDbBhg.SetExtendedInfo8(strDebSperren, strKreditLimite, intDebSammelKto.ToString, intDebErlKto.ToString, "", "", "", shrDebZahlK.ToString, intDebToleranzNbr.ToString, intDebMahnGroup.ToString, "", "", strDebWerbung, "", "", strMwStNr)
+            If intPayDefault = 9 Then 'IBAN
+                Call objDbBhg.SetZahlungsverbindung("B", "", strZVBankName, "", "", strZVBankPLZ.ToString, strZVBankOrt, Left(strZVIBAN, 2), Mid(strZVIBAN, 5, 5), "J", strZVBIC, "", "", "", strZVIBAN, "")
+            End If
             Call objDbBhg.WriteDebitor3(0)
 
             Return 0

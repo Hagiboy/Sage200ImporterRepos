@@ -79,12 +79,6 @@ Friend Class frmImportMain
 
         Dim strIncrBelNbr As String = ""
 
-        '        Dim booAccOk As Boolean
-        '        Dim strMandant As String
-        '        Dim b As Object
-        '       Dim s As Object
-        '       b = Nothing
-        '       On Error GoTo ErrorHandler
 
         Me.Cursor = Cursors.WaitCursor
 
@@ -98,16 +92,12 @@ Friend Class frmImportMain
 
         Call Main.FcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdtDebitorenSub, objdbConn, objdbAccessConn)
 
-        'Call InitdgvDebitoren()
         Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead, objdtDebitorenHead)
 
         'Grid neu aufbauen
         dgvDebitorenSub.Update()
         dgvDebitoren.Update()
         dgvDebitoren.Refresh()
-        'dgvDebitoren.DataSource = objdtDebitorenHead
-        'Debug.Print(objdtDebitorenHead.Rows.Count.ToString)
-        'Call InitdgvDebitoren()
 
         Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, objdtDebitorenSub, Finanz, FBhg, DbBhg, PIFin, objdbConn, objdbConnZHDB02, objdbcommand, objdbcommandZHDB02, objOracleConn, objOracleCmd)
 
@@ -232,15 +222,18 @@ Friend Class frmImportMain
         dgvDebitoren.Columns("dblDebNetto").HeaderText = "Netto"
         dgvDebitoren.Columns("dblDebNetto").Width = 80
         dgvDebitoren.Columns("dblDebNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvDebitoren.Columns("dblDebNetto").DefaultCellStyle.Format = "N2"
         dgvDebitoren.Columns("dblDebNetto").ReadOnly = True
         dgvDebitoren.Columns("dblDebMwSt").DisplayIndex = 8
         dgvDebitoren.Columns("dblDebMwSt").HeaderText = "MwSt"
         dgvDebitoren.Columns("dblDebMwSt").Width = 70
         dgvDebitoren.Columns("dblDebMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvDebitoren.Columns("dblDebMwSt").DefaultCellStyle.Format = "N2"
         dgvDebitoren.Columns("dblDebBrutto").DisplayIndex = 9
         dgvDebitoren.Columns("dblDebBrutto").HeaderText = "Brutto"
         dgvDebitoren.Columns("dblDebBrutto").Width = 80
         dgvDebitoren.Columns("dblDebBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvDebitoren.Columns("dblDebBrutto").DefaultCellStyle.Format = "N2"
         dgvDebitoren.Columns("intSubBookings").DisplayIndex = 10
         dgvDebitoren.Columns("intSubBookings").HeaderText = "Sub"
         dgvDebitoren.Columns("intSubBookings").Width = 50
@@ -265,7 +258,7 @@ Friend Class frmImportMain
         cmbBuchungsart.Name = "intBuchungsart"
         cmbBuchungsart.DataPropertyName = "intBuchungsart"
         cmbBuchungsart.DisplayIndex = 13
-        cmbBuchungsart.Width = 60
+        cmbBuchungsart.Width = 70
         dgvDebitoren.Columns.Add(cmbBuchungsart)
         'dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
         'dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
@@ -333,7 +326,7 @@ Friend Class frmImportMain
 
         'Subbuchungen ausblenden, kann für Testzwecke aktiviert werden
         dgvDebitorenSub.DataSource = objdtDebitorenSub
-        dgvDebitorenSub.Visible = False
+        'dgvDebitorenSub.Visible = False
 
         'DGV
         dgvDebitoren.DataSource = objdtDebitorenHead
@@ -462,6 +455,10 @@ Friend Class frmImportMain
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
+
+        Finally
+            'Neu aufbauen
+            butDebitoren_Click(butDebitoren, EventArgs.Empty)
 
         End Try
 
