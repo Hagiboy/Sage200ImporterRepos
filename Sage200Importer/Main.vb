@@ -340,17 +340,17 @@ ErrorHandler:
             'Durch die Records steppen und Sub-Tabelle füllen
             For Each row In objdtHead.Rows
                 'Debug.Print(strSQLSub)
-                If row("intBuchungsart") = 1 Then
-                    objdrSub = objdtSub.NewRow()
-                    objdrSub("strRGNr") = row("strDebRGNbr")
-                    objdrSub("intSollHaben") = 2
-                    objdrSub("lngKto") = row("lngDebKtoNbr")
-                    objdrSub("dblBrutto") = row("dblDebBrutto")
-                    objdrSub("dblNetto") = row("dblDebNetto")
-                    objdrSub("dblMwSt") = row("dblDebMwSt")
-                    objdrSub("strDebSubText") = row("Betrifft").ToString + " " + row("betrifft1").ToString
-                    objdtSub.Rows.Add(objdrSub)
-                End If
+                'If row("intBuchungsart") = 1 Then
+                '    objdrSub = objdtSub.NewRow()
+                '    objdrSub("strRGNr") = row("strDebRGNbr")
+                '    objdrSub("intSollHaben") = 2
+                '    objdrSub("lngKto") = row("lngDebKtoNbr")
+                '    objdrSub("dblBrutto") = row("dblDebBrutto")
+                '    objdrSub("dblNetto") = row("dblDebNetto")
+                '    objdrSub("dblMwSt") = row("dblDebMwSt")
+                '    objdrSub("strDebSubText") = row("Betrifft").ToString + " " + row("betrifft1").ToString
+                '    objdtSub.Rows.Add(objdrSub)
+                'End If
                 strSQLSub = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"), objdtHead)
                 If strRGTableType = "A" Then
                     objlocOLEdbcmd.CommandText = strSQLSub
@@ -531,15 +531,19 @@ ErrorHandler:
                     intReturnValue = 2
                 End If
                 strBitLog = Trim(intReturnValue.ToString)
+
                 'Kto 02
                 intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha)
                 strBitLog += Trim(intReturnValue.ToString)
+
                 'Currency 03
                 intReturnValue = FcCheckCurrency(row("strDebCur"), objfiBuha)
                 strBitLog += Trim(intReturnValue.ToString)
+
                 'Sub 04
                 intReturnValue = FcCheckSubBookings(row("strDebRGNbr"), objdtDebitSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha, objdbPIFb, row("intBuchungsart"))
                 strBitLog += Trim(intReturnValue.ToString)
+
                 'Autokorrektur 05
                 booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
                 If booAutoCorrect Then
@@ -550,13 +554,13 @@ ErrorHandler:
                         row("dblDebBrutto") = dblSubBrutto * -1
                         row("dblDebNetto") = dblSubNetto * -1
                         row("dblDebMwSt") = dblSubMwSt * -1
-                        'In Sub korrigieren
-                        selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "' AND intSollHaben=2")
-                        If selsubrow.Length = 1 Then
-                            selsubrow(0).Item("dblBrutto") = dblSubBrutto * -1
-                            selsubrow(0).Item("dblMwSt") = dblSubMwSt * -1
-                            selsubrow(0).Item("dblNetto") = dblSubNetto * -1
-                        End If
+                        ''In Sub korrigieren
+                        'selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "' AND intSollHaben=2")
+                        'If selsubrow.Length = 1 Then
+                        '    selsubrow(0).Item("dblBrutto") = dblSubBrutto * -1
+                        '    selsubrow(0).Item("dblMwSt") = dblSubMwSt * -1
+                        '    selsubrow(0).Item("dblNetto") = dblSubNetto * -1
+                        'End If
                         strBitLog += "1"
                     Else
                         strBitLog += "0"
@@ -564,6 +568,7 @@ ErrorHandler:
                 Else
                     strBitLog += "0"
                 End If
+
                 'Diff Kopf - Sub? 06
                 If row("intBuchungsart") = 1 Then 'OP
                     If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) + dblSubBrutto <> 0 _
@@ -574,7 +579,13 @@ ErrorHandler:
                         strBitLog += "0"
                     End If
                 Else
-                    strBitLog += "0"
+                    'Test ob sub 0
+                    If dblSubBrutto <> 0 Then
+                        strBitLog += "1"
+                    Else
+                        strBitLog += "0"
+                    End If
+
                 End If
                 'OP Kopf balanced? 07
                 intReturnValue = FcCheckBelegHead(row("intBuchungsart"), IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")), IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")), IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")))
@@ -682,6 +693,9 @@ ErrorHandler:
                 strBitLog = ""
                 strStatus = ""
                 intSubNumber = 0
+                dblSubBrutto = 0
+                dblSubNetto = 0
+                dblSubMwSt = 0
 
             Next
 
@@ -886,7 +900,6 @@ ErrorHandler:
         Dim strStatusText As String
         Dim strStrStCodeSage200 As String = ""
         Dim strKstKtrSage200 As String = ""
-        Dim intError As Int16 = 0
         Dim selsubrow() As DataRow
         Dim strStatusOverAll As String = "0000000"
 
@@ -901,7 +914,7 @@ ErrorHandler:
         For Each subrow As DataRow In selsubrow
 
             strBitLog = ""
-            intError = 0
+
             'If subrow("intSollHaben") <> 2 Then
             intSubNumber += 1
             If subrow("intSollHaben") = 1 Then
@@ -921,13 +934,13 @@ ErrorHandler:
                     subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto"))
                 Else
                     subrow("strKtoBez") = "n/a"
-                    intError = 7
+
                 End If
             Else
                 subrow("strKtoBez") = "null"
                 subrow("lngKto") = 0
                 intReturnValue = 1
-                intError = 7
+
             End If
             strBitLog += Trim(intReturnValue.ToString)
 
@@ -938,15 +951,15 @@ ErrorHandler:
                     subrow("strKstBez") = strKstKtrSage200
                 ElseIf intReturnValue = 1 Then
                     subrow("strKstBez") = "KoArt"
-                    intError = 8
+
                 Else
                     subrow("strKstBez") = "n/a"
-                    intError = 8
+
                 End If
             Else
                 subrow("strKstBez") = "null"
-                intReturnValue = 1
-                intError = 8
+                intReturnValue = 0
+
             End If
             strBitLog += Trim(intReturnValue.ToString)
 
@@ -957,19 +970,19 @@ ErrorHandler:
                     subrow("strMwStKey") = strStrStCodeSage200
                 Else
                     subrow("strMwStKey") = "n/a"
-                    intError = 9
+
                 End If
             Else
                 subrow("strMwStKey") = "null"
-                intReturnValue = 1
-                intError = 9
+                intReturnValue = 0
+
             End If
             strBitLog += Trim(intReturnValue.ToString)
 
             'Brutto + MwSt + Netto = 0
             If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 And IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) = 0 And IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
                 strBitLog += "1"
-                intError = 10
+
             Else
                 strBitLog += "0"
             End If
@@ -977,7 +990,7 @@ ErrorHandler:
             'Netto = 0
             If IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) = 0 Then
                 strBitLog += "1"
-                intError = 11
+
             Else
                 strBitLog += "0"
             End If
@@ -985,7 +998,7 @@ ErrorHandler:
             'Brutto = 0
             If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 Then
                 strBitLog += "1"
-                intError = 12
+
             Else
                 strBitLog += "0"
             End If
@@ -993,7 +1006,7 @@ ErrorHandler:
             'Brutto - MwSt <> Netto
             If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) - IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) <> IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
                 strBitLog += "1"
-                intError = 13
+
             Else
                 strBitLog += "0"
             End If
@@ -1048,21 +1061,22 @@ ErrorHandler:
             If Val(strStatusOverAll) > 0 Then
                 Return 1
             Else
-                If intBuchungsArt = 1 Then
-                    'OP - Buchung
-                    If dblSubNetto <> 0 Or dblSubBrutto <> 0 Or dblSubMwSt <> 0 Then 'Diff
-                        Return 2
-                    Else
-                        Return 0
-                    End If
-                Else
-                    'Belegsbuchung 'Nur Brutto 0 - Test
-                    If dblSubBrutto <> 0 Then
-                        Return 3
-                    Else
-                        Return 0
-                    End If
-                End If
+                Return 0
+                'If intBuchungsArt = 1 Then
+                '    'OP - Buchung
+                '    'If dblSubNetto <> 0 Or dblSubBrutto <> 0 Or dblSubMwSt <> 0 Then 'Diff
+                '    'Return 2
+                '    'Else
+                '    Return 0
+                '    'End If
+                'Else
+                '    'Belegsbuchung 'Nur Brutto 0 - Test
+                '    If dblSubBrutto <> 0 Then
+                '        Return 3
+                '    Else
+                '        Return 0
+                '    End If
+                'End If
             End If
         End If
 

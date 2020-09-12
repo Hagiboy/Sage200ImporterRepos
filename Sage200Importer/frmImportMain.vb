@@ -367,8 +367,18 @@ Friend Class frmImportMain
         Dim strBeBuEintrag As String
         Dim strSteuerFeld As String
 
-        Dim selDebiSub() As DataRow
+        Dim intSollKonto As Int32
+        Dim intHabenKonto As Int32
+        Dim dblSollBetrag As Double
+        Dim dblHabenBetrag As Double
+        Dim strSteuerFeldSoll As String = ""
+        Dim strSteuerFeldHaben As String = ""
+        Dim strBeBuEintragSoll As String = ""
+        Dim strBeBuEintragHaben As String = ""
+        Dim strDebiTextSoll As String = ""
+        Dim strDebiTextHaben As String = ""
 
+        Dim selDebiSub() As DataRow
 
         Try
 
@@ -405,13 +415,13 @@ Friend Class frmImportMain
                         dblBetrag = row("dblDebBrutto")
                         dblKurs = 1.0#
                         strDebiText = row("strDebText")
-                        strCurrency = "CHF"
+                        strCurrency = row("strDebCur")
 
                         Call DbBhg.SetBelegKopf2(intDebBelegsNummer, strValutaDatum, intDebitorNbr, strBuchType, strBelegDatum, strVerfallDatum, strDebiText, strReferenz, intKondition, strSachBID, strVerkID, strMahnerlaubnis, sngAktuelleMahnstufe, dblBetrag.ToString, dblKurs.ToString, strExtBelegNbr, strSkonto, strCurrency)
 
-                        selDebiSub = objdtDebitorenSub.Select("strRGNr='" + row("strDebRGNbr") + "' AND intSollHaben<>2")
+                        selDebiSub = objdtDebitorenSub.Select("strRGNr='" + row("strDebRGNbr") + "'")
 
-                        For Each SubRow In selDebiSub
+                        For Each SubRow As DataRow In selDebiSub
 
                             intGegenKonto = SubRow("lngKto")
                             strFibuText = SubRow("strDebSubText")
@@ -433,6 +443,60 @@ Friend Class frmImportMain
 
                         'Buchung nur in Fibu
                         'Prinzip Funktion WriteBuchung() anwenden mit allen Parametern
+                        'Beleg-Nummerierung aktivieren
+                        DbBhg.IncrBelNbr = "J"
+                        'Belegsnummer abholen
+                        intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+
+                        'Variablen zuweisen
+                        strBelegDatum = Format(row("datDebRGDatum"), "yyyyMMdd").ToString
+                        strValutaDatum = Format(row("datDebValDatum"), "yyyyMMdd").ToString
+                        'strDebiText = row("strDebText")
+                        strCurrency = row("strDebCur")
+                        dblKurs = 1.0#
+
+                        selDebiSub = objdtDebitorenSub.Select("strRGNr='" + row("strDebRGNbr") + "'")
+
+                        If selDebiSub.Length = 2 Then
+
+                            For Each SubRow As DataRow In selDebiSub
+
+                                If SubRow("intSollHaben") = 0 Then 'Soll
+
+                                    intSollKonto = SubRow("lngKto")
+                                    dblSollBetrag = SubRow("dblNetto")
+                                    strDebiTextSoll = SubRow("strArtikel")
+                                    strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextSoll, SubRow("dblBrutto"), SubRow("strMwStKey"))
+                                    strBeBuEintragSoll = SubRow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+
+
+                                ElseIf SubRow("intSollHaben") = 1 Then 'Haben
+
+                                    intHabenKonto = SubRow("lngKto")
+                                    dblHabenBetrag = SubRow("dblNetto")
+                                    strDebiTextHaben = SubRow("strArtikel")
+                                    strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto"), SubRow("strMwStKey"))
+                                    strBeBuEintragHaben = SubRow("lngKST").ToString + "{<}" + strDebiTextHaben + "{<}" + "CALCULATE" + "{>}"
+
+                                Else
+
+                                    MsgBox("Nicht definierter Wert Sub-Buchungs-SollHaben: " + SubRow("intSollHaben").ToString)
+
+                                End If
+
+                            Next
+
+                            'Buchung ausführen
+                            Call FBhg.WriteBuchung(0, intDebBelegsNummer, strBelegDatum,
+                                                   intSollKonto.ToString, strDebiTextSoll, strCurrency, dblKurs.ToString, dblSollBetrag.ToString, strSteuerFeldSoll,
+                                                   intHabenKonto.ToString, strDebiTextHaben, strCurrency, dblKurs.ToString, dblHabenBetrag.ToString, strSteuerFeldHaben,
+                                                   strCurrency, dblKurs.ToString, row("dblDebNetto").ToString, row("dblDebNetto").ToString, strBeBuEintragSoll, strBeBuEintragHaben, strValutaDatum)
+
+                        Else
+                            MsgBox("Nicht 2 Subbuchungen.")
+                        End If
+
+
 
                     End If
 
