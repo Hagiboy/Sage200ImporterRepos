@@ -533,7 +533,7 @@ ErrorHandler:
                 strBitLog = Trim(intReturnValue.ToString)
 
                 'Kto 02
-                intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha)
+                intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha, row("dblDebMwSt"))
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Currency 03
@@ -682,12 +682,13 @@ ErrorHandler:
                 booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecial", intAccounting) = "0", False, True)
                 If booDiffSubText Then
                     strDebiSubText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits)
-                    selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
-                    For Each subrow In selsubrow
-                        subrow("strDebSubText") = strDebiSubText
-                    Next
-
+                Else
+                    strDebiSubText = row("strDebText")
                 End If
+                selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
+                For Each subrow In selsubrow
+                    subrow("strDebSubText") = strDebiSubText
+                Next
 
                 'Init
                 strBitLog = ""
@@ -842,7 +843,7 @@ ErrorHandler:
             objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
 
             If objlocdtMwSt.Rows.Count = 0 Then
-                MessageBox.Show("MwSt " + strStrCode + " ist nicht definiert.")
+                MessageBox.Show("MwSt " + strStrCode + " ist nicht definiert für " + dblStrWert.ToString + ".")
                 Return 1
             Else
                 'In Sage 200 suchen
@@ -929,9 +930,11 @@ ErrorHandler:
 
             'Konto prüfen
             If Not IsDBNull(subrow("lngKto")) Then
-                intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg)
+                intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, subrow("dblMwSt"))
                 If intReturnValue = 0 Then
                     subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto"))
+                ElseIf intReturnValue = 2 Then
+                    subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " MwSt!"
                 Else
                     subrow("strKtoBez") = "n/a"
 
@@ -1015,7 +1018,11 @@ ErrorHandler:
             strStatusText = ""
             'Konto
             If Left(strBitLog, 1) <> "0" Then
-                strStatusText = "Kto"
+                If Left(strBitLog, 1) = "2" Then
+                    strStatusText = "Kto MwSt"
+                Else
+                    strStatusText = "Kto"
+                End If
             End If
             'Kst/Ktr
             If Mid(strBitLog, 2, 1) <> "0" Then
@@ -1454,15 +1461,28 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcCheckKonto(ByVal lngKtoNbr As Long, ByRef objfiBuha As SBSXASLib.AXiFBhg) As Integer
+    Public Shared Function FcCheckKonto(ByVal lngKtoNbr As Long, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByVal dblMwSt As Double) As Integer
+
+        'Returns 0=ok, 1=existiert nicht, 2=existiert aber keine Steuern
 
         Dim strReturn As String
+        Dim strKontoInfo() As String
 
         strReturn = objfiBuha.GetKontoInfo(lngKtoNbr.ToString)
         If strReturn = "EOF" Then
             Return 1
         Else
-            Return 0
+            If dblMwSt = 0 Then
+                Return 0
+            Else
+                'Steuerpflichtig?
+                strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
+                If strKontoInfo(26) = "" Then
+                    Return 2
+                Else
+                    Return 0
+                End If
+            End If
         End If
 
     End Function

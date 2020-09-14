@@ -287,11 +287,11 @@ Friend Class frmImportMain
         dgvDebitoren.Columns("booLinked").Visible = False
         dgvDebitoren.Columns("strRGName").Visible = False
         dgvDebitoren.Columns("strDebIdentnbr2").Visible = False
-        dgvDebitoren.Columns("strDebText").Visible = False
+        'dgvDebitoren.Columns("strDebText").Visible = False
         dgvDebitoren.Columns("strRGBemerkung").Visible = False
         dgvDebitoren.Columns("strDebRef").Visible = False
         dgvDebitoren.Columns("strZahlBed").Visible = False
-        dgvDebitoren.Columns("strDebStatusBitLog").Visible = False
+        'dgvDebitoren.Columns("strDebStatusBitLog").Visible = False
         dgvDebitoren.Columns("strDebBookStatus").Visible = False
         dgvDebitoren.Columns("booBooked").Visible = False
         dgvDebitoren.Columns("datBooked").Visible = False
@@ -379,6 +379,7 @@ Friend Class frmImportMain
         Dim strDebiTextHaben As String = ""
 
         Dim selDebiSub() As DataRow
+        Dim strSteuerInfo() As String
 
         Try
 
@@ -429,6 +430,9 @@ Friend Class frmImportMain
                             dblBebuBetrag = 1000.0#
                             strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
                             strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                            strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
+                            Debug.Print("Konto-Info: " + strSteuerInfo(26))
+
 
                             Call DbBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
 
@@ -444,9 +448,9 @@ Friend Class frmImportMain
                         'Buchung nur in Fibu
                         'Prinzip Funktion WriteBuchung() anwenden mit allen Parametern
                         'Beleg-Nummerierung aktivieren
-                        DbBhg.IncrBelNbr = "J"
+                        'DbBhg.IncrBelNbr = "J"
                         'Belegsnummer abholen
-                        intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                        intDebBelegsNummer = FBhg.GetNextBelNbr()
 
                         'Variablen zuweisen
                         strBelegDatum = Format(row("datDebRGDatum"), "yyyyMMdd").ToString
@@ -464,19 +468,32 @@ Friend Class frmImportMain
                                 If SubRow("intSollHaben") = 0 Then 'Soll
 
                                     intSollKonto = SubRow("lngKto")
+                                    'strSteuerInfo = Split(FBhg.GetKontoInfo(intSollKonto.ToString), "{>}")
+                                    'Debug.Print("Konto-Info Soll: " + strSteuerInfo(26))
                                     dblSollBetrag = SubRow("dblNetto")
-                                    strDebiTextSoll = SubRow("strArtikel")
-                                    strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextSoll, SubRow("dblBrutto"), SubRow("strMwStKey"))
-                                    strBeBuEintragSoll = SubRow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                                    strDebiTextSoll = SubRow("strDebSubText")
+                                    If SubRow("dblMwSt") > 0 Then
+                                        strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextSoll, SubRow("dblBrutto"), SubRow("strMwStKey"))
+                                    End If
+                                    If SubRow("lngKST") > 0 Then
+                                        strBeBuEintragSoll = SubRow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                                    End If
 
 
                                 ElseIf SubRow("intSollHaben") = 1 Then 'Haben
 
                                     intHabenKonto = SubRow("lngKto")
-                                    dblHabenBetrag = SubRow("dblNetto")
-                                    strDebiTextHaben = SubRow("strArtikel")
-                                    strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto"), SubRow("strMwStKey"))
-                                    strBeBuEintragHaben = SubRow("lngKST").ToString + "{<}" + strDebiTextHaben + "{<}" + "CALCULATE" + "{>}"
+                                    'strSteuerInfo = Split(FBhg.GetKontoInfo(intSollKonto.ToString), "{>}")
+                                    'Debug.Print("Konto-Info Haben: " + strSteuerInfo(26))
+                                    'dblHabenBetrag = SubRow("dblNetto")
+                                    dblHabenBetrag = dblSollBetrag
+                                    strDebiTextHaben = SubRow("strDebSubText")
+                                    If SubRow("dblMwSt") > 0 Then
+                                        strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto"), SubRow("strMwStKey"))
+                                    End If
+                                    If SubRow("lngKST") > 0 Then
+                                        strBeBuEintragHaben = SubRow("lngKST").ToString + "{<}" + strDebiTextHaben + "{<}" + "CALCULATE" + "{>}"
+                                    End If
 
                                 Else
 
