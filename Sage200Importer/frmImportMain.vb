@@ -485,8 +485,8 @@ Friend Class frmImportMain
                                     intHabenKonto = SubRow("lngKto")
                                     'strSteuerInfo = Split(FBhg.GetKontoInfo(intSollKonto.ToString), "{>}")
                                     'Debug.Print("Konto-Info Haben: " + strSteuerInfo(26))
-                                    'dblHabenBetrag = SubRow("dblNetto")
-                                    dblHabenBetrag = dblSollBetrag
+                                    dblHabenBetrag = SubRow("dblNetto")
+                                    'dblHabenBetrag = dblSollBetrag
                                     strDebiTextHaben = SubRow("strDebSubText")
                                     If SubRow("dblMwSt") > 0 Then
                                         strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto"), SubRow("strMwStKey"))
@@ -503,11 +503,18 @@ Friend Class frmImportMain
 
                             Next
 
+                            'Tieferer Betrag für die Gesamt-Buchung herausfinden
+                            If dblSollBetrag <= dblHabenBetrag Then
+                                dblNettoBetrag = dblSollBetrag
+                            ElseIf dblHabenBetrag < dblSollBetrag Then
+                                dblNettoBetrag = dblHabenBetrag
+                            End If
+
                             'Buchung ausführen
                             Call FBhg.WriteBuchung(0, intDebBelegsNummer, strBelegDatum,
-                                                   intSollKonto.ToString, strDebiTextSoll, strCurrency, dblKurs.ToString, dblSollBetrag.ToString, strSteuerFeldSoll,
-                                                   intHabenKonto.ToString, strDebiTextHaben, strCurrency, dblKurs.ToString, dblHabenBetrag.ToString, strSteuerFeldHaben,
-                                                   strCurrency, dblKurs.ToString, row("dblDebNetto").ToString, row("dblDebNetto").ToString, strBeBuEintragSoll, strBeBuEintragHaben, strValutaDatum)
+                                                   intSollKonto.ToString, strDebiTextSoll, strCurrency, dblKurs.ToString, dblNettoBetrag.ToString, strSteuerFeldSoll,
+                                                   intHabenKonto.ToString, strDebiTextHaben, strCurrency, dblKurs.ToString, dblNettoBetrag.ToString, strSteuerFeldHaben,
+                                                   strCurrency, dblKurs.ToString, dblNettoBetrag.ToString, dblNettoBetrag.ToString, strBeBuEintragSoll, strBeBuEintragHaben, strValutaDatum)
 
                         Else
                             MsgBox("Nicht 2 Subbuchungen.")
@@ -524,7 +531,7 @@ Friend Class frmImportMain
                     row("lngBelegNr") = intDebBelegsNummer
 
                     'Status in File RG-Tabelle schreiben
-                    intReturnValue = Main.FcWriteToRGTable(cmbBuha.SelectedValue, row("strDebRGNbr"), row("datBooked"), row("lngBelegNr"), objdbAccessConn)
+                    intReturnValue = Main.FcWriteToRGTable(cmbBuha.SelectedValue, row("strDebRGNbr"), row("datBooked"), row("lngBelegNr"), objdbAccessConn, objOracleConn, objdbConn)
                     If intReturnValue <> 0 Then
                         'Throw an exception
                     End If

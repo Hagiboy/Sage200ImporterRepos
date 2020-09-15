@@ -622,10 +622,14 @@ ErrorHandler:
                 End If
                 'Konto
                 If Mid(strBitLog, 2, 1) <> "0" Then
-                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Kto"
+                    If Mid(strBitLog, 2, 1) <> 2 Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Kto"
+                    Else
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Kto MwSt"
+                    End If
                     row("strDebKtoBez") = "n/a"
-                Else
-                    row("strDebKtoBez") = FcReadDebitorKName(objfiBuha, row("lngDebKtoNbr"))
+                    Else
+                        row("strDebKtoBez") = FcReadDebitorKName(objfiBuha, row("lngDebKtoNbr"))
                 End If
                 'Währung
                 If Mid(strBitLog, 3, 1) <> "0" Then
@@ -1472,17 +1476,17 @@ ErrorHandler:
         If strReturn = "EOF" Then
             Return 1
         Else
-            If dblMwSt = 0 Then
-                Return 0
-            Else
-                'Steuerpflichtig?
-                strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
-                If strKontoInfo(26) = "" Then
-                    Return 2
-                Else
-                    Return 0
-                End If
-            End If
+            'If dblMwSt = 0 Then
+            Return 0
+            'Else
+            'Steuerpflichtig?
+            'strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
+            'If strKontoInfo(26) = "" Then
+            'Return 2
+            'Else
+            'Return 0
+            'End If
+            'End If
         End If
 
     End Function
@@ -1533,30 +1537,80 @@ ErrorHandler:
         End Try
     End Function
 
-    Public Shared Function FcWriteToRGTable(ByVal intMandant As Int32, ByVal strRGNbr As String, ByVal datDate As Date, ByVal intBelegNr As Int32, ByRef objdbAccessConn As OleDb.OleDbConnection) As Int16
+    Public Shared Function FcWriteToRGTable(ByVal intMandant As Int32, ByVal strRGNbr As String, ByVal datDate As Date, ByVal intBelegNr As Int32, ByRef objdbAccessConn As OleDb.OleDbConnection, ByRef objOracleConn As OracleConnection, ByRef objMySQLConn As MySqlConnection) As Int16
 
         'Returns 0=ok, 1=Problem
 
         Dim strSQL As String
         Dim intAffected As Int16
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
+        Dim objlocOracmd As New OracleCommand
+        Dim objlocMySQLRGConn As New MySqlConnection
+        Dim objlocMySQLRGcmd As New MySqlCommand
+        Dim strNameRGTable As String
+        Dim strBelegNrName As String
+        Dim strRGNbrFieldName As String
+        Dim strRGTableType As String
+        Dim strMDBName As String
+        Dim strdbProvider, strdbSource, strdbPathAndFile As String
 
-        strSQL = "UPDATE Tab_Sesam_Europeans SET gebucht=true, gebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, Beleg=" + intBelegNr.ToString + " WHERE RGNrOrig=" + strRGNbr
+
+        objMySQLConn.Open()
+
+        strMDBName = FcReadFromSettings(objMySQLConn, "Buchh_RGTableMDB", intMandant)
+        strRGTableType = FcReadFromSettings(objMySQLConn, "Buchh_RGTableType", intMandant)
+        strNameRGTable = FcReadFromSettings(objMySQLConn, "Buchh_TableDeb", intMandant)
+        strBelegNrName = FcReadFromSettings(objMySQLConn, "Buchh_TableRGBelegNrName", intMandant)
+        strRGNbrFieldName = FcReadFromSettings(objMySQLConn, "Buchh_TableRGNbrFieldName", intMandant)
+        'strSQL = "UPDATE " + strNameRGTable + " SET gebucht=true, gebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "=" + intBelegNr.ToString + " WHERE " + strRGNbrFieldName + "=" + strRGNbr
 
         Try
 
-            objdbAccessConn.Open()
+            If strRGTableType = "A" Then
+                'Access
+                strdbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
+                strdbSource = "Data Source="
+                strdbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+                strSQL = "UPDATE " + strNameRGTable + " SET gebucht=true, gebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "=" + intBelegNr.ToString + " WHERE " + strRGNbrFieldName + "=" + strRGNbr
 
-            objlocOLEdbcmd.CommandText = strSQL
+                objdbAccessConn.ConnectionString = strdbProvider + strdbSource + strdbPathAndFile
+                objdbAccessConn.Open()
 
-            objlocOLEdbcmd.Connection = objdbAccessConn
-            intAffected = objlocOLEdbcmd.ExecuteNonQuery()
-            objdbAccessConn.Close()
+                objlocOLEdbcmd.CommandText = strSQL
+
+                objlocOLEdbcmd.Connection = objdbAccessConn
+                intAffected = objlocOLEdbcmd.ExecuteNonQuery()
+
+            ElseIf strRGTableType = "M" Then
+                'MySQL
+                strSQL = "UPDATE " + strNameRGTable + " SET gebucht=true, gebuchtDatum=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " + strBelegNrName + "=" + intBelegNr.ToString + " WHERE " + strRGNbrFieldName + "=" + strRGNbr
+                objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                objlocMySQLRGConn.Open()
+                objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                objlocMySQLRGcmd.CommandText = strSQL
+                intAffected = objlocMySQLRGcmd.ExecuteNonQuery()
+
+
+            End If
+
             Return 0
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
             Return 1
+
+        Finally
+            If objdbAccessConn.State = ConnectionState.Open Then
+                objdbAccessConn.Close()
+            End If
+
+            If objlocMySQLRGConn.State = ConnectionState.Open Then
+                objlocMySQLRGConn.Close()
+            End If
+
+            If objMySQLConn.State = ConnectionState.Open Then
+                objMySQLConn.Close()
+            End If
 
         End Try
 
