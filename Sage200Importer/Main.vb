@@ -519,7 +519,9 @@ ErrorHandler:
             objdbconn.Open()
             objOrdbconn.Open()
 
-            For Each row In objdtDebits.Rows
+            For Each row As DataRow In objdtDebits.Rows
+
+                'If row("strDebRGNbr") = "54697" Then Stop
 
                 'Status-String erstellen
                 'Debitor 01
@@ -628,8 +630,8 @@ ErrorHandler:
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Kto MwSt"
                     End If
                     row("strDebKtoBez") = "n/a"
-                    Else
-                        row("strDebKtoBez") = FcReadDebitorKName(objfiBuha, row("lngDebKtoNbr"))
+                Else
+                    row("strDebKtoBez") = FcReadDebitorKName(objfiBuha, row("lngDebKtoNbr"))
                 End If
                 'Währung
                 If Mid(strBitLog, 3, 1) <> "0" Then
@@ -1275,11 +1277,13 @@ ErrorHandler:
                     Case "Schweiz"
                         strLand = "CH"
                     Case "Deutschland"
-                        strLand = "D"
+                        strLand = "DE"
                     Case "Frankreich"
-                        strLand = "F"
+                        strLand = "FR"
                     Case "Italien"
-                        strLand = "I"
+                        strLand = "IT"
+                    Case "Österreich"
+                        strLand = "AT"
                     Case Else
                         strLand = "NA"
                 End Select
@@ -1448,9 +1452,12 @@ ErrorHandler:
 
         Call objfiBuha.ReadWhg()
 
+        'If strCurrency = "EUR" Then Stop
+
         strReturn = objfiBuha.GetWhgZeile()
         Do While strReturn <> "EOF"
             If Left(strReturn, 3) = strCurrency Then
+                'If strCurrency = "EUR" Then Stop
                 booFoundCurrency = True
             End If
             strReturn = objfiBuha.GetWhgZeile()
@@ -1706,5 +1713,39 @@ ErrorHandler:
 
     End Function
 
+    Public Shared Function FcGetKurs(ByVal strCurrency As String, ByVal strDateValuta As String, ByRef objFBhg As SBSXASLib.AXiFBhg, ByVal Optional intKonto As Integer = 0) As Double
+
+        'Konzept: Falls ein Konto mitgegeben wird, wird überprüft ob auf dem Konto die mitgegebene Währung Leitwärhung ist. Falls ja wird der Kurs 1 zurück gegeben
+
+        Dim strKursZeile As String = ""
+        Dim strKursZeileAr() As String
+        Dim strKontoInfo() As String
+
+        objFBhg.ReadKurse(strCurrency, "", "J")
+
+        Do While strKursZeile <> "EOF"
+            strKursZeile = objFBhg.GetKursZeile()
+            If strKursZeile <> "EOF" Then
+                strKursZeileAr = Split(strKursZeile, "{>}")
+                If strKursZeileAr(0) = strCurrency Then
+                    If strKursZeileAr(0) = "EUR" Then Stop
+                    'Prüfen ob Currency Leitwährung auf Konto. Falls ja Return 1
+                    If intKonto <> 0 Then
+                        strKontoInfo = Split(objFBhg.GetKontoInfo(intKonto.ToString), "{>}")
+                        If strKontoInfo(7) = strCurrency Then
+                            Return 1
+                        Else
+                            Return strKursZeileAr(4)
+                        End If
+                    Else
+                        Return strKursZeileAr(4)
+                    End If
+                End If
+            Else
+                Return 1 'Kurs nicht gefunden
+            End If
+        Loop
+
+    End Function
 
 End Class
