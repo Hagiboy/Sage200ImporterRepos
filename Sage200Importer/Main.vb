@@ -241,11 +241,19 @@ Friend NotInheritable Class Main
         objdbconn.Close()
         booAccOk = objFinanz.CheckMandant(strMandant)
 
+        'Open Mandantg
+        objFinanz.OpenMandant(strMandant, "")
+
         'Check Periode
         booAccOk = objFinanz.CheckPeriode(strMandant, "2020")
+        Dim intPeriodenNr As Int16
+        Dim strPeriodenInfo As String
+        intPeriodenNr = objFinanz.ReadPeri("ZZ", "")
+        For intLooper As Int16 = 0 To intPeriodenNr
+            strPeriodenInfo = objFinanz.GetPeriListe(intLooper)
+            strPeriodenInfo = objFinanz.GetResource(intLooper)
+        Next
 
-        'Open Mandantg
-        objFinanz.OpenMandant(strMandant, "2020")
 
         If b = 0 Then GoTo isOk
         b = b - 200
@@ -521,7 +529,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "54697" Then Stop
+                'If row("strDebRGNbr") = "45145" Then Stop
 
                 'Status-String erstellen
                 'Debitor 01
@@ -936,7 +944,7 @@ ErrorHandler:
 
             'Konto prüfen
             If Not IsDBNull(subrow("lngKto")) Then
-                intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, subrow("dblMwSt"))
+                intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")))
                 If intReturnValue = 0 Then
                     subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto"))
                 ElseIf intReturnValue = 2 Then

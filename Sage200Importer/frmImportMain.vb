@@ -162,19 +162,19 @@ Friend Class frmImportMain
 
         'MsgBox("OpenMandant:" & Chr(13) & Chr(10) & "Funktionierte")
         'in Cells ToolTip setzen
-        Dim ToolTipAr() As DataRow
-        For Each row In dgvDebitoren.Rows
-            row.Cells(0).ToolTipText = objdtDebitorenSub.Columns("strRGNr").Caption + vbTab + objdtDebitorenSub.Columns("intSollHaben").Caption + vbTab + objdtDebitorenSub.Columns("lngKto").Caption + vbTab +
-                objdtDebitorenSub.Columns("strKtoBez").Caption + vbTab + objdtDebitorenSub.Columns("lngKST").Caption + vbTab + objdtDebitorenSub.Columns("strKSTBez").Caption + vbTab + objdtDebitorenSub.Columns("dblNetto").Caption +
-                vbTab + objdtDebitorenSub.Columns("dblMwSt").Caption + vbTab + objdtDebitorenSub.Columns("dblBrutto").Caption + vbTab + objdtDebitorenSub.Columns("lngMwStSatz").Caption +
-                vbTab + objdtDebitorenSub.Columns("strDebSubText").Caption + "/ " + objdtDebitorenSub.Columns("strStatusUBText").Caption
-            ToolTipAr = objdtDebitorenSub.Select("strRGNr='" + row.Cells(0).Value + "' AND intSollHaben<2")
-            For Each ttrow In ToolTipAr
-                row.Cells(0).ToolTipText = row.Cells(0).ToolTipText + vbCrLf + ttrow("strRGNr") + vbTab + ttrow("intSollHaben").ToString + vbTab + ttrow("lngKto").ToString + vbTab + ttrow("strKtoBez") + vbTab + ttrow("lngKST").ToString +
-                    vbTab + ttrow("strKSTBez") + vbTab + ttrow("dblNetto").ToString + vbTab + ttrow("dblMwSt").ToString + vbTab + ttrow("dblBrutto").ToString + vbTab + ttrow("lngMwStSatz").ToString + vbTab + ttrow("strDebSubText") +
-                    "/ " + ttrow("strStatusUBText")
-            Next
-        Next
+        'Dim ToolTipAr() As DataRow
+        'For Each row In dgvDebitoren.Rows
+        '    row.Cells(0).ToolTipText = objdtDebitorenSub.Columns("strRGNr").Caption + vbTab + objdtDebitorenSub.Columns("intSollHaben").Caption + vbTab + objdtDebitorenSub.Columns("lngKto").Caption + vbTab +
+        '        objdtDebitorenSub.Columns("strKtoBez").Caption + vbTab + objdtDebitorenSub.Columns("lngKST").Caption + vbTab + objdtDebitorenSub.Columns("strKSTBez").Caption + vbTab + objdtDebitorenSub.Columns("dblNetto").Caption +
+        '        vbTab + objdtDebitorenSub.Columns("dblMwSt").Caption + vbTab + objdtDebitorenSub.Columns("dblBrutto").Caption + vbTab + objdtDebitorenSub.Columns("lngMwStSatz").Caption +
+        '        vbTab + objdtDebitorenSub.Columns("strDebSubText").Caption + "/ " + objdtDebitorenSub.Columns("strStatusUBText").Caption
+        '    ToolTipAr = objdtDebitorenSub.Select("strRGNr='" + row.Cells(0).Value + "' AND intSollHaben<2")
+        '    For Each ttrow In ToolTipAr
+        '        row.Cells(0).ToolTipText = row.Cells(0).ToolTipText + vbCrLf + ttrow("strRGNr") + vbTab + ttrow("intSollHaben").ToString + vbTab + ttrow("lngKto").ToString + vbTab + ttrow("strKtoBez") + vbTab + ttrow("lngKST").ToString +
+        '            vbTab + ttrow("strKSTBez") + vbTab + ttrow("dblNetto").ToString + vbTab + ttrow("dblMwSt").ToString + vbTab + ttrow("dblBrutto").ToString + vbTab + ttrow("lngMwStSatz").ToString + vbTab + ttrow("strDebSubText") +
+        '            "/ " + ttrow("strStatusUBText")
+        '    Next
+        'Next
         Me.Cursor = Cursors.Default
         Exit Sub
 
@@ -355,8 +355,8 @@ Friend Class frmImportMain
         Dim sngAktuelleMahnstufe As Single
         Dim dblBetrag As Double
         Dim dblKurs As Double
-        Dim strExtBelegNbr As String
-        Dim strSkonto As String
+        Dim strExtBelegNbr As String = ""
+        Dim strSkonto As String = ""
         Dim strCurrency As String
         Dim strDebiText As String
 
@@ -395,16 +395,24 @@ Friend Class frmImportMain
                     'Test ob OP - Buchung
                     If row("intBuchungsart") = 1 Then
 
-                        If IsDBNull(row("strOPNr")) Or row("strOPNr") = "" Then
-                            'Zuerst Beleg-Nummerieungung aktivieren
-                            DbBhg.IncrBelNbr = "J"
-                            'Belegsnummer abholen
-                            intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
-                        Else
-                            'Beleg-Nummerierung abschalten
-                            DbBhg.IncrBelNbr = "N"
-                            intDebBelegsNummer = row("strOPNr")
-                            'strExtBelegNbr = row("strOPNr")
+                        'Immer zuerst Belegs-Nummerierung aktivieren, falls vorhanden externe Nummer = OP - Nr. Rg
+                        'Resultat Besprechnung 17.09.20 mit Muhi/ Andy
+                        DbBhg.IncrBelNbr = "J"
+                        'Belegsnummer abholen
+                        intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+
+                        If Not IsDBNull(row("strOPNr")) Or row("strOPNr") <> "" Then
+                            strExtBelegNbr = row("strOPNr")
+
+                            '    'Zuerst Beleg-Nummerieungung aktivieren
+                            '    DbBhg.IncrBelNbr = "J"
+                            '    'Belegsnummer abholen
+                            '    intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                            'Else
+                            '    'Beleg-Nummerierung abschalten
+                            '    DbBhg.IncrBelNbr = "N"
+                            '    intDebBelegsNummer = row("strOPNr")
+                            '    'strExtBelegNbr = row("strOPNr")
                         End If
 
                         'Variablen zuweisen
@@ -453,8 +461,8 @@ Friend Class frmImportMain
                             'dblBebuBetrag = 1000.0#
                             strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
                             strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
-                            strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
-                            Debug.Print("Konto-Info: " + strSteuerInfo(26))
+                            'strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
+                            'Debug.Print("Konto-Info: " + strSteuerInfo(26))
 
 
                             Call DbBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
@@ -597,6 +605,13 @@ Friend Class frmImportMain
             End If
 
         End If
+
+    End Sub
+
+    Private Sub dgvDebitoren_DoubleClick(sender As Object, e As EventArgs) Handles dgvDebitoren.DoubleClick
+
+        'Sub-Grid zeigen, vorher mit Datne abfüllen
+
 
     End Sub
 

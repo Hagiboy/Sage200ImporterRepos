@@ -30,9 +30,11 @@ Partial Class frmImportMain
         Me.dgvDebitoren = New System.Windows.Forms.DataGridView()
         Me.butImport = New System.Windows.Forms.Button()
         Me.dgvDebitorenSub = New System.Windows.Forms.DataGridView()
+        Me.dgvDebSubActual = New System.Windows.Forms.DataGridView()
         Me.GroupBox1.SuspendLayout()
         CType(Me.dgvDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvDebitorenSub, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvDebSubActual, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'cmbBuha
@@ -111,11 +113,21 @@ Partial Class frmImportMain
         Me.dgvDebitorenSub.Size = New System.Drawing.Size(884, 128)
         Me.dgvDebitorenSub.TabIndex = 5
         '
+        'dgvDebSubActual
+        '
+        Me.dgvDebSubActual.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvDebSubActual.Location = New System.Drawing.Point(471, 24)
+        Me.dgvDebSubActual.Name = "dgvDebSubActual"
+        Me.dgvDebSubActual.Size = New System.Drawing.Size(757, 101)
+        Me.dgvDebSubActual.TabIndex = 6
+        Me.dgvDebSubActual.Visible = False
+        '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1637, 603)
+        Me.Controls.Add(Me.dgvDebSubActual)
         Me.Controls.Add(Me.dgvDebitorenSub)
         Me.Controls.Add(Me.butImport)
         Me.Controls.Add(Me.dgvDebitoren)
@@ -127,6 +139,7 @@ Partial Class frmImportMain
         Me.GroupBox1.ResumeLayout(False)
         CType(Me.dgvDebitoren, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvDebitorenSub, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvDebSubActual, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -140,4 +153,5 @@ Partial Class frmImportMain
     Friend WithEvents dgvDebitoren As DataGridView
     Friend WithEvents butImport As Button
     Friend WithEvents dgvDebitorenSub As DataGridView
+    Friend WithEvents dgvDebSubActual As DataGridView
 End Class
