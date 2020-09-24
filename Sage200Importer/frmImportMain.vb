@@ -3,6 +3,7 @@ Option Explicit On
 
 Imports MySql.Data.MySqlClient
 Imports System.Data.OracleClient
+Imports System.Data.SqlClient
 'Imports System.Data.OleDb
 
 
@@ -29,9 +30,11 @@ Friend Class frmImportMain
 
     Public objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
     Public objdbConnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+    Public objdbMSSQLConn As New SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
     Public objdbAccessConn As New OleDb.OleDbConnection
     Public objdbcommand As New MySqlCommand
     Public objdbcommandZHDB02 As New MySqlCommand
+    Public objdbSQLcommand As New SqlCommand
     Public objDABuchhaltungen As New MySqlDataAdapter("SELECT * FROM buchhaltungen WHERE NOT Buchh200_Name IS NULL", objdbConn)
     'Public objDACarsGrid As New MySqlDataAdapter("SELECT tblcars.idCar, tblunits.strUnit, tblplates.strPlate, tblcars.strVIN, tblmodelle.strModell FROM tblcars LEFT JOIN tblunits ON tblcars.refUnit = tblunits.idUnit LEFT JOIN tblplates ON tblcars.refPlate = tblplates.idPlate LEFT JOIN tblmodelle ON tblcars.refModell = tblmodelle.idModell", objdbConn)
     'Public objdtDebitor As New DataTable("tbliDebitor")
@@ -39,6 +42,7 @@ Friend Class frmImportMain
     Public objdtDebitorenHead As New DataTable("tbliDebiHead")
     Public objdtDebitorenHeadRead As New DataTable("tbliDebitorenHeadR")
     Public objdtDebitorenSub As New DataTable("tbliDebiSub")
+    Public objdtInfo As New DataTable("tbliInfo")
     Public objOracleConn As New OracleConnection("Data Source=(DESCRIPTION=" _
                     + "(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.0.29)(PORT=1521))" _
                     + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
@@ -85,10 +89,11 @@ Friend Class frmImportMain
         objdtDebitorenHead.Clear()
         objdtDebitorenSub.Clear()
         objdtDebitorenHeadRead.Clear()
+        objdtInfo.Clear()
 
         Call InitVar()
 
-        Call Main.FcLoginSage(objdbConn, Finanz, FBhg, DbBhg, PIFin, cmbBuha.SelectedValue)
+        Call Main.FcLoginSage(objdbConn, objdbMSSQLConn, objdbSQLcommand, Finanz, FBhg, DbBhg, PIFin, cmbBuha.SelectedValue, objdtInfo)
 
         Call Main.FcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdtDebitorenSub, objdbConn, objdbAccessConn)
 
@@ -99,7 +104,7 @@ Friend Class frmImportMain
         dgvDebitoren.Update()
         dgvDebitoren.Refresh()
 
-        Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, objdtDebitorenSub, Finanz, FBhg, DbBhg, PIFin, objdbConn, objdbConnZHDB02, objdbcommand, objdbcommandZHDB02, objOracleConn, objOracleCmd)
+        Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, objdtDebitorenSub, Finanz, FBhg, DbBhg, PIFin, objdbConn, objdbConnZHDB02, objdbcommand, objdbcommandZHDB02, objOracleConn, objOracleCmd, objdtInfo)
 
         'strIncrBelNbr = DbBhg.IncrBelNbr
         'Debug.Print("Increment " + strIncrBelNbr)
@@ -190,7 +195,7 @@ Friend Class frmImportMain
 
     Private Sub InitdgvDebitoren()
 
-        dgvDebitoren.ShowCellToolTips = True
+        dgvDebitoren.ShowCellToolTips = False
         dgvDebitoren.AllowUserToAddRows = False
         dgvDebitoren.AllowUserToDeleteRows = False
         dgvDebitoren.Columns("booDebBook").DisplayIndex = 0
@@ -287,16 +292,59 @@ Friend Class frmImportMain
         dgvDebitoren.Columns("booLinked").Visible = False
         dgvDebitoren.Columns("strRGName").Visible = False
         dgvDebitoren.Columns("strDebIdentnbr2").Visible = False
-        'dgvDebitoren.Columns("strDebText").Visible = False
+        dgvDebitoren.Columns("strDebText").Visible = False
         dgvDebitoren.Columns("strRGBemerkung").Visible = False
         dgvDebitoren.Columns("strDebRef").Visible = False
         dgvDebitoren.Columns("strZahlBed").Visible = False
-        'dgvDebitoren.Columns("strDebStatusBitLog").Visible = False
+        dgvDebitoren.Columns("strDebStatusBitLog").Visible = False
         dgvDebitoren.Columns("strDebBookStatus").Visible = False
         dgvDebitoren.Columns("booBooked").Visible = False
         dgvDebitoren.Columns("datBooked").Visible = False
         dgvDebitoren.Columns("lngBelegNr").Visible = False
 
+
+    End Sub
+
+    Private Sub InitdgvDebitorenSub()
+
+        dgvDebitorenSub.ShowCellToolTips = False
+        dgvDebitorenSub.AllowUserToAddRows = False
+        dgvDebitorenSub.AllowUserToDeleteRows = False
+        dgvDebitorenSub.Columns("strRGNr").DisplayIndex = 0
+        dgvDebitorenSub.Columns("strRGNr").Width = 60
+        dgvDebitorenSub.Columns("strRGNr").HeaderText = "RG-Nr"
+        dgvDebitorenSub.Columns("intSollHaben").Width = 30
+        dgvDebitorenSub.Columns("intSollHaben").HeaderText = "S/H"
+        dgvDebitorenSub.Columns("lngKto").Width = 50
+        dgvDebitorenSub.Columns("lngKto").HeaderText = "Konto"
+        dgvDebitorenSub.Columns("strKtoBez").HeaderText = "Bezeichnung"
+        dgvDebitorenSub.Columns("lngKST").Width = 50
+        dgvDebitorenSub.Columns("lngKST").HeaderText = "KST"
+        dgvDebitorenSub.Columns("strKSTBez").Width = 60
+        dgvDebitorenSub.Columns("strKSTBez").HeaderText = "Bezeichnung"
+        dgvDebitorenSub.Columns("dblNetto").Width = 60
+        dgvDebitorenSub.Columns("dblNetto").HeaderText = "Netto"
+        dgvDebitorenSub.Columns("dblNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvDebitorenSub.Columns("dblNetto").DefaultCellStyle.Format = "N2"
+        dgvDebitorenSub.Columns("dblMwSt").Width = 50
+        dgvDebitorenSub.Columns("dblMwSt").HeaderText = "MwSt"
+        dgvDebitorenSub.Columns("dblMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvDebitorenSub.Columns("dblMwSt").DefaultCellStyle.Format = "N2"
+        dgvDebitorenSub.Columns("dblBrutto").Width = 60
+        dgvDebitorenSub.Columns("dblBrutto").HeaderText = "Brutto"
+        dgvDebitorenSub.Columns("dblBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvDebitorenSub.Columns("dblBrutto").DefaultCellStyle.Format = "N2"
+        dgvDebitorenSub.Columns("lngMwStSatz").Width = 50
+        dgvDebitorenSub.Columns("lngMwStSatz").HeaderText = "MwStS"
+        dgvDebitorenSub.Columns("strMwStKey").Width = 40
+        dgvDebitorenSub.Columns("strMwStKey").HeaderText = "MwStK"
+        dgvDebitorenSub.Columns("strStatusUBText").HeaderText = "Status"
+
+        dgvDebitorenSub.Columns("lngID").Visible = False
+        dgvDebitorenSub.Columns("strArtikel").Visible = False
+        dgvDebitorenSub.Columns("strStatusUBBitLog").Visible = False
+        dgvDebitorenSub.Columns("strDebSubText").Visible = False
+        dgvDebitorenSub.Columns("strDebBookStatus").Visible = False
 
     End Sub
 
@@ -324,14 +372,30 @@ Friend Class frmImportMain
         'Tabelle Debi Sub erstellen
         objdtDebitorenSub = Main.tblDebitorenSub()
 
+        'Info - Tabelle erstellen
+        objdtInfo = Main.tblInfo()
+
         'Subbuchungen ausblenden, kann für Testzwecke aktiviert werden
         dgvDebitorenSub.DataSource = objdtDebitorenSub
         'dgvDebitorenSub.Visible = False
 
-        'DGV
+        'DGV - Info
+        dgvInfo.DataSource = objdtInfo
+        dgvInfo.AllowUserToAddRows = False
+        dgvInfo.AllowUserToDeleteRows = False
+        dgvInfo.Enabled = False
+        dgvInfo.RowHeadersVisible = False
+        dgvInfo.Columns("strInfoT").HeaderText = "Info"
+        dgvInfo.Columns("strInfoT").Width = 100
+        dgvInfo.Columns("strInfoV").HeaderText = "Wert"
+        dgvInfo.Columns("strInfoV").Width = 250
+
+
+        'DGV Debitoren
         dgvDebitoren.DataSource = objdtDebitorenHead
         objdbConn.Open()
         Call InitdgvDebitoren()
+        Call InitdgvDebitorenSub()
         objdbConn.Close()
 
     End Sub
@@ -608,59 +672,27 @@ Friend Class frmImportMain
 
     End Sub
 
-    Private Sub dgvDebitoren_DoubleClick(sender As Object, e As EventArgs) Handles dgvDebitoren.DoubleClick
 
+    Private Sub dgvDebitoren_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvDebitoren.CellContentClick
+
+        'Dim dsDebSub() As DataRow
         'Sub-Grid zeigen, vorher mit Datne abfüllen
+        'dgvDebSubActual.DataSource = objdtDebitorenSub.Select("strRGNr='" + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + "'").CopyToDataTable()
+        dgvDebitorenSub.DataSource = objdtDebitorenSub.Select("strRGNr='" + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + "'").CopyToDataTable
+
+
+        '        dsDebSub = objdtDebitorenSub.Select("lngID > 1")
+
+        'dgvDebitorenSub.DataSource = dsDebSub
+
+        dgvDebitorenSub.Update()
+
+        'dgvDebitorenSub.DataSource = objdtDebitorenSub
+
+        'dgvDebitorenSub.Update()
+
+        'dgvDebSubActual.Visible = True
 
 
     End Sub
-
-    'Private Sub dgvDebitoren_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvDebitoren.CellClick
-
-    ''Nur auf booDebBook reagieren
-    'If e.ColumnIndex = 2 Then
-    '    'Verhindern das Buchungen mit Fehlern aktiviert werden können
-    '    MsgBox("Aktueller Wert " + e.ColumnIndex.ToString + ", " + dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value.ToString)
-    'End If
-
-    'End Sub
-
-    'Private Sub dgvDebitoren_MouseUp(sender As Object, e As MouseEventArgs) Handles dgvDebitoren.MouseUp
-
-    '    MsgBox("up")
-
-    'End Sub
-
-    'Private Sub dgvDebitoren_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs) Handles dgvDebitoren.CellEndEdit
-
-    '    If e.ColumnIndex = 2 Then
-
-    '        MsgBox("Angaben " + e.ColumnIndex.ToString)
-
-    '    End If
-
-    'End Sub
-
-    'Private Sub dgvDebitoren_CellValidating(sender As Object, e As DataGridViewCellValidatingEventArgs) Handles dgvDebitoren.CellValidating
-
-    '    If e.ColumnIndex = 2 Then
-
-    '        MsgBox("Angaben " + e.ColumnIndex.ToString)
-
-    '    End If
-
-
-    'End Sub
-
-    'Private Sub dgvDebitoren_CellBeginEdit(sender As Object, e As DataGridViewCellCancelEventArgs) Handles dgvDebitoren.CellBeginEdit
-
-    '    If e.ColumnIndex = 2 Then
-
-    '        MsgBox("Angaben " + e.ColumnIndex.ToString)
-
-    '    End If
-
-    'End Sub
-
-
 End Class

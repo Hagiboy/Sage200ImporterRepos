@@ -217,14 +217,37 @@ Friend NotInheritable Class Main
         Return DT
     End Function
 
+    Public Shared Function tblInfo() As DataTable
 
-    Public Shared Function FcLoginSage(ByRef objdbconn As MySqlConnection, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByRef objdbPIFb As SBSXASLib.AXiPlFin, ByVal intAccounting As Int16) As Int16
+        Dim DT As DataTable
+        DT = New DataTable("tblDebitorenSub")
+        Dim strInfoT As DataColumn = New DataColumn("strInfoT")
+        strInfoT.DataType = System.Type.[GetType]("System.String")
+        strInfoT.MaxLength = 50
+        strInfoT.Caption = "Info-Titel"
+        DT.Columns.Add(strInfoT)
+        Dim strInfoV As DataColumn = New DataColumn("strInfoV")
+        strInfoV.DataType = System.Type.[GetType]("System.String")
+        strInfoV.MaxLength = 50
+        strInfoV.Caption = "Info-Wert"
+        DT.Columns.Add(strInfoV)
+        Return DT
+
+    End Function
+
+
+
+    Public Shared Function FcLoginSage(ByRef objdbconn As MySqlConnection, ByRef objsqlConn As SqlClient.SqlConnection, ByRef objsqlCom As SqlClient.SqlCommand, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByRef objdbPIFb As SBSXASLib.AXiPlFin, ByVal intAccounting As Int16, ByRef objdtInfo As DataTable) As Int16
 
         '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
 
         Dim booAccOk As Boolean
         Dim strMandant As String
         Dim b As Object
+        Dim strLogonInfo() As String
+        Dim strPeriode() As String
+        Dim FcReturns As Int16
+
         b = Nothing
 
         objFinanz = Nothing
@@ -243,16 +266,33 @@ Friend NotInheritable Class Main
 
         'Open Mandantg
         objFinanz.OpenMandant(strMandant, "")
+        'Buha in Info schreiben
+        'objdtInfo.Rows.Add("Buha", strMandant)
+
+        'Von Login aktuelle Periode auslesen
+        strLogonInfo = Split(objFinanz.GetLogonInfo(), "{>}")
+        objdtInfo.Rows.Add("Man/Periode", strMandant + "/" + strLogonInfo(7))
 
         'Check Periode
-        booAccOk = objFinanz.CheckPeriode(strMandant, "2020")
+        'booAccOk = objFinanz.CheckPeriode(strMandant, "2020")
         Dim intPeriodenNr As Int16
         Dim strPeriodenInfo As String
-        intPeriodenNr = objFinanz.ReadPeri("ZZ", "")
-        For intLooper As Int16 = 0 To intPeriodenNr
-            strPeriodenInfo = objFinanz.GetPeriListe(intLooper)
-            strPeriodenInfo = objFinanz.GetResource(intLooper)
-        Next
+        'strPeriodenInfo = objFinanz.GetLogonInfo()
+        intPeriodenNr = objFinanz.ReadPeri(strMandant, strLogonInfo(7))
+        'For intLooper As Int16 = 0 To intPeriodenNr
+        strPeriodenInfo = objFinanz.GetPeriListe(0)
+        'strPeriodenInfo = objFinanz.GetResource(intLooper)
+        'Next
+        strPeriode = Split(strPeriodenInfo, "{>}")
+        objdtInfo.Rows.Add("GeschäftsJ", strPeriode(3) + "-" + strPeriode(4))
+        objdtInfo.Rows.Add("Buchungen/ Status", strPeriode(5) + "-" + strPeriode(6) + "/ " + strPeriode(2))
+        'objdtInfo.Rows.Add("Status", strPeriode(2))
+        'Debug.Print(FcReadPeriodenDef(objsqlConn, objsqlCom, strPeriode(8))(0))
+
+        'objdtInfo.Rows.Add("Perioden-Def", FcReadPeriodenDef(objsqlConn, objsqlCom, strPeriode(8))(0))
+        'objdtInfo.Rows.Add("Defintion von", FcReadPeriodenDef(objsqlConn, objsqlCom, strPeriode(8))(1))
+
+        FcReturns = FcReadPeriodenDef(objsqlConn, objsqlCom, strPeriode(8), objdtInfo)
 
 
         If b = 0 Then GoTo isOk
@@ -446,6 +486,50 @@ ErrorHandler:
 
     End Function
 
+    Public Shared Function FcReadPeriodenDef(ByRef objSQLConnection As SqlClient.SqlConnection, ByRef objSQLCommand As SqlClient.SqlCommand, ByVal intPeriodenNr As Int32, ByRef objdtInfo As DataTable) As Int16
+
+        'Returns 0=definiert, 1=nicht defeniert, 9=Problem
+
+        Dim objlocdtPeriDef As New DataTable
+        Dim strPeriodenDef(4) As String
+
+        Try
+
+            objSQLConnection.Open()
+            objSQLCommand.CommandText = "SELECT * FROM peridef WHERE teqnbr=" + intPeriodenNr.ToString
+            objSQLCommand.Connection = objSQLConnection
+            objlocdtPeriDef.Load(objSQLCommand.ExecuteReader)
+
+            If objlocdtPeriDef.Rows.Count = 1 Then 'Perioden-Definition vorhanden
+                strPeriodenDef(0) = objlocdtPeriDef.Rows(0).Item(2) 'Bezeichnung
+                strPeriodenDef(1) = objlocdtPeriDef.Rows(0).Item(3).ToString  'Von
+                strPeriodenDef(2) = objlocdtPeriDef.Rows(0).Item(4).ToString  'Bis
+                strPeriodenDef(3) = objlocdtPeriDef.Rows(0).Item(5)  'Status
+
+                objdtInfo.Rows.Add("Perioden-Def", strPeriodenDef(0))
+                objdtInfo.Rows.Add("Von - Bis/ Status", strPeriodenDef(1) + " - " + strPeriodenDef(2) + "/ " + strPeriodenDef(3))
+
+                Return 0
+            Else
+
+                objdtInfo.Rows.Add("Perioden-Def", "keine")
+                objdtInfo.Rows.Add("Von - Bis/ Status", "01.01." + Year(Today()).ToString + " - " + "31.12" + Year(Today()) + "/ " + "O")
+
+                Return 1
+
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 9
+
+        Finally
+            objSQLConnection.Close()
+
+        End Try
+
+    End Function
+
     Public Shared Function FcReadBankSettings(ByVal intAccounting As Int16, ByVal strBank As String, ByRef objdbconn As MySqlConnection) As String
 
         Dim objlocdtBank As New DataTable("tbllocBank")
@@ -503,7 +587,8 @@ ErrorHandler:
                                         ByRef objsqlcommand As MySqlCommand,
                                         ByRef objsqlcommandZHDB02 As MySqlCommand,
                                         ByRef objOrdbconn As OracleClient.OracleConnection,
-                                        ByRef objOrcommand As OracleClient.OracleCommand) As Integer
+                                        ByRef objOrcommand As OracleClient.OracleCommand,
+                                        ByRef objdtInfo As DataTable) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
         Dim strBitLog As String = ""
@@ -606,7 +691,12 @@ ErrorHandler:
                 'OP - Verdopplung 09
                 intReturnValue = FcCheckOPDouble(objdbBuha, IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")), row("strDebRGNbr"))
                 strBitLog += Trim(intReturnValue.ToString)
-
+                'Valuta - Datum 10
+                intReturnValue = FcChCeckDate(row("datDebValDatum"), objdtInfo)
+                strBitLog += Trim(intReturnValue.ToString)
+                'RG - Datum 11
+                intReturnValue = FcChCeckDate(row("datDebRGDatum"), objdtInfo)
+                strBitLog += Trim(intReturnValue.ToString)
                 'intReturnValue = fcCheckIntBank()
 
                 'Status-String auswerten
@@ -676,9 +766,21 @@ ErrorHandler:
                     'Else
                     '    row("strDebRef") = strDebiReferenz
                 End If
+                'Valuta Datum 
+                If Mid(strBitLog, 10, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValD"
+                    'Else
+                    '    row("strDebRef") = strDebiReferenz
+                End If
+                'RG Datum 
+                If Mid(strBitLog, 11, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgD"
+                    'Else
+                    '    row("strDebRef") = strDebiReferenz
+                End If
 
                 'Status schreiben
-                If Val(strBitLog) = 0 Or Val(strBitLog) = 10000 Then
+                If Val(strBitLog) = 0 Or Val(strBitLog) = 1000000 Then
                     row("booDebBook") = True
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
                 End If
@@ -720,6 +822,63 @@ ErrorHandler:
         Finally
             objOrdbconn.Close()
             objdbconn.Close()
+
+        End Try
+
+
+    End Function
+
+    Public Shared Function FcChCeckDate(ByVal datDateToCheck As Date, ByRef objdtInfo As DataTable) As Int16
+
+        'Returns 0=ok, 1=nicht erlaubt, 9=Problem
+        Dim datGJVon As Date = Convert.ToDateTime(Left(objdtInfo.Rows(2).Item(1), 4) + "-" + Mid(objdtInfo.Rows(2).Item(1), 5, 2) + "-" + Mid(objdtInfo.Rows(2).Item(1), 7, 2) + " 00:00:01")
+        Dim datGJBis As Date = Convert.ToDateTime(Mid(objdtInfo.Rows(2).Item(1), 10, 4) + "-" + Mid(objdtInfo.Rows(2).Item(1), 14, 2) + "-" + Mid(objdtInfo.Rows(2).Item(1), 16, 2) + " 23:59:59")
+        Dim booBuhaOpen As Boolean = IIf(Right(objdtInfo.Rows(2).Item(1), 1) = "O", True, False)
+        Dim datPerVon As Date
+        Dim datPerBis As Date
+        Dim intActualLine As Int16
+        Dim booPeriodeOpen As Boolean
+
+        Try
+
+            'Ist Datum in Geschäftsjahr - Def und ist Buchen erlaubt?
+            If datDateToCheck >= datGJVon And datDateToCheck <= datGJBis Then
+                If booBuhaOpen Then
+                    If objdtInfo.Rows.Count > 3 Then
+                        intActualLine = 4
+                        booPeriodeOpen = True
+                        Do While intActualLine < objdtInfo.Rows.Count
+                            'Wurden zusätzliche Perioden defniert und falls ja, ist der Status offen?
+                            datPerVon = Convert.ToDateTime(Left(objdtInfo.Rows(intActualLine).Item(1), 10) + " 00:00:01")
+                            datPerBis = Convert.ToDateTime(Mid(objdtInfo.Rows(intActualLine).Item(1), 23, 10) + " 23:59:59")
+                            booBuhaOpen = IIf(Right(objdtInfo.Rows(intActualLine).Item(1), 1) = "O", True, False)
+                            If datDateToCheck >= datPerVon And datDateToCheck <= datPerBis Then
+                                If booBuhaOpen Then
+                                    booPeriodeOpen = True
+                                Else
+                                    booPeriodeOpen = False
+                                End If
+                            End If
+                            intActualLine += 2
+                        Loop
+                        If booPeriodeOpen Then
+                            Return 0
+                        Else
+                            Return 1
+                        End If
+                    Else
+                        Return 0
+                    End If
+                Else
+                    Return 1
+                End If
+            Else
+                Return 1
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 9
 
         End Try
 
