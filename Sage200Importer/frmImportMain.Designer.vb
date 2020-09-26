@@ -32,6 +32,7 @@ Partial Class frmImportMain
         Me.butImport = New System.Windows.Forms.Button()
         Me.dgvDebitorenSub = New System.Windows.Forms.DataGridView()
         Me.dgvInfo = New System.Windows.Forms.DataGridView()
+        Me.txtNumber = New System.Windows.Forms.TextBox()
         Me.GroupBox1.SuspendLayout()
         CType(Me.dgvDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvDebitorenSub, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -130,11 +131,20 @@ Partial Class frmImportMain
         Me.dgvInfo.Size = New System.Drawing.Size(354, 133)
         Me.dgvInfo.TabIndex = 7
         '
+        'txtNumber
+        '
+        Me.txtNumber.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.txtNumber.Location = New System.Drawing.Point(1556, 19)
+        Me.txtNumber.Name = "txtNumber"
+        Me.txtNumber.Size = New System.Drawing.Size(60, 29)
+        Me.txtNumber.TabIndex = 8
+        '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1637, 637)
+        Me.Controls.Add(Me.txtNumber)
         Me.Controls.Add(Me.dgvInfo)
         Me.Controls.Add(Me.dgvDebitorenSub)
         Me.Controls.Add(Me.butImport)
@@ -162,4 +172,5 @@ Partial Class frmImportMain
     Friend WithEvents butImport As Button
     Friend WithEvents dgvDebitorenSub As DataGridView
     Friend WithEvents dgvInfo As DataGridView
+    Friend WithEvents txtNumber As TextBox
 End Class

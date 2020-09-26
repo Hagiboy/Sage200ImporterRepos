@@ -353,6 +353,7 @@ ErrorHandler:
         Dim objDTDebiHead As New DataTable
         Dim dbProvider, dbSource, dbPathAndFile, strMDBName As String
         Dim objdrSub As DataRow
+        Dim intFcReturns As Int16
 
         objdbconn.Open()
 
@@ -408,12 +409,19 @@ ErrorHandler:
                     objdtSub.Load(objlocMySQLcmd.ExecuteReader)
                 End If
             Next
-
+            'Tabellen runden
+            'intFcReturns = FcRoundInTable(objdtHead, "dblDebNetto", 2)
+            'intFcReturns = FcRoundInTable(objdtHead, "dblDebBrutto", 2)
+            'intFcReturns = FcRoundInTable(objdtHead, "dblDebMwSt", 2)
+            'intFcReturns = FcRoundInTable(objdtSub, "dblNetto", 2)
+            'intFcReturns = FcRoundInTable(objdtSub, "dblMwSt", 2)
+            'intFcReturns = FcRoundInTable(objdtSub, "dblBrutto", 2)
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
 
         Finally
+
             If objdbAccessConn.State = ConnectionState.Open Then
                 objdbAccessConn.Close()
             End If
@@ -421,6 +429,25 @@ ErrorHandler:
                 objRGMySQLConn.Close()
             End If
             objdbconn.Close()
+
+        End Try
+
+    End Function
+
+    Public Shared Function FcRoundInTable(ByRef objdt As DataTable, ByVal strColumnName As String, ByVal intDecimals As Int16) As Int16
+
+        Try
+
+            For Each row As DataRow In objdt.Rows
+
+                row.Item(strColumnName) = Math.Round(row.Item(strColumnName), 2, MidpointRounding.AwayFromZero)
+
+            Next
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 1
 
         End Try
 
@@ -513,7 +540,7 @@ ErrorHandler:
             Else
 
                 objdtInfo.Rows.Add("Perioden-Def", "keine")
-                objdtInfo.Rows.Add("Von - Bis/ Status", "01.01." + Year(Today()).ToString + " - " + "31.12" + Year(Today()) + "/ " + "O")
+                objdtInfo.Rows.Add("Von - Bis/ Status", "01.01." + Year(Today()).ToString + " 00:00:00 - " + "31.12." + Year(Today()).ToString + " 23:59:59/ " + "O")
 
                 Return 1
 
@@ -614,7 +641,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "45145" Then Stop
+                'If row("strDebRGNbr") = "44474" Then Stop
 
                 'Status-String erstellen
                 'Debitor 01
@@ -831,7 +858,7 @@ ErrorHandler:
     Public Shared Function FcChCeckDate(ByVal datDateToCheck As Date, ByRef objdtInfo As DataTable) As Int16
 
         'Returns 0=ok, 1=nicht erlaubt, 9=Problem
-        Dim datGJVon As Date = Convert.ToDateTime(Left(objdtInfo.Rows(2).Item(1), 4) + "-" + Mid(objdtInfo.Rows(2).Item(1), 5, 2) + "-" + Mid(objdtInfo.Rows(2).Item(1), 7, 2) + " 00:00:01")
+        Dim datGJVon As Date = Convert.ToDateTime(Left(objdtInfo.Rows(2).Item(1), 4) + "-" + Mid(objdtInfo.Rows(2).Item(1), 5, 2) + "-" + Mid(objdtInfo.Rows(2).Item(1), 7, 2) + " 00:00:00")
         Dim datGJBis As Date = Convert.ToDateTime(Mid(objdtInfo.Rows(2).Item(1), 10, 4) + "-" + Mid(objdtInfo.Rows(2).Item(1), 14, 2) + "-" + Mid(objdtInfo.Rows(2).Item(1), 16, 2) + " 23:59:59")
         Dim booBuhaOpen As Boolean = IIf(Right(objdtInfo.Rows(2).Item(1), 1) = "O", True, False)
         Dim datPerVon As Date
@@ -987,7 +1014,7 @@ ErrorHandler:
                 Return 1
             ElseIf dblNetto = 0 Then
                 Return 2
-            ElseIf dblBrutto - dblMwSt <> dblNetto Then
+            ElseIf Math.Round(dblBrutto - dblMwSt, 2, MidpointRounding.AwayFromZero) <> dblNetto Then
                 Return 4
             Else
                 Return 0
@@ -1121,7 +1148,7 @@ ErrorHandler:
             strBitLog += Trim(intReturnValue.ToString)
 
             'Kst/Ktr prüfen
-            If Not IsDBNull(subrow("lngKST")) Then
+            If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
                 intReturnValue = FcCheckKstKtr(subrow("lngKST"), objFiBhg, objFiPI, subrow("lngKto"), strKstKtrSage200)
                 If intReturnValue = 0 Then
                     subrow("strKstBez") = strKstKtrSage200
@@ -1180,7 +1207,7 @@ ErrorHandler:
             End If
 
             'Brutto - MwSt <> Netto
-            If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) - IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) <> IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
+            If Math.Round(IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) - IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), 2, MidpointRounding.AwayFromZero) <> IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
                 strBitLog += "1"
 
             Else

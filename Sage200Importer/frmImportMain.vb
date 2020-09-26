@@ -106,6 +106,9 @@ Friend Class frmImportMain
 
         Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, objdtDebitorenSub, Finanz, FBhg, DbBhg, PIFin, objdbConn, objdbConnZHDB02, objdbcommand, objdbcommandZHDB02, objOracleConn, objOracleCmd, objdtInfo)
 
+        'Anzahl schreiben
+        txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
+
         'strIncrBelNbr = DbBhg.IncrBelNbr
         'Debug.Print("Increment " + strIncrBelNbr)
 
@@ -451,6 +454,8 @@ Friend Class frmImportMain
 
             'Debitor erstellen, minimal - Angaben
 
+            Me.Cursor = Cursors.WaitCursor
+
             'Kopfbuchung
             For Each row In objdtDebitorenHead.Rows
 
@@ -648,6 +653,8 @@ Friend Class frmImportMain
         Finally
             'Neu aufbauen
             butDebitoren_Click(butDebitoren, EventArgs.Empty)
+
+            Me.Cursor = Cursors.Default
 
         End Try
 
