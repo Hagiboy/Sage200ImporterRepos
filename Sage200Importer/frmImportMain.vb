@@ -465,23 +465,24 @@ Friend Class frmImportMain
                     If row("intBuchungsart") = 1 Then
 
                         'Immer zuerst Belegs-Nummerierung aktivieren, falls vorhanden externe Nummer = OP - Nr. Rg
+                        'Führt zu Problemen beim Ausbuchen des DTA - Files
                         'Resultat Besprechnung 17.09.20 mit Muhi/ Andy
-                        DbBhg.IncrBelNbr = "J"
+                        'DbBhg.IncrBelNbr = "J"
                         'Belegsnummer abholen
-                        intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                        'intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
 
-                        If Not IsDBNull(row("strOPNr")) Or row("strOPNr") <> "" Then
-                            strExtBelegNbr = row("strOPNr")
+                        If IsDBNull(row("strOPNr")) Or row("strOPNr") = "" Then
+                            'strExtBelegNbr = row("strOPNr")
 
-                            '    'Zuerst Beleg-Nummerieungung aktivieren
-                            '    DbBhg.IncrBelNbr = "J"
-                            '    'Belegsnummer abholen
-                            '    intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
-                            'Else
-                            '    'Beleg-Nummerierung abschalten
-                            '    DbBhg.IncrBelNbr = "N"
-                            '    intDebBelegsNummer = row("strOPNr")
-                            '    'strExtBelegNbr = row("strOPNr")
+                            'Zuerst Beleg-Nummerieungung aktivieren
+                            DbBhg.IncrBelNbr = "J"
+                            'Belegsnummer abholen
+                            intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                        Else
+                            'Beleg-Nummerierung abschalten
+                            DbBhg.IncrBelNbr = "N"
+                            intDebBelegsNummer = row("strOPNr")
+                            'strExtBelegNbr = row("strOPNr")
                         End If
 
                         'Variablen zuweisen

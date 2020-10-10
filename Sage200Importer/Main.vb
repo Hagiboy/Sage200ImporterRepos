@@ -265,7 +265,7 @@ Friend NotInheritable Class Main
         booAccOk = objFinanz.CheckMandant(strMandant)
 
         'Open Mandantg
-        objFinanz.OpenMandant(strMandant, "")
+        objFinanz.OpenMandant(strMandant, "2019")
         'Buha in Info schreiben
         'objdtInfo.Rows.Add("Buha", strMandant)
 
@@ -641,7 +641,8 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "44474" Then Stop
+                '
+                'If row("strDebRGNbr") = "44208" Then Stop
 
                 'Status-String erstellen
                 'Debitor 01
@@ -1452,6 +1453,8 @@ ErrorHandler:
         Dim strLand As String
         Dim intLangauage As Int32
         'Dim intPKNewField As Int32
+        Dim strSQL As String
+        Dim intAffected As Int16
 
         Try
 
@@ -1519,6 +1522,19 @@ ErrorHandler:
                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_BIC")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_BIC")),
                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Currency")), "CHF", objdtDebitor.Rows(0).Item("Rep_Kred_Currency")))
 
+                If intCreatable = 0 Then
+                    'MySQL
+                    strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
+                                                         lngDebiNbr.ToString + " " + objdtDebitor.Rows(0).Item("Rep_Firma") + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', 'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
+                                                         lngDebiNbr.ToString + " wurde erstell im Mandant EE', 'Bitte kontrollieren und Daten ergänzen.', false)"
+                    ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                    'objlocMySQLRGConn.Open()
+                    'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                    objsqlcommandZHDB02.CommandText = strSQL
+                    intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
+
+                End If
+
 
                 Return 0
             Else
@@ -1557,7 +1573,7 @@ ErrorHandler:
             End If
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Problem Neue PK-Nr.")
             Return 0
 
         Finally
@@ -1598,7 +1614,7 @@ ErrorHandler:
         Dim strDebSprachCode As String = intLangauage.ToString
         Dim strDebSperren As String = "N"
         Dim intDebErlKto As Integer = 3200
-        Dim shrDebZahlK As Short = 1
+        Dim shrDebZahlK As Short = 1 'Wird für EE fix auf 30 Tage Netto gesetzt
         Dim intDebToleranzNbr As Integer = 1
         Dim intDebMahnGroup As Integer = 1
         Dim strDebWerbung As String = "N"
@@ -1617,9 +1633,14 @@ ErrorHandler:
             Call objDbBhg.SetCommonInfo2(intDebitorNewNbr, strDebName, "", strDebStreet, "", "", "", strDebCountry, strDebPLZ, strDebOrt, strTelefon1, "", strTelefax, strMail, "", strDebCurrency, "", "", strAnsprechpartner, strDebSprachCode, strText)
             Call objDbBhg.SetExtendedInfo8(strDebSperren, strKreditLimite, intDebSammelKto.ToString, intDebErlKto.ToString, "", "", "", shrDebZahlK.ToString, intDebToleranzNbr.ToString, intDebMahnGroup.ToString, "", "", strDebWerbung, "", "", strMwStNr)
             If intPayDefault = 9 Then 'IBAN
-                Call objDbBhg.SetZahlungsverbindung("B", "", strZVBankName, "", "", strZVBankPLZ.ToString, strZVBankOrt, Left(strZVIBAN, 2), Mid(strZVIBAN, 5, 5), "J", strZVBIC, "", "", "", strZVIBAN, "")
+                If Len(strZVIBAN) > 15 Then
+                    Call objDbBhg.SetZahlungsverbindung("B", "", strZVBankName, "", "", strZVBankPLZ.ToString, strZVBankOrt, Left(strZVIBAN, 2), Mid(strZVIBAN, 5, 5), "J", strZVBIC, "", "", "", strZVIBAN, "")
+                End If
             End If
             Call objDbBhg.WriteDebitor3(0)
+
+            'Mail über Erstellung absetzen
+
 
             Return 0
             'intDebAdrLaufN = DbBhg.GetAdressLaufnr()
