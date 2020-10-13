@@ -664,11 +664,12 @@ ErrorHandler:
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Sub 04
-                intReturnValue = FcCheckSubBookings(row("strDebRGNbr"), objdtDebitSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha, objdbPIFb, row("intBuchungsart"))
+                booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
+                intReturnValue = FcCheckSubBookings(row("strDebRGNbr"), objdtDebitSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha, objdbPIFb, row("intBuchungsart"), booAutoCorrect)
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Autokorrektur 05
-                booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
+                'booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
                 If booAutoCorrect Then
                     'Git es etwas zu korrigieren?
                     If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) <> dblSubBrutto Or
@@ -1084,7 +1085,8 @@ ErrorHandler:
                                               ByRef objdbconn As MySqlConnection,
                                               ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                               ByRef objFiPI As SBSXASLib.AXiPlFin,
-                                              ByVal intBuchungsArt As Int32) As Int16
+                                              ByVal intBuchungsArt As Int32,
+                                              ByVal booAutoCorrect As Boolean) As Int16
 
         'Functin Returns 0=ok, 1=Problem sub, 2=OP Diff zu Kopf, 3=OP nicht 0, 9=keine Subs
 
@@ -1104,6 +1106,7 @@ ErrorHandler:
         Dim strKstKtrSage200 As String = ""
         Dim selsubrow() As DataRow
         Dim strStatusOverAll As String = "0000000"
+        Dim strSteuer() As String
 
         'Summen bilden und Angaben prüfen
         intSubNumber = 0
@@ -1116,6 +1119,34 @@ ErrorHandler:
         For Each subrow As DataRow In selsubrow
 
             strBitLog = ""
+
+            'MwSt prüfen
+            If Not IsDBNull(subrow("strMwStKey")) Then
+                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("lngMwStSatz"), strStrStCodeSage200)
+                If intReturnValue = 0 Then
+                    subrow("strMwStKey") = strStrStCodeSage200
+                    'Check of korrekt berechnet
+                    strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
+                    If Val(strSteuer(2)) <> subrow("dblMwst") Then
+                        'Im Fall von Auto-Korrekt anpassen
+                        'Stop
+                        If booAutoCorrect Then
+                            subrow("dblMwst") = Val(strSteuer(2))
+                            subrow("dblBrutto") = subrow("dblNetto") + subrow("dblMwSt")
+                        Else
+                            intReturnValue = 1
+                        End If
+                    End If
+                Else
+                    subrow("strMwStKey") = "n/a"
+                End If
+            Else
+                subrow("strMwStKey") = "null"
+                intReturnValue = 0
+
+            End If
+            strBitLog += Trim(intReturnValue.ToString)
+
 
             'If subrow("intSollHaben") <> 2 Then
             intSubNumber += 1
@@ -1167,21 +1198,27 @@ ErrorHandler:
             End If
             strBitLog += Trim(intReturnValue.ToString)
 
-            'MwSt prüfen
-            If Not IsDBNull(subrow("strMwStKey")) Then
-                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("lngMwStSatz"), strStrStCodeSage200)
-                If intReturnValue = 0 Then
-                    subrow("strMwStKey") = strStrStCodeSage200
-                Else
-                    subrow("strMwStKey") = "n/a"
+            ''MwSt prüfen
+            'If Not IsDBNull(subrow("strMwStKey")) Then
+            '    intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("lngMwStSatz"), strStrStCodeSage200)
+            '    If intReturnValue = 0 Then
+            '        subrow("strMwStKey") = strStrStCodeSage200
+            '        'Check of korrekt berechnet
+            '        strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
+            '        If Val(strSteuer(2)) <> subrow("dblMwst") Then
+            '            'Im Fall von Auto-Korrekt anpassen
+            '            Stop
+            '        End If
+            '    Else
+            '        subrow("strMwStKey") = "n/a"
 
-                End If
-            Else
-                subrow("strMwStKey") = "null"
-                intReturnValue = 0
+            '    End If
+            'Else
+            '    subrow("strMwStKey") = "null"
+            '    intReturnValue = 0
 
-            End If
-            strBitLog += Trim(intReturnValue.ToString)
+            'End If
+            'strBitLog += Trim(intReturnValue.ToString)
 
             'Brutto + MwSt + Netto = 0
             If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 And IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) = 0 And IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
@@ -1215,10 +1252,15 @@ ErrorHandler:
                 strBitLog += "0"
             End If
 
+
             'Statustext zusammen setzten
             strStatusText = ""
-            'Konto
+            'MwSt
             If Left(strBitLog, 1) <> "0" Then
+                strStatusText += IIf(strStatusText <> "", ", ", "") + "MwSt"
+            End If
+            'Konto
+            If Mid(strBitLog, 2, 1) <> "0" Then
                 If Left(strBitLog, 1) = "2" Then
                     strStatusText = "Kto MwSt"
                 Else
@@ -1226,12 +1268,8 @@ ErrorHandler:
                 End If
             End If
             'Kst/Ktr
-            If Mid(strBitLog, 2, 1) <> "0" Then
-                strStatusText += IIf(strStatusText <> "", ", ", "") + "KST"
-            End If
-            'MwSt
             If Mid(strBitLog, 3, 1) <> "0" Then
-                strStatusText += IIf(strStatusText <> "", ", ", "") + "MwSt"
+                strStatusText += IIf(strStatusText <> "", ", ", "") + "KST"
             End If
             'Alles 0
             If Mid(strBitLog, 4, 1) <> "0" Then
@@ -1911,13 +1949,21 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcGetSteuerFeld(ByRef objFBhg As SBSXASLib.AXiFBhg, ByVal lngKto As Long, ByVal strDebiSubText As String, ByVal dblBrutto As Double, ByVal strMwStKey As String) As String
+    Public Shared Function FcGetSteuerFeld(ByRef objFBhg As SBSXASLib.AXiFBhg, ByVal lngKto As Long, ByVal strDebiSubText As String, ByVal dblBrutto As Double, ByVal strMwStKey As String, ByVal dblMwSt As Double) As String
 
         Dim strSteuerFeld As String = ""
 
         Try
 
-            strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString, strDebiSubText, dblBrutto.ToString, strMwStKey)
+            If dblMwSt > 0 Then
+
+                strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString, strDebiSubText, dblBrutto.ToString, strMwStKey, dblMwSt.ToString)
+
+            Else
+
+                strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString, strDebiSubText, dblBrutto.ToString, strMwStKey)
+
+            End If
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)

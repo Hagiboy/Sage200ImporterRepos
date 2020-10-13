@@ -530,7 +530,7 @@ Friend Class frmImportMain
                             dblNettoBetrag = SubRow("dblNetto")
                             'dblBebuBetrag = 1000.0#
                             strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
-                            strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                            strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"), SubRow("dblMwSt"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
                             'strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
                             'Debug.Print("Konto-Info: " + strSteuerInfo(26))
 
@@ -579,7 +579,7 @@ Friend Class frmImportMain
                                     dblSollBetrag = SubRow("dblNetto")
                                     strDebiTextSoll = SubRow("strDebSubText")
                                     If SubRow("dblMwSt") > 0 Then
-                                        strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextSoll, SubRow("dblBrutto") * dblKursSoll, SubRow("strMwStKey"))
+                                        strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextSoll, SubRow("dblBrutto") * dblKursSoll, SubRow("strMwStKey"), SubRow("dblMwSt"))
                                     End If
                                     If SubRow("lngKST") > 0 Then
                                         strBeBuEintragSoll = SubRow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
@@ -596,7 +596,7 @@ Friend Class frmImportMain
                                     'dblHabenBetrag = dblSollBetrag
                                     strDebiTextHaben = SubRow("strDebSubText")
                                     If SubRow("dblMwSt") > 0 Then
-                                        strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto") * dblKursHaben, SubRow("strMwStKey"))
+                                        strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto") * dblKursHaben, SubRow("strMwStKey"), SubRow("dblMwSt"))
                                     End If
                                     If SubRow("lngKST") > 0 Then
                                         strBeBuEintragHaben = SubRow("lngKST").ToString + "{<}" + strDebiTextHaben + "{<}" + "CALCULATE" + "{>}"
