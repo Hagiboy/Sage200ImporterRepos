@@ -28,14 +28,14 @@ Partial Class frmImportMain
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.butKreditoren = New System.Windows.Forms.Button()
         Me.butDebitoren = New System.Windows.Forms.Button()
-        Me.dgvDebitoren = New System.Windows.Forms.DataGridView()
+        Me.dgvBookings = New System.Windows.Forms.DataGridView()
         Me.butImport = New System.Windows.Forms.Button()
-        Me.dgvDebitorenSub = New System.Windows.Forms.DataGridView()
+        Me.dgvBookingSub = New System.Windows.Forms.DataGridView()
         Me.dgvInfo = New System.Windows.Forms.DataGridView()
         Me.txtNumber = New System.Windows.Forms.TextBox()
         Me.GroupBox1.SuspendLayout()
-        CType(Me.dgvDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.dgvDebitorenSub, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
@@ -89,13 +89,13 @@ Partial Class frmImportMain
         Me.butDebitoren.Text = "&Debitoren"
         Me.butDebitoren.UseVisualStyleBackColor = True
         '
-        'dgvDebitoren
+        'dgvBookings
         '
-        Me.dgvDebitoren.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvDebitoren.Location = New System.Drawing.Point(12, 158)
-        Me.dgvDebitoren.Name = "dgvDebitoren"
-        Me.dgvDebitoren.Size = New System.Drawing.Size(1613, 467)
-        Me.dgvDebitoren.TabIndex = 3
+        Me.dgvBookings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvBookings.Location = New System.Drawing.Point(12, 158)
+        Me.dgvBookings.Name = "dgvBookings"
+        Me.dgvBookings.Size = New System.Drawing.Size(1613, 467)
+        Me.dgvBookings.TabIndex = 3
         '
         'butImport
         '
@@ -107,13 +107,13 @@ Partial Class frmImportMain
         Me.butImport.Text = "&Import"
         Me.butImport.UseVisualStyleBackColor = True
         '
-        'dgvDebitorenSub
+        'dgvBookingSub
         '
-        Me.dgvDebitorenSub.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvDebitorenSub.Location = New System.Drawing.Point(353, 19)
-        Me.dgvDebitorenSub.Name = "dgvDebitorenSub"
-        Me.dgvDebitorenSub.Size = New System.Drawing.Size(774, 133)
-        Me.dgvDebitorenSub.TabIndex = 5
+        Me.dgvBookingSub.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvBookingSub.Location = New System.Drawing.Point(353, 19)
+        Me.dgvBookingSub.Name = "dgvBookingSub"
+        Me.dgvBookingSub.Size = New System.Drawing.Size(774, 133)
+        Me.dgvBookingSub.TabIndex = 5
         '
         'dgvInfo
         '
@@ -146,17 +146,17 @@ Partial Class frmImportMain
         Me.ClientSize = New System.Drawing.Size(1637, 637)
         Me.Controls.Add(Me.txtNumber)
         Me.Controls.Add(Me.dgvInfo)
-        Me.Controls.Add(Me.dgvDebitorenSub)
+        Me.Controls.Add(Me.dgvBookingSub)
         Me.Controls.Add(Me.butImport)
-        Me.Controls.Add(Me.dgvDebitoren)
+        Me.Controls.Add(Me.dgvBookings)
         Me.Controls.Add(Me.GroupBox1)
         Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.cmbBuha)
         Me.Name = "frmImportMain"
         Me.Text = "Sage200 - Importer"
         Me.GroupBox1.ResumeLayout(False)
-        CType(Me.dgvDebitoren, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.dgvDebitorenSub, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
@@ -168,9 +168,9 @@ Partial Class frmImportMain
     Friend WithEvents GroupBox1 As GroupBox
     Friend WithEvents butKreditoren As Button
     Friend WithEvents butDebitoren As Button
-    Friend WithEvents dgvDebitoren As DataGridView
+    Friend WithEvents dgvBookings As DataGridView
     Friend WithEvents butImport As Button
-    Friend WithEvents dgvDebitorenSub As DataGridView
+    Friend WithEvents dgvBookingSub As DataGridView
     Friend WithEvents dgvInfo As DataGridView
     Friend WithEvents txtNumber As TextBox
 End Class

@@ -125,7 +125,7 @@ Friend NotInheritable Class Main
         strDebBookStatus.MaxLength = 50
         DT.Columns.Add(strDebBookStatus)
         Dim booBooked As DataColumn = New DataColumn("booBooked")
-        booLinked.DataType = System.Type.[GetType]("System.Boolean")
+        booBooked.DataType = System.Type.[GetType]("System.Boolean")
         DT.Columns.Add(booBooked)
         Dim datBooked As DataColumn = New DataColumn("datBooked")
         datBooked.DataType = System.Type.[GetType]("System.DateTime")
@@ -217,6 +217,136 @@ Friend NotInheritable Class Main
         Return DT
     End Function
 
+    Public Shared Function tblKreditorenHead() As DataTable
+        Dim DT As DataTable
+        'Dim myNewRow As DataRow
+        DT = New DataTable("tblKreditorenHead")
+        Dim strKredRGNbr As DataColumn = New DataColumn("strKredRGNbr")
+        strKredRGNbr.DataType = System.Type.[GetType]("System.String")
+        strKredRGNbr.MaxLength = 50
+        DT.Columns.Add(strKredRGNbr)
+        DT.PrimaryKey = New DataColumn() {DT.Columns("strKredRGNbr")}
+        Dim intBuchhaltung As DataColumn = New DataColumn("intBuchhaltung")
+        intBuchhaltung.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(intBuchhaltung)
+        Dim booDebBook As DataColumn = New DataColumn("booKredBook")
+        booDebBook.DataType = System.Type.[GetType]("System.Boolean")
+        DT.Columns.Add(booDebBook)
+        Dim intBuchungsart As DataColumn = New DataColumn("intBuchungsart")
+        intBuchungsart.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(intBuchungsart)
+        'Dim intRGArt As DataColumn = New DataColumn("intRGArt")
+        'intRGArt.DataType = System.Type.[GetType]("System.Int32")
+        'DT.Columns.Add(intRGArt)
+        'Dim strRGArt As DataColumn = New DataColumn("strRGArt")
+        'strRGArt.DataType = System.Type.[GetType]("System.String")
+        'strRGArt.MaxLength = 50
+        'DT.Columns.Add(strRGArt)
+        'Dim lngLinkedRG As DataColumn = New DataColumn("lngLinkedRG")
+        'lngLinkedRG.DataType = System.Type.[GetType]("System.Int32")
+        'DT.Columns.Add(lngLinkedRG)
+        'Dim booLinked As DataColumn = New DataColumn("booLinked")
+        'booLinked.DataType = System.Type.[GetType]("System.Boolean")
+        'DT.Columns.Add(booLinked)
+        Dim strRGName As DataColumn = New DataColumn("strRGName")
+        strRGName.DataType = System.Type.[GetType]("System.String")
+        strRGName.MaxLength = 50
+        DT.Columns.Add(strRGName)
+        Dim strOPNr As DataColumn = New DataColumn("strOPNr")
+        strOPNr.DataType = System.Type.[GetType]("System.String")
+        strOPNr.MaxLength = 13
+        DT.Columns.Add(strOPNr)
+        Dim lngKredNbr As DataColumn = New DataColumn("lngKredNbr")
+        lngKredNbr.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(lngKredNbr)
+        Dim strKredPKBez As DataColumn = New DataColumn("strKredBez")
+        strKredPKBez.DataType = System.Type.[GetType]("System.String")
+        strKredPKBez.MaxLength = 50
+        DT.Columns.Add(strKredPKBez)
+        Dim lngKredKtoNbr As DataColumn = New DataColumn("lngKredKtoNbr")
+        lngKredKtoNbr.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(lngKredKtoNbr)
+        Dim strKredKtoBez As DataColumn = New DataColumn("strKredKtoBez")
+        strKredKtoBez.DataType = System.Type.[GetType]("System.String")
+        strKredKtoBez.MaxLength = 50
+        DT.Columns.Add(strKredKtoBez)
+        Dim strKredCur As DataColumn = New DataColumn("strKredCur")
+        strKredCur.DataType = System.Type.[GetType]("System.String")
+        strKredCur.MaxLength = 3
+        DT.Columns.Add(strKredCur)
+        Dim dblKredNetto As DataColumn = New DataColumn("dblKredNetto")
+        dblKredNetto.DataType = System.Type.[GetType]("System.Double")
+        DT.Columns.Add(dblKredNetto)
+        Dim dblKredMwSt As DataColumn = New DataColumn("dblKredMwSt")
+        dblKredMwSt.DataType = System.Type.[GetType]("System.Double")
+        DT.Columns.Add(dblKredMwSt)
+        Dim dblKredBrutto As DataColumn = New DataColumn("dblKredBrutto")
+        dblKredBrutto.DataType = System.Type.[GetType]("System.Double")
+        DT.Columns.Add(dblKredBrutto)
+        Dim intSubBookings As DataColumn = New DataColumn("intSubBookings")
+        intSubBookings.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(intSubBookings)
+        Dim dblSumSubBookings As DataColumn = New DataColumn("dblSumSubBookings")
+        dblSumSubBookings.DataType = System.Type.[GetType]("System.Double")
+        DT.Columns.Add(dblSumSubBookings)
+        Dim lngKredIdentNbr As DataColumn = New DataColumn("lngKredIdentNbr")
+        lngKredIdentNbr.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(lngKredIdentNbr)
+        Dim strKredIdentNbr2 As DataColumn = New DataColumn("strKredIdentNbr2")
+        strKredIdentNbr2.DataType = System.Type.[GetType]("System.String")
+        strKredIdentNbr2.MaxLength = 50
+        DT.Columns.Add(strKredIdentNbr2)
+        Dim strKredText As DataColumn = New DataColumn("strKredText")
+        strKredText.DataType = System.Type.[GetType]("System.String")
+        strKredText.MaxLength = 50
+        DT.Columns.Add(strKredText)
+        Dim strRGBemerkung As DataColumn = New DataColumn("strRGBemerkung")
+        strRGBemerkung.DataType = System.Type.[GetType]("System.String")
+        strRGBemerkung.MaxLength = 1024
+        DT.Columns.Add(strRGBemerkung)
+        Dim datKredRGDatum As DataColumn = New DataColumn("datKredRGDatum")
+        datKredRGDatum.DataType = System.Type.[GetType]("System.DateTime")
+        DT.Columns.Add(datKredRGDatum)
+        Dim datKredValDatum As DataColumn = New DataColumn("datKredValDatum")
+        datKredValDatum.DataType = System.Type.[GetType]("System.DateTime")
+        DT.Columns.Add(datKredValDatum)
+        Dim strKrediBank As DataColumn = New DataColumn("strKrediBank")
+        strKrediBank.DataType = System.Type.[GetType]("System.String")
+        strKrediBank.MaxLength = 5
+        DT.Columns.Add(strKrediBank)
+        Dim strKredRef As DataColumn = New DataColumn("strKredRef")
+        strKredRef.DataType = System.Type.[GetType]("System.String")
+        strKredRef.MaxLength = 27
+        DT.Columns.Add(strKredRef)
+        Dim strZahlBed As DataColumn = New DataColumn("strZahlBed")
+        strZahlBed.DataType = System.Type.[GetType]("System.String")
+        strZahlBed.MaxLength = 5
+        DT.Columns.Add(strZahlBed)
+        Dim strKredStatusBitLog As DataColumn = New DataColumn("strKredStatusBitLog")
+        strKredStatusBitLog.DataType = System.Type.[GetType]("System.String")
+        strKredStatusBitLog.MaxLength = 50
+        DT.Columns.Add(strKredStatusBitLog)
+        Dim strKredStatusText As DataColumn = New DataColumn("strKredStatusText")
+        strKredStatusText.DataType = System.Type.[GetType]("System.String")
+        strKredStatusText.MaxLength = 255
+        DT.Columns.Add(strKredStatusText)
+        Dim strKredBookStatus As DataColumn = New DataColumn("strKredBookStatus")
+        strKredBookStatus.DataType = System.Type.[GetType]("System.String")
+        strKredBookStatus.MaxLength = 50
+        DT.Columns.Add(strKredBookStatus)
+        Dim booBooked As DataColumn = New DataColumn("booBooked")
+        booBooked.DataType = System.Type.[GetType]("System.Boolean")
+        DT.Columns.Add(booBooked)
+        Dim datBooked As DataColumn = New DataColumn("datBooked")
+        datBooked.DataType = System.Type.[GetType]("System.DateTime")
+        DT.Columns.Add(datBooked)
+        Dim lngBelegNr As DataColumn = New DataColumn("lngBelegNr")
+        lngBelegNr.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(lngBelegNr)
+        Return DT
+
+    End Function
+
     Public Shared Function tblInfo() As DataTable
 
         Dim DT As DataTable
@@ -237,7 +367,17 @@ Friend NotInheritable Class Main
 
 
 
-    Public Shared Function FcLoginSage(ByRef objdbconn As MySqlConnection, ByRef objsqlConn As SqlClient.SqlConnection, ByRef objsqlCom As SqlClient.SqlCommand, ByRef objFinanz As SBSXASLib.AXFinanz, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByRef objdbPIFb As SBSXASLib.AXiPlFin, ByVal intAccounting As Int16, ByRef objdtInfo As DataTable) As Int16
+    Public Shared Function FcLoginSage(ByRef objdbconn As MySqlConnection,
+                                       ByRef objsqlConn As SqlClient.SqlConnection,
+                                       ByRef objsqlCom As SqlClient.SqlCommand,
+                                       ByRef objFinanz As SBSXASLib.AXFinanz,
+                                       ByRef objfiBuha As SBSXASLib.AXiFBhg,
+                                       ByRef objdbBuha As SBSXASLib.AXiDbBhg,
+                                       ByRef objdbPIFb As SBSXASLib.AXiPlFin,
+                                       ByRef objkrBuha As SBSXASLib.AXiKrBhg,
+                                       ByVal intAccounting As Int16,
+                                       ByRef objdtInfo As DataTable) As Int16
+
 
         '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
 
@@ -265,7 +405,7 @@ Friend NotInheritable Class Main
         booAccOk = objFinanz.CheckMandant(strMandant)
 
         'Open Mandantg
-        objFinanz.OpenMandant(strMandant, "2019")
+        objFinanz.OpenMandant(strMandant, "")
         'Buha in Info schreiben
         'objdtInfo.Rows.Add("Buha", strMandant)
 
@@ -312,6 +452,9 @@ isOk:
         objdbBuha = objFinanz.GetDebiObj
         objdbPIFb = Nothing
         objdbPIFb = objfiBuha.GetCheckObj
+        'Kreditor
+        objkrBuha = Nothing
+        objkrBuha = New SBSXASLib.AXiKrBhg
         'db = Main_Renamed.Finanz.GetDebiObj
         'UPGRADE_WARNING: Couldn't resolve default property of object s. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
         's = db.ReadDebitor3(CInt(DebitorID.Text), WhgID.Text)
@@ -1563,7 +1706,8 @@ ErrorHandler:
                 If intCreatable = 0 Then
                     'MySQL
                     strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
-                                                         lngDebiNbr.ToString + " " + objdtDebitor.Rows(0).Item("Rep_Firma") + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', 'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
+                                                         lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), '" +
+                                                         Replace(objdtDebitor.Rows(0).Item("Rep_Firma"), ",", "") + "', 'Sage200Imp', 'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
                                                          lngDebiNbr.ToString + " wurde erstell im Mandant EE', 'Bitte kontrollieren und Daten ergänzen.', false)"
                     ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                     'objlocMySQLRGConn.Open()
@@ -1997,6 +2141,7 @@ ErrorHandler:
                             Return 1
                         Else
                             Return strKursZeileAr(4)
+                            Return 0
                         End If
                     Else
                         Return strKursZeileAr(4)
@@ -2008,5 +2153,104 @@ ErrorHandler:
         Loop
 
     End Function
+
+    Public Shared Function FcFillKredit(ByVal intAccounting As Integer,
+                                       ByRef objdtHead As DataTable,
+                                       ByRef objdtSub As DataTable,
+                                       ByRef objdbconn As MySqlConnection,
+                                       ByRef objdbAccessConn As OleDb.OleDbConnection) As Integer
+
+        Dim strSQL As String
+        Dim strSQLSub As String
+        Dim strKRGTableType As String
+        Dim objRGMySQLConn As New MySqlConnection
+        Dim objlocMySQLcmd As New MySqlCommand
+        Dim objlocOLEdbcmd As New OleDb.OleDbCommand
+
+        Dim objDTDebiHead As New DataTable
+        Dim dbProvider, dbSource, dbPathAndFile, strMDBName As String
+        Dim objdrSub As DataRow
+        Dim intFcReturns As Int16
+
+        objdbconn.Open()
+
+        strMDBName = FcReadFromSettings(objdbconn, "Buchh_KRGTableMDB", intAccounting)
+        dbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
+        dbSource = "Data Source="
+        dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+
+        'Head Debitzoren löschen
+        objdtHead.Clear()
+        strSQL = FcReadFromSettings(objdbconn, "Buchh_SQLHeadKred", intAccounting)
+        strKRGTableType = FcReadFromSettings(objdbconn, "Buchh_KRGTableType", intAccounting)
+
+        Try
+
+            'objlocMySQLcmd.CommandText = strSQL
+            If strKRGTableType = "A" Then
+                'Access
+                objdbAccessConn.ConnectionString = dbProvider + dbSource + dbPathAndFile
+                objlocOLEdbcmd.CommandText = strSQL
+                objdbAccessConn.Open()
+                objlocOLEdbcmd.Connection = objdbAccessConn
+                objdtHead.Load(objlocOLEdbcmd.ExecuteReader)
+            ElseIf strKRGTableType = "M" Then
+                'MySQL
+                objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                objlocMySQLcmd.Connection = objRGMySQLConn
+                objlocMySQLcmd.CommandText = strSQL
+                objRGMySQLConn.Open()
+                objdtHead.Load(objlocMySQLcmd.ExecuteReader)
+            End If
+            'objlocMySQLcmd.Connection = objdbconn
+            'objDTDebiHead.Load(objlocMySQLcmd.ExecuteReader)
+            'Durch die Records steppen und Sub-Tabelle füllen
+            For Each row In objdtHead.Rows
+                'Debug.Print(strSQLSub)
+                'If row("intBuchungsart") = 1 Then
+                '    objdrSub = objdtSub.NewRow()
+                '    objdrSub("strRGNr") = row("strDebRGNbr")
+                '    objdrSub("intSollHaben") = 2
+                '    objdrSub("lngKto") = row("lngDebKtoNbr")
+                '    objdrSub("dblBrutto") = row("dblDebBrutto")
+                '    objdrSub("dblNetto") = row("dblDebNetto")
+                '    objdrSub("dblMwSt") = row("dblDebMwSt")
+                '    objdrSub("strDebSubText") = row("Betrifft").ToString + " " + row("betrifft1").ToString
+                '    objdtSub.Rows.Add(objdrSub)
+                'End If
+                'strSQLSub = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"), objdtHead)
+                'If strKRGTableType = "A" Then
+                '    objlocOLEdbcmd.CommandText = strSQLSub
+                '    objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
+                'ElseIf strKRGTableType = "M" Then
+                '    objlocMySQLcmd.CommandText = strSQLSub
+                '    objdtSub.Load(objlocMySQLcmd.ExecuteReader)
+                'End If
+            Next
+            'Tabellen runden
+            'intFcReturns = FcRoundInTable(objdtHead, "dblDebNetto", 2)
+            'intFcReturns = FcRoundInTable(objdtHead, "dblDebBrutto", 2)
+            'intFcReturns = FcRoundInTable(objdtHead, "dblDebMwSt", 2)
+            'intFcReturns = FcRoundInTable(objdtSub, "dblNetto", 2)
+            'intFcReturns = FcRoundInTable(objdtSub, "dblMwSt", 2)
+            'intFcReturns = FcRoundInTable(objdtSub, "dblBrutto", 2)
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+
+        Finally
+
+            If objdbAccessConn.State = ConnectionState.Open Then
+                objdbAccessConn.Close()
+            End If
+            If objRGMySQLConn.State = ConnectionState.Open Then
+                objRGMySQLConn.Close()
+            End If
+            objdbconn.Close()
+
+        End Try
+
+    End Function
+
 
 End Class
