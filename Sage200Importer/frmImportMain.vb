@@ -725,7 +725,7 @@ Friend Class frmImportMain
         objdtInfo.Clear()
 
         'DGV Kreditoren
-        dgvBookings.DataSource = objdtKreditorenHead
+        dgvBookings.DataSource = objdtKreditorenHeadRead
         'objdbConn.Open()
         'Call InitdgvDebitoren()
         'Call InitdgvDebitorenSub()
@@ -736,6 +736,8 @@ Friend Class frmImportMain
         Call Main.FcLoginSage(objdbConn, objdbMSSQLConn, objdbSQLcommand, Finanz, FBhg, DbBhg, PIFin, KrBhg, cmbBuha.SelectedValue, objdtInfo)
 
         Call Main.FcFillKredit(cmbBuha.SelectedValue, objdtKreditorenHeadRead, objdtKreditorenSub, objdbConn, objdbAccessConn)
+
+        Call Main.InsertDataTableColumnName(objdtKreditorenHeadRead, objdtKreditorenHead)
 
         Me.Cursor = Cursors.Default
 
