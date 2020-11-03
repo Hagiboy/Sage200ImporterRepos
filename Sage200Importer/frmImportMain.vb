@@ -360,6 +360,118 @@ Friend Class frmImportMain
 
     End Sub
 
+    Private Sub InitdgvKreditoren()
+
+        dgvBookings.ShowCellToolTips = False
+        dgvBookings.AllowUserToAddRows = False
+        dgvBookings.AllowUserToDeleteRows = False
+        dgvBookings.Columns("booKredBook").DisplayIndex = 0
+        dgvBookings.Columns("booKredBook").HeaderText = "ok"
+        dgvBookings.Columns("booKredBook").Width = 40
+        dgvBookings.Columns("booKredBook").ValueType = System.Type.[GetType]("System.Boolean")
+        dgvBookings.Columns("booKredBook").HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter
+        dgvBookings.Columns("booKredBook").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter
+        dgvBookings.Columns("strKredRGNbr").DisplayIndex = 1
+        dgvBookings.Columns("strKredRGNbr").HeaderText = "KRG-Nr"
+        dgvBookings.Columns("strKredRGNbr").Width = 60
+        dgvBookings.Columns("strKredRGNbr").ReadOnly = True
+        dgvBookings.Columns("lngKredNbr").DisplayIndex = 2
+        dgvBookings.Columns("lngKredNbr").HeaderText = "Kreditor"
+        dgvBookings.Columns("lngKredNbr").Width = 60
+        'dgvBookings.Columns("strDebBez").DisplayIndex = 3
+        'dgvBookings.Columns("strDebBez").HeaderText = "Bezeichnung"
+        'dgvBookings.Columns("strDebBez").Width = 140
+        'dgvBookings.Columns("lngDebKtoNbr").DisplayIndex = 4
+        'dgvBookings.Columns("lngDebKtoNbr").HeaderText = "Konto"
+        'dgvBookings.Columns("lngDebKtoNbr").Width = 50
+        'dgvBookings.Columns("strDebKtoBez").DisplayIndex = 5
+        'dgvBookings.Columns("strDebKtoBez").HeaderText = "Bezeichnung"
+        'dgvBookings.Columns("strDebKtoBez").Width = 150
+        'dgvBookings.Columns("strDebCur").DisplayIndex = 6
+        'dgvBookings.Columns("strDebCur").HeaderText = "Währung"
+        'dgvBookings.Columns("strDebCur").Width = 60
+        'dgvBookings.Columns("dblDebNetto").DisplayIndex = 7
+        'dgvBookings.Columns("dblDebNetto").HeaderText = "Netto"
+        'dgvBookings.Columns("dblDebNetto").Width = 80
+        'dgvBookings.Columns("dblDebNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        'dgvBookings.Columns("dblDebNetto").DefaultCellStyle.Format = "N2"
+        'dgvBookings.Columns("dblDebNetto").ReadOnly = True
+        'dgvBookings.Columns("dblDebMwSt").DisplayIndex = 8
+        'dgvBookings.Columns("dblDebMwSt").HeaderText = "MwSt"
+        'dgvBookings.Columns("dblDebMwSt").Width = 70
+        'dgvBookings.Columns("dblDebMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        'dgvBookings.Columns("dblDebMwSt").DefaultCellStyle.Format = "N2"
+        'dgvBookings.Columns("dblDebBrutto").DisplayIndex = 9
+        'dgvBookings.Columns("dblDebBrutto").HeaderText = "Brutto"
+        'dgvBookings.Columns("dblDebBrutto").Width = 80
+        'dgvBookings.Columns("dblDebBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        'dgvBookings.Columns("dblDebBrutto").DefaultCellStyle.Format = "N2"
+        'dgvBookings.Columns("intSubBookings").DisplayIndex = 10
+        'dgvBookings.Columns("intSubBookings").HeaderText = "Sub"
+        'dgvBookings.Columns("intSubBookings").Width = 50
+        'dgvBookings.Columns("intSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        'dgvBookings.Columns("dblSumSubBookings").DisplayIndex = 11
+        'dgvBookings.Columns("dblSumSubBookings").HeaderText = "Sub-Summe"
+        'dgvBookings.Columns("dblSumSubBookings").Width = 80
+        'dgvBookings.Columns("dblSumSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        'dgvBookings.Columns("lngDebIdentNbr").DisplayIndex = 12
+        'dgvBookings.Columns("lngDebIdentNbr").HeaderText = "Ident"
+        'dgvBookings.Columns("lngDebIdentNbr").Width = 80
+        'Dim cmbBuchungsart As New DataGridViewComboBoxColumn()
+        'Dim objdtBA As New DataTable("objidtBA")
+        'Dim objlocMySQLcmd As New MySqlCommand
+        'objlocMySQLcmd.CommandText = "SELECT * FROM tblBuchungsarten"
+        'objlocMySQLcmd.Connection = objdbConn
+        'objdtBA.Load(objlocMySQLcmd.ExecuteReader)
+        'cmbBuchungsart.DataSource = objdtBA
+        'cmbBuchungsart.DisplayMember = "strBuchungsart"
+        'cmbBuchungsart.ValueMember = "idBuchungsart"
+        'cmbBuchungsart.HeaderText = "BA"
+        'cmbBuchungsart.Name = "intBuchungsart"
+        'cmbBuchungsart.DataPropertyName = "intBuchungsart"
+        'cmbBuchungsart.DisplayIndex = 13
+        'cmbBuchungsart.Width = 70
+        'dgvBookings.Columns.Add(cmbBuchungsart)
+        ''dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
+        ''dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
+        ''dgvDebitoren.Columns("intBuchungsart").HeaderText = "BA"
+        ''dgvDebitoren.Columns("intBuchungsart").Width = 40
+        'dgvBookings.Columns("strOPNr").DisplayIndex = 14
+        'dgvBookings.Columns("strOPNr").HeaderText = "OP-Nr"
+        'dgvBookings.Columns("strOPNr").Width = 80
+        'dgvBookings.Columns("datDebRGDatum").DisplayIndex = 15
+        'dgvBookings.Columns("datDebRGDatum").HeaderText = "RG Datum"
+        'dgvBookings.Columns("datDebRGDatum").Width = 70
+        'dgvBookings.Columns("datDebValDatum").DisplayIndex = 16
+        'dgvBookings.Columns("datDebValDatum").HeaderText = "Val Datum"
+        'dgvBookings.Columns("datDebValDatum").Width = 70
+        'dgvBookings.Columns("strDebiBank").DisplayIndex = 17
+        'dgvBookings.Columns("strDebiBank").HeaderText = "Bank"
+        'dgvBookings.Columns("strDebiBank").Width = 60
+        'dgvBookings.Columns("strDebStatusText").DisplayIndex = 18
+        'dgvBookings.Columns("strDebStatusText").HeaderText = "Status"
+        'dgvBookings.Columns("strDebStatusText").Width = 200
+        'dgvBookings.Columns("intBuchhaltung").Visible = False
+        'dgvBookings.Columns("intBuchungsart").Visible = False
+        'dgvBookings.Columns("intRGArt").Visible = False
+        'dgvBookings.Columns("strRGArt").Visible = False
+        'dgvBookings.Columns("lngLinkedRG").Visible = False
+        'dgvBookings.Columns("booLinked").Visible = False
+        'dgvBookings.Columns("strRGName").Visible = False
+        'dgvBookings.Columns("strDebIdentnbr2").Visible = False
+        'dgvBookings.Columns("strDebText").Visible = False
+        'dgvBookings.Columns("strRGBemerkung").Visible = False
+        'dgvBookings.Columns("strDebRef").Visible = False
+        'dgvBookings.Columns("strZahlBed").Visible = False
+        'dgvBookings.Columns("strDebStatusBitLog").Visible = False
+        'dgvBookings.Columns("strDebBookStatus").Visible = False
+        'dgvBookings.Columns("booBooked").Visible = False
+        'dgvBookings.Columns("datBooked").Visible = False
+        'dgvBookings.Columns("lngBelegNr").Visible = False
+
+
+    End Sub
+
 
     Private Sub frmImportMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
@@ -725,9 +837,9 @@ Friend Class frmImportMain
         objdtInfo.Clear()
 
         'DGV Kreditoren
-        dgvBookings.DataSource = objdtKreditorenHeadRead
+        dgvBookings.DataSource = objdtKreditorenHead
         'objdbConn.Open()
-        'Call InitdgvDebitoren()
+        Call InitdgvKreditoren()
         'Call InitdgvDebitorenSub()
         'objdbConn.Close()
 
