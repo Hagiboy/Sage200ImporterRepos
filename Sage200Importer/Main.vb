@@ -221,11 +221,15 @@ Friend NotInheritable Class Main
         Dim DT As DataTable
         'Dim myNewRow As DataRow
         DT = New DataTable("tblKreditorenHead")
+        Dim lngKredID As DataColumn = New DataColumn("lngKredID")
+        lngKredID.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(lngKredID)
+        DT.PrimaryKey = New DataColumn() {DT.Columns("lngKredID")}
         Dim strKredRGNbr As DataColumn = New DataColumn("strKredRGNbr")
         strKredRGNbr.DataType = System.Type.[GetType]("System.String")
         strKredRGNbr.MaxLength = 50
         DT.Columns.Add(strKredRGNbr)
-        DT.PrimaryKey = New DataColumn() {DT.Columns("strKredRGNbr")}
+        'DT.PrimaryKey = New DataColumn() {DT.Columns("strKredRGNbr")}
         Dim intBuchhaltung As DataColumn = New DataColumn("intBuchhaltung")
         intBuchhaltung.DataType = System.Type.[GetType]("System.Int32")
         DT.Columns.Add(intBuchhaltung)
@@ -312,16 +316,19 @@ Friend NotInheritable Class Main
         DT.Columns.Add(datKredValDatum)
         Dim strKrediBank As DataColumn = New DataColumn("strKrediBank")
         strKrediBank.DataType = System.Type.[GetType]("System.String")
-        strKrediBank.MaxLength = 5
+        strKrediBank.MaxLength = 50
         DT.Columns.Add(strKrediBank)
         Dim strKredRef As DataColumn = New DataColumn("strKredRef")
         strKredRef.DataType = System.Type.[GetType]("System.String")
         strKredRef.MaxLength = 27
         DT.Columns.Add(strKredRef)
-        Dim strZahlBed As DataColumn = New DataColumn("strZahlBed")
-        strZahlBed.DataType = System.Type.[GetType]("System.String")
-        strZahlBed.MaxLength = 5
-        DT.Columns.Add(strZahlBed)
+        'Dim strZahlBed As DataColumn = New DataColumn("strZahlBed")
+        'strZahlBed.DataType = System.Type.[GetType]("System.String")
+        'strZahlBed.MaxLength = 5
+        'DT.Columns.Add(strZahlBed)
+        Dim intPayType As DataColumn = New DataColumn("intPayType")
+        intPayType.DataType = System.Type.[GetType]("System.Int16")
+        DT.Columns.Add(intPayType)
         Dim strKredStatusBitLog As DataColumn = New DataColumn("strKredStatusBitLog")
         strKredStatusBitLog.DataType = System.Type.[GetType]("System.String")
         strKredStatusBitLog.MaxLength = 50
@@ -345,6 +352,87 @@ Friend NotInheritable Class Main
         DT.Columns.Add(lngBelegNr)
         Return DT
 
+    End Function
+
+    Public Shared Function tblKreditorenSub() As DataTable
+        Dim DT As DataTable
+        DT = New DataTable("tblKreditorenSub")
+        Dim lngID As DataColumn = New DataColumn("lngID")
+        lngID.DataType = System.Type.[GetType]("System.Int32")
+        lngID.AutoIncrement = True
+        lngID.AutoIncrementSeed = 1
+        lngID.AutoIncrementStep = 1
+        DT.Columns.Add(lngID)
+        Dim strRGNr As DataColumn = New DataColumn("strRGNr")
+        strRGNr.DataType = System.Type.[GetType]("System.String")
+        strRGNr.MaxLength = 50
+        strRGNr.Caption = "RG-Nr"
+        DT.Columns.Add(strRGNr)
+        Dim intSollHaben As DataColumn = New DataColumn("intSollHaben")
+        intSollHaben.DataType = System.Type.[GetType]("System.Int16")
+        intSollHaben.Caption = "S1/H0"
+        DT.Columns.Add(intSollHaben)
+        Dim lngKto As DataColumn = New DataColumn("lngKto")
+        lngKto.DataType = System.Type.[GetType]("System.Int32")
+        lngKto.Caption = "Konto"
+        DT.Columns.Add(lngKto)
+        Dim strKtoBez As DataColumn = New DataColumn("strKtoBez")
+        strKtoBez.DataType = System.Type.[GetType]("System.String")
+        strKtoBez.MaxLength = 50
+        strKtoBez.Caption = "Bezeichnung"
+        DT.Columns.Add(strKtoBez)
+        Dim lngKST As DataColumn = New DataColumn("lngKST")
+        lngKST.DataType = System.Type.[GetType]("System.Int32")
+        lngKST.Caption = "KST"
+        DT.Columns.Add(lngKST)
+        Dim strKstBez As DataColumn = New DataColumn("strKstBez")
+        strKstBez.DataType = System.Type.[GetType]("System.String")
+        strKstBez.MaxLength = 50
+        strKstBez.Caption = "Bez."
+        DT.Columns.Add(strKstBez)
+        Dim dblNetto As DataColumn = New DataColumn("dblNetto")
+        dblNetto.DataType = System.Type.[GetType]("System.Double")
+        dblNetto.Caption = "Netto"
+        DT.Columns.Add(dblNetto)
+        Dim dblMwSt As DataColumn = New DataColumn("dblMwSt")
+        dblMwSt.DataType = System.Type.[GetType]("System.Double")
+        dblMwSt.Caption = "MwSt"
+        DT.Columns.Add(dblMwSt)
+        Dim dblBrutto As DataColumn = New DataColumn("dblBrutto")
+        dblBrutto.DataType = System.Type.[GetType]("System.Double")
+        dblBrutto.Caption = "Brutto"
+        DT.Columns.Add(dblBrutto)
+        Dim dblMwStSatz As DataColumn = New DataColumn("dblMwStSatz")
+        dblMwStSatz.DataType = System.Type.[GetType]("System.Double")
+        dblMwStSatz.Caption = "MwStS"
+        DT.Columns.Add(dblMwStSatz)
+        Dim strMwStKey As DataColumn = New DataColumn("strMwStKey")
+        strMwStKey.DataType = System.Type.[GetType]("System.String")
+        strMwStKey.MaxLength = 50
+        DT.Columns.Add(strMwStKey)
+        Dim strArtikel As DataColumn = New DataColumn("strArtikel")
+        strArtikel.DataType = System.Type.[GetType]("System.String")
+        strArtikel.MaxLength = 128
+        DT.Columns.Add(strArtikel)
+        Dim strKredSubText As DataColumn = New DataColumn("strKredSubText")
+        strKredSubText.DataType = System.Type.[GetType]("System.String")
+        strKredSubText.MaxLength = 50
+        strKredSubText.Caption = "Buch-Text"
+        DT.Columns.Add(strKredSubText)
+        Dim strStatusUBBitLog As DataColumn = New DataColumn("strStatusUBBitLog")
+        strStatusUBBitLog.DataType = System.Type.[GetType]("System.String")
+        strStatusUBBitLog.MaxLength = 50
+        DT.Columns.Add(strStatusUBBitLog)
+        Dim strStatusUBText As DataColumn = New DataColumn("strStatusUBText")
+        strStatusUBText.DataType = System.Type.[GetType]("System.String")
+        strStatusUBText.MaxLength = 255
+        strStatusUBText.Caption = "Status"
+        DT.Columns.Add(strStatusUBText)
+        Dim strKredBookStatus As DataColumn = New DataColumn("strKredBookStatus")
+        strKredBookStatus.DataType = System.Type.[GetType]("System.String")
+        strKredBookStatus.MaxLength = 50
+        DT.Columns.Add(strKredBookStatus)
+        Return DT
     End Function
 
     Public Shared Function tblInfo() As DataTable
@@ -508,7 +596,7 @@ ErrorHandler:
         dbSource = "Data Source="
         dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
 
-        'Head Debitzoren löschen
+        'Head Debitoren löschen
         objdtHead.Clear()
         strSQL = FcReadFromSettings(objdbconn, "Buchh_SQLHead", intAccounting)
         strRGTableType = FcReadFromSettings(objdbconn, "Buchh_RGTableType", intAccounting)
@@ -658,6 +746,63 @@ ErrorHandler:
 
 
     End Function
+
+    Public Shared Function FcSQLParseKredi(ByVal strSQLToParse As String, ByVal lngKredID As Int32, ByVal objdtKredi As DataTable) As String
+
+        'Funktion setzt in eingelesenem SQL wieder Variablen ein
+        Dim intPipePositionBegin, intPipePositionEnd As Integer
+        Dim strWork, strField As String
+        Dim RowKredi() As DataRow
+
+        'Zuerst Datensatz in Kredii-Head suchen
+        RowKredi = objdtKredi.Select("lngKredID=" + lngKredID.ToString)
+
+        '| suchen
+        If InStr(strSQLToParse, "|") > 0 Then
+            'Vorkommen gefunden
+            intPipePositionBegin = InStr(strSQLToParse, "|")
+            intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
+            Do Until intPipePositionBegin = 0
+                strField = Mid(strSQLToParse, intPipePositionBegin + 1, intPipePositionEnd - intPipePositionBegin - 1)
+                Select Case strField
+                    Case "rsKredi.Fields(""KrediID"")"
+                        strField = RowKredi(0).Item("lngKredID")
+                        'Case "rsDebiTemp.Fields([strRGArt])"
+                        '    strField = rsDebiTemp.Fields("strRGArt")
+                        'Case "rsDebiTemp.Fields([strRGName])"
+                        '    strField = rsDebiTemp.Fields("strRGName")
+                        'Case "rsDebiTemp.Fields([strDebIdentNbr2])"
+                        '    strField = rsDebiTemp.Fields("strDebIdentNbr2")
+                        'Case "rsDebi.Fields([RGBemerkung])"
+                        '    strField = rsDebi.Fields("RGBemerkung")
+                        'Case "rsDebi.Fields([JornalNr])"
+                        '    strField = rsDebi.Fields("JornalNr")
+                        'Case "rsDebiTemp.Fields([strRGBemerkung])"
+                        '    strField = rsDebiTemp.Fields("strRGBemerkung")
+                        'Case "rsDebiTemp.Fields(""strDebRGNbr"")"
+                        '    strField = rsDebiTemp.Fields("strDebRGNbr")
+                        'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
+                        '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
+                        'Case "rsDebiTemp.Fields([strDebText])"
+                        '    strField = rsDebiTemp.Fields("strDebText")
+                        'Case "KUNDENZEICHEN"
+                        '    strField = fcGetKundenzeichen(rsDebiTemp.Fields("lngDebIdentNbr"))
+                    Case Else
+                        strField = "unknown field"
+                End Select
+                strSQLToParse = Left(strSQLToParse, intPipePositionBegin - 1) & strField & Right(strSQLToParse, Len(strSQLToParse) - intPipePositionEnd)
+                'Neuer Anfang suchen für evtl. weitere |
+                intPipePositionBegin = InStr(strSQLToParse, "|")
+                'intPipePositionBegin = InStr(intPipePositionEnd + 1, strSQLToParse, "|")
+                intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
+            Loop
+        End If
+
+        Return strSQLToParse
+
+
+    End Function
+
 
     Public Shared Function FcReadPeriodenDef(ByRef objSQLConnection As SqlClient.SqlConnection, ByRef objSQLCommand As SqlClient.SqlCommand, ByVal intPeriodenNr As Int32, ByRef objdtInfo As DataTable) As Int16
 
@@ -2221,14 +2366,14 @@ ErrorHandler:
                 '    objdrSub("strDebSubText") = row("Betrifft").ToString + " " + row("betrifft1").ToString
                 '    objdtSub.Rows.Add(objdrSub)
                 'End If
-                'strSQLSub = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"), objdtHead)
-                'If strKRGTableType = "A" Then
-                '    objlocOLEdbcmd.CommandText = strSQLSub
-                '    objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
-                'ElseIf strKRGTableType = "M" Then
-                '    objlocMySQLcmd.CommandText = strSQLSub
-                '    objdtSub.Load(objlocMySQLcmd.ExecuteReader)
-                'End If
+                strSQLSub = FcSQLParseKredi(FcReadFromSettings(objdbconn, "Buchh_SQLDetailKred", intAccounting), row("lngKredID"), objdtHead)
+                If strKRGTableType = "A" Then
+                    objlocOLEdbcmd.CommandText = strSQLSub
+                    objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
+                ElseIf strKRGTableType = "M" Then
+                    objlocMySQLcmd.CommandText = strSQLSub
+                    objdtSub.Load(objlocMySQLcmd.ExecuteReader)
+                End If
             Next
             'Tabellen runden
             'intFcReturns = FcRoundInTable(objdtHead, "dblDebNetto", 2)
@@ -2252,6 +2397,261 @@ ErrorHandler:
             objdbconn.Close()
 
         End Try
+
+    End Function
+
+    Public Shared Function FcCheckKredit(ByVal intAccounting As Integer,
+                                        ByRef objdtKredits As DataTable,
+                                        ByRef objdtKreditSubs As DataTable,
+                                        ByRef objFinanz As SBSXASLib.AXFinanz,
+                                        ByRef objfiBuha As SBSXASLib.AXiFBhg,
+                                        ByRef objdbBuha As SBSXASLib.AXiKrBhg,
+                                        ByRef objdbPIFb As SBSXASLib.AXiPlFin,
+                                        ByRef objdbconn As MySqlConnection,
+                                        ByRef objdbconnZHDB02 As MySqlConnection,
+                                        ByRef objsqlcommand As MySqlCommand,
+                                        ByRef objsqlcommandZHDB02 As MySqlCommand,
+                                        ByRef objOrdbconn As OracleClient.OracleConnection,
+                                        ByRef objOrcommand As OracleClient.OracleCommand,
+                                        ByRef objdtInfo As DataTable) As Integer
+
+        'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
+        Dim strBitLog As String = ""
+        Dim intReturnValue As Integer
+        Dim strStatus As String = ""
+        Dim intSubNumber As Int16
+        Dim dblSubNetto As Double
+        Dim dblSubMwSt As Double
+        Dim dblSubBrutto As Double
+        Dim booAutoCorrect As Boolean
+        Dim selsubrow() As DataRow
+        Dim strKrediReferenz As String
+        Dim booDiffHeadText As Boolean
+        Dim strKrediiHeadText As String
+        Dim booDiffSubText As Boolean
+        Dim strKrediSubText As String
+        Dim intKreditorNew As Int32
+
+        Try
+
+            objdbconn.Open()
+            objOrdbconn.Open()
+
+            For Each row As DataRow In objdtKredits.Rows
+
+                '
+                'If row("strDebRGNbr") = "44208" Then Stop
+
+                'Status-String erstellen
+                'Debitor 01
+                'intReturnValue = FcGetRefDebiNr(objdbconn, objdbconnZHDB02, objsqlcommand, objsqlcommandZHDB02, objOrdbconn, objOrcommand, IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")), intAccounting, intDebitorNew)
+                'strBitLog += Trim(intReturnValue.ToString)
+                'If intDebitorNew <> 0 Then
+                '    intReturnValue = FcCheckDebitor(intDebitorNew, row("intBuchungsart"), objdbBuha)
+                'Else
+                '    intReturnValue = 2
+                'End If
+                'strBitLog = Trim(intReturnValue.ToString)
+
+                ''Kto 02
+                'intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha, row("dblDebMwSt"))
+                'strBitLog += Trim(intReturnValue.ToString)
+
+                ''Currency 03
+                'intReturnValue = FcCheckCurrency(row("strDebCur"), objfiBuha)
+                'strBitLog += Trim(intReturnValue.ToString)
+
+                ''Sub 04
+                'booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
+                'intReturnValue = FcCheckSubBookings(row("strDebRGNbr"), objdtDebitSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha, objdbPIFb, row("intBuchungsart"), booAutoCorrect)
+                'strBitLog += Trim(intReturnValue.ToString)
+
+                ''Autokorrektur 05
+                ''booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
+                'If booAutoCorrect Then
+                '    'Git es etwas zu korrigieren?
+                '    If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) <> dblSubBrutto Or
+                '        IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) <> dblSubNetto Or
+                '        IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) <> dblSubMwSt Then
+                '        row("dblDebBrutto") = dblSubBrutto * -1
+                '        row("dblDebNetto") = dblSubNetto * -1
+                '        row("dblDebMwSt") = dblSubMwSt * -1
+                '        ''In Sub korrigieren
+                '        'selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "' AND intSollHaben=2")
+                '        'If selsubrow.Length = 1 Then
+                '        '    selsubrow(0).Item("dblBrutto") = dblSubBrutto * -1
+                '        '    selsubrow(0).Item("dblMwSt") = dblSubMwSt * -1
+                '        '    selsubrow(0).Item("dblNetto") = dblSubNetto * -1
+                '        'End If
+                '        strBitLog += "1"
+                '    Else
+                '        strBitLog += "0"
+                '    End If
+                'Else
+                '    strBitLog += "0"
+                'End If
+
+                ''Diff Kopf - Sub? 06
+                'If row("intBuchungsart") = 1 Then 'OP
+                '    If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) + dblSubBrutto <> 0 _
+                '        Or IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) + dblSubMwSt <> 0 _
+                '        Or IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) + dblSubNetto <> 0 Then
+                '        strBitLog += "1"
+                '    Else
+                '        strBitLog += "0"
+                '    End If
+                'Else
+                '    'Test ob sub 0
+                '    If dblSubBrutto <> 0 Then
+                '        strBitLog += "1"
+                '    Else
+                '        strBitLog += "0"
+                '    End If
+
+                'End If
+                ''OP Kopf balanced? 07
+                'intReturnValue = FcCheckBelegHead(row("intBuchungsart"), IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")), IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")), IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")))
+                'strBitLog += Trim(intReturnValue.ToString)
+                ''Referenz 08
+                'intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("intBuchungsart"), strDebiReferenz)
+                'strBitLog += Trim(intReturnValue.ToString)
+                ''OP - Verdopplung 09
+                'intReturnValue = FcCheckOPDouble(objdbBuha, IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")), row("strDebRGNbr"))
+                'strBitLog += Trim(intReturnValue.ToString)
+                ''Valuta - Datum 10
+                'intReturnValue = FcChCeckDate(row("datDebValDatum"), objdtInfo)
+                'strBitLog += Trim(intReturnValue.ToString)
+                ''RG - Datum 11
+                'intReturnValue = FcChCeckDate(row("datDebRGDatum"), objdtInfo)
+                'strBitLog += Trim(intReturnValue.ToString)
+                ''intReturnValue = fcCheckIntBank()
+
+                ''Status-String auswerten
+                ''Debitor
+                'If Left(strBitLog, 1) <> "0" Then
+                '    strStatus = "Deb"
+                '    If Left(strBitLog, 1) <> "2" Then
+                '        intReturnValue = FcIsDebitorCreatable(objdbconnZHDB02, objsqlcommandZHDB02, intDebitorNew, objdbBuha)
+                '        If intReturnValue = 0 Then
+                '            strStatus += " erstellt"
+                '        Else
+                '            strStatus += " nicht erstellt."
+                '        End If
+                '        row("strDebBez") = FcReadDebitorName(objdbBuha, intDebitorNew, row("strDebCur"))
+                '        row("lngDebNbr") = intDebitorNew
+                '    Else
+                '        strStatus += " keine Ref"
+                '        row("strDebBez") = "n/a"
+                '    End If
+                'Else
+                '    row("strDebBez") = FcReadDebitorName(objdbBuha, intDebitorNew, row("strDebCur"))
+                '    row("lngDebNbr") = intDebitorNew
+                'End If
+                ''Konto
+                'If Mid(strBitLog, 2, 1) <> "0" Then
+                '    If Mid(strBitLog, 2, 1) <> 2 Then
+                '        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Kto"
+                '    Else
+                '        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Kto MwSt"
+                '    End If
+                '    row("strDebKtoBez") = "n/a"
+                'Else
+                '    row("strDebKtoBez") = FcReadDebitorKName(objfiBuha, row("lngDebKtoNbr"))
+                'End If
+                ''Währung
+                'If Mid(strBitLog, 3, 1) <> "0" Then
+                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Cur"
+                'End If
+                ''Subbuchungen
+                ''Totale in Head schreiben
+                'row("intSubBookings") = intSubNumber.ToString
+                'row("dblSumSubBookings") = dblSubBrutto.ToString
+                'If Mid(strBitLog, 4, 1) <> "0" Then
+                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Sub"
+                'End If
+                ''Autokorretkur
+                'If Mid(strBitLog, 5, 1) <> "0" Then
+                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "AutoC"
+                'End If
+                ''Diff zu Subbuchungen
+                'If Mid(strBitLog, 6, 1) <> "0" Then
+                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "DiffS"
+                'End If
+                ''OP Kopf
+                'If Mid(strBitLog, 7, 1) <> "0" Then
+                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "BelK"
+                'End If
+                ''Referenz
+                'If Mid(strBitLog, 8, 1) <> "0" Then
+                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Ref"
+                'Else
+                '    row("strDebRef") = strDebiReferenz
+                'End If
+                ''OP
+                'If Mid(strBitLog, 9, 1) <> "0" Then
+                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "OPDbl"
+                '    'Else
+                '    '    row("strDebRef") = strDebiReferenz
+                'End If
+                ''Valuta Datum 
+                'If Mid(strBitLog, 10, 1) <> "0" Then
+                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValD"
+                '    'Else
+                '    '    row("strDebRef") = strDebiReferenz
+                'End If
+                ''RG Datum 
+                'If Mid(strBitLog, 11, 1) <> "0" Then
+                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgD"
+                '    'Else
+                '    '    row("strDebRef") = strDebiReferenz
+                'End If
+
+                ''Status schreiben
+                'If Val(strBitLog) = 0 Or Val(strBitLog) = 1000000 Then
+                '    row("booDebBook") = True
+                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
+                'End If
+                'row("strDebStatusText") = strStatus
+                'row("strDebStatusBitLog") = strBitLog
+
+                ''Wird ein anderer Text in der Head-Buchung gewünscht?
+                'booDiffHeadText = IIf(FcReadFromSettings(objdbconn, "Buchh_TextSpecial", intAccounting) = "0", False, True)
+                'If booDiffHeadText Then
+                '    strDebiHeadText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_TextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits)
+                '    row("strDebText") = strDebiHeadText
+                'End If
+
+                ''Wird ein anderer Text in den Sub-Buchung gewünscht?
+                'booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecial", intAccounting) = "0", False, True)
+                'If booDiffSubText Then
+                '    strDebiSubText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits)
+                'Else
+                '    strDebiSubText = row("strDebText")
+                'End If
+                'selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
+                'For Each subrow In selsubrow
+                '    subrow("strDebSubText") = strDebiSubText
+                'Next
+
+                ''Init
+                'strBitLog = ""
+                'strStatus = ""
+                'intSubNumber = 0
+                'dblSubBrutto = 0
+                'dblSubNetto = 0
+                'dblSubMwSt = 0
+
+            Next
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+
+        Finally
+            objOrdbconn.Close()
+            objdbconn.Close()
+
+        End Try
+
 
     End Function
 

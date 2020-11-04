@@ -76,7 +76,7 @@ Partial Class frmImportMain
         Me.butKreditoren.Name = "butKreditoren"
         Me.butKreditoren.Size = New System.Drawing.Size(131, 41)
         Me.butKreditoren.TabIndex = 1
-        Me.butKreditoren.Text = "&Kredtiroren"
+        Me.butKreditoren.Text = "&Kreditoren"
         Me.butKreditoren.UseVisualStyleBackColor = True
         '
         'butDebitoren
