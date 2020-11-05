@@ -412,6 +412,7 @@ Friend Class frmImportMain
         dgvBookings.Columns("intSubBookings").Width = 50
         dgvBookings.Columns("intSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
         dgvBookings.Columns("dblSumSubBookings").DisplayIndex = 11
+        dgvBookings.Columns("dblSumSubBookings").DefaultCellStyle.Format = "N2"
         dgvBookings.Columns("dblSumSubBookings").HeaderText = "Sub-Summe"
         dgvBookings.Columns("dblSumSubBookings").Width = 80
         dgvBookings.Columns("dblSumSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
@@ -906,7 +907,7 @@ Friend Class frmImportMain
         dgvBookings.Update()
         dgvBookings.Refresh()
 
-        'Call Main.FcCheckKredit(cmbBuha.SelectedValue, objdtKreditorenHead, objdtKreditorenSub, Finanz, FBhg, KrBhg, PIFin, objdbConn, objdbConnZHDB02, objdbcommand, objdbcommandZHDB02, objOracleConn, objOracleCmd, objdtInfo)
+        Call Main.FcCheckKredit(cmbBuha.SelectedValue, objdtKreditorenHead, objdtKreditorenSub, Finanz, FBhg, KrBhg, PIFin, objdbConn, objdbConnZHDB02, objdbcommand, objdbcommandZHDB02, objOracleConn, objOracleCmd, objdtInfo)
 
         Me.Cursor = Cursors.Default
 
