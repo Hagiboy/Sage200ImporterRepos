@@ -363,6 +363,10 @@ Friend NotInheritable Class Main
         lngID.AutoIncrementSeed = 1
         lngID.AutoIncrementStep = 1
         DT.Columns.Add(lngID)
+        Dim lngKredID As DataColumn = New DataColumn("lngKredID")
+        lngKredID.DataType = System.Type.[GetType]("System.Int32")
+        lngKredID.Caption = "Kred-ID"
+        DT.Columns.Add(lngKredID)
         Dim strRGNr As DataColumn = New DataColumn("strRGNr")
         strRGNr.DataType = System.Type.[GetType]("System.String")
         strRGNr.MaxLength = 50
@@ -1228,6 +1232,30 @@ ErrorHandler:
         End Try
 
     End Function
+
+    Public Shared Function FcCheckKrediOPDouble(ByRef objKrBuha As SBSXASLib.AXiKrBhg, ByVal strKreditor As String, ByVal strOPNr As String) As Int16
+
+        'Return 0=ok, 1=Beleg existiert, 9=Problem
+
+        Dim intBelegReturn As Int16
+
+        Try
+            intBelegReturn = objKrBuha.doesBelegExist(strKreditor, "CHF", strOPNr, "", "", "")
+            If intBelegReturn = 0 Then
+                Return 0
+            Else
+                Return 1
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 9
+
+        End Try
+
+    End Function
+
 
     Public Shared Function FcCreateDebRef(ByRef objdbconn As MySqlConnection, ByVal intAccounting As Integer, ByVal strBank As String, ByVal strRGNr As String, ByVal intBuchungsArt As Integer, ByRef strReferenz As String) As Integer
 
@@ -2330,8 +2358,8 @@ ErrorHandler:
                 If intCreatable = 0 Then
                     'MySQL
                     strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
-                                                         lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), '" +
-                                                         Replace(objdtKreditor.Rows(0).Item("Rep_Firma"), ",", "") + "', 'Sage200Imp', 'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
+                                                         lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
+                                                         "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
                                                          lngKrediNbr.ToString + " wurde erstell im Mandant EE', 'Bitte kontrollieren und Daten ergänzen.', false)"
                     ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                     'objlocMySQLRGConn.Open()
@@ -2627,6 +2655,46 @@ ErrorHandler:
     End Function
 
 
+    Public Shared Function FcChCeckKredOP(ByRef strOPNbr As String, ByVal strKredRGNbr As String) As Int16
+
+        Dim strKredOPNbr As String
+
+        '0=ok, 1=OP erstellt oder falsch 9=Problem
+
+        'OP - Nr. Testen
+        Try
+
+            If Not strOPNbr Is Nothing And strOPNbr <> "" Then
+
+                strKredOPNbr = CStr(Convert.ToString(Array.FindAll(strOPNbr.ToArray, Function(c As Char) Char.IsNumber(c))))
+
+                If strOPNbr <> strKredOPNbr Then
+                    strOPNbr = strKredOPNbr
+                    Return 0
+                Else
+                    Return 0
+                End If
+
+            Else
+                If strKredRGNbr <> "" Then
+                    strOPNbr = CStr(Convert.ToString(Array.FindAll(strKredRGNbr.ToArray, Function(c As Char) Char.IsNumber(c))))
+                    Return 0
+                Else
+
+                    Return 9
+                End If
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+
+            Return 9
+
+        End Try
+
+
+    End Function
+
     Public Shared Function FcCheckDebitor(ByVal lngDebitor As Long, ByVal intBuchungsart As Integer, ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
 
         Dim strReturn As String
@@ -2691,6 +2759,7 @@ ErrorHandler:
             Result = False
             Return Result
         End Try
+
     End Function
 
     Public Shared Function FcWriteToRGTable(ByVal intMandant As Int32, ByVal strRGNbr As String, ByVal datDate As Date, ByVal intBelegNr As Int32, ByRef objdbAccessConn As OleDb.OleDbConnection, ByRef objOracleConn As OracleConnection, ByRef objMySQLConn As MySqlConnection) As Int16
@@ -3035,6 +3104,7 @@ ErrorHandler:
         Dim booDiffSubText As Boolean
         Dim strKrediSubText As String
         Dim intKreditorNew As Int32
+        Dim strCleanOPNbr As String
 
         Try
 
@@ -3045,7 +3115,9 @@ ErrorHandler:
 
                 '
                 'If row("strDebRGNbr") = "44208" Then Stop
-
+                'Runden
+                row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
+                row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
                 'Status-String erstellen
                 'Kreditor 01
                 intReturnValue = FcGetRefKrediNr(objdbconn, objdbconnZHDB02, objsqlcommand, objsqlcommandZHDB02, objOrdbconn, objOrcommand, IIf(IsDBNull(row("lngKredNbr")), 0, row("lngKredNbr")), intAccounting, intKreditorNew)
@@ -3079,7 +3151,7 @@ ErrorHandler:
                     If IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")) <> dblSubBrutto Or
                         IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")) <> dblSubNetto Or
                         IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")) <> dblSubMwSt Then
-                        row("dblKredBrutto") = dblSubBrutto * -1
+                        row("dblKredBrutto") = Math.Round(dblSubBrutto * -1, 2, MidpointRounding.AwayFromZero)
                         row("dblKredNetto") = dblSubNetto * -1
                         row("dblKredMwSt") = dblSubMwSt * -1
                         ''In Sub korrigieren
@@ -3117,19 +3189,23 @@ ErrorHandler:
                 'OP Kopf balanced? 07
                 intReturnValue = FcCheckBelegHead(row("intBuchungsart"), IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")), IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")), IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")))
                 strBitLog += Trim(intReturnValue.ToString)
-                ''Referenz 08
+                'OP - Nummer prüfen 08
                 'intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("intBuchungsart"), strDebiReferenz)
-                'strBitLog += Trim(intReturnValue.ToString)
-                ''OP - Verdopplung 09
-                'intReturnValue = FcCheckOPDouble(objdbBuha, IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")), row("strDebRGNbr"))
-                'strBitLog += Trim(intReturnValue.ToString)
-                ''Valuta - Datum 10
-                'intReturnValue = FcChCeckDate(row("datDebValDatum"), objdtInfo)
-                'strBitLog += Trim(intReturnValue.ToString)
-                ''RG - Datum 11
-                'intReturnValue = FcChCeckDate(row("datDebRGDatum"), objdtInfo)
-                'strBitLog += Trim(intReturnValue.ToString)
+                strCleanOPNbr = IIf(IsDBNull(row("strOPNr")), "", row("strOPNr"))
+                intReturnValue = FcChCeckKredOP(strCleanOPNbr, IIf(IsDBNull(row("strKredRGNbr")), "", row("strKredRGNbr")))
+                row("strOPNr") = strCleanOPNbr
+                strBitLog += Trim(intReturnValue.ToString)
+                'OP - Verdopplung 09
+                intReturnValue = FcCheckKrediOPDouble(objKrBuha, IIf(IsDBNull(row("lngKredNbr")), 0, row("lngKredNbr")), row("strKredRGNbr"))
+                strBitLog += Trim(intReturnValue.ToString)
+                'Valuta - Datum 10
+                intReturnValue = FcChCeckDate(row("datKredValDatum"), objdtInfo)
+                strBitLog += Trim(intReturnValue.ToString)
+                'RG - Datum 11
+                intReturnValue = FcChCeckDate(row("datKredRGDatum"), objdtInfo)
+                strBitLog += Trim(intReturnValue.ToString)
                 ''intReturnValue = fcCheckIntBank()
+
 
                 'Status-String auswerten
                 'Kreditor
@@ -3182,40 +3258,39 @@ ErrorHandler:
                 If Mid(strBitLog, 6, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "DiffS"
                 End If
-                ''OP Kopf
-                'If Mid(strBitLog, 7, 1) <> "0" Then
-                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "BelK"
-                'End If
-                ''Referenz
-                'If Mid(strBitLog, 8, 1) <> "0" Then
-                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Ref"
-                'Else
-                '    row("strDebRef") = strDebiReferenz
-                'End If
-                ''OP
-                'If Mid(strBitLog, 9, 1) <> "0" Then
-                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "OPDbl"
-                '    'Else
-                '    '    row("strDebRef") = strDebiReferenz
-                'End If
-                ''Valuta Datum 
-                'If Mid(strBitLog, 10, 1) <> "0" Then
-                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValD"
-                '    'Else
-                '    '    row("strDebRef") = strDebiReferenz
-                'End If
-                ''RG Datum 
-                'If Mid(strBitLog, 11, 1) <> "0" Then
-                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgD"
-                '    'Else
-                '    '    row("strDebRef") = strDebiReferenz
-                'End If
+                'OP Kopf
+                If Mid(strBitLog, 7, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "BelK"
+                End If
+                'OP Nummer
+                If Mid(strBitLog, 8, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "OPNbr"
+                End If
+                'OP Doppelt
+                If Mid(strBitLog, 9, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "OPDbl"
+                    'Else
+                    '   row("strDebRef") = strDebiReferenz
+                End If
+                'Valuta Datum 
+                If Mid(strBitLog, 10, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValD"
+                    'Else
+                    '    row("strDebRef") = strDebiReferenz
+                End If
+                'RG Datum 
+                If Mid(strBitLog, 11, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgD"
+                    'Else
+                    '    row("strDebRef") = strDebiReferenz
+                End If
+                'OP - Nr.
 
-                ''Status schreiben
-                'If Val(strBitLog) = 0 Or Val(strBitLog) = 1000000 Then
-                '    row("booDebBook") = True
-                '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
-                'End If
+                'Status schreiben
+                If Val(strBitLog) = 0 Or Val(strBitLog) = 1000000 Then
+                    row("booKredBook") = True
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
+                End If
                 row("strKredStatusText") = strStatus
                 row("strKredStatusBitLog") = strBitLog
 
@@ -3241,10 +3316,10 @@ ErrorHandler:
                 'Init
                 strBitLog = ""
                 strStatus = ""
-                'intSubNumber = 0
-                'dblSubBrutto = 0
-                'dblSubNetto = 0
-                'dblSubMwSt = 0
+                intSubNumber = 0
+                dblSubBrutto = 0
+                dblSubNetto = 0
+                dblSubMwSt = 0
 
             Next
 

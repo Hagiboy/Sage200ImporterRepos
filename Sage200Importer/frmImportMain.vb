@@ -51,6 +51,7 @@ Friend Class frmImportMain
                     + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
                     + "User Id=cis;Password=sugus;")
     Public objOracleCmd As New OracleCommand()
+    Public intMode As Int16
 
     Public Sub InitVar()
 
@@ -87,6 +88,8 @@ Friend Class frmImportMain
         Dim strIncrBelNbr As String = ""
 
         Me.Cursor = Cursors.WaitCursor
+
+        intMode = 0
 
         objdtDebitorenHead.Clear()
         objdtDebitorenSub.Clear()
@@ -372,10 +375,14 @@ Friend Class frmImportMain
         dgvBookings.Columns("booKredBook").ValueType = System.Type.[GetType]("System.Boolean")
         dgvBookings.Columns("booKredBook").HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter
         dgvBookings.Columns("booKredBook").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter
-        dgvBookings.Columns("strKredRGNbr").DisplayIndex = 1
-        dgvBookings.Columns("strKredRGNbr").HeaderText = "KRG-Nr"
-        dgvBookings.Columns("strKredRGNbr").Width = 60
-        dgvBookings.Columns("strKredRGNbr").ReadOnly = True
+        'dgvBookings.Columns("strKredRGNbr").DisplayIndex = 1
+        'dgvBookings.Columns("strKredRGNbr").HeaderText = "KRG-Nr"
+        'dgvBookings.Columns("strKredRGNbr").Width = 60
+        'dgvBookings.Columns("strKredRGNbr").ReadOnly = True
+        dgvBookings.Columns("lngKredID").DisplayIndex = 1
+        dgvBookings.Columns("lngKredID").HeaderText = "Kred-ID"
+        dgvBookings.Columns("lngKredID").Width = 60
+        dgvBookings.Columns("lngKredID").ReadOnly = True
         dgvBookings.Columns("lngKredNbr").DisplayIndex = 2
         dgvBookings.Columns("lngKredNbr").HeaderText = "Kreditor"
         dgvBookings.Columns("lngKredNbr").Width = 60
@@ -395,18 +402,18 @@ Friend Class frmImportMain
         dgvBookings.Columns("dblKredNetto").HeaderText = "Netto"
         dgvBookings.Columns("dblKredNetto").Width = 80
         dgvBookings.Columns("dblKredNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-        dgvBookings.Columns("dblKredNetto").DefaultCellStyle.Format = "N2"
+        'dgvBookings.Columns("dblKredNetto").DefaultCellStyle.Format = "N2"
         dgvBookings.Columns("dblKredNetto").ReadOnly = True
         dgvBookings.Columns("dblKredMwSt").DisplayIndex = 8
         dgvBookings.Columns("dblKredMwSt").HeaderText = "MwSt"
         dgvBookings.Columns("dblKredMwSt").Width = 70
         dgvBookings.Columns("dblKredMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-        dgvBookings.Columns("dblKredMwSt").DefaultCellStyle.Format = "N2"
+        'dgvBookings.Columns("dblKredMwSt").DefaultCellStyle.Format = "N2"
         dgvBookings.Columns("dblKredBrutto").DisplayIndex = 9
         dgvBookings.Columns("dblKredBrutto").HeaderText = "Brutto"
         dgvBookings.Columns("dblKredBrutto").Width = 80
         dgvBookings.Columns("dblKredBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-        dgvBookings.Columns("dblKredBrutto").DefaultCellStyle.Format = "N2"
+        'dgvBookings.Columns("dblKredBrutto").DefaultCellStyle.Format = "N2"
         dgvBookings.Columns("intSubBookings").DisplayIndex = 10
         dgvBookings.Columns("intSubBookings").HeaderText = "Sub"
         dgvBookings.Columns("intSubBookings").Width = 50
@@ -482,9 +489,12 @@ Friend Class frmImportMain
         dgvBookingSub.ShowCellToolTips = False
         dgvBookingSub.AllowUserToAddRows = False
         dgvBookingSub.AllowUserToDeleteRows = False
-        dgvBookingSub.Columns("strRGNr").DisplayIndex = 0
-        dgvBookingSub.Columns("strRGNr").Width = 60
-        dgvBookingSub.Columns("strRGNr").HeaderText = "RG-Nr"
+        'dgvBookingSub.Columns("strRGNr").DisplayIndex = 0
+        'dgvBookingSub.Columns("strRGNr").Width = 60
+        'dgvBookingSub.Columns("strRGNr").HeaderText = "RG-Nr"
+        dgvBookingSub.Columns("lngKredID").DisplayIndex = 0
+        dgvBookingSub.Columns("lngKredID").Width = 60
+        dgvBookingSub.Columns("lngKredID").HeaderText = "Kred-ID"
         dgvBookingSub.Columns("intSollHaben").Width = 30
         dgvBookingSub.Columns("intSollHaben").HeaderText = "S/H"
         dgvBookingSub.Columns("lngKto").Width = 50
@@ -497,15 +507,15 @@ Friend Class frmImportMain
         dgvBookingSub.Columns("dblNetto").Width = 60
         dgvBookingSub.Columns("dblNetto").HeaderText = "Netto"
         dgvBookingSub.Columns("dblNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-        dgvBookingSub.Columns("dblNetto").DefaultCellStyle.Format = "N2"
+        'dgvBookingSub.Columns("dblNetto").DefaultCellStyle.Format = "N2"
         dgvBookingSub.Columns("dblMwSt").Width = 50
         dgvBookingSub.Columns("dblMwSt").HeaderText = "MwSt"
         dgvBookingSub.Columns("dblMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-        dgvBookingSub.Columns("dblMwSt").DefaultCellStyle.Format = "N2"
+        'dgvBookingSub.Columns("dblMwSt").DefaultCellStyle.Format = "N2"
         dgvBookingSub.Columns("dblBrutto").Width = 60
         dgvBookingSub.Columns("dblBrutto").HeaderText = "Brutto"
         dgvBookingSub.Columns("dblBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-        dgvBookingSub.Columns("dblBrutto").DefaultCellStyle.Format = "N2"
+        'dgvBookingSub.Columns("dblBrutto").DefaultCellStyle.Format = "N2"
         dgvBookingSub.Columns("dblMwStSatz").Width = 40
         dgvBookingSub.Columns("dblMwStSatz").HeaderText = "MwStS"
         dgvBookingSub.Columns("dblMwStSatz").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
@@ -837,16 +847,42 @@ Friend Class frmImportMain
 
     Private Sub dgvDebitoren_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles dgvBookings.CellValueChanged
 
-        If e.ColumnIndex = 2 And e.RowIndex >= 0 Then
+        Dim intDecidiveCell As Integer
 
-            If dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value Then
+        If intMode = 0 Then
+            intDecidiveCell = 2
+        Else
+            intDecidiveCell = 3
+        End If
 
-                'MsgBox("Geändert zu checked " + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + ", " + dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value.ToString + Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value).ToString)
-                'Zulassen? = keine Fehler
-                If Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 0 And Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 10000 Then
-                    MsgBox("Rechnung ist nicht buchbar.", vbOKOnly + vbExclamation, "Nicht buchbar")
-                    dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value = False
+        If e.ColumnIndex = intDecidiveCell And e.RowIndex >= 0 Then
+
+
+            If intMode = 0 Then
+                If dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value Then
+
+                    'MsgBox("Geändert zu checked " + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + ", " + dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value.ToString + Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value).ToString)
+                    'Zulassen? = keine Fehler
+                    If Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 0 And Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 10000 Then
+                        MsgBox("Rechnung ist nicht buchbar.", vbOKOnly + vbExclamation, "Nicht buchbar")
+                        dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value = False
+                    End If
+
                 End If
+
+            Else
+
+                If dgvBookings.Rows(e.RowIndex).Cells("booKredBook").Value Then
+
+                    'MsgBox("Geändert zu checked " + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + ", " + dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value.ToString + Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value).ToString)
+                    'Zulassen? = keine Fehler
+                    If Val(dgvBookings.Rows(e.RowIndex).Cells("strKredStatusBitLog").Value) <> 0 Then
+                        MsgBox("Rechnung ist nicht buchbar.", vbOKOnly + vbExclamation, "Nicht buchbar")
+                        dgvBookings.Rows(e.RowIndex).Cells("booKredBook").Value = False
+                    End If
+
+                End If
+
             End If
 
         End If
@@ -856,23 +892,14 @@ Friend Class frmImportMain
 
     Private Sub dgvDebitoren_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvBookings.CellContentClick
 
-        'Dim dsDebSub() As DataRow
-        'Sub-Grid zeigen, vorher mit Datne abfüllen
-        'dgvDebSubActual.DataSource = objdtDebitorenSub.Select("strRGNr='" + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + "'").CopyToDataTable()
-        dgvBookingSub.DataSource = objdtDebitorenSub.Select("strRGNr='" + dgvBookings.Rows(e.RowIndex).Cells("strDebRGNbr").Value + "'").CopyToDataTable
 
-
-        '        dsDebSub = objdtDebitorenSub.Select("lngID > 1")
-
-        'dgvDebitorenSub.DataSource = dsDebSub
+        If intMode = 0 Then 'Debitoren
+            dgvBookingSub.DataSource = objdtDebitorenSub.Select("strRGNr='" + dgvBookings.Rows(e.RowIndex).Cells("strDebRGNbr").Value + "'").CopyToDataTable
+        Else
+            dgvBookingSub.DataSource = objdtKreditorenSub.Select("lngKredID=" + dgvBookings.Rows(e.RowIndex).Cells("lngKredID").Value.ToString).CopyToDataTable
+        End If
 
         dgvBookingSub.Update()
-
-        'dgvDebitorenSub.DataSource = objdtDebitorenSub
-
-        'dgvDebitorenSub.Update()
-
-        'dgvDebSubActual.Visible = True
 
 
     End Sub
@@ -880,6 +907,8 @@ Friend Class frmImportMain
     Private Sub butKreditoren_Click(sender As Object, e As EventArgs) Handles butKreditoren.Click
 
         Me.Cursor = Cursors.WaitCursor
+
+        intMode = 1
 
         objdtKreditorenHead.Clear()
         objdtKreditorenSub.Clear()
