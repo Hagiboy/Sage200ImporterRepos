@@ -33,6 +33,7 @@ Partial Class frmImportMain
         Me.dgvBookingSub = New System.Windows.Forms.DataGridView()
         Me.dgvInfo = New System.Windows.Forms.DataGridView()
         Me.txtNumber = New System.Windows.Forms.TextBox()
+        Me.butImportK = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -100,11 +101,11 @@ Partial Class frmImportMain
         'butImport
         '
         Me.butImport.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.butImport.Location = New System.Drawing.Point(1493, 84)
+        Me.butImport.Location = New System.Drawing.Point(1493, 54)
         Me.butImport.Name = "butImport"
         Me.butImport.Size = New System.Drawing.Size(132, 41)
         Me.butImport.TabIndex = 4
-        Me.butImport.Text = "&Import"
+        Me.butImport.Text = "&Import D"
         Me.butImport.UseVisualStyleBackColor = True
         '
         'dgvBookingSub
@@ -139,11 +140,22 @@ Partial Class frmImportMain
         Me.txtNumber.Size = New System.Drawing.Size(60, 29)
         Me.txtNumber.TabIndex = 8
         '
+        'butImportK
+        '
+        Me.butImportK.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.butImportK.Location = New System.Drawing.Point(1493, 111)
+        Me.butImportK.Name = "butImportK"
+        Me.butImportK.Size = New System.Drawing.Size(132, 41)
+        Me.butImportK.TabIndex = 9
+        Me.butImportK.Text = "&Import K"
+        Me.butImportK.UseVisualStyleBackColor = True
+        '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1637, 637)
+        Me.Controls.Add(Me.butImportK)
         Me.Controls.Add(Me.txtNumber)
         Me.Controls.Add(Me.dgvInfo)
         Me.Controls.Add(Me.dgvBookingSub)
@@ -173,4 +185,5 @@ Partial Class frmImportMain
     Friend WithEvents dgvBookingSub As DataGridView
     Friend WithEvents dgvInfo As DataGridView
     Friend WithEvents txtNumber As TextBox
+    Friend WithEvents butImportK As Button
 End Class

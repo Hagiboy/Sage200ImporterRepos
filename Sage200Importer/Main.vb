@@ -184,10 +184,10 @@ Friend NotInheritable Class Main
         dblBrutto.DataType = System.Type.[GetType]("System.Double")
         dblBrutto.Caption = "Brutto"
         DT.Columns.Add(dblBrutto)
-        Dim lngMwStSatz As DataColumn = New DataColumn("lngMwStSatz")
-        lngMwStSatz.DataType = System.Type.[GetType]("System.Double")
-        lngMwStSatz.Caption = "MwStS"
-        DT.Columns.Add(lngMwStSatz)
+        Dim dblMwStSatz As DataColumn = New DataColumn("dblMwStSatz")
+        dblMwStSatz.DataType = System.Type.[GetType]("System.Double")
+        dblMwStSatz.Caption = "MwStS"
+        DT.Columns.Add(dblMwStSatz)
         Dim strMwStKey As DataColumn = New DataColumn("strMwStKey")
         strMwStKey.DataType = System.Type.[GetType]("System.String")
         strMwStKey.MaxLength = 50
@@ -302,7 +302,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(strKredIdentNbr2)
         Dim strKredText As DataColumn = New DataColumn("strKredText")
         strKredText.DataType = System.Type.[GetType]("System.String")
-        strKredText.MaxLength = 50
+        strKredText.MaxLength = 125
         DT.Columns.Add(strKredText)
         Dim strRGBemerkung As DataColumn = New DataColumn("strRGBemerkung")
         strRGBemerkung.DataType = System.Type.[GetType]("System.String")
@@ -420,7 +420,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(strArtikel)
         Dim strKredSubText As DataColumn = New DataColumn("strKredSubText")
         strKredSubText.DataType = System.Type.[GetType]("System.String")
-        strKredSubText.MaxLength = 50
+        strKredSubText.MaxLength = 125
         strKredSubText.Caption = "Buch-Text"
         DT.Columns.Add(strKredSubText)
         Dim strStatusUBBitLog As DataColumn = New DataColumn("strStatusUBBitLog")
@@ -938,7 +938,7 @@ ErrorHandler:
             For Each row As DataRow In objdtDebits.Rows
 
                 '
-                'If row("strDebRGNbr") = "44208" Then Stop
+                If row("strDebRGNbr") = "57976" Then Stop
 
                 'Status-String erstellen
                 'Debitor 01
@@ -1442,12 +1442,12 @@ ErrorHandler:
 
             'MwSt prüfen
             If Not IsDBNull(subrow("strMwStKey")) Then
-                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("lngMwStSatz"), strStrStCodeSage200)
+                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")), strStrStCodeSage200)
                 If intReturnValue = 0 Then
                     subrow("strMwStKey") = strStrStCodeSage200
                     'Check of korrekt berechnet
                     strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
-                    If Val(strSteuer(2)) <> subrow("dblMwst") Then
+                    If Val(strSteuer(2)) <> IIf(IsDBNull(subrow("dblMwst")), 0, subrow("dblMwst")) Then
                         'Im Fall von Auto-Korrekt anpassen
                         'Stop
                         If booAutoCorrect Then
@@ -1694,7 +1694,7 @@ ErrorHandler:
 
             'MwSt prüfen
             If Not IsDBNull(subrow("strMwStKey")) Then
-                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("lngMwStSatz"), strStrStCodeSage200)
+                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero), strStrStCodeSage200)
                 If intReturnValue = 0 Then
                     subrow("strMwStKey") = strStrStCodeSage200
                     'Check of korrekt berechnet
@@ -2242,9 +2242,9 @@ ErrorHandler:
                 If intCreatable = 0 Then
                     'MySQL
                     strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
-                                                         lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), '" +
-                                                         Replace(objdtDebitor.Rows(0).Item("Rep_Firma"), ",", "") + "', 'Sage200Imp', 'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
-                                                         lngDebiNbr.ToString + " wurde erstell im Mandant EE', 'Bitte kontrollieren und Daten ergänzen.', false)"
+                                                         lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
+                                                         "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
+                                                         lngDebiNbr.ToString + " wurde erstell im Mandant EE', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
                     ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                     'objlocMySQLRGConn.Open()
                     'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
@@ -2359,8 +2359,8 @@ ErrorHandler:
                     'MySQL
                     strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
                                                          lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
-                                                         "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
-                                                         lngKrediNbr.ToString + " wurde erstell im Mandant EE', 'Bitte kontrollieren und Daten ergänzen.', false)"
+                                                         "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Kreditor " +
+                                                         lngKrediNbr.ToString + " wurde erstell im Mandant EE', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
                     ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                     'objlocMySQLRGConn.Open()
                     'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
@@ -2843,6 +2843,92 @@ ErrorHandler:
 
     End Function
 
+    Public Shared Function FcWriteToKrediRGTable(ByVal intMandant As Int32,
+                                                 ByVal lngKredID As Int32,
+                                                 ByVal datDate As Date,
+                                                 ByVal intBelegNr As Int32,
+                                                 ByRef objdbAccessConn As OleDb.OleDbConnection,
+                                                 ByRef objOracleConn As OracleConnection,
+                                                 ByRef objMySQLConn As MySqlConnection) As Int16
+
+        'Returns 0=ok, 1=Problem
+
+        Dim strSQL As String
+        Dim intAffected As Int16
+        Dim objlocOLEdbcmd As New OleDb.OleDbCommand
+        Dim objlocOracmd As New OracleCommand
+        Dim objlocMySQLRGConn As New MySqlConnection
+        Dim objlocMySQLRGcmd As New MySqlCommand
+        Dim strNameKRGTable As String
+        Dim strBelegNrName As String
+        Dim strKRGNbrFieldName As String
+        Dim strKRGTableType As String
+        Dim strMDBName As String
+        Dim strdbProvider, strdbSource, strdbPathAndFile As String
+
+
+        objMySQLConn.Open()
+
+        strMDBName = FcReadFromSettings(objMySQLConn, "Buchh_KRGTableMDB", intMandant)
+        strKRGTableType = FcReadFromSettings(objMySQLConn, "Buchh_KRGTableType", intMandant)
+        strNameKRGTable = FcReadFromSettings(objMySQLConn, "Buchh_TableKred", intMandant)
+        strBelegNrName = FcReadFromSettings(objMySQLConn, "Buchh_TableKRGBelegNrName", intMandant)
+        strKRGNbrFieldName = FcReadFromSettings(objMySQLConn, "Buchh_TableKRGNbrFieldName", intMandant)
+        'strSQL = "UPDATE " + strNameRGTable + " SET gebucht=true, gebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "=" + intBelegNr.ToString + " WHERE " + strRGNbrFieldName + "=" + strRGNbr
+
+        Try
+
+            If strKRGTableType = "A" Then
+                'Access
+                strdbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
+                strdbSource = "Data Source="
+                strdbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+                strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + lngKredID.ToString
+
+                objdbAccessConn.ConnectionString = strdbProvider + strdbSource + strdbPathAndFile
+                objdbAccessConn.Open()
+
+                objlocOLEdbcmd.CommandText = strSQL
+
+                objlocOLEdbcmd.Connection = objdbAccessConn
+                intAffected = objlocOLEdbcmd.ExecuteNonQuery()
+
+            ElseIf strKRGTableType = "M" Then
+                'MySQL
+                strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + lngKredID.ToString
+                objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                objlocMySQLRGConn.Open()
+                objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                objlocMySQLRGcmd.CommandText = strSQL
+                intAffected = objlocMySQLRGcmd.ExecuteNonQuery()
+
+
+            End If
+
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 1
+
+        Finally
+            If objdbAccessConn.State = ConnectionState.Open Then
+                objdbAccessConn.Close()
+            End If
+
+            If objlocMySQLRGConn.State = ConnectionState.Open Then
+                objlocMySQLRGConn.Close()
+            End If
+
+            If objMySQLConn.State = ConnectionState.Open Then
+                objMySQLConn.Close()
+            End If
+
+        End Try
+
+
+    End Function
+
 
     Public Shared Function FcSetBuchMode(ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal strMode As String) As Int16
 
@@ -3026,7 +3112,7 @@ ErrorHandler:
             'objlocMySQLcmd.Connection = objdbconn
             'objDTDebiHead.Load(objlocMySQLcmd.ExecuteReader)
             'Durch die Records steppen und Sub-Tabelle füllen
-            For Each row In objdtHead.Rows
+            For Each row As DataRow In objdtHead.Rows
                 'Debug.Print(strSQLSub)
                 'If row("intBuchungsart") = 1 Then
                 '    objdrSub = objdtSub.NewRow()
@@ -3118,6 +3204,7 @@ ErrorHandler:
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
+                row("dblKredBrutto") = Decimal.Round(row("dblKredBrutto"), 2, MidpointRounding.AwayFromZero)
                 'Status-String erstellen
                 'Kreditor 01
                 intReturnValue = FcGetRefKrediNr(objdbconn, objdbconnZHDB02, objsqlcommand, objsqlcommandZHDB02, objOrdbconn, objOrcommand, IIf(IsDBNull(row("lngKredNbr")), 0, row("lngKredNbr")), intAccounting, intKreditorNew)
@@ -3327,13 +3414,113 @@ ErrorHandler:
             MessageBox.Show(ex.Message)
 
         Finally
-            objOrdbconn.Close()
-            objdbconn.Close()
+            If objOrdbconn.State = ConnectionState.Open Then
+                objOrdbconn.Close()
+            End If
+            If objdbconn.State = ConnectionState.Open Then
+                objdbconn.Close()
+            End If
 
         End Try
 
 
     End Function
 
+    Public Shared Function fcCheckTransitorischeDebit(ByVal intAccounting As Int16, ByRef objdbconn As MySqlConnection,
+                                       ByRef objdbAccessConn As OleDb.OleDbConnection)
+
+        Dim strSQL As String
+        'Dim strSQLSub As String
+        Dim strRGTableType As String
+        Dim objRGMySQLConn As New MySqlConnection
+        Dim objlocMySQLcmd As New MySqlCommand
+        Dim objlocOLEdbcmd As New OleDb.OleDbCommand
+        Dim booTransits As Boolean
+        Dim intAffected As Int16
+
+        Dim tblCompute As New DataTable()
+        Dim booTransitcond As Boolean
+
+
+        Dim objDTTransitDebits As New DataTable
+        Dim dbProvider, dbSource, dbPathAndFile, strMDBName As String
+
+
+        Try
+
+            objdbconn.Open()
+            'Gibt es transitorische Buchungen?
+            booTransits = CBool(FcReadFromSettings(objdbconn, "Buchh_Transit", intAccounting))
+
+            If booTransits Then
+
+                'Table - Art lesen
+                strRGTableType = FcReadFromSettings(objdbconn, "Buchh_RGTableType", intAccounting)
+                'Debitoren - Table Name lesen
+                strMDBName = FcReadFromSettings(objdbconn, "Buchh_RGTableMDB", intAccounting)
+                ''Access
+                'dbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
+                'dbSource = "Data Source="
+                'dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+
+                'Debitzoren Transit-Queries für Mandant einlesen
+                strSQL = "SELECT * FROM buchhaltungen_sub WHERE strType='D' AND refMandant=" + intAccounting.ToString
+                objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
+                objlocMySQLcmd.Connection = objRGMySQLConn
+                objlocMySQLcmd.CommandText = strSQL
+                objRGMySQLConn.Open()
+                objDTTransitDebits.Load(objlocMySQLcmd.ExecuteReader)
+
+                For Each rowdebitquery As DataRow In objDTTransitDebits.Rows
+
+                    If Not IsDBNull(rowdebitquery("strCondition")) Then
+                        'Es wurde eine Bedingung definiert
+                        booTransitcond = Convert.ToBoolean(tblCompute.Compute("#" + DateTime.Now.ToString("yyyy-MM-dd") + "#" + rowdebitquery("strCondition"), Nothing))
+                        'Debug.Print("Result " + "#" + DateTime.Now.ToString("yyyy-MM-dd") + "#" + rowdebitquery("strCondition") + ", " + booTransitcond.ToString)
+                    Else
+                        booTransitcond = True
+                    End If
+
+                    If booTransitcond Then
+                        'Debug.Print("Running Query " + rowdebitquery("strSQL"))
+                        If strRGTableType = "A" Then
+                            'Access
+                            objdbAccessConn.Open()
+                            objlocOLEdbcmd.Connection = objdbAccessConn
+                            objlocOLEdbcmd.CommandText = rowdebitquery("strSQL")
+                            intAffected = objlocOLEdbcmd.ExecuteNonQuery()
+                        ElseIf strRGTableType = "M" Then
+                            'MySQL
+                            objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                            objRGMySQLConn.Open()
+                            objlocMySQLcmd.Connection = objRGMySQLConn
+                            objlocMySQLcmd.CommandText = rowdebitquery("strSQL")
+                            intAffected = objlocMySQLcmd.ExecuteNonQuery()
+                        End If
+                    End If
+
+                Next
+
+
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+
+        Finally
+            If objRGMySQLConn.State = ConnectionState.Open Then
+                objRGMySQLConn.Close()
+            End If
+            If objdbconn.State = ConnectionState.Open Then
+                objdbconn.Close()
+            End If
+            If objdbAccessConn.State = ConnectionState.Open Then
+                objdbAccessConn.Close()
+            End If
+
+        End Try
+
+
+    End Function
 
 End Class
