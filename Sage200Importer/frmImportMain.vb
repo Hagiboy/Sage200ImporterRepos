@@ -124,7 +124,21 @@ Friend Class frmImportMain
         dgvBookings.Update()
         dgvBookings.Refresh()
 
-        Call Main.FcCheckDebit(cmbBuha.SelectedValue, objdtDebitorenHead, objdtDebitorenSub, Finanz, FBhg, DbBhg, PIFin, objdbConn, objdbConnZHDB02, objdbcommand, objdbcommandZHDB02, objOracleConn, objOracleCmd, objdtInfo)
+        Call Main.FcCheckDebit(cmbBuha.SelectedValue,
+                               objdtDebitorenHead,
+                               objdtDebitorenSub,
+                               Finanz,
+                               FBhg,
+                               DbBhg,
+                               PIFin,
+                               objdbConn,
+                               objdbConnZHDB02,
+                               objdbcommand,
+                               objdbcommandZHDB02,
+                               objOracleConn,
+                               objOracleCmd,
+                               objdtInfo,
+                               cmbBuha.Text)
 
         'Anzahl schreiben
         txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
@@ -667,7 +681,7 @@ Friend Class frmImportMain
                         'Verdopplung interne BelegsNummer verhindern
                         DbBhg.CheckDoubleIntBelNbr = "J"
 
-                        If IsDBNull(row("strOPNr")) Or row("strOPNr") = "" Then
+                        If IIf(IsDBNull(row("strOPNr")), "", row("strOPNr")) = "" Then
                             'strExtBelegNbr = row("strOPNr")
 
                             'Zuerst Beleg-Nummerieungung aktivieren
@@ -744,11 +758,20 @@ Friend Class frmImportMain
 
                         'Buchung nur in Fibu
                         'Prinzip Funktion WriteBuchung() anwenden mit allen Parametern
-                        'Beleg-Nummerierung aktivieren
-                        'DbBhg.IncrBelNbr = "J"
-                        'Belegsnummer abholen
-                        intDebBelegsNummer = FBhg.GetNextBelNbr()
 
+                        'Verdopplung interne BelegsNummer verhindern
+                        FBhg.CheckDoubleIntBelNbr = "J"
+
+                        If IIf(IsDBNull(row("strOPNr")), "", row("strOPNr")) <> "" And IIf(IsDBNull(row("lngDebIdentNbr")), 0, row("lngDebIdentNbr")) <> 0 Then
+                            'Belegsnummer abholen fall keine Beleg-Nummer angegeben
+                            intDebBelegsNummer = FBhg.GetNextBelNbr()
+                        Else
+                            If IIf(IsDBNull(row("strOPNr")), "", row("strOPNr")) <> "" Then
+                                intDebBelegsNummer = Convert.ToInt32(row("strOPNr"))
+                            Else
+                                intDebBelegsNummer = row("lngDebIdentNbr")
+                            End If
+                        End If
                         'Variablen zuweisen
                         strBelegDatum = Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         strValutaDatum = Format(row("datDebValDatum"), "yyyyMMdd").ToString

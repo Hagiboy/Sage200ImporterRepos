@@ -911,7 +911,8 @@ ErrorHandler:
                                         ByRef objsqlcommandZHDB02 As MySqlCommand,
                                         ByRef objOrdbconn As OracleClient.OracleConnection,
                                         ByRef objOrcommand As OracleClient.OracleCommand,
-                                        ByRef objdtInfo As DataTable) As Integer
+                                        ByRef objdtInfo As DataTable,
+                                        ByVal strcmbBuha As String) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
         Dim strBitLog As String = ""
@@ -966,7 +967,7 @@ ErrorHandler:
 
                 'Autokorrektur 05
                 'booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
-                If booAutoCorrect Then
+                If booAutoCorrect And row("intBuchungsart") = 1 Then
                     'Git es etwas zu korrigieren?
                     If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) <> dblSubBrutto Or
                         IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) <> dblSubNetto Or
@@ -1013,23 +1014,13 @@ ErrorHandler:
                 'Referenz 08
                 intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("intBuchungsart"), strDebiReferenz)
                 strBitLog += Trim(intReturnValue.ToString)
-                'OP - Verdopplung 09
-                intReturnValue = FcCheckOPDouble(objdbBuha, IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")), row("strDebRGNbr"))
-                strBitLog += Trim(intReturnValue.ToString)
-                'Valuta - Datum 10
-                intReturnValue = FcChCeckDate(row("datDebValDatum"), objdtInfo)
-                strBitLog += Trim(intReturnValue.ToString)
-                'RG - Datum 11
-                intReturnValue = FcChCeckDate(row("datDebRGDatum"), objdtInfo)
-                strBitLog += Trim(intReturnValue.ToString)
-                'intReturnValue = fcCheckIntBank()
 
-                'Status-String auswerten
+                'Status-String auswerten, vorziehen um neue PK - Nummer auszulesen
                 'Debitor
                 If Left(strBitLog, 1) <> "0" Then
                     strStatus = "Deb"
                     If Left(strBitLog, 1) <> "2" Then
-                        intReturnValue = FcIsDebitorCreatable(objdbconnZHDB02, objsqlcommandZHDB02, intDebitorNew, objdbBuha)
+                        intReturnValue = FcIsDebitorCreatable(objdbconnZHDB02, objsqlcommandZHDB02, intDebitorNew, objdbBuha, strcmbBuha)
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
                         Else
@@ -1045,6 +1036,39 @@ ErrorHandler:
                     row("strDebBez") = FcReadDebitorName(objdbBuha, intDebitorNew, row("strDebCur"))
                     row("lngDebNbr") = intDebitorNew
                 End If
+
+                'OP - Verdopplung 09
+                intReturnValue = FcCheckOPDouble(objdbBuha, IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")), row("strDebRGNbr"))
+                strBitLog += Trim(intReturnValue.ToString)
+                'Valuta - Datum 10
+                intReturnValue = FcChCeckDate(row("datDebValDatum"), objdtInfo)
+                strBitLog += Trim(intReturnValue.ToString)
+                'RG - Datum 11
+                intReturnValue = FcChCeckDate(row("datDebRGDatum"), objdtInfo)
+                strBitLog += Trim(intReturnValue.ToString)
+                'intReturnValue = fcCheckIntBank()
+
+                'Status-String auswerten
+                ''Debitor
+                'If Left(strBitLog, 1) <> "0" Then
+                '    strStatus = "Deb"
+                '    If Left(strBitLog, 1) <> "2" Then
+                '        intReturnValue = FcIsDebitorCreatable(objdbconnZHDB02, objsqlcommandZHDB02, intDebitorNew, objdbBuha)
+                '        If intReturnValue = 0 Then
+                '            strStatus += " erstellt"
+                '        Else
+                '            strStatus += " nicht erstellt."
+                '        End If
+                '        row("strDebBez") = FcReadDebitorName(objdbBuha, intDebitorNew, row("strDebCur"))
+                '        row("lngDebNbr") = intDebitorNew
+                '    Else
+                '        strStatus += " keine Ref"
+                '        row("strDebBez") = "n/a"
+                '    End If
+                'Else
+                '    row("strDebBez") = FcReadDebitorName(objdbBuha, intDebitorNew, row("strDebCur"))
+                '    row("lngDebNbr") = intDebitorNew
+                'End If
                 'Konto
                 If Mid(strBitLog, 2, 1) <> "0" Then
                     If Mid(strBitLog, 2, 1) <> 2 Then
@@ -1217,7 +1241,7 @@ ErrorHandler:
         Dim intBelegReturn As Int16
 
         Try
-            intBelegReturn = objdbBuha.doesBelegExist(strDebitor, "CHF", strOPNr, "", "", "")
+            intBelegReturn = objdbBuha.doesBelegExist(strDebitor, "CHF", strOPNr, "0", "", "")
             If intBelegReturn = 0 Then
                 Return 0
             Else
@@ -2055,25 +2079,30 @@ ErrorHandler:
 
             End If
 
-            If IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
-                intDebiNew = 0
-                Return 2
-            Else
-                intPKNewField = objdtDebitor.Rows(0).Item(strDebNewField)
-                intPKNewField = FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtDebitor.Rows(0).Item(strDebNewField))
-                If intPKNewField = 0 Then
-                    intDebiNew = 0
-                    Return 3
-                Else
-                    intDebiNew = intPKNewField
-                    Return 0
-                End If
-            End If
+            If objdtDebitor.Rows.Count > 0 Then
 
+                If IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
+                    intDebiNew = 0
+                    Return 2
+                Else
+                    intPKNewField = objdtDebitor.Rows(0).Item(strDebNewField)
+                    intPKNewField = FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtDebitor.Rows(0).Item(strDebNewField))
+                    If intPKNewField = 0 Then
+                        intDebiNew = 0
+                        Return 3
+                    Else
+                        intDebiNew = intPKNewField
+                        Return 0
+                    End If
+                End If
+            Else
+                intDebiNew = 0
+                Return 4
+            End If
 
         End If
 
-        Return intPKNewField
+            Return intPKNewField
 
 
     End Function
@@ -2161,7 +2190,8 @@ ErrorHandler:
     Public Shared Function FcIsDebitorCreatable(ByRef objdbconnZHDB02 As MySqlConnection,
                                                 ByRef objsqlcommandZHDB02 As MySqlCommand,
                                                 ByVal lngDebiNbr As Long,
-                                                ByRef objDbBhg As SBSXASLib.AXiDbBhg) As Int16
+                                                ByRef objDbBhg As SBSXASLib.AXiDbBhg,
+                                                ByVal strcmbBuha As String) As Int16
 
         'Return: 0=creatable und erstellt, 3=Sage - Suchtext nicht erfasst, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
 
@@ -2244,7 +2274,7 @@ ErrorHandler:
                     strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
                                                          lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
                                                          "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
-                                                         lngDebiNbr.ToString + " wurde erstell im Mandant EE', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
+                                                         lngDebiNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
                     ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                     'objlocMySQLRGConn.Open()
                     'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
@@ -2392,7 +2422,7 @@ ErrorHandler:
 
     Public Shared Function FcGetPKNewFromRep(ByRef objdbconnZHDB02 As MySqlConnection, ByRef objsqlcommandZHDB02 As MySqlCommand, ByVal intPKRefField As Int32) As Int32
 
-        'Aus Tabelle Rep_Betriebe auf ZHDB02 auslesen
+        'Aus Tabelle Rep_Betriebe auf ZHDB02 auslesen 
         Dim objdtRepBetrieb As New DataTable
 
         Try
