@@ -88,7 +88,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(strDebIdentNbr2)
         Dim strDebText As DataColumn = New DataColumn("strDebText")
         strDebText.DataType = System.Type.[GetType]("System.String")
-        strDebText.MaxLength = 50
+        strDebText.MaxLength = 255
         DT.Columns.Add(strDebText)
         Dim strRGBemerkung As DataColumn = New DataColumn("strRGBemerkung")
         strRGBemerkung.DataType = System.Type.[GetType]("System.String")
@@ -198,7 +198,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(strArtikel)
         Dim strDebSubText As DataColumn = New DataColumn("strDebSubText")
         strDebSubText.DataType = System.Type.[GetType]("System.String")
-        strDebSubText.MaxLength = 50
+        strDebSubText.MaxLength = 255
         strDebSubText.Caption = "Buch-Text"
         DT.Columns.Add(strDebSubText)
         Dim strStatusUBBitLog As DataColumn = New DataColumn("strStatusUBBitLog")
@@ -911,6 +911,7 @@ ErrorHandler:
                                         ByRef objsqlcommandZHDB02 As MySqlCommand,
                                         ByRef objOrdbconn As OracleClient.OracleConnection,
                                         ByRef objOrcommand As OracleClient.OracleCommand,
+                                        ByRef objdbAccessConn As OleDb.OleDbConnection,
                                         ByRef objdtInfo As DataTable,
                                         ByVal strcmbBuha As String) As Integer
 
@@ -935,15 +936,20 @@ ErrorHandler:
 
             objdbconn.Open()
             objOrdbconn.Open()
+            'objdbAccessConn.Open()
 
             For Each row As DataRow In objdtDebits.Rows
 
-                '
-                If row("strDebRGNbr") = "57976" Then Stop
+                'If row("strDebRGNbr") = "57976" Then Stop
+
+                'Runden
+                row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 2, MidpointRounding.AwayFromZero)
+                row("dblDebMwSt") = Decimal.Round(row("dblDebMwst"), 2, MidpointRounding.AwayFromZero)
+                row("dblDebBrutto") = Decimal.Round(row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
 
                 'Status-String erstellen
                 'Debitor 01
-                intReturnValue = FcGetRefDebiNr(objdbconn, objdbconnZHDB02, objsqlcommand, objsqlcommandZHDB02, objOrdbconn, objOrcommand, IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")), intAccounting, intDebitorNew)
+                intReturnValue = FcGetRefDebiNr(objdbconn, objdbconnZHDB02, objsqlcommand, objsqlcommandZHDB02, objOrdbconn, objOrcommand, objdbAccessConn, IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")), intAccounting, intDebitorNew)
                 strBitLog += Trim(intReturnValue.ToString)
                 If intDebitorNew <> 0 Then
                     intReturnValue = FcCheckDebitor(intDebitorNew, row("intBuchungsart"), objdbBuha)
@@ -1041,10 +1047,10 @@ ErrorHandler:
                 intReturnValue = FcCheckOPDouble(objdbBuha, IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")), row("strDebRGNbr"))
                 strBitLog += Trim(intReturnValue.ToString)
                 'Valuta - Datum 10
-                intReturnValue = FcChCeckDate(row("datDebValDatum"), objdtInfo)
+                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")), objdtInfo)
                 strBitLog += Trim(intReturnValue.ToString)
                 'RG - Datum 11
-                intReturnValue = FcChCeckDate(row("datDebRGDatum"), objdtInfo)
+                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebRGDatum")), #1789-09-17#, row("datDebRGDatum")), objdtInfo)
                 strBitLog += Trim(intReturnValue.ToString)
                 'intReturnValue = fcCheckIntBank()
 
@@ -1169,9 +1175,16 @@ ErrorHandler:
             MessageBox.Show(ex.Message)
 
         Finally
-            objOrdbconn.Close()
-            objdbconn.Close()
 
+            If objOrdbconn.State = ConnectionState.Open Then
+                objOrdbconn.Close()
+            End If
+            If objdbconn.State = ConnectionState.Open Then
+                objdbconn.Close()
+            End If
+            If objdbAccessConn.State = ConnectionState.Open Then
+                objdbAccessConn.Close()
+            End If
         End Try
 
 
@@ -1464,6 +1477,12 @@ ErrorHandler:
 
             strBitLog = ""
 
+            'Runden
+            subrow("dblNetto") = Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero)
+            subrow("dblMwSt") = Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero)
+            subrow("dblBrutto") = Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero)
+            subrow("dblMwStSatz") = Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero)
+
             'MwSt prüfen
             If Not IsDBNull(subrow("strMwStKey")) Then
                 intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")), strStrStCodeSage200)
@@ -1503,6 +1522,11 @@ ErrorHandler:
                 dblSubMwSt += subrow("dblMwSt")
                 dblSubBrutto += subrow("dblBrutto")
             End If
+
+            'Runden
+            dblSubNetto = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
+            dblSubMwSt = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
+            dblSubBrutto = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
 
             'Konto prüfen
             If Not IsDBNull(subrow("lngKto")) Then
@@ -2030,6 +2054,7 @@ ErrorHandler:
                                           ByRef objsqlcommandZHDB02 As MySqlCommand,
                                           ByRef objOrdbconn As OracleClient.OracleConnection,
                                           ByRef objOrcommand As OracleClient.OracleCommand,
+                                          ByRef objdbAccessConn As OleDb.OleDbConnection,
                                           ByVal lngDebiNbr As Int32,
                                           ByVal intAccounting As Int32,
                                           ByRef intDebiNew As Int32) As Int16
@@ -2043,6 +2068,13 @@ ErrorHandler:
         Dim objdbConnDeb As New MySqlConnection
         Dim objsqlCommDeb As New MySqlCommand
 
+        Dim objlocOLEdbcmd As New OleDb.OleDbCommand
+        Dim strMDBName As String = FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting)
+        Dim dbProvider As String = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
+        Dim dbSource As String = "Data Source="
+        Dim dbPathAndFile As String = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+        Dim strSQL As String
+
         strTableName = FcReadFromSettings(objdbconn, "Buchh_PKTable", intAccounting)
         strTableType = FcReadFromSettings(objdbconn, "Buchh_PKTableType", intAccounting)
         strDebFieldName = FcReadFromSettings(objdbconn, "Buchh_PKField", intAccounting)
@@ -2055,12 +2087,16 @@ ErrorHandler:
         strSageName = FcReadFromSettings(objdbconn, "Buchh_PKSageName", intAccounting)
         strDebiAccField = FcReadFromSettings(objdbconn, "Buchh_DPKAccount", intAccounting)
 
+        strSQL = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+                 " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
+
         If strTableName <> "" And strDebFieldName <> "" Then
 
             If strTableType = "O" Then 'Oracle
                 'objOrdbconn.Open()
-                objOrcommand.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
-                                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
+                'objOrcommand.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+                '                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
+                objOrcommand.CommandText = strSQL
                 objdtDebitor.Load(objOrcommand.ExecuteReader)
                 'Ist DebiNrNew Linked oder Direkt
                 'If strDebNewFieldType = "D" Then
@@ -2071,11 +2107,21 @@ ErrorHandler:
                 'MySQL - Tabelle einlesen
                 objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting))
                 objdbConnDeb.Open()
-                objsqlCommDeb.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
-                                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
+                'objsqlCommDeb.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+                '                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
+                objsqlCommDeb.CommandText = strSQL
                 objsqlCommDeb.Connection = objdbConnDeb
                 objdtDebitor.Load(objsqlCommDeb.ExecuteReader)
                 objdbConnDeb.Close()
+
+            ElseIf strTableType = "A" Then 'Access
+                'Access
+                objdbAccessConn.ConnectionString = dbProvider + dbSource + dbPathAndFile
+                objlocOLEdbcmd.CommandText = strSQL
+                objdbAccessConn.Open()
+                objlocOLEdbcmd.Connection = objdbAccessConn
+                objdtDebitor.Load(objlocOLEdbcmd.ExecuteReader)
+                objdbAccessConn.Close()
 
             End If
 
@@ -2085,14 +2131,19 @@ ErrorHandler:
                     intDebiNew = 0
                     Return 2
                 Else
-                    intPKNewField = objdtDebitor.Rows(0).Item(strDebNewField)
-                    intPKNewField = FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtDebitor.Rows(0).Item(strDebNewField))
-                    If intPKNewField = 0 Then
-                        intDebiNew = 0
-                        Return 3
-                    Else
-                        intDebiNew = intPKNewField
-                        Return 0
+
+                    If strTableName <> "Tab_Repbetriebe" Then
+                        intPKNewField = objdtDebitor.Rows(0).Item(strDebNewField)
+                        intPKNewField = FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtDebitor.Rows(0).Item(strDebNewField))
+                        If intPKNewField = 0 Then
+                            intDebiNew = 0
+                            Return 3
+                        Else
+                            intDebiNew = intPKNewField
+                            Return 0
+                        End If
+                    Else 'Wenn Angaben nicht von anderer Tabelle kommen
+                        intDebiNew = objdtDebitor.Rows(0).Item(strDebNewField)
                     End If
                 End If
             Else
@@ -2102,8 +2153,7 @@ ErrorHandler:
 
         End If
 
-            Return intPKNewField
-
+        Return intPKNewField
 
     End Function
 
@@ -2207,6 +2257,7 @@ ErrorHandler:
 
             'Angaben einlesen
             objdbconnZHDB02.Open()
+            objsqlcommandZHDB02.Connection = objdbconnZHDB02
             objsqlcommandZHDB02.CommandText = "SELECT Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_DebiKonto, Rep_Gruppe, Rep_Vertretung, Rep_Ansprechpartner, Rep_Land, Rep_Tel1, Rep_Fax, Rep_Mail, " +
                                                 "Rep_Language, Rep_Kredi_MWSTNr, Rep_Kreditlimite, Rep_Kred_Pay_Def, Rep_Kred_Bank_Name, Rep_Kred_Bank_PLZ, Rep_Kred_Bank_Ort, Rep_Kred_IBAN, Rep_Kred_Bank_BIC, " +
                                                 "Rep_Kred_Currency FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString

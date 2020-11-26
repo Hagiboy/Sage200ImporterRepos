@@ -35,7 +35,7 @@ Friend Class frmImportMain
     Public objdbcommand As New MySqlCommand
     Public objdbcommandZHDB02 As New MySqlCommand
     Public objdbSQLcommand As New SqlCommand
-    Public objDABuchhaltungen As New MySqlDataAdapter("SELECT * FROM buchhaltungen WHERE NOT Buchh200_Name IS NULL", objdbConn)
+    Public objDABuchhaltungen As New MySqlDataAdapter("SELECT * FROM buchhaltungen WHERE NOT Buchh200_Name IS NULL ORDER BY Buchh_Bez", objdbConn)
     'Public objDACarsGrid As New MySqlDataAdapter("SELECT tblcars.idCar, tblunits.strUnit, tblplates.strPlate, tblcars.strVIN, tblmodelle.strModell FROM tblcars LEFT JOIN tblunits ON tblcars.refUnit = tblunits.idUnit LEFT JOIN tblplates ON tblcars.refPlate = tblplates.idPlate LEFT JOIN tblmodelle ON tblcars.refModell = tblmodelle.idModell", objdbConn)
     'Public objdtDebitor As New DataTable("tbliDebitor")
     Public objdtBuchhaltungen As New DataTable("tbliBuchhaltungen")
@@ -137,6 +137,7 @@ Friend Class frmImportMain
                                objdbcommandZHDB02,
                                objOracleConn,
                                objOracleCmd,
+                               objdbAccessConn,
                                objdtInfo,
                                cmbBuha.Text)
 
@@ -638,7 +639,7 @@ Friend Class frmImportMain
         Dim strFibuText As String
         Dim dblNettoBetrag As Double
         Dim dblBebuBetrag As Double
-        Dim strBeBuEintrag As String
+        Dim strBeBuEintrag As String = ""
         Dim strSteuerFeld As String
 
         Dim intSollKonto As Int32
@@ -739,7 +740,11 @@ Friend Class frmImportMain
                             strFibuText = SubRow("strDebSubText")
                             dblNettoBetrag = SubRow("dblNetto")
                             'dblBebuBetrag = 1000.0#
-                            strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
+                            If SubRow("lngKST") > 0 Then
+                                strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
+                            Else
+                                strBeBuEintrag = "00" + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"
+                            End If
                             strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"), SubRow("dblMwSt"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
                             'strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
                             'Debug.Print("Konto-Info: " + strSteuerInfo(26))
