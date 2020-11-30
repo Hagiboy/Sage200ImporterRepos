@@ -115,7 +115,13 @@ Friend Class frmImportMain
 
         Call Main.FcLoginSage(objdbConn, objdbMSSQLConn, objdbSQLcommand, Finanz, FBhg, DbBhg, PIFin, KrBhg, cmbBuha.SelectedValue, objdtInfo)
 
-        Call Main.FcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdtDebitorenSub, objdbConn, objdbAccessConn)
+        'Transitorische Buchungen?
+        Call Main.fcCheckTransitorischeDebit(cmbBuha.SelectedValue, objdbConn, objdbAccessConn)
+
+        'Gibt es eine Query auszuführen bevor dem Buchen?
+        Call Main.FcExecuteBeforeDebit(cmbBuha.SelectedValue, objdbConn)
+
+        Call Main.FcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdtDebitorenSub, objdbConn, objdbAccessConn, objOracleConn, objOracleCmd)
 
         Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead, objdtDebitorenHead)
 
@@ -143,9 +149,6 @@ Friend Class frmImportMain
 
         'Anzahl schreiben
         txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
-
-        'Transitorische Buchungen?
-        Call Main.fcCheckTransitorischeDebit(cmbBuha.SelectedValue, objdbConn, objdbAccessConn)
 
         'strIncrBelNbr = DbBhg.IncrBelNbr
         'Debug.Print("Increment " + strIncrBelNbr)
@@ -333,7 +336,7 @@ Friend Class frmImportMain
         dgvBookings.Columns("booLinked").Visible = False
         dgvBookings.Columns("strRGName").Visible = False
         dgvBookings.Columns("strDebIdentnbr2").Visible = False
-        dgvBookings.Columns("strDebText").Visible = False
+        'dgvBookings.Columns("strDebText").Visible = False
         dgvBookings.Columns("strRGBemerkung").Visible = False
         dgvBookings.Columns("strDebRef").Visible = False
         dgvBookings.Columns("strZahlBed").Visible = False
@@ -745,7 +748,11 @@ Friend Class frmImportMain
                             Else
                                 strBeBuEintrag = "00" + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"
                             End If
-                            strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"), SubRow("dblMwSt"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                            If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" And SubRow("strMwStKey") <> "25" Then
+                                strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"), SubRow("dblMwSt"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                            Else
+                                strSteuerFeld = "STEUERFREI"
+                            End If
                             'strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
                             'Debug.Print("Konto-Info: " + strSteuerInfo(26))
 
@@ -867,6 +874,9 @@ Friend Class frmImportMain
                         'Throw an exception
                     End If
 
+                    'Evtl. Query nach Buchung ausführen
+                    Call Main.FcExecuteAfterDebit(cmbBuha.SelectedValue, objdbConn)
+
                 End If
 
             Next
@@ -933,14 +943,22 @@ Friend Class frmImportMain
 
     Private Sub dgvDebitoren_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvBookings.CellContentClick
 
+        Try
 
-        If intMode = 0 Then 'Debitoren
-            dgvBookingSub.DataSource = objdtDebitorenSub.Select("strRGNr='" + dgvBookings.Rows(e.RowIndex).Cells("strDebRGNbr").Value + "'").CopyToDataTable
-        Else
-            dgvBookingSub.DataSource = objdtKreditorenSub.Select("lngKredID=" + dgvBookings.Rows(e.RowIndex).Cells("lngKredID").Value.ToString).CopyToDataTable
-        End If
+            If intMode = 0 Then 'Debitoren
+                dgvBookingSub.DataSource = objdtDebitorenSub.Select("strRGNr='" + dgvBookings.Rows(e.RowIndex).Cells("strDebRGNbr").Value + "'").CopyToDataTable
+            Else
+                dgvBookingSub.DataSource = objdtKreditorenSub.Select("lngKredID=" + dgvBookings.Rows(e.RowIndex).Cells("lngKredID").Value.ToString).CopyToDataTable
+            End If
 
-        dgvBookingSub.Update()
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+
+        Finally
+            dgvBookingSub.Update()
+
+        End Try
+
 
 
     End Sub

@@ -580,7 +580,9 @@ ErrorHandler:
                                        ByRef objdtHead As DataTable,
                                        ByRef objdtSub As DataTable,
                                        ByRef objdbconn As MySqlConnection,
-                                       ByRef objdbAccessConn As OleDb.OleDbConnection) As Integer
+                                       ByRef objdbAccessConn As OleDb.OleDbConnection,
+                                       ByRef objOracleCon As OracleConnection,
+                                       ByRef objOracleCmd As OracleCommand) As Integer
 
         Dim strSQL As String
         Dim strSQLSub As String
@@ -597,9 +599,6 @@ ErrorHandler:
         objdbconn.Open()
 
         strMDBName = FcReadFromSettings(objdbconn, "Buchh_RGTableMDB", intAccounting)
-        dbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
-        dbSource = "Data Source="
-        dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
 
         'Head Debitoren löschen
         objdtHead.Clear()
@@ -611,6 +610,11 @@ ErrorHandler:
             'objlocMySQLcmd.CommandText = strSQL
             If strRGTableType = "A" Then
                 'Access
+
+                dbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
+                dbSource = "Data Source="
+                dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+
                 objdbAccessConn.ConnectionString = dbProvider + dbSource + dbPathAndFile
                 objlocOLEdbcmd.CommandText = strSQL
                 objdbAccessConn.Open()
@@ -639,7 +643,7 @@ ErrorHandler:
                 '    objdrSub("strDebSubText") = row("Betrifft").ToString + " " + row("betrifft1").ToString
                 '    objdtSub.Rows.Add(objdrSub)
                 'End If
-                strSQLSub = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"), objdtHead)
+                strSQLSub = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"), objdtHead, objOracleCon, objOracleCmd)
                 If strRGTableType = "A" Then
                     objlocOLEdbcmd.CommandText = strSQLSub
                     objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
@@ -692,7 +696,11 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcSQLParse(ByVal strSQLToParse As String, ByVal strRGNbr As String, ByVal objdtDebi As DataTable) As String
+    Public Shared Function FcSQLParse(ByVal strSQLToParse As String,
+                                      ByVal strRGNbr As String,
+                                      ByVal objdtDebi As DataTable,
+                                      ByRef objOracleConn As OracleClient.OracleConnection,
+                                      ByRef objOracleCommand As OracleClient.OracleCommand) As String
 
         'Funktion setzt in eingelesenem SQL wieder Variablen ein
         Dim intPipePositionBegin, intPipePositionEnd As Integer
@@ -718,10 +726,10 @@ ErrorHandler:
                         strField = RowDebi(0).Item("lngDebIdentNbr")
                         'Case "rsDebiTemp.Fields([strRGArt])"
                         '    strField = rsDebiTemp.Fields("strRGArt")
-                        'Case "rsDebiTemp.Fields([strRGName])"
-                        '    strField = rsDebiTemp.Fields("strRGName")
-                        'Case "rsDebiTemp.Fields([strDebIdentNbr2])"
-                        '    strField = rsDebiTemp.Fields("strDebIdentNbr2")
+                    Case "rsDebiTemp.Fields([strRGName])"
+                        strField = RowDebi(0).Item("strRGName")
+                    Case "rsDebiTemp.Fields([strDebIdentNbr2])"
+                        strField = RowDebi(0).Item("strDebIdentNbr2")
                         'Case "rsDebi.Fields([RGBemerkung])"
                         '    strField = rsDebi.Fields("RGBemerkung")
                         'Case "rsDebi.Fields([JornalNr])"
@@ -734,8 +742,8 @@ ErrorHandler:
                         '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
                         'Case "rsDebiTemp.Fields([strDebText])"
                         '    strField = rsDebiTemp.Fields("strDebText")
-                        'Case "KUNDENZEICHEN"
-                        '    strField = fcGetKundenzeichen(rsDebiTemp.Fields("lngDebIdentNbr"))
+                    Case "KUNDENZEICHEN"
+                        strField = FcGetKundenzeichen(RowDebi(0).Item("lngDebIdentNbr"), objOracleConn, objOracleCommand)
                     Case Else
                         strField = "unknown field"
                 End Select
@@ -749,6 +757,17 @@ ErrorHandler:
 
         Return strSQLToParse
 
+
+    End Function
+
+    Public Shared Function FcGetKundenzeichen(ByVal lngJournalNr As Int32, ByRef objOracleCon As OracleConnection, ByRef objOracleCmd As OracleCommand) As String
+
+        Dim objdtJournalKZ As New DataTable
+
+        objOracleCmd.CommandText = "SELECT KUNDENZEICHEN FROM TAB_JOURNALSTAMM WHERE JORNALNR=" + lngJournalNr.ToString
+        objdtJournalKZ.Load(objOracleCmd.ExecuteReader)
+
+        Return objdtJournalKZ.Rows(0).Item(0)
 
     End Function
 
@@ -1145,14 +1164,14 @@ ErrorHandler:
                 'Wird ein anderer Text in der Head-Buchung gewünscht?
                 booDiffHeadText = IIf(FcReadFromSettings(objdbconn, "Buchh_TextSpecial", intAccounting) = "0", False, True)
                 If booDiffHeadText Then
-                    strDebiHeadText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_TextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits)
+                    strDebiHeadText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_TextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits, objOrdbconn, objOrcommand)
                     row("strDebText") = strDebiHeadText
                 End If
 
                 'Wird ein anderer Text in den Sub-Buchung gewünscht?
                 booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecial", intAccounting) = "0", False, True)
                 If booDiffSubText Then
-                    strDebiSubText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits)
+                    strDebiSubText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits, objOrdbconn, objOrcommand)
                 Else
                     strDebiSubText = row("strDebText")
                 End If
@@ -3007,6 +3026,137 @@ ErrorHandler:
 
         End Try
 
+    End Function
+
+    Public Shared Function FcExecuteBeforeDebit(ByVal intMandant As Integer, ByRef objMySQLConn As MySqlConnection) As Int16
+
+        Dim strSQL As String
+        Dim strBeforeDebiRunType As String
+        Dim strMDBName As String
+        Dim objlocMySQLRGConn As New MySqlConnection
+        Dim objlocMySQLRGcmd As New MySqlCommand
+        Dim intAffected As Int16
+
+
+        Try
+
+            objMySQLConn.Open()
+            strSQL = FcReadFromSettings(objMySQLConn, "Buchh_SQLbeforeDebiRun", intMandant)
+            strBeforeDebiRunType = FcReadFromSettings(objMySQLConn, "Buchh_SQLbeforeDebiType", intMandant)
+            strMDBName = FcReadFromSettings(objMySQLConn, "Buchh_SQLbeforeDebiMDB", intMandant)
+
+            If strSQL <> "" Then
+
+                If strBeforeDebiRunType = "A" Then
+                    'Access
+                    'strdbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
+                    'strdbSource = "Data Source="
+                    'strdbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+                    'strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + lngKredID.ToString
+
+                    'objdbAccessConn.ConnectionString = strdbProvider + strdbSource + strdbPathAndFile
+                    'objdbAccessConn.Open()
+
+                    'objlocOLEdbcmd.CommandText = strSQL
+
+                    'objlocOLEdbcmd.Connection = objdbAccessConn
+                    'intAffected = objlocOLEdbcmd.ExecuteNonQuery()
+
+                ElseIf strBeforeDebiRunType = "M" Then
+                    'MySQL
+                    objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                    objlocMySQLRGConn.Open()
+                    objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                    objlocMySQLRGcmd.CommandText = strSQL
+                    intAffected = objlocMySQLRGcmd.ExecuteNonQuery()
+
+                End If
+
+            End If
+
+            Return 0
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 1
+
+        Finally
+            If objMySQLConn.State = ConnectionState.Open Then
+                objMySQLConn.Close()
+            End If
+
+            If objlocMySQLRGConn.State = ConnectionState.Open Then
+                objlocMySQLRGConn.Close()
+            End If
+
+        End Try
+
+    End Function
+
+    Public Shared Function FcExecuteAfterDebit(ByVal intMandant As Integer, ByRef objMySQLConn As MySqlConnection) As Int16
+
+        Dim strSQL As String
+        Dim strAfterDebiRunType As String
+        Dim strMDBName As String
+        Dim objlocMySQLRGConn As New MySqlConnection
+        Dim objlocMySQLRGcmd As New MySqlCommand
+        Dim intAffected As Int16
+
+
+        Try
+
+            objMySQLConn.Open()
+            strSQL = FcReadFromSettings(objMySQLConn, "Buchh_SQLafterDebiRun", intMandant)
+            strAfterDebiRunType = FcReadFromSettings(objMySQLConn, "Buchh_SQLafterDebiType", intMandant)
+            strMDBName = FcReadFromSettings(objMySQLConn, "Buchh_SQLafterDebiMDB", intMandant)
+
+            If strSQL <> "" Then
+
+                If strAfterDebiRunType = "A" Then
+                    'Access
+                    'strdbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
+                    'strdbSource = "Data Source="
+                    'strdbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+                    'strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + lngKredID.ToString
+
+                    'objdbAccessConn.ConnectionString = strdbProvider + strdbSource + strdbPathAndFile
+                    'objdbAccessConn.Open()
+
+                    'objlocOLEdbcmd.CommandText = strSQL
+
+                    'objlocOLEdbcmd.Connection = objdbAccessConn
+                    'intAffected = objlocOLEdbcmd.ExecuteNonQuery()
+
+                ElseIf strAfterDebiRunType = "M" Then
+                    'MySQL
+                    objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                    objlocMySQLRGConn.Open()
+                    objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                    objlocMySQLRGcmd.CommandText = strSQL
+                    intAffected = objlocMySQLRGcmd.ExecuteNonQuery()
+
+                End If
+
+            End If
+
+            Return 0
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 1
+
+        Finally
+            If objMySQLConn.State = ConnectionState.Open Then
+                objMySQLConn.Close()
+            End If
+
+            If objlocMySQLRGConn.State = ConnectionState.Open Then
+                objlocMySQLRGConn.Close()
+            End If
+
+        End Try
 
     End Function
 
