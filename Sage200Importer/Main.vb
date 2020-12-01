@@ -944,7 +944,7 @@ ErrorHandler:
         Dim dblSubBrutto As Double
         Dim booAutoCorrect As Boolean
         Dim selsubrow() As DataRow
-        Dim strDebiReferenz As String
+        Dim strDebiReferenz As String = ""
         Dim booDiffHeadText As Boolean
         Dim strDebiHeadText As String
         Dim booDiffSubText As Boolean
@@ -1037,7 +1037,7 @@ ErrorHandler:
                 intReturnValue = FcCheckBelegHead(row("intBuchungsart"), IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")), IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")), IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")))
                 strBitLog += Trim(intReturnValue.ToString)
                 'Referenz 08
-                intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("intBuchungsart"), strDebiReferenz)
+                intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("strOPNr"), row("intBuchungsart"), strDebiReferenz)
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Status-String auswerten, vorziehen um neue PK - Nummer auszulesen
@@ -1313,20 +1313,43 @@ ErrorHandler:
     End Function
 
 
-    Public Shared Function FcCreateDebRef(ByRef objdbconn As MySqlConnection, ByVal intAccounting As Integer, ByVal strBank As String, ByVal strRGNr As String, ByVal intBuchungsArt As Integer, ByRef strReferenz As String) As Integer
+    Public Shared Function FcCreateDebRef(ByRef objdbconn As MySqlConnection,
+                                          ByVal intAccounting As Integer,
+                                          ByVal strBank As String,
+                                          ByVal strRGNr As String,
+                                          ByVal strOPNr As String,
+                                          ByVal intBuchungsArt As Integer,
+                                          ByRef strReferenz As String) As Integer
 
         'Return 0=ok oder nicht nötig, 1=keine Angaben hinterlegt, 2=Berechnung hat nicht geklappt
 
         Dim strTLNNr As String
-        Dim strCleanedRGNr As String
+        Dim strCleanedNr As String
+        Dim strRefFrom As String
 
         Try
 
             If intBuchungsArt = 1 Then
-                strTLNNr = FcReadBankSettings(intAccounting, strBank, objdbconn)
-                strCleanedRGNr = FcCleanRGNrStrict(strRGNr)
+                'Checken ob Referenz aus OP - Nr. oder aus Rechnung erstellt werden soll
 
-                strReferenz = strTLNNr + StrDup(20 - Len(strCleanedRGNr), "0") + strCleanedRGNr + Trim(CStr(FcModulo10(strTLNNr + StrDup(20 - Len(strCleanedRGNr), "0") + strCleanedRGNr)))
+                strRefFrom = FcReadFromSettings(objdbconn, "Buchh_ESRNrFrom", intAccounting)
+                If strRefFrom = "" Then
+                    strRefFrom = "R"
+                End If
+
+                Select Case strRefFrom
+                    Case "R"
+                        strCleanedNr = strRGNr
+                    Case "O"
+                        strCleanedNr = strOPNr
+
+                End Select
+
+                strTLNNr = FcReadBankSettings(intAccounting, strBank, objdbconn)
+
+                strCleanedNr = FcCleanRGNrStrict(strRGNr)
+
+                strReferenz = strTLNNr + StrDup(20 - Len(strCleanedNr), "0") + strCleanedNr + Trim(CStr(FcModulo10(strTLNNr + StrDup(20 - Len(strCleanedNr), "0") + strCleanedNr)))
                 Return 0
 
             Else
@@ -1497,10 +1520,10 @@ ErrorHandler:
             strBitLog = ""
 
             'Runden
-            subrow("dblNetto") = Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero)
-            subrow("dblMwSt") = Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero)
-            subrow("dblBrutto") = Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero)
-            subrow("dblMwStSatz") = Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero)
+            subrow("dblNetto") = IIf(IsDBNull(subrow("dblNetto")), 0, Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero))
+            subrow("dblMwSt") = IIf(IsDBNull(subrow("dblMwst")), 0, Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero))
+            subrow("dblBrutto") = IIf(IsDBNull(subrow("dblBrutto")), 0, Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero))
+            subrow("dblMwStSatz") = IIf(IsDBNull(subrow("dblMwStSatz")), 0, Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero))
 
             'MwSt prüfen
             If Not IsDBNull(subrow("strMwStKey")) Then
@@ -2628,7 +2651,7 @@ ErrorHandler:
         Dim intKredToleranzNbr As Integer = 1
         Dim intKredMahnGroup As Integer = 1
         Dim strKredWerbung As String = "N"
-        Dim strText As String
+        Dim strText As String = ""
         Dim strTelefon1 As String
         Dim strTelefax As String
 
@@ -2675,7 +2698,22 @@ ErrorHandler:
                                            strKredWerbung)
             If intPayDefault = 9 Then 'IBAN
                 If Len(strZVIBAN) > 15 Then
-                    Call objKrBhg.SetZahlungsverbindung("B", strZVIBAN, strZVBankName, "", "", strZVBankPLZ.ToString, strZVBankOrt, Left(strZVIBAN, 2), Mid(strZVIBAN, 5, 5), "J", strZVBIC, "", "", "", strZVIBAN, "")
+                    Call objKrBhg.SetZahlungsverbindung("B",
+                                                        strZVIBAN,
+                                                        strZVBankName,
+                                                        "",
+                                                        "",
+                                                        strZVBankPLZ.ToString,
+                                                        strZVBankOrt,
+                                                        Left(strZVIBAN, 2),
+                                                        Mid(strZVIBAN, 5, 5),
+                                                        "J",
+                                                        strZVBIC,
+                                                        "",
+                                                        "",
+                                                        "",
+                                                        strZVIBAN,
+                                                        "")
                 End If
             End If
             Call objKrBhg.WriteKreditor3(0)
