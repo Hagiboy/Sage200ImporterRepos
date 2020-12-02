@@ -258,7 +258,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(strRGName)
         Dim strOPNr As DataColumn = New DataColumn("strOPNr")
         strOPNr.DataType = System.Type.[GetType]("System.String")
-        strOPNr.MaxLength = 13
+        strOPNr.MaxLength = 30
         DT.Columns.Add(strOPNr)
         Dim lngKredNbr As DataColumn = New DataColumn("lngKredNbr")
         lngKredNbr.DataType = System.Type.[GetType]("System.Int32")
@@ -592,9 +592,9 @@ ErrorHandler:
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
 
         Dim objDTDebiHead As New DataTable
-        Dim dbProvider, dbSource, dbPathAndFile, strMDBName As String
         Dim objdrSub As DataRow
         Dim intFcReturns As Int16
+        Dim strMDBName As String
 
         objdbconn.Open()
 
@@ -610,12 +610,8 @@ ErrorHandler:
             'objlocMySQLcmd.CommandText = strSQL
             If strRGTableType = "A" Then
                 'Access
+                Call FcInitAccessConnecation(objdbAccessConn, strMDBName)
 
-                dbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
-                dbSource = "Data Source="
-                dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
-
-                objdbAccessConn.ConnectionString = dbProvider + dbSource + dbPathAndFile
                 objlocOLEdbcmd.CommandText = strSQL
                 objdbAccessConn.Open()
                 objlocOLEdbcmd.Connection = objdbAccessConn
@@ -1781,6 +1777,11 @@ ErrorHandler:
         For Each subrow As DataRow In selsubrow
 
             strBitLog = ""
+            'Runden
+            subrow("dblNetto") = IIf(IsDBNull(subrow("dblNetto")), 0, Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero))
+            subrow("dblMwSt") = IIf(IsDBNull(subrow("dblMwst")), 0, Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero))
+            subrow("dblBrutto") = IIf(IsDBNull(subrow("dblBrutto")), 0, Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero))
+            subrow("dblMwStSatz") = IIf(IsDBNull(subrow("dblMwStSatz")), 0, Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero))
 
             'MwSt prüfen
             If Not IsDBNull(subrow("strMwStKey")) Then
@@ -2112,9 +2113,6 @@ ErrorHandler:
 
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
         Dim strMDBName As String = FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting)
-        Dim dbProvider As String = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
-        Dim dbSource As String = "Data Source="
-        Dim dbPathAndFile As String = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
         Dim strSQL As String
 
         strTableName = FcReadFromSettings(objdbconn, "Buchh_PKTable", intAccounting)
@@ -2158,7 +2156,7 @@ ErrorHandler:
 
             ElseIf strTableType = "A" Then 'Access
                 'Access
-                objdbAccessConn.ConnectionString = dbProvider + dbSource + dbPathAndFile
+                Call FcInitAccessConnecation(objdbAccessConn, strMDBName)
                 objlocOLEdbcmd.CommandText = strSQL
                 objdbAccessConn.Open()
                 objlocOLEdbcmd.Connection = objdbAccessConn
@@ -2915,7 +2913,6 @@ ErrorHandler:
         Dim strRGNbrFieldName As String
         Dim strRGTableType As String
         Dim strMDBName As String
-        Dim strdbProvider, strdbSource, strdbPathAndFile As String
 
 
         objMySQLConn.Open()
@@ -2931,16 +2928,11 @@ ErrorHandler:
 
             If strRGTableType = "A" Then
                 'Access
-                strdbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
-                strdbSource = "Data Source="
-                strdbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+                Call FcInitAccessConnecation(objdbAccessConn, strMDBName)
+
                 strSQL = "UPDATE " + strNameRGTable + " SET gebucht=true, gebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "=" + intBelegNr.ToString + " WHERE " + strRGNbrFieldName + "=" + strRGNbr
-
-                objdbAccessConn.ConnectionString = strdbProvider + strdbSource + strdbPathAndFile
                 objdbAccessConn.Open()
-
                 objlocOLEdbcmd.CommandText = strSQL
-
                 objlocOLEdbcmd.Connection = objdbAccessConn
                 intAffected = objlocOLEdbcmd.ExecuteNonQuery()
 
@@ -3002,8 +2994,6 @@ ErrorHandler:
         Dim strKRGNbrFieldName As String
         Dim strKRGTableType As String
         Dim strMDBName As String
-        Dim strdbProvider, strdbSource, strdbPathAndFile As String
-
 
         objMySQLConn.Open()
 
@@ -3018,16 +3008,11 @@ ErrorHandler:
 
             If strKRGTableType = "A" Then
                 'Access
-                strdbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
-                strdbSource = "Data Source="
-                strdbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+                Call FcInitAccessConnecation(objdbAccessConn, strMDBName)
                 strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + lngKredID.ToString
 
-                objdbAccessConn.ConnectionString = strdbProvider + strdbSource + strdbPathAndFile
                 objdbAccessConn.Open()
-
                 objlocOLEdbcmd.CommandText = strSQL
-
                 objlocOLEdbcmd.Connection = objdbAccessConn
                 intAffected = objlocOLEdbcmd.ExecuteNonQuery()
 
@@ -3086,6 +3071,7 @@ ErrorHandler:
             If strSQL <> "" Then
 
                 If strBeforeDebiRunType = "A" Then
+                    Stop
                     'Access
                     'strdbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
                     'strdbSource = "Data Source="
@@ -3152,6 +3138,7 @@ ErrorHandler:
             If strSQL <> "" Then
 
                 If strAfterDebiRunType = "A" Then
+                    Stop
                     'Access
                     'strdbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
                     'strdbSource = "Data Source="
@@ -3344,16 +3331,13 @@ ErrorHandler:
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
 
         Dim objDTDebiHead As New DataTable
-        Dim dbProvider, dbSource, dbPathAndFile, strMDBName As String
+        Dim strMDBName As String
         Dim objdrSub As DataRow
         Dim intFcReturns As Int16
 
         objdbconn.Open()
 
         strMDBName = FcReadFromSettings(objdbconn, "Buchh_KRGTableMDB", intAccounting)
-        dbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
-        dbSource = "Data Source="
-        dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
 
         'Head Debitzoren löschen
         objdtHead.Clear()
@@ -3365,7 +3349,8 @@ ErrorHandler:
             'objlocMySQLcmd.CommandText = strSQL
             If strKRGTableType = "A" Then
                 'Access
-                objdbAccessConn.ConnectionString = dbProvider + dbSource + dbPathAndFile
+                Call FcInitAccessConnecation(objdbAccessConn, strMDBName)
+
                 objlocOLEdbcmd.CommandText = strSQL
                 objdbAccessConn.Open()
                 objlocOLEdbcmd.Connection = objdbAccessConn
@@ -3712,7 +3697,7 @@ ErrorHandler:
 
 
         Dim objDTTransitDebits As New DataTable
-        Dim dbProvider, dbSource, dbPathAndFile, strMDBName As String
+        Dim strMDBName As String
 
 
         Try
@@ -3727,10 +3712,6 @@ ErrorHandler:
                 strRGTableType = FcReadFromSettings(objdbconn, "Buchh_RGTableType", intAccounting)
                 'Debitoren - Table Name lesen
                 strMDBName = FcReadFromSettings(objdbconn, "Buchh_RGTableMDB", intAccounting)
-                ''Access
-                'dbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
-                'dbSource = "Data Source="
-                'dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
 
                 'Debitzoren Transit-Queries für Mandant einlesen
                 strSQL = "SELECT * FROM buchhaltungen_sub WHERE strType='D' AND refMandant=" + intAccounting.ToString
@@ -3754,6 +3735,7 @@ ErrorHandler:
                         'Debug.Print("Running Query " + rowdebitquery("strSQL"))
                         If strRGTableType = "A" Then
                             'Access
+                            Call FcInitAccessConnecation(objdbAccessConn, strMDBName)
                             objdbAccessConn.Open()
                             objlocOLEdbcmd.Connection = objdbAccessConn
                             objlocOLEdbcmd.CommandText = rowdebitquery("strSQL")
@@ -3786,6 +3768,30 @@ ErrorHandler:
             If objdbAccessConn.State = ConnectionState.Open Then
                 objdbAccessConn.Close()
             End If
+
+        End Try
+
+
+    End Function
+
+    Public Shared Function FcInitAccessConnecation(ByRef objaccesscon As OleDb.OleDbConnection, ByVal strMDBName As String) As Int16
+
+        'Access - Connection soll initialisiert werden
+        '0 = ok, 1 = nicht ok
+
+        Dim dbProvider, dbSource, dbPathAndFile As String
+
+        Try
+
+            dbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
+            dbSource = "Data Source="
+            dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+            objaccesscon.ConnectionString = dbProvider + dbSource + dbPathAndFile
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 1
 
         End Try
 

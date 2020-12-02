@@ -481,7 +481,7 @@ Friend Class frmImportMain
         ''dgvDebitoren.Columns("intBuchungsart").Width = 40
         dgvBookings.Columns("strOPNr").DisplayIndex = 14
         dgvBookings.Columns("strOPNr").HeaderText = "OP-Nr"
-        dgvBookings.Columns("strOPNr").Width = 80
+        dgvBookings.Columns("strOPNr").Width = 100
         dgvBookings.Columns("datKredRGDatum").DisplayIndex = 15
         dgvBookings.Columns("datKredRGDatum").HeaderText = "RG Datum"
         dgvBookings.Columns("datKredRGDatum").Width = 70
@@ -1009,7 +1009,8 @@ Friend Class frmImportMain
     Private Sub butImportK_Click(sender As Object, e As EventArgs) Handles butImportK.Click
 
         Dim intReturnValue As Int16
-        Dim intKredBelegsNummer As Int32
+        Dim intKredBelegsNummer As UInt32
+        Dim strExtKredBelegsNummer As String
 
         Dim intKreditorNbr As Int32
         Dim strBuchType As String
@@ -1102,6 +1103,7 @@ Friend Class frmImportMain
                             intKredBelegsNummer = row("strOPNr")
                             'strExtBelegNbr = row("strOPNr")
                         End If
+                        strExtKredBelegsNummer = row("strKredRGNbr")
 
                         'Variablen zuweisen
                         intKreditorNbr = row("lngKredNbr")
@@ -1151,7 +1153,7 @@ Friend Class frmImportMain
                         Call KrBhg.SetBelegKopf2(intKredBelegsNummer,
                                                  strValutaDatum,
                                                  intKreditorNbr,
-                                                 intKredBelegsNummer.ToString,
+                                                 strExtKredBelegsNummer,
                                                  strBelegDatum,
                                                  strVerfallDatum,
                                                  strKrediText,
