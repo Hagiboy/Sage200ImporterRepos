@@ -1000,7 +1000,25 @@ Friend Class frmImportMain
         dgvBookings.Update()
         dgvBookings.Refresh()
 
-        Call Main.FcCheckKredit(cmbBuha.SelectedValue, objdtKreditorenHead, objdtKreditorenSub, Finanz, FBhg, KrBhg, PIFin, objdbConn, objdbConnZHDB02, objdbcommand, objdbcommandZHDB02, objOracleConn, objOracleCmd, objdtInfo)
+        Call Main.FcCheckKredit(cmbBuha.SelectedValue,
+                                objdtKreditorenHead,
+                                objdtKreditorenSub,
+                                Finanz,
+                                FBhg,
+                                KrBhg,
+                                PIFin,
+                                objdbConn,
+                                objdbConnZHDB02,
+                                objdbcommand,
+                                objdbcommandZHDB02,
+                                objOracleConn,
+                                objOracleCmd,
+                                objdbAccessConn,
+                                objdtInfo,
+                                cmbBuha.Text)
+
+        'Anzahl schreiben
+        txtNumber.Text = objdtKreditorenHead.Rows.Count.ToString
 
         Me.Cursor = Cursors.Default
 
@@ -1040,6 +1058,8 @@ Friend Class frmImportMain
         Dim intGegenKonto As Int32
         Dim strFibuText As String
         Dim dblNettoBetrag As Double
+        Dim dblBruttoBetrag As Double
+        Dim dblMwStBetrag As Double
         Dim dblBebuBetrag As Double
         Dim strBeBuEintrag As String
         Dim strSteuerFeld As String
@@ -1112,7 +1132,11 @@ Friend Class frmImportMain
                         strBelegDatum = Format(row("datKredRGDatum"), "yyyyMMdd").ToString
                         strVerfallDatum = ""
                         strReferenz = row("strKredRef")
+                        'If row("intPayType") <> 9 Then
                         intTeilnehmer = CInt(row("strKrediBank"))
+                        'Else
+                        'intTeilnehmer = 0
+                        'End If
                         strMahnerlaubnis = "" 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         dblBetrag = row("dblKredBrutto")
                         strKrediText = IIf(IsDBNull(row("strKredText")), "", row("strKredText"))
@@ -1180,10 +1204,28 @@ Friend Class frmImportMain
 
                             intGegenKonto = SubRow("lngKto")
                             strFibuText = SubRow("strKredSubText")
-                            dblNettoBetrag = SubRow("dblNetto")
+                            'Soll auf Minus setzen
+                            If SubRow("intSollHaben") = 1 Then
+                                dblNettoBetrag = SubRow("dblNetto") * -1
+                                dblMwStBetrag = SubRow("dblMwSt") * -1
+                                dblBruttoBetrag = SubRow("dblBrutto") * -1
+                            Else
+                                dblNettoBetrag = SubRow("dblNetto")
+                                dblMwStBetrag = SubRow("dblMwSt")
+                                dblBruttoBetrag = SubRow("dblBrutto")
+                            End If
                             'dblBebuBetrag = 1000.0#
-                            strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strKredSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
-                            strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strKredSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"), SubRow("dblMwSt"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                            If SubRow("lngKST") > 0 Then
+                                strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strKredSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
+                            Else
+                                strBeBuEintrag = "00" + "{<}" + SubRow("strKredSubText") + "{<}" + "0" + "{>}"
+                            End If
+                            If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" And SubRow("strMwStKey") <> "25" Then
+                                strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strKredSubText"), dblBruttoBetrag, SubRow("strMwStKey"), dblMwStBetrag)     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                            Else
+                                strSteuerFeld = "STEUERFREI"
+                            End If
+
                             'strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
                             'Debug.Print("Konto-Info: " + strSteuerInfo(26))
 
@@ -1279,8 +1321,6 @@ Friend Class frmImportMain
                         Else
                             MsgBox("Nicht 2 Subbuchungen.")
                         End If
-
-
 
                     End If
 

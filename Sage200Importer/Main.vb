@@ -3,6 +3,7 @@ Option Explicit On
 
 Imports MySql.Data.MySqlClient
 Imports System.Data.OracleClient
+Imports System.Net
 'Imports System.Data.OleDb
 
 Friend NotInheritable Class Main
@@ -272,7 +273,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(lngKredKtoNbr)
         Dim strKredKtoBez As DataColumn = New DataColumn("strKredKtoBez")
         strKredKtoBez.DataType = System.Type.[GetType]("System.String")
-        strKredKtoBez.MaxLength = 50
+        strKredKtoBez.MaxLength = 80
         DT.Columns.Add(strKredKtoBez)
         Dim strKredCur As DataColumn = New DataColumn("strKredCur")
         strKredCur.DataType = System.Type.[GetType]("System.String")
@@ -382,7 +383,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(lngKto)
         Dim strKtoBez As DataColumn = New DataColumn("strKtoBez")
         strKtoBez.DataType = System.Type.[GetType]("System.String")
-        strKtoBez.MaxLength = 50
+        strKtoBez.MaxLength = 80
         strKtoBez.Caption = "Bezeichnung"
         DT.Columns.Add(strKtoBez)
         Dim lngKST As DataColumn = New DataColumn("lngKST")
@@ -974,7 +975,7 @@ ErrorHandler:
                 strBitLog = Trim(intReturnValue.ToString)
 
                 'Kto 02
-                intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha, row("dblDebMwSt"))
+                intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha, row("dblDebMwSt"), 0)
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Currency 03
@@ -1422,48 +1423,75 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcCheckMwSt(ByRef objdbconn As MySqlConnection, ByRef objFiBhg As SBSXASLib.AXiFBhg, ByVal strStrCode As String, ByVal dblStrWert As Double, ByRef strStrCode200 As String) As Integer
+    Public Shared Function FcCheckMwSt(ByRef objdbconn As MySqlConnection,
+                                       ByRef objFiBhg As SBSXASLib.AXiFBhg,
+                                       ByVal strStrCode As String,
+                                       ByVal dblStrWert As Double,
+                                       ByRef strStrCode200 As String) As Integer
 
         'returns 0=ok, 1=nicht gefunden
 
         Dim objlocdtMwSt As New DataTable("tbllocMwSt")
         Dim objlocMySQLcmd As New MySqlCommand
         Dim strSteuerRec As String = ""
-        Dim strSteuerRecAr() As String
+        'Dim strSteuerRecAr() As String
         Dim intLooper As Int16 = 0
 
         Try
 
-            objlocMySQLcmd.CommandText = "SELECT  * FROM sage50mwst WHERE strKey='" + strStrCode + "' AND dblProzent=" + dblStrWert.ToString
+            'Besprechung mit Muhi 20201209 => Es soll eine fixe Vergabe des MStSchlüssels passieren 
+            objlocMySQLcmd.CommandText = "SELECT  * FROM sage50mwst WHERE strKey='" + strStrCode + "'"
 
             objlocMySQLcmd.Connection = objdbconn
             objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
 
             If objlocdtMwSt.Rows.Count = 0 Then
-                MessageBox.Show("MwSt " + strStrCode + " ist nicht definiert für " + dblStrWert.ToString + ".")
+                MessageBox.Show("MwSt " + strStrCode + " ist nicht definiert für Sage 50 MsSt-Key " + strStrCode + ".")
                 Return 1
             Else
-                'In Sage 200 suchen
-                Do Until strSteuerRec = "EOF"
-                    strSteuerRec = objFiBhg.GetStIDListe(intLooper)
-                    If strSteuerRec <> "EOF" Then
-                        strSteuerRecAr = Split(strSteuerRec, "{>}")
-                        'Gefunden?
-                        If strSteuerRecAr(3) = dblStrWert And strSteuerRecAr(6) = objlocdtMwSt.Rows(0).Item("strBruttoNetto") And strSteuerRecAr(7) = objlocdtMwSt.Rows(0).Item("strGegenKonto") Then
-                            'Debug.Print("Found " + strSteuerRecAr(0).ToString)
-                            strStrCode200 = strSteuerRecAr(0)
-                            Return 0
-                        End If
-                    Else
-                        Return 1
-                    End If
-                    intLooper += 1
-                Loop
+                'Wert von Tabelle übergeben
+                If Not IsDBNull(objlocdtMwSt.Rows(0).Item("intSage200Key")) Then
+                    strStrCode200 = objlocdtMwSt.Rows(0).Item("intSage200Key")
+                    Return 0
+                Else
+                    strStrCode200 = "00"
+                    Return 2
+                End If
+
             End If
+
+            'Besprechung mit Muhi 20201209 => Es soll eine fixe Vergabe des MStSchlüssels passieren 
+            'objlocMySQLcmd.CommandText = "SELECT  * FROM sage50mwst WHERE strKey='" + strStrCode + "' AND dblProzent=" + dblStrWert.ToString
+
+            'objlocMySQLcmd.Connection = objdbconn
+            'objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
+
+            'If objlocdtMwSt.Rows.Count = 0 Then
+            '    MessageBox.Show("MwSt " + strStrCode + " ist nicht definiert für " + dblStrWert.ToString + ".")
+            '    Return 1
+            'Else
+            '    'In Sage 200 suchen
+            '    Do Until strSteuerRec = "EOF"
+            '        strSteuerRec = objFiBhg.GetStIDListe(intLooper)
+            '        If strSteuerRec <> "EOF" Then
+            '            strSteuerRecAr = Split(strSteuerRec, "{>}")
+            '            'Gefunden?
+            '            If strSteuerRecAr(3) = dblStrWert And strSteuerRecAr(6) = objlocdtMwSt.Rows(0).Item("strBruttoNetto") And strSteuerRecAr(7) = objlocdtMwSt.Rows(0).Item("strGegenKonto") Then
+            '                'Debug.Print("Found " + strSteuerRecAr(0).ToString)
+            '                strStrCode200 = strSteuerRecAr(0)
+            '                Return 0
+            '            End If
+            '        Else
+            '            Return 1
+            '        End If
+            '        intLooper += 1
+            '    Loop
+            'End If
 
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
+            Return 9
 
         End Try
 
@@ -1516,10 +1544,30 @@ ErrorHandler:
             strBitLog = ""
 
             'Runden
-            subrow("dblNetto") = IIf(IsDBNull(subrow("dblNetto")), 0, Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero))
-            subrow("dblMwSt") = IIf(IsDBNull(subrow("dblMwst")), 0, Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero))
-            subrow("dblBrutto") = IIf(IsDBNull(subrow("dblBrutto")), 0, Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero))
-            subrow("dblMwStSatz") = IIf(IsDBNull(subrow("dblMwStSatz")), 0, Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero))
+#Disable Warning BC30198 ' '")" erwartet.
+#Disable Warning BC32017 ' Komma, ")" oder eine gültige Ausdrucksfortsetzung erwartet.
+            If IsDBNull(subrow("dblNetto") Then
+#Enable Warning BC32017 ' Komma, ")" oder eine gültige Ausdrucksfortsetzung erwartet.
+#Enable Warning BC30198 ' '")" erwartet.
+                subrow("dblNetto") = 0
+            Else
+                Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero)
+            End If
+            If IsDBNull(subrow("dblMwst")) Then
+                subrow("dblMwst") = 0
+            Else
+                subrow("dblMwst") = Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero)
+            End If
+            If IsDBNull(subrow("dblBrutto")) Then
+                subrow("dblBrutto") = 0
+            Else
+                subrow("dblBrutto") = Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero)
+            End If
+            If IsDBNull(subrow("dblMwStSatz")) Then
+                subrow("dblMwStSatz") = 0
+            Else
+                subrow("dblMwStSatz") = Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero)
+            End If
 
             'MwSt prüfen
             If Not IsDBNull(subrow("strMwStKey")) Then
@@ -1568,11 +1616,13 @@ ErrorHandler:
 
             'Konto prüfen
             If Not IsDBNull(subrow("lngKto")) Then
-                intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")))
+                intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
                 If intReturnValue = 0 Then
                     subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto"))
                 ElseIf intReturnValue = 2 Then
                     subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " MwSt!"
+                ElseIf intReturnValue = 3 Then
+                    subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " NoKST"
                 Else
                     subrow("strKtoBez") = "n/a"
 
@@ -1785,7 +1835,8 @@ ErrorHandler:
 
             'MwSt prüfen
             If Not IsDBNull(subrow("strMwStKey")) Then
-                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero), strStrStCodeSage200)
+                intReturnValue = FcCheckMwStToCorrect(objdbconn, subrow("strMwStKey"), subrow("dblMwStSatz"), subrow("dblMwSt"))
+                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("dblMwStSatz"), strStrStCodeSage200)
                 If intReturnValue = 0 Then
                     subrow("strMwStKey") = strStrStCodeSage200
                     'Check of korrekt berechnet
@@ -1825,11 +1876,17 @@ ErrorHandler:
 
             'Konto prüfen
             If Not IsDBNull(subrow("lngKto")) Then
-                intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")))
+                intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
                 If intReturnValue = 0 Then
                     subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto"))
                 ElseIf intReturnValue = 2 Then
                     subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " MwSt!"
+                ElseIf intReturnValue = 3 Then
+                    subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " NoKST"
+                    'Falls keine KST definiert KST auf 0 setzen
+                    subrow("lngKST") = 0
+                    'Error zurück setzen
+                    intReturnValue = 0
                 Else
                     subrow("strKtoBez") = "n/a"
 
@@ -1926,6 +1983,8 @@ ErrorHandler:
             If Mid(strBitLog, 2, 1) <> "0" Then
                 If Left(strBitLog, 1) = "2" Then
                     strStatusText = "Kto MwSt"
+                ElseIf Mid(strBitLog, 2, 1) = "3" Then
+                    strStatusText = "Kto nKST"
                 Else
                     strStatusText = "Kto"
                 End If
@@ -1991,6 +2050,67 @@ ErrorHandler:
 
     End Function
 
+
+    Public Shared Function FcCheckMwStToCorrect(ByRef objdbconn As MySqlConnection,
+                                                ByVal strStrCode As String,
+                                                ByRef dblStrWert As Double,
+                                                ByVal dblStrAmount As Double) As Integer
+
+        Dim objlocdtMwSt As New DataTable("tbllocMwSt")
+        Dim objlocMySQLcmd As New MySqlCommand
+        Dim strSteuerRec As String = ""
+
+        Try
+
+            'Sind die Angaben stimmig?
+            If Len(strStrCode) > 0 And dblStrAmount <> 0 And dblStrWert = 0 Then 'MwSt Wert ist 0 obwohl Schlüssel und MwSt-Betrag
+
+                objlocMySQLcmd.CommandText = "SELECT  * FROM sage50mwst WHERE strKey='" + strStrCode + "'"
+
+                objlocMySQLcmd.Connection = objdbconn
+                objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
+
+                If objlocdtMwSt.Rows.Count = 0 Then
+                    MessageBox.Show("MwSt " + strStrCode + " ist nicht definiert. Korrektur von MwST-Satz nicht möglich.")
+                    Return 1
+                Else
+                    'MwSt-Satz änern gemäss Tabelle
+                    dblStrWert = objlocdtMwSt.Rows(0).Item("dblProzent")
+                    Return 2
+
+                End If
+
+            ElseIf Len(strStrCode) > 0 And dblStrAmount = 0 And dblStrWert <> 0 Then 'MwSt Wert ist nicht 0 obwohl kein Betrag
+
+                'Check was ist hinterlegt
+                objlocMySQLcmd.CommandText = "SELECT  * FROM sage50mwst WHERE strKey='" + strStrCode + "'"
+
+                objlocMySQLcmd.Connection = objdbconn
+                objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
+
+                If objlocdtMwSt.Rows.Count = 0 Then
+                    MessageBox.Show("MwSt " + strStrCode + " ist nicht definiert. Korrektur von MwST-Satz nicht möglich.")
+                    Return 1
+                Else
+                    If objlocdtMwSt.Rows(0).Item("dblProzent") <> dblStrWert Then
+                        dblStrWert = objlocdtMwSt.Rows(0).Item("dblProzent")
+                        Return 2
+                    End If
+
+                End If
+
+            Else
+                Return 0
+
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+
+        End Try
+
+    End Function
 
     Public Shared Function FcCheckKstKtr(ByVal lngKST As Long, objFiBhg As SBSXASLib.AXiFBhg, ByRef objFiPI As SBSXASLib.AXiPlFin, ByVal lngKonto As Long, ByRef strKstKtrSage200 As String) As Int16
 
@@ -2203,6 +2323,7 @@ ErrorHandler:
                                           ByRef objsqlcommandZHDB02 As MySqlCommand,
                                           ByRef objOrdbconn As OracleClient.OracleConnection,
                                           ByRef objOrcommand As OracleClient.OracleCommand,
+                                          ByRef objdbAccessConn As OleDb.OleDbConnection,
                                           ByVal lngKrediNbr As Int32,
                                           ByVal intAccounting As Int32,
                                           ByRef intKrediNew As Int32) As Int16
@@ -2216,6 +2337,10 @@ ErrorHandler:
         Dim objdbConnKred As New MySqlConnection
         Dim objsqlCommKred As New MySqlCommand
 
+        Dim objlocOLEdbcmd As New OleDb.OleDbCommand
+        Dim strMDBName As String = FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting)
+        Dim strSQL As String
+
         strTableName = FcReadFromSettings(objdbconn, "Buchh_PKKrediTable", intAccounting)
         strTableType = FcReadFromSettings(objdbconn, "Buchh_PKKrediTableType", intAccounting)
         strKredFieldName = FcReadFromSettings(objdbconn, "Buchh_PKKrediField", intAccounting)
@@ -2228,12 +2353,14 @@ ErrorHandler:
         strSageName = FcReadFromSettings(objdbconn, "Buchh_PKKrediSageName", intAccounting)
         strKredAccField = FcReadFromSettings(objdbconn, "Buchh_PKKrediAccount", intAccounting)
 
+        strSQL = "SELECT " + strKredFieldName + ", " + strKredNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strKredAccField +
+                 " FROM " + strTableName + " WHERE " + strKredFieldName + "=" + lngKrediNbr.ToString
+
         If strTableName <> "" And strKredFieldName <> "" Then
 
             If strTableType = "O" Then 'Oracle
                 'objOrdbconn.Open()
-                objOrcommand.CommandText = "SELECT " + strKredFieldName + ", " + strKredNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strKredAccField +
-                                            " FROM " + strTableName + " WHERE " + strKredFieldName + "=" + lngKrediNbr.ToString
+                objOrcommand.CommandText = strSQL
                 objdtKreditor.Load(objOrcommand.ExecuteReader)
                 'Ist DebiNrNew Linked oder Direkt
                 'If strDebNewFieldType = "D" Then
@@ -2244,35 +2371,113 @@ ErrorHandler:
                 'MySQL - Tabelle einlesen
                 objdbConnKred.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(FcReadFromSettings(objdbconn, "Buchh_PKKrediTableConnection", intAccounting))
                 objdbConnKred.Open()
-                objsqlCommKred.CommandText = "SELECT " + strKredFieldName + ", " + strKredNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strKredAccField +
-                                            " FROM " + strTableName + " WHERE " + strKredFieldName + "=" + lngKrediNbr.ToString
+                objsqlCommKred.CommandText = strSQL
                 objsqlCommKred.Connection = objdbConnKred
                 objdtKreditor.Load(objsqlCommKred.ExecuteReader)
                 objdbConnKred.Close()
 
+            ElseIf strTableType = "A" Then 'Access
+                'Access
+                Call FcInitAccessConnecation(objdbAccessConn, strMDBName)
+                objlocOLEdbcmd.CommandText = strSQL
+                objdbAccessConn.Open()
+                objlocOLEdbcmd.Connection = objdbAccessConn
+                objdtKreditor.Load(objlocOLEdbcmd.ExecuteReader)
+                objdbAccessConn.Close()
+
             End If
 
             'If IsDBNull(objdtKreditor.Rows(0).Item(strKredNewField)) Then
-            If objdtKreditor.Rows.Count = 0 Then
-                intKrediNew = 0
-                Return 2
-            Else
-                intPKNewField = IIf(IsDBNull(objdtKreditor.Rows(0).Item(strKredNewField)), 0, objdtKreditor.Rows(0).Item(strKredNewField))
-                'intPKNewField = FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtKreditor.Rows(0).Item(strKredNewField))
-                If intPKNewField = 0 Then
+            If objdtKreditor.Rows.Count > 0 Then
+                If IsDBNull(objdtKreditor.Rows(0).Item(strKredNewField)) Then
                     intKrediNew = 0
-                    Return 3
+                    Return 2
                 Else
-                    intKrediNew = intPKNewField
-                    Return 0
-                End If
-            End If
 
+                    If strTableName <> "Tab_Repbetriebe" Then
+                        'intPKNewField = objdtKreditor.Rows(0).Item(strKredNewField)
+                        intPKNewField = FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtKreditor.Rows(0).Item(strKredNewField))
+                        If intPKNewField = 0 Then
+                            intKrediNew = 0
+                            Return 3
+                        Else
+                            intKrediNew = intPKNewField
+                            Return 0
+                        End If
+                    Else 'Wenn Angaben nicht von anderer Tabelle kommen
+                        intKrediNew = objdtKreditor.Rows(0).Item(strKredNewField)
+                        Return 0
+                    End If
+                End If
+            Else
+                intKrediNew = 0
+                Return 4
+            End If
 
         End If
 
         Return intPKNewField
 
+    End Function
+
+    Public Shared Function FcCheckKreditBank(ByVal objKrBhg As SBSXASLib.AXiKrBhg,
+                                             ByVal intKreditor As Int32,
+                                             ByVal intPayType As Int16,
+                                             ByVal strIBAN As String,
+                                             ByVal strBank As String,
+                                             ByRef objdbconnZHDB02 As MySqlConnection) As Int16
+
+        'Falls Typetype 9 (IBAN) ist, dann Zahlungsverbindungen prüfen
+
+        Dim strZahlVerbindungLine As String = ""
+        Dim strZahlVerbindung() As String
+        Dim booBankExists As Boolean = False
+        Dim intReturnValue As Int16
+
+        'API ansprechen
+
+        Try
+
+            If intPayType = 9 Then
+
+                Call objKrBhg.ReadZahlungsverb(intKreditor * -1)
+
+                Do Until strZahlVerbindungLine = "EOF"
+
+                    strZahlVerbindungLine = objKrBhg.GetZahlungsverbZeile()
+                    'Debug.Print("Line " + strZahlVerbindungLine)
+                    strZahlVerbindung = Split(strZahlVerbindungLine, "{>}")
+                    If strZahlVerbindungLine <> "EOF" Then
+                        If strZahlVerbindung(3) = "K" Then
+                            'Debug.Print("BankV " + strZahlVerbindung(4) + ", " + strIBAN)
+                            If strZahlVerbindung(4) = strIBAN Then
+                                booBankExists = True
+                                'Debug.Print("Gefunden " + strZahlVerbindungLine)
+                            End If
+
+                        End If
+                    End If
+                Loop
+
+                If Not booBankExists Then
+                    MessageBox.Show("Bankvebindung muss erstellt werden " + strIBAN)
+                    intReturnValue = FccheckBankRep(objdbconnZHDB02, intKreditor, strIBAN)
+                    If intReturnValue = 0 Then
+                        'Bankverbindung kann erstellt werden
+                        Return 0
+                    Else
+                        Return 1
+                    End If
+                End If
+
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 9
+
+        End Try
 
     End Function
 
@@ -2397,7 +2602,8 @@ ErrorHandler:
     Public Shared Function FcIsKreditorCreatable(ByRef objdbconnZHDB02 As MySqlConnection,
                                                 ByRef objsqlcommandZHDB02 As MySqlCommand,
                                                 ByVal lngKrediNbr As Long,
-                                                ByRef objKrBhg As SBSXASLib.AXiKrBhg) As Int16
+                                                ByRef objKrBhg As SBSXASLib.AXiKrBhg,
+                                                ByVal strcmbBuha As String) As Int16
 
         'Return: 0=creatable und erstellt, 3=Sage - Suchtext nicht erfasst, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
 
@@ -2481,7 +2687,7 @@ ErrorHandler:
                     strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
                                                          lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
                                                          "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Kreditor " +
-                                                         lngKrediNbr.ToString + " wurde erstell im Mandant EE', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
+                                                         lngKrediNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
                     ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                     'objlocMySQLRGConn.Open()
                     'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
@@ -2509,7 +2715,6 @@ ErrorHandler:
 
 
     End Function
-
 
     Public Shared Function FcGetPKNewFromRep(ByRef objdbconnZHDB02 As MySqlConnection, ByRef objsqlcommandZHDB02 As MySqlCommand, ByVal intPKRefField As Int32) As Int32
 
@@ -2764,7 +2969,7 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcCheckKonto(ByVal lngKtoNbr As Long, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByVal dblMwSt As Double) As Integer
+    Public Shared Function FcCheckKonto(ByVal lngKtoNbr As Long, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByVal dblMwSt As Double, ByVal lngKST As Int32) As Integer
 
         'Returns 0=ok, 1=existiert nicht, 2=existiert aber keine Steuern
 
@@ -2776,16 +2981,28 @@ ErrorHandler:
             Return 1
         Else
             'If dblMwSt = 0 Then
-            Return 0
-            'Else
-            'Steuerpflichtig?
-            'strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
-            'If strKontoInfo(26) = "" Then
-            'Return 2
-            'Else
             'Return 0
-            'End If
-            'End If
+            'KST?
+            If lngKST > 0 Then
+                strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
+                If strKontoInfo(22) = "" Then
+                    Return 3
+                Else
+                    Return 0
+
+                    'Else
+                    'Steuerpflichtig?
+                    'strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
+                    'If strKontoInfo(26) = "" Then
+                    'Return 2
+                    'Else
+                    'Return 0
+                    'End If
+                    'End If
+                End If
+            Else
+                Return 0
+            End If
         End If
 
     End Function
@@ -3262,7 +3479,7 @@ ErrorHandler:
 
         Try
 
-            If dblMwSt > 0 Then
+            If dblMwSt <> 0 Then
 
                 strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString, strDebiSubText, dblBrutto.ToString, strMwStKey, dblMwSt.ToString)
 
@@ -3386,6 +3603,7 @@ ErrorHandler:
                 ElseIf strKRGTableType = "M" Then
                     objlocMySQLcmd.CommandText = strSQLSub
                     objdtSub.Load(objlocMySQLcmd.ExecuteReader)
+                    Debug.Print("Ok, " + strSQLSub)
                 End If
             Next
             'Tabellen runden
@@ -3426,7 +3644,9 @@ ErrorHandler:
                                         ByRef objsqlcommandZHDB02 As MySqlCommand,
                                         ByRef objOrdbconn As OracleClient.OracleConnection,
                                         ByRef objOrcommand As OracleClient.OracleCommand,
-                                        ByRef objdtInfo As DataTable) As Integer
+                                        ByRef objdbAccessConn As OleDb.OleDbConnection,
+                                        ByRef objdtInfo As DataTable,
+                                        ByVal strcmbBuha As String) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
         Dim strBitLog As String = ""
@@ -3461,17 +3681,29 @@ ErrorHandler:
                 row("dblKredBrutto") = Decimal.Round(row("dblKredBrutto"), 2, MidpointRounding.AwayFromZero)
                 'Status-String erstellen
                 'Kreditor 01
-                intReturnValue = FcGetRefKrediNr(objdbconn, objdbconnZHDB02, objsqlcommand, objsqlcommandZHDB02, objOrdbconn, objOrcommand, IIf(IsDBNull(row("lngKredNbr")), 0, row("lngKredNbr")), intAccounting, intKreditorNew)
+                intReturnValue = FcGetRefKrediNr(objdbconn,
+                                                 objdbconnZHDB02,
+                                                 objsqlcommand,
+                                                 objsqlcommandZHDB02,
+                                                 objOrdbconn,
+                                                 objOrcommand,
+                                                 objdbAccessConn,
+                                                 IIf(IsDBNull(row("lngKredNbr")), 0, row("lngKredNbr")),
+                                                 intAccounting,
+                                                 intKreditorNew)
+
                 strBitLog += Trim(intReturnValue.ToString)
                 If intKreditorNew <> 0 Then
                     intReturnValue = FcCheckKreditor(intKreditorNew, row("intBuchungsart"), objKrBuha)
+                    'intReturnValue = FcCheckKreditBank(objKrBuha, intKreditorNew, row("intPayType"), row("strKredRef"), row("strKrediBank"), objdbconnZHDB02)
+                    'intReturnValue = 3
                 Else
                     intReturnValue = 2
                 End If
                 strBitLog = Trim(intReturnValue.ToString)
 
                 'Kto 02
-                intReturnValue = FcCheckKonto(row("lngKredKtoNbr"), objfiBuha, row("dblKredMwSt"))
+                intReturnValue = FcCheckKonto(row("lngKredKtoNbr"), objfiBuha, row("dblKredMwSt"), 0)
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Currency 03
@@ -3479,14 +3711,14 @@ ErrorHandler:
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Sub 04
-                'booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
-                booAutoCorrect = False
+                booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
+                'booAutoCorrect = False
                 intReturnValue = FcCheckKrediSubBookings(row("lngKredID"), objdtKreditSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha, objdbPIFb, row("intBuchungsart"), booAutoCorrect)
                 strBitLog += Trim(intReturnValue.ToString)
 
-                ''Autokorrektur 05
-                ''booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
-                booAutoCorrect = False
+                'Autokorrektur 05
+                'booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
+                'booAutoCorrect = False
                 If booAutoCorrect Then
                     'Git es etwas zu korrigieren?
                     If IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")) <> dblSubBrutto Or
@@ -3550,10 +3782,10 @@ ErrorHandler:
 
                 'Status-String auswerten
                 'Kreditor
-                If Left(strBitLog, 1) <> "0" Then
+                If Left(strBitLog, 1) <> "0" And Left(strBitLog, 1) <> "3" Then
                     strStatus = "Kred"
                     If Left(strBitLog, 1) <> "2" Then
-                        intReturnValue = FcIsKreditorCreatable(objdbconnZHDB02, objsqlcommandZHDB02, intKreditorNew, objKrBuha)
+                        intReturnValue = FcIsKreditorCreatable(objdbconnZHDB02, objsqlcommandZHDB02, intKreditorNew, objKrBuha, strcmbBuha)
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
                         Else
@@ -3661,6 +3893,7 @@ ErrorHandler:
                 dblSubBrutto = 0
                 dblSubNetto = 0
                 dblSubMwSt = 0
+                intKreditorNew = 0
 
             Next
 
