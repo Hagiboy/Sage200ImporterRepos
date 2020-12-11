@@ -753,7 +753,7 @@ Friend Class frmImportMain
                             Else
                                 strBeBuEintrag = "00" + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"
                             End If
-                            If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" And SubRow("strMwStKey") <> "25" Then
+                            If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then 'And SubRow("strMwStKey") <> "25" Then
                                 strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"), SubRow("dblMwSt"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
                             Else
                                 strSteuerFeld = "STEUERFREI"
@@ -1220,7 +1220,7 @@ Friend Class frmImportMain
                             Else
                                 strBeBuEintrag = "00" + "{<}" + SubRow("strKredSubText") + "{<}" + "0" + "{>}"
                             End If
-                            If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" And SubRow("strMwStKey") <> "25" Then
+                            If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then ' And SubRow("strMwStKey") <> "25" Then
                                 strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strKredSubText"), dblBruttoBetrag, SubRow("strMwStKey"), dblMwStBetrag)     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
                             Else
                                 strSteuerFeld = "STEUERFREI"
