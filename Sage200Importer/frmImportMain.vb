@@ -65,6 +65,14 @@ Friend Class frmImportMain
         Adr = Nothing
         Finanz = Nothing
 
+        'objdbcommand = Nothing
+        'objdbcommandZHDB02 = Nothing
+        objdtDebitorenHeadRead.Clear()
+        objdtDebitorenHead.Clear()
+        objdtDebitorenSub.Clear()
+        objdtKreditorenHeadRead.Clear()
+        objdtKreditorenHead.Clear()
+        objdtKreditorenSub.Clear()
         'Call Check_CheckStateChanged(Check, New System.EventArgs())
 
         FELD_SEP = "{<}"
@@ -950,10 +958,14 @@ Friend Class frmImportMain
 
         Try
 
-            If intMode = 0 Then 'Debitoren
-                dgvBookingSub.DataSource = objdtDebitorenSub.Select("strRGNr='" + dgvBookings.Rows(e.RowIndex).Cells("strDebRGNbr").Value + "'").CopyToDataTable
-            Else
-                dgvBookingSub.DataSource = objdtKreditorenSub.Select("lngKredID=" + dgvBookings.Rows(e.RowIndex).Cells("lngKredID").Value.ToString).CopyToDataTable
+            If e.RowIndex >= 0 Then
+
+                If intMode = 0 Then 'Debitoren
+                    dgvBookingSub.DataSource = objdtDebitorenSub.Select("strRGNr='" + dgvBookings.Rows(e.RowIndex).Cells("strDebRGNbr").Value + "'").CopyToDataTable
+                Else
+                    dgvBookingSub.DataSource = objdtKreditorenSub.Select("lngKredID=" + dgvBookings.Rows(e.RowIndex).Cells("lngKredID").Value.ToString).CopyToDataTable
+                End If
+
             End If
 
         Catch ex As Exception
@@ -969,6 +981,8 @@ Friend Class frmImportMain
     End Sub
 
     Private Sub butKreditoren_Click(sender As Object, e As EventArgs) Handles butKreditoren.Click
+
+        Dim intReturnValue As Int16
 
         Me.Cursor = Cursors.WaitCursor
 
@@ -991,7 +1005,10 @@ Friend Class frmImportMain
 
         Call Main.FcLoginSage(objdbConn, objdbMSSQLConn, objdbSQLcommand, Finanz, FBhg, DbBhg, PIFin, KrBhg, cmbBuha.SelectedValue, objdtInfo)
 
-        Call Main.FcFillKredit(cmbBuha.SelectedValue, objdtKreditorenHeadRead, objdtKreditorenSub, objdbConn, objdbAccessConn)
+        intReturnValue = Main.FcFillKredit(cmbBuha.SelectedValue, objdtKreditorenHeadRead, objdtKreditorenSub, objdbConn, objdbAccessConn)
+        If intReturnValue = 1 Then
+            MessageBox.Show("Keine Kreditoren-Defintion hinterlegt.", "Keine Definition")
+        End If
 
         Call Main.InsertDataTableColumnName(objdtKreditorenHeadRead, objdtKreditorenHead)
 
