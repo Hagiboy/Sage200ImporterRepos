@@ -1005,7 +1005,7 @@ Friend Class frmImportMain
 
         Call Main.FcLoginSage(objdbConn, objdbMSSQLConn, objdbSQLcommand, Finanz, FBhg, DbBhg, PIFin, KrBhg, cmbBuha.SelectedValue, objdtInfo)
 
-        intReturnValue = Main.FcFillKredit(cmbBuha.SelectedValue, objdtKreditorenHeadRead, objdtKreditorenSub, objdbConn, objdbAccessConn)
+        intReturnValue = MainKreditor.FcFillKredit(cmbBuha.SelectedValue, objdtKreditorenHeadRead, objdtKreditorenSub, objdbConn, objdbAccessConn)
         If intReturnValue = 1 Then
             MessageBox.Show("Keine Kreditoren-Defintion hinterlegt.", "Keine Definition")
         End If
@@ -1348,7 +1348,7 @@ Friend Class frmImportMain
                     row("lngBelegNr") = intKredBelegsNummer
 
                     'Status in File RG-Tabelle schreiben
-                    intReturnValue = Main.FcWriteToKrediRGTable(cmbBuha.SelectedValue, row("lngKredID"), row("datBooked"), row("lngBelegNr"), objdbAccessConn, objOracleConn, objdbConn)
+                    intReturnValue = MainKreditor.FcWriteToKrediRGTable(cmbBuha.SelectedValue, row("lngKredID"), row("datBooked"), row("lngBelegNr"), objdbAccessConn, objOracleConn, objdbConn)
                     If intReturnValue <> 0 Then
                         'Throw an exception
                     End If
