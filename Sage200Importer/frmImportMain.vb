@@ -128,9 +128,9 @@ Friend Class frmImportMain
         Call Main.fcCheckTransitorischeDebit(cmbBuha.SelectedValue, objdbConn, objdbAccessConn)
 
         'Gibt es eine Query auszuführen bevor dem Buchen?
-        Call Main.FcExecuteBeforeDebit(cmbBuha.SelectedValue, objdbConn)
+        Call MainDebitor.FcExecuteBeforeDebit(cmbBuha.SelectedValue, objdbConn)
 
-        Call Main.FcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdtDebitorenSub, objdbConn, objdbAccessConn, objOracleConn, objOracleCmd)
+        Call MainDebitor.FcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdtDebitorenSub, objdbConn, objdbAccessConn, objOracleConn, objOracleCmd)
 
         Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead, objdtDebitorenHead)
 
@@ -882,13 +882,13 @@ Friend Class frmImportMain
                     row("lngBelegNr") = intDebBelegsNummer
 
                     'Status in File RG-Tabelle schreiben
-                    intReturnValue = Main.FcWriteToRGTable(cmbBuha.SelectedValue, row("strDebRGNbr"), row("datBooked"), row("lngBelegNr"), objdbAccessConn, objOracleConn, objdbConn)
+                    intReturnValue = MainDebitor.FcWriteToRGTable(cmbBuha.SelectedValue, row("strDebRGNbr"), row("datBooked"), row("lngBelegNr"), objdbAccessConn, objOracleConn, objdbConn)
                     If intReturnValue <> 0 Then
                         'Throw an exception
                     End If
 
                     'Evtl. Query nach Buchung ausführen
-                    Call Main.FcExecuteAfterDebit(cmbBuha.SelectedValue, objdbConn)
+                    Call MainDebitor.FcExecuteAfterDebit(cmbBuha.SelectedValue, objdbConn)
 
                 End If
 

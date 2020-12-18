@@ -9,272 +9,6 @@ Imports System.Xml
 
 Public Class MainKreditor
 
-    'Public Shared Function FcCheckKrediSubBookings(ByVal lngKredID As Int32,
-    '                                          ByRef objDtKrediSub As DataTable,
-    '                                          ByRef intSubNumber As Int16,
-    '                                          ByRef dblSubBrutto As Double,
-    '                                          ByRef dblSubNetto As Double,
-    '                                          ByRef dblSubMwSt As Double,
-    '                                          ByRef objdbconn As MySqlConnection,
-    '                                          ByRef objFiBhg As SBSXASLib.AXiFBhg,
-    '                                          ByRef objFiPI As SBSXASLib.AXiPlFin,
-    '                                          ByVal intBuchungsArt As Int32,
-    '                                          ByVal booAutoCorrect As Boolean) As Int16
-
-    '    'Functin Returns 0=ok, 1=Problem sub, 2=OP Diff zu Kopf, 3=OP nicht 0, 9=keine Subs
-
-    '    'BitLog in Sub
-    '    '1: Konto
-    '    '2: KST
-    '    '3: MwST
-    '    '4: Brutto, Netto + MwSt 0
-    '    '5: Netto 0
-    '    '6: Brutto 0
-    '    '7: Brutto - MwsT <> Netto
-
-    '    Dim intReturnValue As Int32
-    '    Dim strBitLog As String
-    '    Dim strStatusText As String
-    '    Dim strStrStCodeSage200 As String = ""
-    '    Dim strKstKtrSage200 As String = ""
-    '    Dim selsubrow() As DataRow
-    '    Dim strStatusOverAll As String = "0000000"
-    '    Dim strSteuer() As String
-
-    '    'Summen bilden und Angaben prüfen
-    '    intSubNumber = 0
-    '    dblSubNetto = 0
-    '    dblSubMwSt = 0
-    '    dblSubBrutto = 0
-
-    '    selsubrow = objDtKrediSub.Select("lngKredID=" + lngKredID.ToString)
-
-    '    For Each subrow As DataRow In selsubrow
-
-    '        strBitLog = ""
-    '        'Runden
-    '        subrow("dblNetto") = IIf(IsDBNull(subrow("dblNetto")), 0, Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero))
-    '        subrow("dblMwSt") = IIf(IsDBNull(subrow("dblMwst")), 0, Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero))
-    '        subrow("dblBrutto") = IIf(IsDBNull(subrow("dblBrutto")), 0, Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero))
-    '        subrow("dblMwStSatz") = IIf(IsDBNull(subrow("dblMwStSatz")), 0, Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero))
-
-    '        'MwSt prüfen
-    '        If Not IsDBNull(subrow("strMwStKey")) Then
-    '            intReturnValue = Main.FcCheckMwStToCorrect(objdbconn, subrow("strMwStKey"), subrow("dblMwStSatz"), subrow("dblMwSt"))
-    '            intReturnValue = Main.FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("dblMwStSatz"), strStrStCodeSage200)
-    '            If intReturnValue = 0 Then
-    '                subrow("strMwStKey") = strStrStCodeSage200
-    '                'Check of korrekt berechnet
-    '                strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
-    '                If Val(strSteuer(2)) <> subrow("dblMwst") Then
-    '                    'Im Fall von Auto-Korrekt anpassen
-    '                    'Stop
-    '                    If booAutoCorrect Then
-    '                        subrow("dblMwst") = Val(strSteuer(2))
-    '                        subrow("dblBrutto") = subrow("dblNetto") + subrow("dblMwSt")
-    '                    Else
-    '                        intReturnValue = 1
-    '                    End If
-    '                End If
-    '            Else
-    '                subrow("strMwStKey") = "n/a"
-    '            End If
-    '        Else
-    '            subrow("strMwStKey") = "null"
-    '            intReturnValue = 0
-
-    '        End If
-    '        strBitLog += Trim(intReturnValue.ToString)
-
-
-    '        'If subrow("intSollHaben") <> 2 Then
-    '        intSubNumber += 1
-    '        If subrow("intSollHaben") = 0 Then
-    '            dblSubNetto += IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) * -1
-    '            dblSubMwSt += IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) * -1
-    '            dblSubBrutto += IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) * -1
-    '        Else
-    '            dblSubNetto += subrow("dblNetto")
-    '            dblSubMwSt += subrow("dblMwSt")
-    '            dblSubBrutto += subrow("dblBrutto")
-    '        End If
-
-    '        'Konto prüfen
-    '        If Not IsDBNull(subrow("lngKto")) Then
-    '            intReturnValue = Main.FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
-    '            If intReturnValue = 0 Then
-    '                subrow("strKtoBez") = Main.FcReadDebitorKName(objFiBhg, subrow("lngKto"))
-    '            ElseIf intReturnValue = 2 Then
-    '                subrow("strKtoBez") = Main.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " MwSt!"
-    '            ElseIf intReturnValue = 3 Then
-    '                subrow("strKtoBez") = Main.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " NoKST"
-    '                'Falls keine KST definiert KST auf 0 setzen
-    '                subrow("lngKST") = 0
-    '                'Error zurück setzen
-    '                intReturnValue = 0
-    '            Else
-    '                subrow("strKtoBez") = "n/a"
-
-    '            End If
-    '        Else
-    '            subrow("strKtoBez") = "null"
-    '            subrow("lngKto") = 0
-    '            intReturnValue = 1
-
-    '        End If
-    '        strBitLog += Trim(intReturnValue.ToString)
-
-    '        'Kst/Ktr prüfen
-    '        If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
-    '            intReturnValue = Main.FcCheckKstKtr(subrow("lngKST"), objFiBhg, objFiPI, subrow("lngKto"), strKstKtrSage200)
-    '            If intReturnValue = 0 Then
-    '                subrow("strKstBez") = strKstKtrSage200
-    '            ElseIf intReturnValue = 1 Then
-    '                subrow("strKstBez") = "KoArt"
-
-    '            Else
-    '                subrow("strKstBez") = "n/a"
-
-    '            End If
-    '        Else
-    '            subrow("strKstBez") = "null"
-    '            intReturnValue = 0
-
-    '        End If
-    '        strBitLog += Trim(intReturnValue.ToString)
-
-    '        ''MwSt prüfen
-    '        'If Not IsDBNull(subrow("strMwStKey")) Then
-    '        '    intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("lngMwStSatz"), strStrStCodeSage200)
-    '        '    If intReturnValue = 0 Then
-    '        '        subrow("strMwStKey") = strStrStCodeSage200
-    '        '        'Check of korrekt berechnet
-    '        '        strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
-    '        '        If Val(strSteuer(2)) <> subrow("dblMwst") Then
-    '        '            'Im Fall von Auto-Korrekt anpassen
-    '        '            Stop
-    '        '        End If
-    '        '    Else
-    '        '        subrow("strMwStKey") = "n/a"
-
-    '        '    End If
-    '        'Else
-    '        '    subrow("strMwStKey") = "null"
-    '        '    intReturnValue = 0
-
-    '        'End If
-    '        'strBitLog += Trim(intReturnValue.ToString)
-
-    '        'Brutto + MwSt + Netto = 0
-    '        If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 And IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) = 0 And IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
-    '            strBitLog += "1"
-
-    '        Else
-    '            strBitLog += "0"
-    '        End If
-
-    '        'Netto = 0
-    '        If IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) = 0 Then
-    '            strBitLog += "1"
-
-    '        Else
-    '            strBitLog += "0"
-    '        End If
-
-    '        'Brutto = 0
-    '        If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 Then
-    '            strBitLog += "1"
-
-    '        Else
-    '            strBitLog += "0"
-    '        End If
-
-    '        'Brutto - MwSt <> Netto
-    '        If Math.Round(IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) - IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), 2, MidpointRounding.AwayFromZero) <> IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
-    '            strBitLog += "1"
-
-    '        Else
-    '            strBitLog += "0"
-    '        End If
-
-
-    '        'Statustext zusammen setzten
-    '        strStatusText = ""
-    '        'MwSt
-    '        If Left(strBitLog, 1) <> "0" Then
-    '            strStatusText += IIf(strStatusText <> "", ", ", "") + "MwSt"
-    '        End If
-    '        'Konto
-    '        If Mid(strBitLog, 2, 1) <> "0" Then
-    '            If Left(strBitLog, 1) = "2" Then
-    '                strStatusText = "Kto MwSt"
-    '            ElseIf Mid(strBitLog, 2, 1) = "3" Then
-    '                strStatusText = "Kto nKST"
-    '            Else
-    '                strStatusText = "Kto"
-    '            End If
-    '        End If
-    '        'Kst/Ktr
-    '        If Mid(strBitLog, 3, 1) <> "0" Then
-    '            strStatusText += IIf(strStatusText <> "", ", ", "") + "KST"
-    '        End If
-    '        'Alles 0
-    '        If Mid(strBitLog, 4, 1) <> "0" Then
-    '            strStatusText += IIf(strStatusText <> "", ", ", "") + "All0"
-    '        End If
-    '        'Netto 0
-    '        If Mid(strBitLog, 5, 1) <> "0" Then
-    '            strStatusText += IIf(strStatusText <> "", ", ", "") + "Net0"
-    '        End If
-    '        'Brutto 0
-    '        If Mid(strBitLog, 6, 1) <> "0" Then
-    '            strStatusText += IIf(strStatusText <> "", ", ", "") + "Brut0"
-    '        End If
-    '        'Diff
-    '        If Mid(strBitLog, 7, 1) <> "0" Then
-    '            strStatusText += IIf(strStatusText <> "", ", ", "") + "Diff"
-    '        End If
-
-    '        If Val(strBitLog) = 0 Then
-    '            strStatusText = "ok"
-    '        End If
-
-    '        'BitLog und Text schreiben
-    '        subrow("strStatusUBBitLog") = strBitLog
-    '        subrow("strStatusUBText") = strStatusText
-
-    '        strStatusOverAll = strStatusOverAll Or strBitLog
-
-    '    Next
-
-    '    'Rückgabe der ganzen Funktion Sub-Prüfung
-    '    If intSubNumber = 0 Then 'keine Subs
-    '        Return 9
-    '    Else
-    '        If Val(strStatusOverAll) > 0 Then
-    '            Return 1
-    '        Else
-    '            Return 0
-    '            'If intBuchungsArt = 1 Then
-    '            '    'OP - Buchung
-    '            '    'If dblSubNetto <> 0 Or dblSubBrutto <> 0 Or dblSubMwSt <> 0 Then 'Diff
-    '            '    'Return 2
-    '            '    'Else
-    '            '    Return 0
-    '            '    'End If
-    '            'Else
-    '            '    'Belegsbuchung 'Nur Brutto 0 - Test
-    '            '    If dblSubBrutto <> 0 Then
-    '            '        Return 3
-    '            '    Else
-    '            '        Return 0
-    '            '    End If
-    '            'End If
-    '        End If
-    '    End If
-
-    'End Function
-
 
     Public Shared Function FcReadKreditorName(ByRef objKrBhg As SBSXASLib.AXiKrBhg, ByVal intKrediNbr As Int32, ByVal strCurrency As String) As String
 
@@ -384,9 +118,9 @@ Public Class MainKreditor
                         intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtKreditor.Rows(0).Item(strKredNewField)) 'Rep_Nr
                         If intPKNewField = 0 Then
                             'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
-                            intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtKreditor.Rows(0).Item(strKredNewField))
-                            intKrediNew = 0
-                            Return 3
+                            intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtKreditor.Rows(0).Item(strKredNewField), intKrediNew)
+                            'intKrediNew = 0
+                            'Return 3
                         Else
                             intKrediNew = intPKNewField
                             Return 0
@@ -396,7 +130,7 @@ Public Class MainKreditor
                         If Not IsDBNull(objdtKreditor.Rows(0).Item(strKredNewField)) Then
                             intKrediNew = objdtKreditor.Rows(0).Item(strKredNewField)
                         Else
-                            intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtKreditor.Rows(0).Item(strKredNewField))
+                            intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtKreditor.Rows(0).Item(strKredNewField), intKrediNew)
                         End If
                         Return 0
                     End If
@@ -868,7 +602,7 @@ Public Class MainKreditor
                     '    objdrSub("strDebSubText") = row("Betrifft").ToString + " " + row("betrifft1").ToString
                     '    objdtSub.Rows.Add(objdrSub)
                     'End If
-                    strSQLSub = Main.FcSQLParseKredi(Main.FcReadFromSettings(objdbconn, "Buchh_SQLDetailKred", intAccounting), row("lngKredID"), objdtHead)
+                    strSQLSub = FcSQLParseKredi(Main.FcReadFromSettings(objdbconn, "Buchh_SQLDetailKred", intAccounting), row("lngKredID"), objdtHead)
                     If strKRGTableType = "A" Then
                         objlocOLEdbcmd.CommandText = strSQLSub
                         objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
@@ -899,298 +633,6 @@ Public Class MainKreditor
         End Try
 
     End Function
-
-    'Public Shared Function FcCheckKredit(ByVal intAccounting As Integer,
-    '                                    ByRef objdtKredits As DataTable,
-    '                                    ByRef objdtKreditSubs As DataTable,
-    '                                    ByRef objFinanz As SBSXASLib.AXFinanz,
-    '                                    ByRef objfiBuha As SBSXASLib.AXiFBhg,
-    '                                    ByRef objKrBuha As SBSXASLib.AXiKrBhg,
-    '                                    ByRef objdbPIFb As SBSXASLib.AXiPlFin,
-    '                                    ByRef objdbconn As MySqlConnection,
-    '                                    ByRef objdbconnZHDB02 As MySqlConnection,
-    '                                    ByRef objsqlcommand As MySqlCommand,
-    '                                    ByRef objsqlcommandZHDB02 As MySqlCommand,
-    '                                    ByRef objOrdbconn As OracleClient.OracleConnection,
-    '                                    ByRef objOrcommand As OracleClient.OracleCommand,
-    '                                    ByRef objdbAccessConn As OleDb.OleDbConnection,
-    '                                    ByRef objdtInfo As DataTable,
-    '                                    ByVal strcmbBuha As String) As Integer
-
-    '    'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
-    '    Dim strBitLog As String = ""
-    '    Dim intReturnValue As Integer
-    '    Dim strStatus As String = ""
-    '    Dim intSubNumber As Int16
-    '    Dim dblSubNetto As Double
-    '    Dim dblSubMwSt As Double
-    '    Dim dblSubBrutto As Double
-    '    Dim booAutoCorrect As Boolean
-    '    Dim selsubrow() As DataRow
-    '    Dim strKrediReferenz As String
-    '    Dim booDiffHeadText As Boolean
-    '    Dim strKrediiHeadText As String
-    '    Dim booDiffSubText As Boolean
-    '    Dim strKrediSubText As String
-    '    Dim intKreditorNew As Int32
-    '    Dim strCleanOPNbr As String
-
-    '    Try
-
-    '        objdbconn.Open()
-    '        objOrdbconn.Open()
-
-    '        For Each row As DataRow In objdtKredits.Rows
-
-    '            '
-    '            If row("lngKredID") = "48535" Then Stop
-    '            'Runden
-    '            row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
-    '            row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
-    '            row("dblKredBrutto") = Decimal.Round(row("dblKredBrutto"), 2, MidpointRounding.AwayFromZero)
-    '            'Status-String erstellen
-    '            'Kreditor 01
-    '            intReturnValue = FcGetRefKrediNr(objdbconn,
-    '                                             objdbconnZHDB02,
-    '                                             objsqlcommand,
-    '                                             objsqlcommandZHDB02,
-    '                                             objOrdbconn,
-    '                                             objOrcommand,
-    '                                             objdbAccessConn,
-    '                                             IIf(IsDBNull(row("lngKredNbr")), 0, row("lngKredNbr")),
-    '                                             intAccounting,
-    '                                             intKreditorNew)
-
-    '            strBitLog += Trim(intReturnValue.ToString)
-    '            If intKreditorNew <> 0 Then
-    '                intReturnValue = FcCheckKreditor(intKreditorNew, row("intBuchungsart"), objKrBuha)
-    '                'intReturnValue = FcCheckKreditBank(objKrBuha, intKreditorNew, row("intPayType"), row("strKredRef"), row("strKrediBank"), objdbconnZHDB02)
-    '                'intReturnValue = 3
-    '            Else
-    '                intReturnValue = 2
-    '            End If
-    '            strBitLog = Trim(intReturnValue.ToString)
-
-    '            'Kto 02
-    '            intReturnValue = FcCheckKonto(row("lngKredKtoNbr"), objfiBuha, row("dblKredMwSt"), 0)
-    '            strBitLog += Trim(intReturnValue.ToString)
-
-    '            'Currency 03
-    '            intReturnValue = FcCheckCurrency(row("strKredCur"), objfiBuha)
-    '            strBitLog += Trim(intReturnValue.ToString)
-
-    '            'Sub 04
-    '            booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
-    '            'booAutoCorrect = False
-    '            intReturnValue = FcCheckKrediSubBookings(row("lngKredID"), objdtKreditSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha, objdbPIFb, row("intBuchungsart"), booAutoCorrect)
-    '            strBitLog += Trim(intReturnValue.ToString)
-
-    '            'Autokorrektur 05
-    '            'booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
-    '            'booAutoCorrect = False
-    '            If booAutoCorrect Then
-    '                'Git es etwas zu korrigieren?
-    '                If IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")) <> dblSubBrutto Or
-    '                    IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")) <> dblSubNetto Or
-    '                    IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")) <> dblSubMwSt Then
-    '                    row("dblKredBrutto") = Math.Round(dblSubBrutto * -1, 2, MidpointRounding.AwayFromZero)
-    '                    row("dblKredNetto") = dblSubNetto * -1
-    '                    row("dblKredMwSt") = dblSubMwSt * -1
-    '                    ''In Sub korrigieren
-    '                    'selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "' AND intSollHaben=2")
-    '                    'If selsubrow.Length = 1 Then
-    '                    '    selsubrow(0).Item("dblBrutto") = dblSubBrutto * -1
-    '                    '    selsubrow(0).Item("dblMwSt") = dblSubMwSt * -1
-    '                    '    selsubrow(0).Item("dblNetto") = dblSubNetto * -1
-    '                    'End If
-    '                    strBitLog += "1"
-    '                Else
-    '                    strBitLog += "0"
-    '                End If
-    '            Else
-    '                strBitLog += "0"
-    '            End If
-
-    '            'Diff Kopf - Sub? 06
-    '            If row("intBuchungsart") = 1 Then 'OP
-    '                If IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")) + dblSubBrutto <> 0 _
-    '                    Or IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")) + dblSubMwSt <> 0 _
-    '                    Or IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")) + dblSubNetto <> 0 Then
-    '                    strBitLog += "1"
-    '                Else
-    '                    strBitLog += "0"
-    '                End If
-    '            Else
-    '                'Test ob sub 0
-    '                If dblSubBrutto <> 0 Then
-    '                    strBitLog += "1"
-    '                Else
-    '                    strBitLog += "0"
-    '                End If
-    '            End If
-    '            'OP Kopf balanced? 07
-    '            intReturnValue = FcCheckBelegHead(row("intBuchungsart"), IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")), IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")), IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")))
-    '            strBitLog += Trim(intReturnValue.ToString)
-    '            'OP - Nummer prüfen 08
-    '            'intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("intBuchungsart"), strDebiReferenz)
-    '            strCleanOPNbr = IIf(IsDBNull(row("strOPNr")), "", row("strOPNr"))
-    '            intReturnValue = FcChCeckKredOP(strCleanOPNbr, IIf(IsDBNull(row("strKredRGNbr")), "", row("strKredRGNbr")))
-    '            row("strOPNr") = strCleanOPNbr
-    '            strBitLog += Trim(intReturnValue.ToString)
-    '            'OP - Verdopplung 09
-    '            intReturnValue = FcCheckKrediOPDouble(objKrBuha, IIf(IsDBNull(row("lngKredNbr")), 0, row("lngKredNbr")), row("strKredRGNbr"))
-    '            strBitLog += Trim(intReturnValue.ToString)
-    '            'Valuta - Datum 10
-    '            intReturnValue = FcChCeckDate(row("datKredValDatum"), objdtInfo)
-    '            strBitLog += Trim(intReturnValue.ToString)
-    '            'RG - Datum 11
-    '            intReturnValue = FcChCeckDate(row("datKredRGDatum"), objdtInfo)
-    '            strBitLog += Trim(intReturnValue.ToString)
-    '            ''intReturnValue = fcCheckIntBank()
-
-
-    '            'Status-String auswerten
-    '            'Kreditor
-    '            If Left(strBitLog, 1) <> "0" Then
-    '                strStatus = "Kred"
-    '                If Left(strBitLog, 1) <> "2" Then
-    '                    intReturnValue = FcIsKreditorCreatable(objdbconn, objdbconnZHDB02, objsqlcommandZHDB02, intKreditorNew, objKrBuha, strcmbBuha, row("intPayType"))
-    '                    If intReturnValue = 0 Then
-    '                        strStatus += " erstellt"
-    '                        row("strKredBez") = FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
-
-    '                    Else
-    '                        strStatus += " nicht erstellt."
-    '                        row("strKredBez") = "n/a"
-    '                    End If
-    '                    row("lngKredNbr") = intKreditorNew
-    '                Else
-    '                    strStatus += " keine Ref"
-    '                    row("strKredBez") = "n/a"
-    '                End If
-    '            Else
-    '                row("strKredBez") = FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
-    '                row("lngKredNbr") = intKreditorNew
-    '                intReturnValue = MainKreditor.FcCheckKreditBank(objdbconn,
-    '                                                   objdbconnZHDB02,
-    '                                                   objKrBuha,
-    '                                                   intKreditorNew,
-    '                                                   row("intPayType"),
-    '                                                   row("strKredRef"),
-    '                                                   row("strKredRef"),
-    '                                                   row("strKredCur"))
-    '            End If
-    '            'Konto
-    '            If Mid(strBitLog, 2, 1) <> "0" Then
-    '                If Mid(strBitLog, 2, 1) <> 2 Then
-    '                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Kto"
-    '                Else
-    '                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Kto MwSt"
-    '                End If
-    '                row("strKredKtoBez") = "n/a"
-    '            Else
-    '                row("strKredKtoBez") = FcReadDebitorKName(objfiBuha, row("lngKredKtoNbr"))
-    '            End If
-    '            'Währung
-    '            If Mid(strBitLog, 3, 1) <> "0" Then
-    '                strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Cur"
-    '            End If
-    '            'Subbuchungen
-    '            'Totale in Head schreiben
-    '            row("intSubBookings") = intSubNumber.ToString
-    '            row("dblSumSubBookings") = dblSubBrutto.ToString
-    '            If Mid(strBitLog, 4, 1) <> "0" Then
-    '                strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Sub"
-    '            End If
-    '            'Autokorretkur
-    '            If Mid(strBitLog, 5, 1) <> "0" Then
-    '                strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "AutoC"
-    '            End If
-    '            'Diff zu Subbuchungen
-    '            If Mid(strBitLog, 6, 1) <> "0" Then
-    '                strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "DiffS"
-    '            End If
-    '            'OP Kopf
-    '            If Mid(strBitLog, 7, 1) <> "0" Then
-    '                strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "BelK"
-    '            End If
-    '            'OP Nummer
-    '            If Mid(strBitLog, 8, 1) <> "0" Then
-    '                strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "OPNbr"
-    '            End If
-    '            'OP Doppelt
-    '            If Mid(strBitLog, 9, 1) <> "0" Then
-    '                strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "OPDbl"
-    '                'Else
-    '                '   row("strDebRef") = strDebiReferenz
-    '            End If
-    '            'Valuta Datum 
-    '            If Mid(strBitLog, 10, 1) <> "0" Then
-    '                strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValD"
-    '                'Else
-    '                '    row("strDebRef") = strDebiReferenz
-    '            End If
-    '            'RG Datum 
-    '            If Mid(strBitLog, 11, 1) <> "0" Then
-    '                strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgD"
-    '                'Else
-    '                '    row("strDebRef") = strDebiReferenz
-    '            End If
-    '            'OP - Nr.
-
-    '            'Status schreiben
-    '            If Val(strBitLog) = 0 Or Val(strBitLog) = 1000000 Then
-    '                row("booKredBook") = True
-    '                strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
-    '            End If
-    '            row("strKredStatusText") = strStatus
-    '            row("strKredStatusBitLog") = strBitLog
-
-    '            ''Wird ein anderer Text in der Head-Buchung gewünscht?
-    '            'booDiffHeadText = IIf(FcReadFromSettings(objdbconn, "Buchh_TextSpecial", intAccounting) = "0", False, True)
-    '            'If booDiffHeadText Then
-    '            '    strDebiHeadText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_TextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits)
-    '            '    row("strDebText") = strDebiHeadText
-    '            'End If
-
-    '            ''Wird ein anderer Text in den Sub-Buchung gewünscht?
-    '            'booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecial", intAccounting) = "0", False, True)
-    '            'If booDiffSubText Then
-    '            '    strDebiSubText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits)
-    '            'Else
-    '            '    strDebiSubText = row("strDebText")
-    '            'End If
-    '            'selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
-    '            'For Each subrow In selsubrow
-    '            '    subrow("strDebSubText") = strDebiSubText
-    '            'Next
-
-    '            'Init
-    '            strBitLog = ""
-    '            strStatus = ""
-    '            intSubNumber = 0
-    '            dblSubBrutto = 0
-    '            dblSubNetto = 0
-    '            dblSubMwSt = 0
-    '            intKreditorNew = 0
-
-    '        Next
-
-    '    Catch ex As Exception
-    '        MessageBox.Show(ex.Message)
-
-    '    Finally
-    '        If objOrdbconn.State = ConnectionState.Open Then
-    '            objOrdbconn.Close()
-    '        End If
-    '        If objdbconn.State = ConnectionState.Open Then
-    '            objdbconn.Close()
-    '        End If
-
-    '    End Try
-
-
-    'End Function
 
 
     Public Shared Function FcCheckKreditor(ByVal lngKreditor As Long, ByVal intBuchungsart As Integer, ByRef objKrBuha As SBSXASLib.AXiKrBhg) As Integer
@@ -1347,5 +789,86 @@ Public Class MainKreditor
         End Try
 
     End Function
+
+    Public Shared Function FcSQLParseKredi(ByVal strSQLToParse As String, ByVal lngKredID As Int32, ByVal objdtKredi As DataTable) As String
+
+        'Funktion setzt in eingelesenem SQL wieder Variablen ein
+        Dim intPipePositionBegin, intPipePositionEnd As Integer
+        Dim strWork, strField As String
+        Dim RowKredi() As DataRow
+
+        'Zuerst Datensatz in Kredii-Head suchen
+        RowKredi = objdtKredi.Select("lngKredID=" + lngKredID.ToString)
+
+        '| suchen
+        If InStr(strSQLToParse, "|") > 0 Then
+            'Vorkommen gefunden
+            intPipePositionBegin = InStr(strSQLToParse, "|")
+            intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
+            Do Until intPipePositionBegin = 0
+                strField = Mid(strSQLToParse, intPipePositionBegin + 1, intPipePositionEnd - intPipePositionBegin - 1)
+                Select Case strField
+                    Case "rsKredi.Fields(""KrediID"")"
+                        strField = RowKredi(0).Item("lngKredID")
+                        'Case "rsDebiTemp.Fields([strRGArt])"
+                        '    strField = rsDebiTemp.Fields("strRGArt")
+                        'Case "rsDebiTemp.Fields([strRGName])"
+                        '    strField = rsDebiTemp.Fields("strRGName")
+                        'Case "rsDebiTemp.Fields([strDebIdentNbr2])"
+                        '    strField = rsDebiTemp.Fields("strDebIdentNbr2")
+                        'Case "rsDebi.Fields([RGBemerkung])"
+                        '    strField = rsDebi.Fields("RGBemerkung")
+                        'Case "rsDebi.Fields([JornalNr])"
+                        '    strField = rsDebi.Fields("JornalNr")
+                        'Case "rsDebiTemp.Fields([strRGBemerkung])"
+                        '    strField = rsDebiTemp.Fields("strRGBemerkung")
+                        'Case "rsDebiTemp.Fields(""strDebRGNbr"")"
+                        '    strField = rsDebiTemp.Fields("strDebRGNbr")
+                        'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
+                        '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
+                        'Case "rsDebiTemp.Fields([strDebText])"
+                        '    strField = rsDebiTemp.Fields("strDebText")
+                        'Case "KUNDENZEICHEN"
+                        '    strField = fcGetKundenzeichen(rsDebiTemp.Fields("lngDebIdentNbr"))
+                    Case Else
+                        strField = "unknown field"
+                End Select
+                strSQLToParse = Left(strSQLToParse, intPipePositionBegin - 1) & strField & Right(strSQLToParse, Len(strSQLToParse) - intPipePositionEnd)
+                'Neuer Anfang suchen für evtl. weitere |
+                intPipePositionBegin = InStr(strSQLToParse, "|")
+                'intPipePositionBegin = InStr(intPipePositionEnd + 1, strSQLToParse, "|")
+                intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
+            Loop
+        End If
+
+        Return strSQLToParse
+
+
+    End Function
+
+    Public Shared Function FcCheckKrediOPDouble(ByRef objKrBuha As SBSXASLib.AXiKrBhg, ByVal strKreditor As String, ByVal strOPNr As String) As Int16
+
+        'Return 0=ok, 1=Beleg existiert, 9=Problem
+
+        Dim intBelegReturn As Int16
+
+        Try
+            intBelegReturn = objKrBuha.doesBelegExist(strKreditor, "CHF", strOPNr, "", "", "")
+            If intBelegReturn = 0 Then
+                Return 0
+            Else
+                Return 1
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 9
+
+        End Try
+
+    End Function
+
+
 
 End Class
