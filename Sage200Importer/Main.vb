@@ -581,99 +581,99 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcRoundInTable(ByRef objdt As DataTable, ByVal strColumnName As String, ByVal intDecimals As Int16) As Int16
+    'Public Shared Function FcRoundInTable(ByRef objdt As DataTable, ByVal strColumnName As String, ByVal intDecimals As Int16) As Int16
 
-        Try
+    '    Try
 
-            For Each row As DataRow In objdt.Rows
+    '        For Each row As DataRow In objdt.Rows
 
-                row.Item(strColumnName) = Math.Round(row.Item(strColumnName), 2, MidpointRounding.AwayFromZero)
+    '            row.Item(strColumnName) = Math.Round(row.Item(strColumnName), 2, MidpointRounding.AwayFromZero)
 
-            Next
-            Return 0
+    '        Next
+    '        Return 0
 
-        Catch ex As Exception
-            MessageBox.Show(ex.Message)
-            Return 1
+    '    Catch ex As Exception
+    '        MessageBox.Show(ex.Message)
+    '        Return 1
 
-        End Try
+    '    End Try
 
-    End Function
+    'End Function
 
-    Public Shared Function FcSQLParse(ByVal strSQLToParse As String,
-                                      ByVal strRGNbr As String,
-                                      ByVal objdtDebi As DataTable,
-                                      ByRef objOracleConn As OracleClient.OracleConnection,
-                                      ByRef objOracleCommand As OracleClient.OracleCommand) As String
+    'Public Shared Function FcSQLParse(ByVal strSQLToParse As String,
+    '                                  ByVal strRGNbr As String,
+    '                                  ByVal objdtDebi As DataTable,
+    '                                  ByRef objOracleConn As OracleClient.OracleConnection,
+    '                                  ByRef objOracleCommand As OracleClient.OracleCommand) As String
 
-        'Funktion setzt in eingelesenem SQL wieder Variablen ein
-        Dim intPipePositionBegin, intPipePositionEnd As Integer
-        Dim strWork, strField As String
-        Dim RowDebi() As DataRow
+    '    'Funktion setzt in eingelesenem SQL wieder Variablen ein
+    '    Dim intPipePositionBegin, intPipePositionEnd As Integer
+    '    Dim strWork, strField As String
+    '    Dim RowDebi() As DataRow
 
-        'Zuerst Datensatz in Debi-Head suchen
-        RowDebi = objdtDebi.Select("strDebRGNbr='" + strRGNbr + "'")
+    '    'Zuerst Datensatz in Debi-Head suchen
+    '    RowDebi = objdtDebi.Select("strDebRGNbr='" + strRGNbr + "'")
 
-        '| suchen
-        If InStr(strSQLToParse, "|") > 0 Then
-            'Vorkommen gefunden
-            intPipePositionBegin = InStr(strSQLToParse, "|")
-            intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
-            Do Until intPipePositionBegin = 0
-                strField = Mid(strSQLToParse, intPipePositionBegin + 1, intPipePositionEnd - intPipePositionBegin - 1)
-                Select Case strField
-                    Case "rsDebi.Fields(""RGNr"")"
-                        strField = RowDebi(0).Item("strDebRGNbr")
-                    Case "rsDebiTemp.Fields([strDebPKBez])"
-                        strField = RowDebi(0).Item("strDebBez")
-                    Case "rsDebiTemp.Fields([lngDebIdentNbr])"
-                        strField = RowDebi(0).Item("lngDebIdentNbr")
-                        'Case "rsDebiTemp.Fields([strRGArt])"
-                        '    strField = rsDebiTemp.Fields("strRGArt")
-                    Case "rsDebiTemp.Fields([strRGName])"
-                        strField = RowDebi(0).Item("strRGName")
-                    Case "rsDebiTemp.Fields([strDebIdentNbr2])"
-                        strField = RowDebi(0).Item("strDebIdentNbr2")
-                        'Case "rsDebi.Fields([RGBemerkung])"
-                        '    strField = rsDebi.Fields("RGBemerkung")
-                        'Case "rsDebi.Fields([JornalNr])"
-                        '    strField = rsDebi.Fields("JornalNr")
-                        'Case "rsDebiTemp.Fields([strRGBemerkung])"
-                        '    strField = rsDebiTemp.Fields("strRGBemerkung")
-                        'Case "rsDebiTemp.Fields(""strDebRGNbr"")"
-                        '    strField = rsDebiTemp.Fields("strDebRGNbr")
-                        'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
-                        '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
-                        'Case "rsDebiTemp.Fields([strDebText])"
-                        '    strField = rsDebiTemp.Fields("strDebText")
-                    Case "KUNDENZEICHEN"
-                        strField = FcGetKundenzeichen(RowDebi(0).Item("lngDebIdentNbr"), objOracleConn, objOracleCommand)
-                    Case Else
-                        strField = "unknown field"
-                End Select
-                strSQLToParse = Left(strSQLToParse, intPipePositionBegin - 1) & strField & Right(strSQLToParse, Len(strSQLToParse) - intPipePositionEnd)
-                'Neuer Anfang suchen für evtl. weitere |
-                intPipePositionBegin = InStr(strSQLToParse, "|")
-                'intPipePositionBegin = InStr(intPipePositionEnd + 1, strSQLToParse, "|")
-                intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
-            Loop
-        End If
+    '    '| suchen
+    '    If InStr(strSQLToParse, "|") > 0 Then
+    '        'Vorkommen gefunden
+    '        intPipePositionBegin = InStr(strSQLToParse, "|")
+    '        intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
+    '        Do Until intPipePositionBegin = 0
+    '            strField = Mid(strSQLToParse, intPipePositionBegin + 1, intPipePositionEnd - intPipePositionBegin - 1)
+    '            Select Case strField
+    '                Case "rsDebi.Fields(""RGNr"")"
+    '                    strField = RowDebi(0).Item("strDebRGNbr")
+    '                Case "rsDebiTemp.Fields([strDebPKBez])"
+    '                    strField = RowDebi(0).Item("strDebBez")
+    '                Case "rsDebiTemp.Fields([lngDebIdentNbr])"
+    '                    strField = RowDebi(0).Item("lngDebIdentNbr")
+    '                    'Case "rsDebiTemp.Fields([strRGArt])"
+    '                    '    strField = rsDebiTemp.Fields("strRGArt")
+    '                Case "rsDebiTemp.Fields([strRGName])"
+    '                    strField = RowDebi(0).Item("strRGName")
+    '                Case "rsDebiTemp.Fields([strDebIdentNbr2])"
+    '                    strField = RowDebi(0).Item("strDebIdentNbr2")
+    '                    'Case "rsDebi.Fields([RGBemerkung])"
+    '                    '    strField = rsDebi.Fields("RGBemerkung")
+    '                    'Case "rsDebi.Fields([JornalNr])"
+    '                    '    strField = rsDebi.Fields("JornalNr")
+    '                    'Case "rsDebiTemp.Fields([strRGBemerkung])"
+    '                    '    strField = rsDebiTemp.Fields("strRGBemerkung")
+    '                    'Case "rsDebiTemp.Fields(""strDebRGNbr"")"
+    '                    '    strField = rsDebiTemp.Fields("strDebRGNbr")
+    '                    'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
+    '                    '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
+    '                    'Case "rsDebiTemp.Fields([strDebText])"
+    '                    '    strField = rsDebiTemp.Fields("strDebText")
+    '                Case "KUNDENZEICHEN"
+    '                    strField = FcGetKundenzeichen(RowDebi(0).Item("lngDebIdentNbr"), objOracleConn, objOracleCommand)
+    '                Case Else
+    '                    strField = "unknown field"
+    '            End Select
+    '            strSQLToParse = Left(strSQLToParse, intPipePositionBegin - 1) & strField & Right(strSQLToParse, Len(strSQLToParse) - intPipePositionEnd)
+    '            'Neuer Anfang suchen für evtl. weitere |
+    '            intPipePositionBegin = InStr(strSQLToParse, "|")
+    '            'intPipePositionBegin = InStr(intPipePositionEnd + 1, strSQLToParse, "|")
+    '            intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
+    '        Loop
+    '    End If
 
-        Return strSQLToParse
+    '    Return strSQLToParse
 
 
-    End Function
+    'End Function
 
-    Public Shared Function FcGetKundenzeichen(ByVal lngJournalNr As Int32, ByRef objOracleCon As OracleConnection, ByRef objOracleCmd As OracleCommand) As String
+    'Public Shared Function FcGetKundenzeichen(ByVal lngJournalNr As Int32, ByRef objOracleCon As OracleConnection, ByRef objOracleCmd As OracleCommand) As String
 
-        Dim objdtJournalKZ As New DataTable
+    '    Dim objdtJournalKZ As New DataTable
 
-        objOracleCmd.CommandText = "SELECT KUNDENZEICHEN FROM TAB_JOURNALSTAMM WHERE JORNALNR=" + lngJournalNr.ToString
-        objdtJournalKZ.Load(objOracleCmd.ExecuteReader)
+    '    objOracleCmd.CommandText = "SELECT KUNDENZEICHEN FROM TAB_JOURNALSTAMM WHERE JORNALNR=" + lngJournalNr.ToString
+    '    objdtJournalKZ.Load(objOracleCmd.ExecuteReader)
 
-        Return objdtJournalKZ.Rows(0).Item(0)
+    '    Return objdtJournalKZ.Rows(0).Item(0)
 
-    End Function
+    'End Function
 
     Public Shared Function FcReadPeriodenDef(ByRef objSQLConnection As SqlClient.SqlConnection, ByRef objSQLCommand As SqlClient.SqlCommand, ByVal intPeriodenNr As Int32, ByRef objdtInfo As DataTable) As Int16
 
@@ -709,7 +709,7 @@ ErrorHandler:
             End If
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Periodendefinition lesen")
             Return 9
 
         Finally
@@ -725,13 +725,13 @@ ErrorHandler:
         Dim objlocMySQLcmd As New MySqlCommand
 
         Try
-            objlocMySQLcmd.CommandText = "SELECT strBLZ FROM tblAccountingBank WHERE intAccountingID=" + intAccounting.ToString + " AND strBank='" + strBank + "'"
+            objlocMySQLcmd.CommandText = "SELECT strBLZ FROM t_sage_tblaccountingbank WHERE intAccountingID=" + intAccounting.ToString + " AND strBank='" + strBank + "'"
             objlocMySQLcmd.Connection = objdbconn
             objlocdtBank.Load(objlocMySQLcmd.ExecuteReader)
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Bankleitzahl suchen.")
 
         End Try
 
@@ -747,7 +747,7 @@ ErrorHandler:
 
         Try
 
-            objlocMySQLcmd.CommandText = "SELECT buchhaltungen." + strField + " FROM buchhaltungen WHERE Buchh_Nr=" + intMandant.ToString
+            objlocMySQLcmd.CommandText = "SELECT t_sage_buchhaltungen." + strField + " FROM t_sage_buchhaltungen WHERE Buchh_Nr=" + intMandant.ToString
             'Debug.Print(objlocMySQLcmd.CommandText)
             objlocMySQLcmd.Connection = objdbconn
             objlocdtSetting.Load(objlocMySQLcmd.ExecuteReader)
@@ -755,7 +755,7 @@ ErrorHandler:
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Einstellung lesen")
 
         End Try
 
@@ -797,6 +797,7 @@ ErrorHandler:
         Dim booDiffSubText As Boolean
         Dim strDebiSubText As String
         Dim intDebitorNew As Int32
+        Dim intiBankSage200 As Int16
 
         Try
 
@@ -905,7 +906,7 @@ ErrorHandler:
                 If Left(strBitLog, 1) <> "0" Then
                     strStatus += "Deb"
                     If Left(strBitLog, 1) <> "2" Then
-                        intReturnValue = MainDebitor.FcIsDebitorCreatable(objdbconn, objdbconnZHDB02, objsqlcommandZHDB02, intDebitorNew, objdbBuha, strcmbBuha, row("intPayType"))
+                        intReturnValue = MainDebitor.FcIsDebitorCreatable(objdbconn, objdbconnZHDB02, objsqlcommandZHDB02, intDebitorNew, objdbBuha, strcmbBuha, intAccounting)
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
                         Else
@@ -935,7 +936,9 @@ ErrorHandler:
                 'RG - Datum 11
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebRGDatum")), #1789-09-17#, row("datDebRGDatum")), objdtInfo)
                 strBitLog += Trim(intReturnValue.ToString)
-                'intReturnValue = fcCheckIntBank()
+                'Interne Bank 12
+                intReturnValue = MainDebitor.FcCheckDebiIntBank(objdbconn, intAccounting, IIf(IsDBNull(row("strDebiBank")), "", row("strDebiBank")), intiBankSage200)
+                strBitLog += Trim(intReturnValue.ToString)
 
                 'Status-String auswerten
                 ''Debitor
@@ -1016,9 +1019,15 @@ ErrorHandler:
                     'Else
                     '    row("strDebRef") = strDebiReferenz
                 End If
+                'interne Bank
+                If Mid(strBitLog, 12, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "iBnk"
+                Else
+                    row("strDebiBank") = intiBankSage200
+                End If
 
                 'Status schreiben
-                If Val(strBitLog) = 0 Or Val(strBitLog) = 1000000 Then
+                If Val(strBitLog) = 0 Or Val(strBitLog) = 10000000 Then
                     row("booDebBook") = True
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
                 End If
@@ -1028,14 +1037,14 @@ ErrorHandler:
                 'Wird ein anderer Text in der Head-Buchung gewünscht?
                 booDiffHeadText = IIf(FcReadFromSettings(objdbconn, "Buchh_TextSpecial", intAccounting) = "0", False, True)
                 If booDiffHeadText Then
-                    strDebiHeadText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_TextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits, objOrdbconn, objOrcommand)
+                    strDebiHeadText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_TextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits, objOrdbconn, objOrcommand)
                     row("strDebText") = strDebiHeadText
                 End If
 
                 'Wird ein anderer Text in den Sub-Buchung gewünscht?
                 booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecial", intAccounting) = "0", False, True)
                 If booDiffSubText Then
-                    strDebiSubText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits, objOrdbconn, objOrcommand)
+                    strDebiSubText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits, objOrdbconn, objOrcommand)
                 Else
                     strDebiSubText = row("strDebText")
                 End If
@@ -1055,7 +1064,7 @@ ErrorHandler:
             Next
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Debitor Kopfdaten-Check")
 
         Finally
 
@@ -1072,6 +1081,7 @@ ErrorHandler:
 
 
     End Function
+
 
     Public Shared Function FcChCeckDate(ByVal datDateToCheck As Date, ByRef objdtInfo As DataTable) As Int16
 
@@ -1122,7 +1132,7 @@ ErrorHandler:
             End If
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Datumscheck")
             Return 9
 
         End Try
@@ -1146,7 +1156,7 @@ ErrorHandler:
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Check doppelte OP - Nr.")
             Return 9
 
         End Try
@@ -1198,7 +1208,7 @@ ErrorHandler:
             End If
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Problem Referenzerstellung")
             Return 1
 
         End Try
@@ -1284,7 +1294,7 @@ ErrorHandler:
         Try
 
             'Besprechung mit Muhi 20201209 => Es soll eine fixe Vergabe des MStSchlüssels passieren 
-            objlocMySQLcmd.CommandText = "SELECT  * FROM sage50mwst WHERE strKey='" + strStrCode + "'"
+            objlocMySQLcmd.CommandText = "SELECT  * FROM t_sage_sage50mwst WHERE strKey='" + strStrCode + "'"
 
             objlocMySQLcmd.Connection = objdbconn
             objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
@@ -1305,7 +1315,7 @@ ErrorHandler:
             End If
 
             'Besprechung mit Muhi 20201209 => Es soll eine fixe Vergabe des MStSchlüssels passieren 
-            'objlocMySQLcmd.CommandText = "SELECT  * FROM sage50mwst WHERE strKey='" + strStrCode + "' AND dblProzent=" + dblStrWert.ToString
+            'objlocMySQLcmd.CommandText = "SELECT  * FROM t_sage_sage50mwst WHERE strKey='" + strStrCode + "' AND dblProzent=" + dblStrWert.ToString
 
             'objlocMySQLcmd.Connection = objdbconn
             'objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
@@ -1334,7 +1344,7 @@ ErrorHandler:
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "MwSt-Key Check")
             Return 9
 
         End Try
@@ -1912,7 +1922,7 @@ ErrorHandler:
             'Sind die Angaben stimmig?
             If Len(strStrCode) > 0 And dblStrAmount <> 0 And dblStrWert = 0 Then 'MwSt Wert ist 0 obwohl Schlüssel und MwSt-Betrag
 
-                objlocMySQLcmd.CommandText = "SELECT  * FROM sage50mwst WHERE strKey='" + strStrCode + "'"
+                objlocMySQLcmd.CommandText = "SELECT  * FROM t_sage_sage50mwst WHERE strKey='" + strStrCode + "'"
 
                 objlocMySQLcmd.Connection = objdbconn
                 objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
@@ -1930,7 +1940,7 @@ ErrorHandler:
             ElseIf Len(strStrCode) > 0 And dblStrAmount = 0 And dblStrWert <> 0 Then 'MwSt Wert ist nicht 0 obwohl kein Betrag
 
                 'Check was ist hinterlegt
-                objlocMySQLcmd.CommandText = "SELECT  * FROM sage50mwst WHERE strKey='" + strStrCode + "'"
+                objlocMySQLcmd.CommandText = "SELECT  * FROM t_sage_sage50mwst WHERE strKey='" + strStrCode + "'"
 
                 objlocMySQLcmd.Connection = objdbconn
                 objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
@@ -2311,7 +2321,7 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
                 '
-                If row("lngKredID") = "48535" Then Stop
+                'If row("lngKredID") = "1103800" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -2414,15 +2424,22 @@ ErrorHandler:
                 'RG - Datum 11
                 intReturnValue = FcChCeckDate(row("datKredRGDatum"), objdtInfo)
                 strBitLog += Trim(intReturnValue.ToString)
-                ''intReturnValue = fcCheckIntBank()
-
+                ''Referenz 12
+                'intReturnValue = IIf(IsDBNull(row("strKredRef")), 1, 0)
+                'strBitLog += Trim(intReturnValue.ToString)
 
                 'Status-String auswerten
                 'Kreditor
                 If Left(strBitLog, 1) <> "0" Then
                     strStatus = "Kred"
                     If Left(strBitLog, 1) <> "2" Then
-                        intReturnValue = MainKreditor.FcIsKreditorCreatable(objdbconn, objdbconnZHDB02, objsqlcommandZHDB02, intKreditorNew, objKrBuha, strcmbBuha, row("intPayType"))
+                        intReturnValue = MainKreditor.FcIsKreditorCreatable(objdbconn,
+                                                                            objdbconnZHDB02,
+                                                                            objsqlcommandZHDB02,
+                                                                            intKreditorNew,
+                                                                            objKrBuha,
+                                                                            strcmbBuha,
+                                                                            IIf(IsDBNull(row("intPayType")), 3, row("intPayType")))
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
                             row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
@@ -2443,9 +2460,9 @@ ErrorHandler:
                                                        objdbconnZHDB02,
                                                        objKrBuha,
                                                        intKreditorNew,
-                                                       row("intPayType"),
-                                                       row("strKredRef"),
-                                                       row("strKredRef"),
+                                                       IIf(IsDBNull(row("intPayType")), 3, row("intPayType")),
+                                                       IIf(IsDBNull(row("strKredRef")), "", row("strKredRef")),
+                                                       IIf(IsDBNull(row("strKredRef")), "", row("strKredRef")),
                                                        row("strKredCur"))
                 End If
                 'Konto
@@ -2504,7 +2521,14 @@ ErrorHandler:
                     'Else
                     '    row("strDebRef") = strDebiReferenz
                 End If
-                'OP - Nr.
+                'Referenz
+                'If Left(strBitLog, 12, 1) <> "0" Then
+                '    strStatus = "KRef "
+                '    If intKreditorNew > 0 Then 'Neue Kreditoren-Nr bekannt Versuch IBAN von Standard zu lesen
+
+
+                '    End If
+                'End If
 
                 'Status schreiben
                 If Val(strBitLog) = 0 Or Val(strBitLog) = 1000000 Then
@@ -2529,12 +2553,12 @@ ErrorHandler:
                 '    strDebiSubText = row("strDebText")
                 'End If
                 'selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
-                'For Each subrow In selsubrow
-                '    subrow("strDebSubText") = strDebiSubText
-                'Next
+                        'For Each subrow In selsubrow
+                        '    subrow("strDebSubText") = strDebiSubText
+                        'Next
 
-                'Init
-                strBitLog = ""
+                        'Init
+                        strBitLog = ""
                 strStatus = ""
                 intSubNumber = 0
                 dblSubBrutto = 0
@@ -2594,12 +2618,13 @@ ErrorHandler:
                 strMDBName = FcReadFromSettings(objdbconn, "Buchh_RGTableMDB", intAccounting)
 
                 'Debitzoren Transit-Queries für Mandant einlesen
-                strSQL = "SELECT * FROM buchhaltungen_sub WHERE strType='D' AND refMandant=" + intAccounting.ToString
+                strSQL = "SELECT * FROM t_sage_buchhaltungen_sub WHERE strType='D' AND refMandant=" + intAccounting.ToString
                 objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
                 objlocMySQLcmd.Connection = objRGMySQLConn
                 objlocMySQLcmd.CommandText = strSQL
                 objRGMySQLConn.Open()
                 objDTTransitDebits.Load(objlocMySQLcmd.ExecuteReader)
+                objRGMySQLConn.Close()
 
                 For Each rowdebitquery As DataRow In objDTTransitDebits.Rows
 
@@ -2852,7 +2877,7 @@ ErrorHandler:
 
             'Zuerst prüfen ob IBAN nicht schon in der Tabelle der bekannten existiert
             objmysqlcom.Connection = objdbconn
-            objmysqlcom.CommandText = "SELECT strIBANNr FROM tbliban WHERE strIBANNr='" + strIBAN + "'"
+            objmysqlcom.CommandText = "SELECT * FROM tbliban WHERE strIBANNr='" + strIBAN + "'"
             objdtIBAN.Load(objmysqlcom.ExecuteReader)
             If objdtIBAN.Rows.Count = 0 Then
 

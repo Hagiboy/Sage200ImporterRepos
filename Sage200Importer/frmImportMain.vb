@@ -35,7 +35,7 @@ Friend Class frmImportMain
     Public objdbcommand As New MySqlCommand
     Public objdbcommandZHDB02 As New MySqlCommand
     Public objdbSQLcommand As New SqlCommand
-    Public objDABuchhaltungen As New MySqlDataAdapter("SELECT * FROM buchhaltungen WHERE NOT Buchh200_Name IS NULL ORDER BY Buchh_Bez", objdbConn)
+    Public objDABuchhaltungen As New MySqlDataAdapter("SELECT * FROM t_sage_buchhaltungen WHERE NOT Buchh200_Name IS NULL ORDER BY Buchh_Bez", objdbConn)
     'Public objDACarsGrid As New MySqlDataAdapter("SELECT tblcars.idCar, tblunits.strUnit, tblplates.strPlate, tblcars.strVIN, tblmodelle.strModell FROM tblcars LEFT JOIN tblunits ON tblcars.refUnit = tblunits.idUnit LEFT JOIN tblplates ON tblcars.refPlate = tblplates.idPlate LEFT JOIN tblmodelle ON tblcars.refModell = tblmodelle.idModell", objdbConn)
     'Public objdtDebitor As New DataTable("tbliDebitor")
     Public objdtBuchhaltungen As New DataTable("tbliBuchhaltungen")
@@ -307,7 +307,7 @@ Friend Class frmImportMain
             Dim cmbBuchungsart As New DataGridViewComboBoxColumn()
             Dim objdtBA As New DataTable("objidtBA")
             Dim objlocMySQLcmd As New MySqlCommand
-            objlocMySQLcmd.CommandText = "SELECT * FROM tblBuchungsarten"
+            objlocMySQLcmd.CommandText = "SELECT * FROM t_sage_tblbuchungsarten"
             objlocMySQLcmd.Connection = objdbConn
             objdtBA.Load(objlocMySQLcmd.ExecuteReader)
             cmbBuchungsart.DataSource = objdtBA
@@ -470,7 +470,7 @@ Friend Class frmImportMain
         Dim objdtBA As New DataTable("objidtBA")
         Dim objlocMySQLcmd As New MySqlCommand
         objdbConn.Open()
-        objlocMySQLcmd.CommandText = "SELECT * FROM tblBuchungsarten"
+        objlocMySQLcmd.CommandText = "SELECT * FROM t_sage_tblbuchungsarten"
         objlocMySQLcmd.Connection = objdbConn
         objdtBA.Load(objlocMySQLcmd.ExecuteReader)
         cmbBuchungsart.DataSource = objdtBA
@@ -670,6 +670,7 @@ Friend Class frmImportMain
         Dim strDebiTextHaben As String = ""
         Dim dblKursSoll As Double = 0
         Dim dblKursHaben As Double = 0
+        Dim intEigeneBank As Int16
 
         Dim selDebiSub() As DataRow
         Dim strSteuerInfo() As String
@@ -728,6 +729,7 @@ Friend Class frmImportMain
                         Else
                             dblKurs = 1.0#
                         End If
+                        intEigeneBank = row("strDebiBank")
 
                         Call DbBhg.SetBelegKopf2(intDebBelegsNummer,
                                                  strValutaDatum,
@@ -746,7 +748,9 @@ Friend Class frmImportMain
                                                  dblKurs.ToString,
                                                  strExtBelegNbr,
                                                  strSkonto,
-                                                 strCurrency)
+                                                 strCurrency,
+                                                 "",
+                                                 intEigeneBank.ToString)
 
                         selDebiSub = objdtDebitorenSub.Select("strRGNr='" + row("strDebRGNbr") + "'")
 
@@ -1148,11 +1152,11 @@ Friend Class frmImportMain
                         strValutaDatum = Format(row("datKredValDatum"), "yyyyMMdd").ToString
                         strBelegDatum = Format(row("datKredRGDatum"), "yyyyMMdd").ToString
                         strVerfallDatum = ""
-                        strReferenz = row("strKredRef")
-                        'If row("intPayType") <> 9 Then
-                        intTeilnehmer = CInt(row("strKrediBank"))
-                        'Else
+                        strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
+                        'If IsDBNull(row("strKrediBank")) Then
                         'intTeilnehmer = 0
+                        'Else
+                        intTeilnehmer = CInt(Val(row("strKrediBank")))
                         'End If
                         strMahnerlaubnis = "" 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         dblBetrag = row("dblKredBrutto")

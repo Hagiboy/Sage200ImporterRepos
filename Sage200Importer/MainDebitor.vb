@@ -73,7 +73,7 @@ Public Class MainDebitor
                 '    objdrSub("strDebSubText") = row("Betrifft").ToString + " " + row("betrifft1").ToString
                 '    objdtSub.Rows.Add(objdrSub)
                 'End If
-                strSQLSub = Main.FcSQLParse(Main.FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"), objdtHead, objOracleCon, objOracleCmd)
+                strSQLSub = MainDebitor.FcSQLParse(Main.FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"), objdtHead, objOracleCon, objOracleCmd)
                 If strRGTableType = "A" Then
                     objlocOLEdbcmd.CommandText = strSQLSub
                     objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
@@ -91,7 +91,7 @@ Public Class MainDebitor
             'intFcReturns = FcRoundInTable(objdtSub, "dblBrutto", 2)
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Debitoren-Daten-Lesen Problem")
 
         Finally
 
@@ -267,7 +267,7 @@ Public Class MainDebitor
                                                 ByVal lngDebiNbr As Long,
                                                 ByRef objDbBhg As SBSXASLib.AXiDbBhg,
                                                 ByVal strcmbBuha As String,
-                                                ByRef intPayType As Int16) As Int16
+                                                ByVal intAccounting As Int16) As Int16
 
         'Return: 0=creatable und erstellt, 3=Sage - Suchtext nicht erfasst, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
 
@@ -291,6 +291,7 @@ Public Class MainDebitor
         Dim intDebZB As Int16
         Dim objdsDebitor As New DataSet
         Dim objDADebitor As New MySqlDataAdapter
+        Dim intPayType As Int16
 
         Try
 
@@ -299,7 +300,7 @@ Public Class MainDebitor
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
             objsqlcommandZHDB02.CommandText = "SELECT Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_DebiKonto, Rep_Gruppe, Rep_Vertretung, Rep_Ansprechpartner, Rep_Land, Rep_Tel1, Rep_Fax, Rep_Mail, " +
                                                 "Rep_Language, Rep_Kredi_MWSTNr, Rep_Kreditlimite, Rep_Kred_Pay_Def, Rep_Kred_Bank_Name, Rep_Kred_Bank_PLZ, Rep_Kred_Bank_Ort, Rep_Kred_IBAN, Rep_Kred_Bank_BIC, " +
-                                                "Rep_Kred_Currency, Rep_Kred_PCKto, Rep_Debi_ErloesKonto FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
+                                                "Rep_Kred_Currency, Rep_Kred_PCKto, Rep_DebiErloesKonto FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
             objdtDebitor.Load(objsqlcommandZHDB02.ExecuteReader)
 
             'Gefunden?
@@ -352,7 +353,7 @@ Public Class MainDebitor
                         intLangauage = 2057 'Englisch
                 End Select
 
-                'Variablen zuweisen für die Erstellung des Kreditors
+                'Variablen zuweisen für die Erstellung des Debitors
                 strIBANNr = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_IBAN")), "", objdtDebitor.Rows(0).Item("Rep_Kred_IBAN"))
                 strBankName = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Name")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Name"))
                 strBankAddress1 = ""
@@ -362,10 +363,10 @@ Public Class MainDebitor
                 strBankBIC = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_BIC")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_BIC"))
                 strBankClearing = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_PCKto")), "", objdtDebitor.Rows(0).Item("Rep_Kred_PCKto"))
 
-                If intPayType = 9 Or Len(strIBANNr) = 21 Then 'IBAN
-                    If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
-                        intPayType = 9
-                    End If
+                If Len(strIBANNr) = 21 Then 'IBAN
+                    'If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
+                    intPayType = 9
+                    'End If
                     intReturnValue = Main.FcGetIBANDetails(objdbconn,
                                                       strIBANNr,
                                                       strBankName,
@@ -405,13 +406,13 @@ Public Class MainDebitor
                                           strBankBIC,
                                           strBankClearing,
                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Currency")), "CHF", objdtDebitor.Rows(0).Item("Rep_Kred_Currency")),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Debi_ErloesKonto")), "CHF", objdtDebitor.Rows(0).Item("Rep_Debi_ErloesKonto")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")), "CHF", objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")),
                                           intDebZB)
 
                 If intCreatable = 0 Then
                     'MySQL
                     strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
-                                                         strcmbBuha + lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
+                                                         intAccounting.ToString + lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
                                                          "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
                                                          lngDebiNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
                     ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
@@ -430,7 +431,7 @@ Public Class MainDebitor
             End If
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Debitor - Erstellbar - Abklärung")
             Return 9
 
         Finally
@@ -558,7 +559,7 @@ Public Class MainDebitor
             'intDebBankLaufNr = DbBhg.GetZahlungsverbLaufnr()
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Debitor - Erstellung")
 
             Return 1
 
@@ -638,7 +639,7 @@ Public Class MainDebitor
             Return 0
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Status in Debitor-RG-Tabelle schreiben")
             Return 1
 
         Finally
@@ -709,7 +710,7 @@ Public Class MainDebitor
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Vor Debitor - Ausführung")
             Return 1
 
         Finally
@@ -776,7 +777,7 @@ Public Class MainDebitor
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Nach Debitor - Ausführung")
             Return 1
 
         Finally
@@ -792,5 +793,132 @@ Public Class MainDebitor
 
     End Function
 
+    Public Shared Function FcCheckDebiIntBank(ByRef objdbconn As MySqlConnection, ByVal intAccounting As Integer, ByVal striBankS50 As String, ByRef intIBankS200 As String) As Int16
+
+        '0=ok, 1=Sage50 iBank nicht gefunden, 2=Kein Standard gesetzt, 3=Nichts angegeben, auf Standard gesetzt, 9=Problem
+
+        Dim objdbcommand As New MySqlCommand
+        Dim objdtiBank As New DataTable
+
+        Try
+            'wurde i Bank definiert?
+            If striBankS50 <> "" Then
+                'Sage 50 - Bank suchen
+                objdbcommand.Connection = objdbconn
+                'objdbconn.Open()
+                objdbcommand.CommandText = "SELECT intSage200 FROM t_sage_tblaccountingbank WHERE strBank='" + striBankS50 + "' AND intAccountingID=" + intAccounting.ToString
+                objdtiBank.Load(objdbcommand.ExecuteReader)
+                'wurde DS gefunden?
+                If objdtiBank.Rows.Count > 0 Then
+                    intIBankS200 = objdtiBank.Rows(0).Item("intSage200")
+                    Return 0
+                Else
+                    intIBankS200 = 0
+                    Return 1
+                End If
+            Else
+                'Standard nehmen
+                objdbcommand.Connection = objdbconn
+                'objdbconn.Open()
+                objdbcommand.CommandText = "SELECT intSage200 FROM tblaccoutningbank WHERE booStandard=true AND intAccountingID=" + intAccounting.ToString
+                objdtiBank.Load(objdbcommand.ExecuteReader)
+                'wurde ein Standard definieren
+                If objdtiBank.Rows.Count > 0 Then
+                    intIBankS200 = objdtiBank.Rows(0).Item("intSage200")
+                    Return 3
+                Else
+                    intIBankS200 = 0
+                    Return 2
+                End If
+
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Eigene Bank - Suche")
+            Return 9
+
+        Finally
+            If objdbconn.State = ConnectionState.Open Then
+                'objdbconn.Close()
+            End If
+
+        End Try
+
+    End Function
+
+    Public Shared Function FcSQLParse(ByVal strSQLToParse As String,
+                                      ByVal strRGNbr As String,
+                                      ByVal objdtDebi As DataTable,
+                                      ByRef objOracleConn As OracleClient.OracleConnection,
+                                      ByRef objOracleCommand As OracleClient.OracleCommand) As String
+
+        'Funktion setzt in eingelesenem SQL wieder Variablen ein
+        Dim intPipePositionBegin, intPipePositionEnd As Integer
+        Dim strWork, strField As String
+        Dim RowDebi() As DataRow
+
+        'Zuerst Datensatz in Debi-Head suchen
+        RowDebi = objdtDebi.Select("strDebRGNbr='" + strRGNbr + "'")
+
+        '| suchen
+        If InStr(strSQLToParse, "|") > 0 Then
+            'Vorkommen gefunden
+            intPipePositionBegin = InStr(strSQLToParse, "|")
+            intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
+            Do Until intPipePositionBegin = 0
+                strField = Mid(strSQLToParse, intPipePositionBegin + 1, intPipePositionEnd - intPipePositionBegin - 1)
+                Select Case strField
+                    Case "rsDebi.Fields(""RGNr"")"
+                        strField = RowDebi(0).Item("strDebRGNbr")
+                    Case "rsDebiTemp.Fields([strDebPKBez])"
+                        strField = RowDebi(0).Item("strDebBez")
+                    Case "rsDebiTemp.Fields([lngDebIdentNbr])"
+                        strField = RowDebi(0).Item("lngDebIdentNbr")
+                        'Case "rsDebiTemp.Fields([strRGArt])"
+                        '    strField = rsDebiTemp.Fields("strRGArt")
+                    Case "rsDebiTemp.Fields([strRGName])"
+                        strField = RowDebi(0).Item("strRGName")
+                    Case "rsDebiTemp.Fields([strDebIdentNbr2])"
+                        strField = RowDebi(0).Item("strDebIdentNbr2")
+                        'Case "rsDebi.Fields([RGBemerkung])"
+                        '    strField = rsDebi.Fields("RGBemerkung")
+                        'Case "rsDebi.Fields([JornalNr])"
+                        '    strField = rsDebi.Fields("JornalNr")
+                        'Case "rsDebiTemp.Fields([strRGBemerkung])"
+                        '    strField = rsDebiTemp.Fields("strRGBemerkung")
+                        'Case "rsDebiTemp.Fields(""strDebRGNbr"")"
+                        '    strField = rsDebiTemp.Fields("strDebRGNbr")
+                        'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
+                        '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
+                        'Case "rsDebiTemp.Fields([strDebText])"
+                        '    strField = rsDebiTemp.Fields("strDebText")
+                    Case "KUNDENZEICHEN"
+                        strField = FcGetKundenzeichen(RowDebi(0).Item("lngDebIdentNbr"), objOracleConn, objOracleCommand)
+                    Case Else
+                        strField = "unknown field"
+                End Select
+                strSQLToParse = Left(strSQLToParse, intPipePositionBegin - 1) & strField & Right(strSQLToParse, Len(strSQLToParse) - intPipePositionEnd)
+                'Neuer Anfang suchen für evtl. weitere |
+                intPipePositionBegin = InStr(strSQLToParse, "|")
+                'intPipePositionBegin = InStr(intPipePositionEnd + 1, strSQLToParse, "|")
+                intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
+            Loop
+        End If
+
+        Return strSQLToParse
+
+
+    End Function
+
+    Public Shared Function FcGetKundenzeichen(ByVal lngJournalNr As Int32, ByRef objOracleCon As OracleConnection, ByRef objOracleCmd As OracleCommand) As String
+
+        Dim objdtJournalKZ As New DataTable
+
+        objOracleCmd.CommandText = "SELECT KUNDENZEICHEN FROM TAB_JOURNALSTAMM WHERE JORNALNR=" + lngJournalNr.ToString
+        objdtJournalKZ.Load(objOracleCmd.ExecuteReader)
+
+        Return objdtJournalKZ.Rows(0).Item(0)
+
+    End Function
 
 End Class

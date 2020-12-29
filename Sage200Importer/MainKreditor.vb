@@ -501,7 +501,13 @@ Public Class MainKreditor
 
             ElseIf strKRGTableType = "M" Then
                 'MySQL
-                strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + lngKredID.ToString
+                'Bei IG andere Feldnamen
+                If intMandant = 25 Then
+                    strSQL = "UPDATE " + strNameKRGTable + " SET IGKBooked=true, IGKBDate=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + lngKredID.ToString
+                Else
+                    strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + lngKredID.ToString
+                End If
+
                 objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                 objlocMySQLRGConn.Open()
                 objlocMySQLRGcmd.Connection = objlocMySQLRGConn
@@ -734,7 +740,7 @@ Public Class MainKreditor
                             'Debug.Print("BankV " + strZahlVerbindung(4) + ", " + strIBAN)
                             If strZahlVerbindung(4) = strIBAN Then
                                 booBankExists = True
-                                Debug.Print("Gefunden " + strZahlVerbindungLine)
+                                'Debug.Print("Gefunden " + strZahlVerbindungLine)
                             End If
 
                         End If
