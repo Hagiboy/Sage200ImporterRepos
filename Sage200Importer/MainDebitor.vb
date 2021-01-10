@@ -217,7 +217,7 @@ Public Class MainDebitor
             End If
 
             If objdtDebitor.Rows.Count > 0 Then
-                If IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
+                If IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) And strTableName <> "Tab_Repbetriebe" Then 'Es steht nichts im Feld welches auf den Rep_Betrieb verweist oder wenn direkt
                     intDebiNew = 0
                     Return 2
                 Else
@@ -245,7 +245,13 @@ Public Class MainDebitor
                         If Not IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
                             intDebiNew = objdtDebitor.Rows(0).Item(strDebNewField)
                         Else
-                            intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtDebitor.Rows(0).Item(strDebNewField), intDebiNew)
+                            intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02, lngDebiNbr.ToString, intDebiNew)
+                            If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
+                                intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02, lngDebiNbr, intDebiNew)
+                                If intFunctionReturns = 0 Then 'Schreiben hat geklappt
+                                    Return 1
+                                End If
+                            End If
                         End If
                         Return 0
                     End If
@@ -298,9 +304,9 @@ Public Class MainDebitor
             'Angaben einlesen
             objdbconnZHDB02.Open()
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
-            objsqlcommandZHDB02.CommandText = "SELECT Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_DebiKonto, Rep_Gruppe, Rep_Vertretung, Rep_Ansprechpartner, Rep_Land, Rep_Tel1, Rep_Fax, Rep_Mail, " +
-                                                "Rep_Language, Rep_Kredi_MWSTNr, Rep_Kreditlimite, Rep_Kred_Pay_Def, Rep_Kred_Bank_Name, Rep_Kred_Bank_PLZ, Rep_Kred_Bank_Ort, Rep_Kred_IBAN, Rep_Kred_Bank_BIC, " +
-                                                "Rep_Kred_Currency, Rep_Kred_PCKto, Rep_DebiErloesKonto FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
+            objsqlcommandZHDB02.CommandText = "SELECT Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_DebiKonto, Rep_Gruppe, Rep_Vertretung, Rep_Ansprechpartner, IF(Rep_Land IS NULL, 'Schweiz', Rep_Land) AS Rep_Land, Rep_Tel1, Rep_Fax, Rep_Mail, " +
+                                                "IF(Rep_Language IS NULL, 'D', Rep_Language) AS Rep_Language, Rep_Kredi_MWSTNr, Rep_Kreditlimite, Rep_Kred_Pay_Def, Rep_Kred_Bank_Name, Rep_Kred_Bank_PLZ, Rep_Kred_Bank_Ort, Rep_Kred_IBAN, Rep_Kred_Bank_BIC, " +
+                                                "IF(Rep_Kred_Currency IS NULL, 'CHF', Rep_Kred_Currency) AS Rep_Kred_Currency, Rep_Kred_PCKto, Rep_DebiErloesKonto FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
             objdtDebitor.Load(objsqlcommandZHDB02.ExecuteReader)
 
             'Gefunden?
@@ -406,14 +412,14 @@ Public Class MainDebitor
                                           strBankBIC,
                                           strBankClearing,
                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Currency")), "CHF", objdtDebitor.Rows(0).Item("Rep_Kred_Currency")),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")), "CHF", objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")),
+                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")), "3200", objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")),
                                           intDebZB)
 
                 If intCreatable = 0 Then
                     'MySQL
                     strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
                                                          intAccounting.ToString + lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
-                                                         "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
+                                                         "'finance@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
                                                          lngDebiNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
                     ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                     'objlocMySQLRGConn.Open()
@@ -874,8 +880,8 @@ Public Class MainDebitor
                         strField = RowDebi(0).Item("strDebBez")
                     Case "rsDebiTemp.Fields([lngDebIdentNbr])"
                         strField = RowDebi(0).Item("lngDebIdentNbr")
-                        'Case "rsDebiTemp.Fields([strRGArt])"
-                        '    strField = rsDebiTemp.Fields("strRGArt")
+                    Case "rsDebiTemp.Fields([strRGArt])"
+                        strField = RowDebi(0).Item("strRGArt")
                     Case "rsDebiTemp.Fields([strRGName])"
                         strField = RowDebi(0).Item("strRGName")
                     Case "rsDebiTemp.Fields([strDebIdentNbr2])"

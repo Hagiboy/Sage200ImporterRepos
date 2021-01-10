@@ -19,7 +19,7 @@ Friend NotInheritable Class Main
         strDebRGNbr.DataType = System.Type.[GetType]("System.String")
         strDebRGNbr.MaxLength = 50
         DT.Columns.Add(strDebRGNbr)
-        DT.PrimaryKey = New DataColumn() {DT.Columns("strDebRGNbr")}
+        'DT.PrimaryKey = New DataColumn() {DT.Columns("strDebRGNbr")}
         Dim intBuchhaltung As DataColumn = New DataColumn("intBuchhaltung")
         intBuchhaltung.DataType = System.Type.[GetType]("System.Int32")
         DT.Columns.Add(intBuchhaltung)
@@ -198,7 +198,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(strMwStKey)
         Dim strArtikel As DataColumn = New DataColumn("strArtikel")
         strArtikel.DataType = System.Type.[GetType]("System.String")
-        strArtikel.MaxLength = 128
+        strArtikel.MaxLength = 255
         DT.Columns.Add(strArtikel)
         Dim strDebSubText As DataColumn = New DataColumn("strDebSubText")
         strDebSubText.DataType = System.Type.[GetType]("System.String")
@@ -462,7 +462,6 @@ Friend NotInheritable Class Main
     End Function
 
 
-
     Public Shared Function FcLoginSage(ByRef objdbconn As MySqlConnection,
                                        ByRef objsqlConn As SqlClient.SqlConnection,
                                        ByRef objsqlCom As SqlClient.SqlCommand,
@@ -472,7 +471,8 @@ Friend NotInheritable Class Main
                                        ByRef objdbPIFb As SBSXASLib.AXiPlFin,
                                        ByRef objkrBuha As SBSXASLib.AXiKrBhg,
                                        ByVal intAccounting As Int16,
-                                       ByRef objdtInfo As DataTable) As Int16
+                                       ByRef objdtInfo As DataTable,
+                                       ByVal strPeriod As String) As Int16
 
 
         '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
@@ -504,7 +504,7 @@ Friend NotInheritable Class Main
         booAccOk = objFinanz.CheckMandant(strMandant)
 
         'Open Mandantg
-        objFinanz.OpenMandant(strMandant, "")
+        objFinanz.OpenMandant(strMandant, strPeriod)
         'Buha in Info schreiben
         'objdtInfo.Rows.Add("Buha", strMandant)
 
@@ -581,99 +581,49 @@ ErrorHandler:
 
     End Function
 
-    'Public Shared Function FcRoundInTable(ByRef objdt As DataTable, ByVal strColumnName As String, ByVal intDecimals As Int16) As Int16
+    Public Shared Function FcReadPeriodsFromMandant(ByRef objdbconn As MySqlConnection,
+                                                    ByRef objFinanz As SBSXASLib.AXFinanz,
+                                                    ByVal intAccounting As Int16,
+                                                    ByRef cmbPeriods As ComboBox) As Int16
 
-    '    Try
+        Dim strMandant As String
+        Dim booAccOk As Int16
+        Dim intLbNbr As Int16
+        Dim strPeriodenListe As String = ""
+        Dim strPeriodeAr() As String
+        Dim intLooper As Int16
 
-    '        For Each row As DataRow In objdt.Rows
-
-    '            row.Item(strColumnName) = Math.Round(row.Item(strColumnName), 2, MidpointRounding.AwayFromZero)
-
-    '        Next
-    '        Return 0
-
-    '    Catch ex As Exception
-    '        MessageBox.Show(ex.Message)
-    '        Return 1
-
-    '    End Try
-
-    'End Function
-
-    'Public Shared Function FcSQLParse(ByVal strSQLToParse As String,
-    '                                  ByVal strRGNbr As String,
-    '                                  ByVal objdtDebi As DataTable,
-    '                                  ByRef objOracleConn As OracleClient.OracleConnection,
-    '                                  ByRef objOracleCommand As OracleClient.OracleCommand) As String
-
-    '    'Funktion setzt in eingelesenem SQL wieder Variablen ein
-    '    Dim intPipePositionBegin, intPipePositionEnd As Integer
-    '    Dim strWork, strField As String
-    '    Dim RowDebi() As DataRow
-
-    '    'Zuerst Datensatz in Debi-Head suchen
-    '    RowDebi = objdtDebi.Select("strDebRGNbr='" + strRGNbr + "'")
-
-    '    '| suchen
-    '    If InStr(strSQLToParse, "|") > 0 Then
-    '        'Vorkommen gefunden
-    '        intPipePositionBegin = InStr(strSQLToParse, "|")
-    '        intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
-    '        Do Until intPipePositionBegin = 0
-    '            strField = Mid(strSQLToParse, intPipePositionBegin + 1, intPipePositionEnd - intPipePositionBegin - 1)
-    '            Select Case strField
-    '                Case "rsDebi.Fields(""RGNr"")"
-    '                    strField = RowDebi(0).Item("strDebRGNbr")
-    '                Case "rsDebiTemp.Fields([strDebPKBez])"
-    '                    strField = RowDebi(0).Item("strDebBez")
-    '                Case "rsDebiTemp.Fields([lngDebIdentNbr])"
-    '                    strField = RowDebi(0).Item("lngDebIdentNbr")
-    '                    'Case "rsDebiTemp.Fields([strRGArt])"
-    '                    '    strField = rsDebiTemp.Fields("strRGArt")
-    '                Case "rsDebiTemp.Fields([strRGName])"
-    '                    strField = RowDebi(0).Item("strRGName")
-    '                Case "rsDebiTemp.Fields([strDebIdentNbr2])"
-    '                    strField = RowDebi(0).Item("strDebIdentNbr2")
-    '                    'Case "rsDebi.Fields([RGBemerkung])"
-    '                    '    strField = rsDebi.Fields("RGBemerkung")
-    '                    'Case "rsDebi.Fields([JornalNr])"
-    '                    '    strField = rsDebi.Fields("JornalNr")
-    '                    'Case "rsDebiTemp.Fields([strRGBemerkung])"
-    '                    '    strField = rsDebiTemp.Fields("strRGBemerkung")
-    '                    'Case "rsDebiTemp.Fields(""strDebRGNbr"")"
-    '                    '    strField = rsDebiTemp.Fields("strDebRGNbr")
-    '                    'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
-    '                    '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
-    '                    'Case "rsDebiTemp.Fields([strDebText])"
-    '                    '    strField = rsDebiTemp.Fields("strDebText")
-    '                Case "KUNDENZEICHEN"
-    '                    strField = FcGetKundenzeichen(RowDebi(0).Item("lngDebIdentNbr"), objOracleConn, objOracleCommand)
-    '                Case Else
-    '                    strField = "unknown field"
-    '            End Select
-    '            strSQLToParse = Left(strSQLToParse, intPipePositionBegin - 1) & strField & Right(strSQLToParse, Len(strSQLToParse) - intPipePositionEnd)
-    '            'Neuer Anfang suchen für evtl. weitere |
-    '            intPipePositionBegin = InStr(strSQLToParse, "|")
-    '            'intPipePositionBegin = InStr(intPipePositionEnd + 1, strSQLToParse, "|")
-    '            intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
-    '        Loop
-    '    End If
-
-    '    Return strSQLToParse
+        objFinanz = Nothing
+        objFinanz = New SBSXASLib.AXFinanz
 
 
-    'End Function
+        'Loign
+        Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
 
-    'Public Shared Function FcGetKundenzeichen(ByVal lngJournalNr As Int32, ByRef objOracleCon As OracleConnection, ByRef objOracleCmd As OracleCommand) As String
+        objdbconn.Open()
+        strMandant = FcReadFromSettings(objdbconn, "Buchh200_Name", intAccounting)
+        objdbconn.Close()
+        booAccOk = objFinanz.CheckMandant(strMandant)
 
-    '    Dim objdtJournalKZ As New DataTable
+        'Combo leeren
+        cmbPeriods.Items.Clear()
 
-    '    objOracleCmd.CommandText = "SELECT KUNDENZEICHEN FROM TAB_JOURNALSTAMM WHERE JORNALNR=" + lngJournalNr.ToString
-    '    objdtJournalKZ.Load(objOracleCmd.ExecuteReader)
+        'GJ einlesen
+        intLbNbr = objFinanz.ReadPeri(strMandant, "")
+        Do Until strPeriodenListe = "EOF"
+            strPeriodenListe = objFinanz.GetPeriListe(intLooper)
+            strPeriodeAr = Split(strPeriodenListe, "{>}")
+            If strPeriodenListe <> "EOF" Then
+                cmbPeriods.Items.Add(strPeriodeAr(0))
+            End If
+            intLooper += 1
+        Loop
 
-    '    Return objdtJournalKZ.Rows(0).Item(0)
 
-    'End Function
+    End Function
 
     Public Shared Function FcReadPeriodenDef(ByRef objSQLConnection As SqlClient.SqlConnection, ByRef objSQLCommand As SqlClient.SqlCommand, ByVal intPeriodenNr As Int32, ByRef objdtInfo As DataTable) As Int16
 
@@ -1401,7 +1351,7 @@ ErrorHandler:
             If IsDBNull(subrow("dblNetto")) Then
                 subrow("dblNetto") = 0
             Else
-                Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero)
+                subrow("dblNetto") = Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero)
             End If
             If IsDBNull(subrow("dblMwst")) Then
                 subrow("dblMwst") = 0
@@ -1491,7 +1441,7 @@ ErrorHandler:
 
             'Kst/Ktr prüfen
             If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
-                intReturnValue = FcCheckKstKtr(subrow("lngKST"), objFiBhg, objFiPI, subrow("lngKto"), strKstKtrSage200)
+                intReturnValue = FcCheckKstKtr(IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")), objFiBhg, objFiPI, subrow("lngKto"), strKstKtrSage200)
                 If intReturnValue = 0 Then
                     subrow("strKstBez") = strKstKtrSage200
                 ElseIf intReturnValue = 1 Then
@@ -2645,6 +2595,7 @@ ErrorHandler:
                             objlocOLEdbcmd.Connection = objdbAccessConn
                             objlocOLEdbcmd.CommandText = rowdebitquery("strSQL")
                             intAffected = objlocOLEdbcmd.ExecuteNonQuery()
+                            objdbAccessConn.Close()
                         ElseIf strRGTableType = "M" Then
                             'MySQL
                             objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
@@ -2877,7 +2828,7 @@ ErrorHandler:
 
             'Zuerst prüfen ob IBAN nicht schon in der Tabelle der bekannten existiert
             objmysqlcom.Connection = objdbconn
-            objmysqlcom.CommandText = "SELECT * FROM tbliban WHERE strIBANNr='" + strIBAN + "'"
+            objmysqlcom.CommandText = "SELECT * FROM t_sage_tbliban WHERE strIBANNr='" + strIBAN + "'"
             objdtIBAN.Load(objmysqlcom.ExecuteReader)
             If objdtIBAN.Rows.Count = 0 Then
 
@@ -2940,7 +2891,7 @@ ErrorHandler:
                     strBankBIC = Trim(strXMLText(8))
 
                     'in IBAN-Tabelle schreiben
-                    objmysqlcom.CommandText = "INSERT INTO tbliban (strIBANNr, strIBANBankName, strIBANBankAddress1, strIBANBankAddress2, strIBANBankBIC, strIBANBankCountry, strIBANBankClearing) " +
+                    objmysqlcom.CommandText = "INSERT INTO t_sage_tbliban (strIBANNr, strIBANBankName, strIBANBankAddress1, strIBANBankAddress2, strIBANBankBIC, strIBANBankCountry, strIBANBankClearing) " +
                                               "VALUES('" + strIBAN + "', '" + strBankName + "', '" + strBankAddress1 + "', '" + strBankAddress2 + "', '" + strBankBIC + "', '" + strBankCountry + "', '" + strBankClearing + "')"
                     intRecAffected = objmysqlcom.ExecuteNonQuery()
 

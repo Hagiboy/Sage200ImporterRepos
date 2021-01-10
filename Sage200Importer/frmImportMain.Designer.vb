@@ -34,6 +34,7 @@ Partial Class frmImportMain
         Me.dgvInfo = New System.Windows.Forms.DataGridView()
         Me.txtNumber = New System.Windows.Forms.TextBox()
         Me.butImportK = New System.Windows.Forms.Button()
+        Me.cmbPerioden = New System.Windows.Forms.ComboBox()
         Me.GroupBox1.SuspendLayout()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -63,9 +64,9 @@ Partial Class frmImportMain
         '
         Me.GroupBox1.Controls.Add(Me.butKreditoren)
         Me.GroupBox1.Controls.Add(Me.butDebitoren)
-        Me.GroupBox1.Location = New System.Drawing.Point(66, 66)
+        Me.GroupBox1.Location = New System.Drawing.Point(66, 85)
         Me.GroupBox1.Name = "GroupBox1"
-        Me.GroupBox1.Size = New System.Drawing.Size(281, 68)
+        Me.GroupBox1.Size = New System.Drawing.Size(281, 62)
         Me.GroupBox1.TabIndex = 2
         Me.GroupBox1.TabStop = False
         Me.GroupBox1.Text = "Modus"
@@ -150,11 +151,20 @@ Partial Class frmImportMain
         Me.butImportK.Text = "&Import K"
         Me.butImportK.UseVisualStyleBackColor = True
         '
+        'cmbPerioden
+        '
+        Me.cmbPerioden.FormattingEnabled = True
+        Me.cmbPerioden.Location = New System.Drawing.Point(66, 58)
+        Me.cmbPerioden.Name = "cmbPerioden"
+        Me.cmbPerioden.Size = New System.Drawing.Size(92, 21)
+        Me.cmbPerioden.TabIndex = 10
+        '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1637, 637)
+        Me.Controls.Add(Me.cmbPerioden)
         Me.Controls.Add(Me.butImportK)
         Me.Controls.Add(Me.txtNumber)
         Me.Controls.Add(Me.dgvInfo)
@@ -186,4 +196,5 @@ Partial Class frmImportMain
     Friend WithEvents dgvInfo As DataGridView
     Friend WithEvents txtNumber As TextBox
     Friend WithEvents butImportK As Button
+    Friend WithEvents cmbPerioden As ComboBox
 End Class

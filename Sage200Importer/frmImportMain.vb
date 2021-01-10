@@ -52,7 +52,7 @@ Friend Class frmImportMain
                     + "User Id=cis;Password=sugus;")
     Public objOracleCmd As New OracleCommand()
     Public intMode As Int16
-    Public boodgvSet As Boolean = False
+    'Public boodgvSet As Boolean = False
 
     Public Sub InitVar()
 
@@ -67,9 +67,9 @@ Friend Class frmImportMain
 
         'objdbcommand = Nothing
         'objdbcommandZHDB02 = Nothing
-        objdtDebitorenHeadRead.Clear()
-        objdtDebitorenHead.Clear()
-        objdtDebitorenSub.Clear()
+        'objdtDebitorenHeadRead.Clear()
+        'objdtDebitorenHead.Clear()
+        'objdtDebitorenSub.Clear()
         objdtKreditorenHeadRead.Clear()
         objdtKreditorenHead.Clear()
         objdtKreditorenSub.Clear()
@@ -107,10 +107,29 @@ Friend Class frmImportMain
 
         intMode = 0
 
-        objdtDebitorenHead.Clear()
-        objdtDebitorenSub.Clear()
-        objdtDebitorenHeadRead.Clear()
+        objdtDebitorenHead = Nothing
+        objdtDebitorenHeadRead = Nothing
+        objdtDebitorenSub = Nothing
+
+        'Tabelle Debi/ Kredi Head erstellen
+        objdtDebitorenHead = Main.tblDebitorenHead()
+        objdtDebitorenHeadRead = Main.tblDebitorenHead()
+        'objdtKreditorenHead = Main.tblKreditorenHead()
+
+        'Tabelle Debi/ Kredi Sub erstellen
+        objdtDebitorenSub = Main.tblDebitorenSub()
+        'objdtKreditorenSub = Main.tblKreditorenSub()
+
+
+        'objdtDebitorenHead.Clear()
+        'objdtDebitorenHeadRead.Clear()
+        'objdtDebitorenSub.Clear()
         objdtInfo.Clear()
+
+        'dgvBookings.Rows.Clear()
+        If dgvBookings.Columns.Contains("intBuchungsart") Then
+            dgvBookings.Columns.Remove("intBuchungsart")
+        End If
 
         'DGV Debitoren
         dgvBookings.DataSource = objdtDebitorenHead
@@ -122,7 +141,7 @@ Friend Class frmImportMain
 
         Call InitVar()
 
-        Call Main.FcLoginSage(objdbConn, objdbMSSQLConn, objdbSQLcommand, Finanz, FBhg, DbBhg, PIFin, KrBhg, cmbBuha.SelectedValue, objdtInfo)
+        Call Main.FcLoginSage(objdbConn, objdbMSSQLConn, objdbSQLcommand, Finanz, FBhg, DbBhg, PIFin, KrBhg, cmbBuha.SelectedValue, objdtInfo, cmbPerioden.SelectedItem)
 
         'Transitorische Buchungen?
         Call Main.fcCheckTransitorischeDebit(cmbBuha.SelectedValue, objdbConn, objdbAccessConn)
@@ -303,24 +322,24 @@ Friend Class frmImportMain
         dgvBookings.Columns("lngDebIdentNbr").DisplayIndex = 12
         dgvBookings.Columns("lngDebIdentNbr").HeaderText = "Ident"
         dgvBookings.Columns("lngDebIdentNbr").Width = 80
-        If Not boodgvSet Then
-            Dim cmbBuchungsart As New DataGridViewComboBoxColumn()
-            Dim objdtBA As New DataTable("objidtBA")
-            Dim objlocMySQLcmd As New MySqlCommand
-            objlocMySQLcmd.CommandText = "SELECT * FROM t_sage_tblbuchungsarten"
-            objlocMySQLcmd.Connection = objdbConn
-            objdtBA.Load(objlocMySQLcmd.ExecuteReader)
-            cmbBuchungsart.DataSource = objdtBA
-            cmbBuchungsart.DisplayMember = "strBuchungsart"
-            cmbBuchungsart.ValueMember = "idBuchungsart"
-            cmbBuchungsart.HeaderText = "BA"
-            cmbBuchungsart.Name = "intBuchungsart"
-            cmbBuchungsart.DataPropertyName = "intBuchungsart"
-            cmbBuchungsart.DisplayIndex = 13
-            cmbBuchungsart.Width = 70
-            dgvBookings.Columns.Add(cmbBuchungsart)
-            boodgvSet = True
-        End If
+        'If Not boodgvSet Then
+        Dim cmbBuchungsart As New DataGridViewComboBoxColumn()
+        Dim objdtBA As New DataTable("objidtBA")
+        Dim objlocMySQLcmd As New MySqlCommand
+        objlocMySQLcmd.CommandText = "SELECT * FROM t_sage_tblbuchungsarten"
+        objlocMySQLcmd.Connection = objdbConn
+        objdtBA.Load(objlocMySQLcmd.ExecuteReader)
+        cmbBuchungsart.DataSource = objdtBA
+        cmbBuchungsart.DisplayMember = "strBuchungsart"
+        cmbBuchungsart.ValueMember = "idBuchungsart"
+        cmbBuchungsart.HeaderText = "BA"
+        cmbBuchungsart.Name = "intBuchungsart"
+        cmbBuchungsart.DataPropertyName = "intBuchungsart"
+        cmbBuchungsart.DisplayIndex = 13
+        cmbBuchungsart.Width = 70
+        dgvBookings.Columns.Add(cmbBuchungsart)
+        'boodgvSet = True
+        'End If
         'dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
         'dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
         'dgvDebitoren.Columns("intBuchungsart").HeaderText = "BA"
@@ -591,11 +610,11 @@ Friend Class frmImportMain
         cmbBuha.ValueMember = "Buchh_Nr"
 
         'Tabelle Debi/ Kredi Head erstellen
-        objdtDebitorenHead = Main.tblDebitorenHead()
+        'objdtDebitorenHead = Main.tblDebitorenHead()
         objdtKreditorenHead = Main.tblKreditorenHead()
 
         'Tabelle Debi/ Kredi Sub erstellen
-        objdtDebitorenSub = Main.tblDebitorenSub()
+        'objdtDebitorenSub = Main.tblDebitorenSub()
         objdtKreditorenSub = Main.tblKreditorenSub()
 
         'Info - Tabelle erstellen
@@ -763,12 +782,12 @@ Friend Class frmImportMain
                             If SubRow("lngKST") > 0 Then
                                 strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
                             Else
-                                strBeBuEintrag = "00" + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"
+                                'strBeBuEintrag = "999999" + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"
                             End If
                             If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then 'And SubRow("strMwStKey") <> "25" Then
                                 strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"), SubRow("dblMwSt"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
                             Else
-                                strSteuerFeld = "STEUERFREI"
+                                'strSteuerFeld = "STEUERFREI"
                             End If
                             'strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
                             'Debug.Print("Konto-Info: " + strSteuerInfo(26))
@@ -1007,7 +1026,7 @@ Friend Class frmImportMain
 
         Call InitVar()
 
-        Call Main.FcLoginSage(objdbConn, objdbMSSQLConn, objdbSQLcommand, Finanz, FBhg, DbBhg, PIFin, KrBhg, cmbBuha.SelectedValue, objdtInfo)
+        Call Main.FcLoginSage(objdbConn, objdbMSSQLConn, objdbSQLcommand, Finanz, FBhg, DbBhg, PIFin, KrBhg, cmbBuha.SelectedValue, objdtInfo, cmbPerioden.SelectedValue)
 
         intReturnValue = MainKreditor.FcFillKredit(cmbBuha.SelectedValue, objdtKreditorenHeadRead, objdtKreditorenSub, objdbConn, objdbAccessConn)
         If intReturnValue = 1 Then
@@ -1376,4 +1395,13 @@ Friend Class frmImportMain
 
     End Sub
 
+    Private Sub cmbBuha_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles cmbBuha.SelectionChangeCommitted
+
+        Call Main.FcReadPeriodsFromMandant(objdbConn,
+                                           Finanz,
+                                           cmbBuha.SelectedValue,
+                                           cmbPerioden)
+
+
+    End Sub
 End Class
