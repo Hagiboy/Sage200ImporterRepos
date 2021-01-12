@@ -297,6 +297,8 @@ Public Class MainDebitor
         Dim intDebZB As Int16
         Dim objdsDebitor As New DataSet
         Dim objDADebitor As New MySqlDataAdapter
+        Dim objdtSachB As New DataTable("tbliSachB")
+        Dim strSachB As String
         Dim intPayType As Int16
 
         Try
@@ -304,7 +306,7 @@ Public Class MainDebitor
             'Angaben einlesen
             objdbconnZHDB02.Open()
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
-            objsqlcommandZHDB02.CommandText = "SELECT Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_DebiKonto, Rep_Gruppe, Rep_Vertretung, Rep_Ansprechpartner, IF(Rep_Land IS NULL, 'Schweiz', Rep_Land) AS Rep_Land, Rep_Tel1, Rep_Fax, Rep_Mail, " +
+            objsqlcommandZHDB02.CommandText = "SELECT Rep_Nr, Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_DebiKonto, Rep_Gruppe, Rep_Vertretung, Rep_Ansprechpartner, IF(Rep_Land IS NULL, 'Schweiz', Rep_Land) AS Rep_Land, Rep_Tel1, Rep_Fax, Rep_Mail, " +
                                                 "IF(Rep_Language IS NULL, 'D', Rep_Language) AS Rep_Language, Rep_Kredi_MWSTNr, Rep_Kreditlimite, Rep_Kred_Pay_Def, Rep_Kred_Bank_Name, Rep_Kred_Bank_PLZ, Rep_Kred_Bank_Ort, Rep_Kred_IBAN, Rep_Kred_Bank_BIC, " +
                                                 "IF(Rep_Kred_Currency IS NULL, 'CHF', Rep_Kred_Currency) AS Rep_Kred_Currency, Rep_Kred_PCKto, Rep_DebiErloesKonto FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
             objdtDebitor.Load(objsqlcommandZHDB02.ExecuteReader)
@@ -313,11 +315,29 @@ Public Class MainDebitor
             If objdtDebitor.Rows.Count > 0 Then
                 'Debug.Print("Gefunden, kann erstellt werden")
 
+                'Sachbearbeiter suchen
+                'Ist Ausnahme definiert?
+                objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=" + objdtDebitor.Rows(0).Item("Rep_Nr").ToString + " AND Buchh_Nr=" + intAccounting.ToString
+                objdtSachB.Load(objsqlcommandZHDB02.ExecuteReader)
+                If objdtSachB.Rows.Count > 0 Then 'Ausnahme definiert auf Rep-Betrieb
+                    strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
+                Else
+                    'Default setzen
+                    objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=2535 AND Buchh_Nr=" + intAccounting.ToString
+                    objdtSachB.Load(objsqlcommandZHDB02.ExecuteReader)
+                    If objdtSachB.Rows.Count > 0 Then 'Default ist definiert
+                        strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
+                    Else
+                        strSachB = ""
+                        MessageBox.Show("Kein Sachbearbeiter - Default gesetzt für Buha " + strcmbBuha, "Debitorenerstellung")
+                    End If
+                End If
+
                 'Zahlungsbedingung suchen
                 'objdtKreditor.Clear()
                 'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
-                objsqlcommandZHDB02.CommandText = "SELECT Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
-                                                  "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition ON Tab_Repbetriebe.Rep_DebiZKonditionID = t_sage_zahlungskondition.ID " +
+                objsqlcommandZHDB02.CommandText = "Select Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
+                                                  "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition On Tab_Repbetriebe.Rep_DebiZKonditionID = t_sage_zahlungskondition.ID " +
                                                   "WHERE Tab_Repbetriebe.PKNr=" + lngDebiNbr.ToString
                 objDADebitor.SelectCommand = objsqlcommandZHDB02
                 objdsDebitor.EnforceConstraints = False
@@ -413,7 +433,8 @@ Public Class MainDebitor
                                           strBankClearing,
                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Currency")), "CHF", objdtDebitor.Rows(0).Item("Rep_Kred_Currency")),
                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")), "3200", objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")),
-                                          intDebZB)
+                                          intDebZB,
+                                          strSachB)
 
                 If intCreatable = 0 Then
                     'MySQL
@@ -473,7 +494,8 @@ Public Class MainDebitor
                                        ByVal strZVClearing As String,
                                        ByVal strCurrency As String,
                                        ByVal intDebErlKto As Int16,
-                                       ByVal intDebZB As Int16) As Int16
+                                       ByVal intDebZB As Int16,
+                                       ByVal strSachB As String) As Int16
 
         Dim strDebCountry As String = strLand
         Dim strDebCurrency As String = strCurrency
@@ -522,7 +544,7 @@ Public Class MainDebitor
                                            strKreditLimite,
                                            intDebSammelKto.ToString,
                                            intDebErlKto.ToString,
-                                           "",
+                                           strSachB,
                                            "",
                                            "",
                                            shrDebZahlK.ToString,

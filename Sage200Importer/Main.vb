@@ -748,6 +748,10 @@ ErrorHandler:
         Dim strDebiSubText As String
         Dim intDebitorNew As Int32
         Dim intiBankSage200 As Int16
+        Dim dblRDiffNetto As Double
+        Dim dblRDiffMwSt As Double
+        Dim dblRDiffBrutto As Double
+        'Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
 
         Try
 
@@ -757,7 +761,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "57976" Then Stop
+                'If row("strDebRGNbr") = "106473" Then Stop
 
                 'Runden
                 row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 2, MidpointRounding.AwayFromZero)
@@ -823,7 +827,64 @@ ErrorHandler:
                         strBitLog += "0"
                     End If
                 Else
-                    strBitLog += "0"
+                    If row("intBuchungsart") = 1 Then
+
+                        dblRDiffBrutto = 0
+                        row("dblDebNetto") = dblSubNetto * -1
+                        row("dblDebMwSt") = dblSubMwSt * -1
+
+                        'Für evtl. Rundungsdifferenzen einen Datensatz in die Sub-Tabelle hinzufügen
+                        If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) + dblSubBrutto <> 0 Then
+                            'Or IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) + dblSubMwSt <> 0 _
+                            'Or IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) + dblSubNetto <> 0 Then
+
+                            'row("dblDebNetto") = dblSubNetto * -1
+                            'row("dblDebMwSt") = dblSubMwSt * -1
+
+                            dblRDiffBrutto = Decimal.Round(row("dblDebBrutto") + dblSubBrutto, 2, MidpointRounding.AwayFromZero)
+                            dblRDiffMwSt = 0 'Decimal.Round(row("dblDebMwSt") + dblSubMwSt, 2, MidpointRounding.AwayFromZero)
+                            dblRDiffNetto = 0 'Decimal.Round(row("dblDebNetto") + dblSubNetto, 2, MidpointRounding.AwayFromZero)
+
+                            'Zu sub-Table hinzifügen
+                            Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
+                            objdrDebiSub("strRGNr") = row("strDebRGNbr")
+                            objdrDebiSub("intSollHaben") = 1
+                            objdrDebiSub("lngKto") = 6906
+                            objdrDebiSub("strKtoBez") = "Rundungsdifferenzen"
+                            objdrDebiSub("lngKST") = 999999
+                            objdrDebiSub("strKstBez") = "SystemKST"
+                            objdrDebiSub("dblNetto") = dblRDiffNetto
+                            objdrDebiSub("dblMwSt") = dblRDiffMwSt
+                            objdrDebiSub("dblBrutto") = dblRDiffBrutto
+                            objdrDebiSub("dblMwStSatz") = 0
+                            objdrDebiSub("strMwStKey") = "null"
+                            objdrDebiSub("strArtikel") = "Rundungsdifferenz"
+                            objdrDebiSub("strDebSubText") = "Eingefügt"
+                            objdrDebiSub("strStatusUBBitLog") = "00000000"
+                            If Math.Abs(dblRDiffBrutto) > 1 Then
+                                objdrDebiSub("strStatusUBText") = "Rund > 1"
+                            Else
+                                objdrDebiSub("strStatusUBText") = "ok"
+                            End If
+                            objdtDebitSubs.Rows.Add(objdrDebiSub)
+                            'Summe der Sub-Buchungen anpassen
+                            dblSubBrutto = Decimal.Round(dblSubBrutto - dblRDiffBrutto, 2, MidpointRounding.AwayFromZero)
+                            'dblSubMwSt = Decimal.Round(dblSubMwSt - dblRDiffMwSt, 2, MidpointRounding.AwayFromZero)
+                            'dblSubNetto = Decimal.Round(dblSubNetto - dblRDiffNetto, 2, MidpointRounding.AwayFromZero)
+                            If Math.Abs(dblRDiffBrutto) > 1 Then
+                                strBitLog += "1"
+                            Else
+                                strBitLog += "0"
+                            End If
+                        Else
+                            strBitLog += "0"
+
+                        End If
+
+                    Else
+                        strBitLog += "0"
+                    End If
+
                 End If
 
                 'Diff Kopf - Sub? 06
@@ -845,8 +906,13 @@ ErrorHandler:
 
                 End If
                 'OP Kopf balanced? 07
-                intReturnValue = FcCheckBelegHead(row("intBuchungsart"), IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")), IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")), IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")))
+                intReturnValue = FcCheckBelegHead(row("intBuchungsart"),
+                                                  IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")),
+                                                  IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")),
+                                                  IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")),
+                                                  dblRDiffBrutto)
                 strBitLog += Trim(intReturnValue.ToString)
+                'strBitLog += "0"
                 'Referenz 08
                 intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("strOPNr"), row("intBuchungsart"), strDebiReferenz)
                 strBitLog += Trim(intReturnValue.ToString)
@@ -999,7 +1065,7 @@ ErrorHandler:
                     strDebiSubText = row("strDebText")
                 End If
                 selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
-                For Each subrow In selsubrow
+                            For Each subrow In selsubrow
                     subrow("strDebSubText") = strDebiSubText
                 Next
 
@@ -1125,7 +1191,7 @@ ErrorHandler:
         'Return 0=ok oder nicht nötig, 1=keine Angaben hinterlegt, 2=Berechnung hat nicht geklappt
 
         Dim strTLNNr As String
-        Dim strCleanedNr As String
+        Dim strCleanedNr As String = ""
         Dim strRefFrom As String
 
         Try
@@ -1148,9 +1214,10 @@ ErrorHandler:
 
                 strTLNNr = FcReadBankSettings(intAccounting, strBank, objdbconn)
 
-                strCleanedNr = FcCleanRGNrStrict(strRGNr)
+                strCleanedNr = FcCleanRGNrStrict(strCleanedNr)
 
                 strReferenz = strTLNNr + StrDup(20 - Len(strCleanedNr), "0") + strCleanedNr + Trim(CStr(FcModulo10(strTLNNr + StrDup(20 - Len(strCleanedNr), "0") + strCleanedNr)))
+
                 Return 0
 
             Else
@@ -1205,7 +1272,11 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcCheckBelegHead(ByVal intBuchungsArt As Int16, ByVal dblBrutto As Double, ByVal dblNetto As Double, ByVal dblMwSt As Double) As Int16
+    Public Shared Function FcCheckBelegHead(ByVal intBuchungsArt As Int16,
+                                            ByVal dblBrutto As Double,
+                                            ByVal dblNetto As Double,
+                                            ByVal dblMwSt As Double,
+                                            ByVal dblRDiff As Double) As Int16
 
         'Returns 0=ok oder nicht wichtig, 1=Brutto, 2=Netto, 3=Beide, 4=Diff
 
@@ -1216,7 +1287,7 @@ ErrorHandler:
                 Return 1
             ElseIf dblNetto = 0 Then
                 Return 2
-            ElseIf Math.Round(dblBrutto - dblMwSt, 2, MidpointRounding.AwayFromZero) <> Math.Round(dblNetto, 2, MidpointRounding.AwayFromZero) Then
+            ElseIf Math.Round(dblBrutto - dblRDiff - dblMwSt, 2, MidpointRounding.AwayFromZero) <> Math.Round(dblNetto, 2, MidpointRounding.AwayFromZero) Then
                 Return 4
             Else
                 Return 0
@@ -1370,7 +1441,7 @@ ErrorHandler:
             End If
 
             'MwSt prüfen
-            If Not IsDBNull(subrow("strMwStKey")) Then
+            If Not IsDBNull(subrow("strMwStKey")) And subrow("lngKto") >= 3000 Then
                 intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")), strStrStCodeSage200)
                 If intReturnValue = 0 Then
                     subrow("strMwStKey") = strStrStCodeSage200
@@ -1379,18 +1450,22 @@ ErrorHandler:
                     If Val(strSteuer(2)) <> IIf(IsDBNull(subrow("dblMwst")), 0, subrow("dblMwst")) Then
                         'Im Fall von Auto-Korrekt anpassen
                         'Stop
-                        If booAutoCorrect Then
-                            subrow("dblMwst") = Val(strSteuer(2))
-                            subrow("dblBrutto") = subrow("dblNetto") + subrow("dblMwSt")
-                        Else
-                            intReturnValue = 1
-                        End If
+                        'If booAutoCorrect Then
+                        strStatusText += "MwSt " + subrow("dblMwst").ToString
+                        subrow("dblMwst") = Val(strSteuer(2))
+                        subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                        'subrow("dblNetto") = Decimal.Round(subrow("dblBrutto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                        strStatusText += " -> " + subrow("dblMwst").ToString + ", "
+                        'Else
+                        'intReturnValue = 1
+                        'End If
                     End If
                 Else
                     subrow("strMwStKey") = "n/a"
                 End If
             Else
                 subrow("strMwStKey") = "null"
+                subrow("dblMwst") = 0
                 intReturnValue = 0
 
             End If
@@ -1517,7 +1592,7 @@ ErrorHandler:
 
 
             'Statustext zusammen setzten
-            strStatusText = ""
+            'strStatusText = ""
             'MwSt
             If Left(strBitLog, 1) <> "0" Then
                 strStatusText += IIf(strStatusText <> "", ", ", "") + "MwSt"
@@ -1552,12 +1627,13 @@ ErrorHandler:
             End If
 
             If Val(strBitLog) = 0 Then
-                strStatusText = "ok"
+                strStatusText += " ok"
             End If
 
             'BitLog und Text schreiben
             subrow("strStatusUBBitLog") = strBitLog
             subrow("strStatusUBText") = strStatusText
+            strStatusText = ""
 
             strStatusOverAll = strStatusOverAll Or strBitLog
 
@@ -2357,7 +2433,11 @@ ErrorHandler:
                     End If
                 End If
                 'OP Kopf balanced? 07
-                intReturnValue = FcCheckBelegHead(row("intBuchungsart"), IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")), IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")), IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")))
+                intReturnValue = FcCheckBelegHead(row("intBuchungsart"),
+                                                  IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")),
+                                                  IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")),
+                                                  IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")),
+                                                  0)
                 strBitLog += Trim(intReturnValue.ToString)
                 'OP - Nummer prüfen 08
                 'intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("intBuchungsart"), strDebiReferenz)
@@ -2681,7 +2761,7 @@ ErrorHandler:
                 objdtPKNr.Clear()
                 objsqlcommand.CommandText = "SELECT RangeStart, RangeEnd " +
                                             "FROM tab_repbetriebe_pknrgruppe " +
-                                            "WHERE ID=" + intPKNrGuppenID.ToString
+                                            "WHERE ID=" + intPKNrGuppenID.ToString + " AND ID<5"
                 objdtPKNr.Load(objsqlcommand.ExecuteReader)
                 If objdtPKNr.Rows.Count > 0 Then 'Bereichsdefinition gefunden
                     intRangeStart = objdtPKNr.Rows(0).Item("RangeStart")

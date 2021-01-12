@@ -386,14 +386,14 @@ Friend Class frmImportMain
         dgvBookingSub.AllowUserToAddRows = False
         dgvBookingSub.AllowUserToDeleteRows = False
         dgvBookingSub.Columns("strRGNr").DisplayIndex = 0
-        dgvBookingSub.Columns("strRGNr").Width = 60
+        dgvBookingSub.Columns("strRGNr").Width = 55
         dgvBookingSub.Columns("strRGNr").HeaderText = "RG-Nr"
-        dgvBookingSub.Columns("intSollHaben").Width = 30
+        dgvBookingSub.Columns("intSollHaben").Width = 20
         dgvBookingSub.Columns("intSollHaben").HeaderText = "S/H"
         dgvBookingSub.Columns("lngKto").Width = 50
         dgvBookingSub.Columns("lngKto").HeaderText = "Konto"
         dgvBookingSub.Columns("strKtoBez").HeaderText = "Bezeichnung"
-        dgvBookingSub.Columns("lngKST").Width = 50
+        dgvBookingSub.Columns("lngKST").Width = 40
         dgvBookingSub.Columns("lngKST").HeaderText = "KST"
         dgvBookingSub.Columns("strKSTBez").Width = 60
         dgvBookingSub.Columns("strKSTBez").HeaderText = "Bezeichnung"
@@ -409,11 +409,12 @@ Friend Class frmImportMain
         dgvBookingSub.Columns("dblBrutto").HeaderText = "Brutto"
         dgvBookingSub.Columns("dblBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
         dgvBookingSub.Columns("dblBrutto").DefaultCellStyle.Format = "N2"
-        dgvBookingSub.Columns("dblMwStSatz").Width = 50
+        dgvBookingSub.Columns("dblMwStSatz").Width = 40
         dgvBookingSub.Columns("dblMwStSatz").HeaderText = "MwStS"
         dgvBookingSub.Columns("strMwStKey").Width = 40
         dgvBookingSub.Columns("strMwStKey").HeaderText = "MwStK"
         dgvBookingSub.Columns("strStatusUBText").HeaderText = "Status"
+        dgvBookingSub.Columns("strStatusUBText").Width = 135
 
         dgvBookingSub.Columns("lngID").Visible = False
         dgvBookingSub.Columns("strArtikel").Visible = False
@@ -693,6 +694,8 @@ Friend Class frmImportMain
 
         Dim selDebiSub() As DataRow
         Dim strSteuerInfo() As String
+        Dim strDebitor() As String
+        Dim strDebiLine As String
 
         Try
 
@@ -733,6 +736,11 @@ Friend Class frmImportMain
                         End If
 
                         'Variablen zuweisen
+                        'Sachbearbeiter aus Debitor auslesen
+                        strDebiLine = DbBhg.ReadDebitor3(row("lngDebNbr") * -1, "")
+                        strDebitor = Split(strDebiLine, "{>}")
+                        strSachBID = strDebitor(30)
+                        'strExtBelegNbr = row("strDebRGNbr")
                         intDebitorNbr = row("lngDebNbr")
                         strBuchType = "R"
                         strValutaDatum = Format(row("datDebValDatum"), "yyyyMMdd").ToString
@@ -777,7 +785,11 @@ Friend Class frmImportMain
 
                             intGegenKonto = SubRow("lngKto")
                             strFibuText = SubRow("strDebSubText")
-                            dblNettoBetrag = SubRow("dblNetto")
+                            If intGegenKonto <> 6906 Then
+                                dblNettoBetrag = SubRow("dblNetto")
+                            Else 'Rundungsdifferenzen
+                                dblNettoBetrag = SubRow("dblBrutto")
+                            End If
                             'dblBebuBetrag = 1000.0#
                             If SubRow("lngKST") > 0 Then
                                 strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
@@ -787,13 +799,16 @@ Friend Class frmImportMain
                             If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then 'And SubRow("strMwStKey") <> "25" Then
                                 strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"), SubRow("dblMwSt"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
                             Else
-                                'strSteuerFeld = "STEUERFREI"
+                                strSteuerFeld = "STEUERFREI"
                             End If
                             'strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
                             'Debug.Print("Konto-Info: " + strSteuerInfo(26))
 
 
                             Call DbBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
+
+                            strSteuerFeld = ""
+                            strBeBuEintrag = ""
 
                             'Status Sub schreiben
 
