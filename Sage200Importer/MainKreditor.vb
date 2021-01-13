@@ -56,7 +56,7 @@ Public Class MainKreditor
         Dim objsqlCommKred As New MySqlCommand
 
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
-        Dim strMDBName As String = Main.FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting)
+        Dim strMDBName As String = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediTableConnection", intAccounting)
         Dim strSQL As String
         Dim intFunctinReturns As Int16
 
@@ -152,7 +152,8 @@ Public Class MainKreditor
                                                 ByVal lngKrediNbr As Long,
                                                 ByRef objKrBhg As SBSXASLib.AXiKrBhg,
                                                 ByVal strcmbBuha As String,
-                                                ByRef intPayType As Int16) As Int16
+                                                ByRef intPayType As Int16,
+                                                ByVal strIBANFromInv As String) As Int16
 
         'Return: 0=creatable und erstellt, 3=Kreditor konnte nicht erstellt werden, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
 
@@ -228,7 +229,7 @@ Public Class MainKreditor
 
                 'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
                 Select Case IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Language")), "D", objdtKreditor.Rows(0).Item("Rep_Language"))
-                    Case "D"
+                    Case "D", ""
                         intLangauage = 2055
                     Case "F"
                         intLangauage = 4108
@@ -239,7 +240,12 @@ Public Class MainKreditor
                 End Select
 
                 'Variablen zuweisen für die Erstellung des Kreditors
-                strIBANNr = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_IBAN")), "", objdtKreditor.Rows(0).Item("Rep_Kred_IBAN"))
+                'IBAN von RG übernehmen sonst von Default holen
+                If strIBANFromInv = "" Then
+                    strIBANNr = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_IBAN")), "", objdtKreditor.Rows(0).Item("Rep_Kred_IBAN"))
+                Else
+                    strIBANNr = strIBANFromInv
+                End If
                 strBankName = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Bank_Name")), "", objdtKreditor.Rows(0).Item("Rep_Kred_Bank_Name"))
                 strBankAddress1 = ""
                 strBankPLZ = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Bank_PLZ")), "", objdtKreditor.Rows(0).Item("Rep_Kred_Bank_PLZ"))
@@ -249,6 +255,7 @@ Public Class MainKreditor
                 strBankClearing = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_PCKto")), "", objdtKreditor.Rows(0).Item("Rep_Kred_PCKto"))
 
                 If intPayType = 9 Or Len(strIBANNr) = 21 Then 'IBAN
+
                     If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
                         intPayType = 9
                     End If
@@ -294,27 +301,27 @@ Public Class MainKreditor
                                           IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto")), 4200, objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto")),
                                           intKredZB)
 
-                If intCreatable = 0 Then
-                    'MySQL
-                    'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
-                    '                                     lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
-                    '                                     "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Kreditor " +
-                    '                                     lngKrediNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
-                    ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
-                    'objlocMySQLRGConn.Open()
-                    'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
-                    'objsqlcommandZHDB02.CommandText = strSQL
-                    'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
+                    If intCreatable = 0 Then
+                        'MySQL
+                        'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
+                        '                                     lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
+                        '                                     "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Kreditor " +
+                        '                                     lngKrediNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
+                        ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                        'objlocMySQLRGConn.Open()
+                        'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                        'objsqlcommandZHDB02.CommandText = strSQL
+                        'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
 
 
 
-                    Return 0
+                        Return 0
+                    Else
+                        Return 3
+
+                    End If
                 Else
-                    Return 3
-
-                End If
-            Else
-                Return 4
+                    Return 4
             End If
 
         Catch ex As Exception

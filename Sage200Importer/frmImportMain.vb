@@ -369,7 +369,7 @@ Friend Class frmImportMain
         dgvBookings.Columns("strDebIdentnbr2").Visible = False
         'dgvBookings.Columns("strDebText").Visible = False
         dgvBookings.Columns("strRGBemerkung").Visible = False
-        dgvBookings.Columns("strDebRef").Visible = False
+        'dgvBookings.Columns("strDebRef").Visible = False
         dgvBookings.Columns("strZahlBed").Visible = False
         dgvBookings.Columns("strDebStatusBitLog").Visible = False
         dgvBookings.Columns("strDebBookStatus").Visible = False
@@ -489,12 +489,12 @@ Friend Class frmImportMain
         Dim cmbBuchungsart As New DataGridViewComboBoxColumn()
         Dim objdtBA As New DataTable("objidtBA")
         Dim objlocMySQLcmd As New MySqlCommand
-        objdbConn.Open()
+        'objdbConn.Open()
         objlocMySQLcmd.CommandText = "SELECT * FROM t_sage_tblbuchungsarten"
         objlocMySQLcmd.Connection = objdbConn
         objdtBA.Load(objlocMySQLcmd.ExecuteReader)
         cmbBuchungsart.DataSource = objdtBA
-        objdbConn.Close()
+        'objdbConn.Close()
         cmbBuchungsart.DisplayMember = "strBuchungsart"
         cmbBuchungsart.ValueMember = "idBuchungsart"
         cmbBuchungsart.HeaderText = "BA"
@@ -1026,18 +1026,33 @@ Friend Class frmImportMain
 
         intMode = 1
 
-        objdtKreditorenHead.Clear()
-        objdtKreditorenSub.Clear()
-        objdtKreditorenHeadRead.Clear()
+        objdtKreditorenHead = Nothing
+        objdtKreditorenHeadRead = Nothing
+        objdtKreditorenSub = Nothing
+
+        'Tabelle Kredi - Head erstellen
+        objdtKreditorenHead = Main.tblKreditorenHead()
+        objdtKreditorenHeadRead = Main.tblKreditorenHead()
+
+        'Tabelle Kreditoren - Sub erstellen
+        objdtKreditorenSub = Main.tblKreditorenSub()
+
+        'objdtKreditorenHead.Clear()
+        'objdtKreditorenSub.Clear()
+        'objdtKreditorenHeadRead.Clear()
         objdtInfo.Clear()
+
+        If dgvBookings.Columns.Contains("intBuchungsart") Then
+            dgvBookings.Columns.Remove("intBuchungsart")
+        End If
 
         'DGV Kreditoren
         dgvBookings.DataSource = objdtKreditorenHead
         dgvBookingSub.DataSource = objdtKreditorenSub
-        'objdbConn.Open()
+        objdbConn.Open()
         Call InitdgvKreditoren()
         Call InitdgvKreditorenSub()
-        'objdbConn.Close()
+        objdbConn.Close()
 
         Call InitVar()
 
@@ -1165,7 +1180,7 @@ Friend Class frmImportMain
                         'Eindeutigkeit der internen Beleg-Nummer setzen
                         KrBhg.CheckDoubleIntBelNbr = "J"
 
-                        If IsDBNull(row("strOPNr")) Or row("strOPNr") = "" Then
+                        If IsDBNull(row("strOPNr")) Or row("StrOPNr") = "" Then
                             'strExtBelegNbr = row("strOPNr")
 
                             'Zuerst Beleg-Nummerieungung aktivieren

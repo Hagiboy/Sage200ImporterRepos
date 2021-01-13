@@ -1302,7 +1302,8 @@ ErrorHandler:
                                        ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                        ByVal strStrCode As String,
                                        ByVal dblStrWert As Double,
-                                       ByRef strStrCode200 As String) As Integer
+                                       ByRef strStrCode200 As String,
+                                       ByVal intKonto As Int32) As Integer
 
         'returns 0=ok, 1=nicht gefunden
 
@@ -1313,6 +1314,13 @@ ErrorHandler:
         Dim intLooper As Int16 = 0
 
         Try
+
+            'Falls MwStKey 'ohne' und Konto >= 3000 und 3999 dann ohne = frei
+            If strStrCode = "ohne" Then
+                If intKonto >= 3000 And intKonto <= 3999 Then
+                    strStrCode = "frei"
+                End If
+            End If
 
             'Besprechung mit Muhi 20201209 => Es soll eine fixe Vergabe des MStSchlüssels passieren 
             objlocMySQLcmd.CommandText = "SELECT  * FROM t_sage_sage50mwst WHERE strKey='" + strStrCode + "'"
@@ -1442,10 +1450,10 @@ ErrorHandler:
 
             'MwSt prüfen
             If Not IsDBNull(subrow("strMwStKey")) And subrow("lngKto") >= 3000 Then
-                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")), strStrStCodeSage200)
+                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")), strStrStCodeSage200, subrow("lngKto"))
                 If intReturnValue = 0 Then
                     subrow("strMwStKey") = strStrStCodeSage200
-                    'Check of korrekt berechnet
+                    'Check ob korrekt berechnet
                     strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
                     If Val(strSteuer(2)) <> IIf(IsDBNull(subrow("dblMwst")), 0, subrow("dblMwst")) Then
                         'Im Fall von Auto-Korrekt anpassen
@@ -1530,8 +1538,9 @@ ErrorHandler:
 
                 End If
             Else
+                'subrow("lngKST") = 0
                 subrow("strKstBez") = "null"
-                intReturnValue = 0
+                intReturnValue = 1
 
             End If
             strBitLog += Trim(intReturnValue.ToString)
@@ -1717,9 +1726,9 @@ ErrorHandler:
             subrow("dblMwStSatz") = IIf(IsDBNull(subrow("dblMwStSatz")), 0, Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero))
 
             'MwSt prüfen
-            If Not IsDBNull(subrow("strMwStKey")) Then
+            If Not IsDBNull(subrow("strMwStKey")) And subrow("lngKto") >= 3000 Then
                 intReturnValue = FcCheckMwStToCorrect(objdbconn, subrow("strMwStKey"), subrow("dblMwStSatz"), subrow("dblMwSt"))
-                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("dblMwStSatz"), strStrStCodeSage200)
+                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("dblMwStSatz"), strStrStCodeSage200, subrow("lngKto"))
                 If intReturnValue = 0 Then
                     subrow("strMwStKey") = strStrStCodeSage200
                     'Check of korrekt berechnet
@@ -1739,6 +1748,7 @@ ErrorHandler:
                 End If
             Else
                 subrow("strMwStKey") = "null"
+                subrow("dblMwst") = 0
                 intReturnValue = 0
 
             End If
@@ -1783,7 +1793,7 @@ ErrorHandler:
             strBitLog += Trim(intReturnValue.ToString)
 
             'Kst/Ktr prüfen
-            If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
+            If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 And subrow("lngKto") >= 3000 Then
                 intReturnValue = FcCheckKstKtr(subrow("lngKST"), objFiBhg, objFiPI, subrow("lngKto"), strKstKtrSage200)
                 If intReturnValue = 0 Then
                     subrow("strKstBez") = strKstKtrSage200
@@ -1796,6 +1806,7 @@ ErrorHandler:
                 End If
             Else
                 subrow("strKstBez") = "null"
+                subrow("lngKST") = 0
                 intReturnValue = 0
 
             End If
@@ -1965,6 +1976,24 @@ ErrorHandler:
 
             ElseIf Len(strStrCode) > 0 And dblStrAmount = 0 And dblStrWert <> 0 Then 'MwSt Wert ist nicht 0 obwohl kein Betrag
 
+                'Check was ist hinterlegt
+                objlocMySQLcmd.CommandText = "SELECT  * FROM t_sage_sage50mwst WHERE strKey='" + strStrCode + "'"
+
+                objlocMySQLcmd.Connection = objdbconn
+                objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
+
+                If objlocdtMwSt.Rows.Count = 0 Then
+                    MessageBox.Show("MwSt " + strStrCode + " ist nicht definiert. Korrektur von MwST-Satz nicht möglich.")
+                    Return 1
+                Else
+                    If objlocdtMwSt.Rows(0).Item("dblProzent") <> dblStrWert Then
+                        dblStrWert = objlocdtMwSt.Rows(0).Item("dblProzent")
+                        Return 2
+                    End If
+
+                End If
+
+            ElseIf strStrCode = "ohne" Or strStrCode = "frei" Then
                 'Check was ist hinterlegt
                 objlocMySQLcmd.CommandText = "SELECT  * FROM t_sage_sage50mwst WHERE strKey='" + strStrCode + "'"
 
@@ -2469,7 +2498,8 @@ ErrorHandler:
                                                                             intKreditorNew,
                                                                             objKrBuha,
                                                                             strcmbBuha,
-                                                                            IIf(IsDBNull(row("intPayType")), 3, row("intPayType")))
+                                                                            IIf(IsDBNull(row("intPayType")), 3, row("intPayType")),
+                                                                            row("strKredRef"))
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
                             row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
@@ -2971,8 +3001,20 @@ ErrorHandler:
                     strBankBIC = Trim(strXMLText(8))
 
                     'in IBAN-Tabelle schreiben
-                    objmysqlcom.CommandText = "INSERT INTO t_sage_tbliban (strIBANNr, strIBANBankName, strIBANBankAddress1, strIBANBankAddress2, strIBANBankBIC, strIBANBankCountry, strIBANBankClearing) " +
-                                              "VALUES('" + strIBAN + "', '" + strBankName + "', '" + strBankAddress1 + "', '" + strBankAddress2 + "', '" + strBankBIC + "', '" + strBankCountry + "', '" + strBankClearing + "')"
+                    objmysqlcom.CommandText = "INSERT INTO t_sage_tbliban (strIBANNr, 
+                                                                        strIBANBankName, 
+                                                                        strIBANBankAddress1, 
+                                                                        strIBANBankAddress2, 
+                                                                        strIBANBankBIC, 
+                                                                        strIBANBankCountry, 
+                                                                        strIBANBankClearing) " +
+                                                            "VALUES('" + strIBAN + "', '" +
+                                                            Replace(strBankName, "'", "`") + "', '" +
+                                                            Replace(strBankAddress1, "'", "`") + "', '" +
+                                                            Replace(strBankAddress2, "'", "`") + "', '" +
+                                                            strBankBIC + "', '" +
+                                                            strBankCountry + "', '" +
+                                                            strBankClearing + "')"
                     intRecAffected = objmysqlcom.ExecuteNonQuery()
 
                     Return 0

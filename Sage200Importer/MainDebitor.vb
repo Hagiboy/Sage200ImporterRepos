@@ -369,7 +369,7 @@ Public Class MainDebitor
 
                 'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
                 Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Language")), "D", objdtDebitor.Rows(0).Item("Rep_Language"))
-                    Case "D"
+                    Case "D", ""
                         intLangauage = 2055
                     Case "F"
                         intLangauage = 4108
