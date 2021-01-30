@@ -1157,7 +1157,7 @@ Friend Class frmImportMain
             Me.Cursor = Cursors.WaitCursor
 
             'Kopfbuchung
-            For Each row In objdtKreditorenHead.Rows
+            For Each row As DataRow In objdtKreditorenHead.Rows
 
                 If IIf(IsDBNull(row("booKredBook")), False, row("booKredBook")) Then
 
@@ -1205,7 +1205,12 @@ Friend Class frmImportMain
                         'If IsDBNull(row("strKrediBank")) Then
                         'intTeilnehmer = 0
                         'Else
-                        intTeilnehmer = CInt(Val(row("strKrediBank")))
+                        'Teilnehmer nur bei ESR setzen
+                        If row("intPayType") <> 9 Then
+                            intTeilnehmer = CInt(Val(row("strKrediBank")))
+                        Else
+
+                        End If
                         'End If
                         strMahnerlaubnis = "" 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         dblBetrag = row("dblKredBrutto")
@@ -1245,28 +1250,28 @@ Friend Class frmImportMain
 
 
                         Call KrBhg.SetBelegKopf2(intKredBelegsNummer,
-                                                 strValutaDatum,
-                                                 intKreditorNbr,
-                                                 strExtKredBelegsNummer,
-                                                 strBelegDatum,
-                                                 strVerfallDatum,
-                                                 strKrediText,
-                                                 intBankNbr,
-                                                 strBuchType,
-                                                 strZahlSperren,
-                                                 strVorausZahlung,
-                                                 intKondition,
-                                                 intKonditionLN,
-                                                 strSachBID,
-                                                 strReferenz,
-                                                 strSkonto,
-                                                 dblBetrag.ToString,
-                                                 strErfassungsArt,
-                                                 dblKurs.ToString,
-                                                 strCurrency,
-                                                 "",
-                                                 intTeilnehmer.ToString,
-                                                 intEigeneBank.ToString)
+                                                     strValutaDatum,
+                                                     intKreditorNbr,
+                                                     strExtKredBelegsNummer,
+                                                     strBelegDatum,
+                                                     strVerfallDatum,
+                                                     strKrediText,
+                                                     intBankNbr,
+                                                     strBuchType,
+                                                     strZahlSperren,
+                                                     strVorausZahlung,
+                                                     intKondition,
+                                                     intKonditionLN,
+                                                     strSachBID,
+                                                     strReferenz,
+                                                     strSkonto,
+                                                     dblBetrag.ToString,
+                                                     strErfassungsArt,
+                                                     dblKurs.ToString,
+                                                     strCurrency,
+                                                     "",
+                                                     intTeilnehmer.ToString,
+                                                     intEigeneBank.ToString)
 
                         selKrediSub = objdtKreditorenSub.Select("lngKredID=" + row("lngKredID").ToString)
 
@@ -1288,7 +1293,7 @@ Friend Class frmImportMain
                             If SubRow("lngKST") > 0 Then
                                 strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strKredSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
                             Else
-                                strBeBuEintrag = "00" + "{<}" + SubRow("strKredSubText") + "{<}" + "0" + "{>}"
+                                'strBeBuEintrag = "00" + "{<}" + SubRow("strKredSubText") + "{<}" + "0" + "{>}"
                             End If
                             If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then ' And SubRow("strMwStKey") <> "25" Then
                                 strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strKredSubText"), dblBruttoBetrag, SubRow("strMwStKey"), dblMwStBetrag)     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"

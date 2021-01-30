@@ -1448,8 +1448,14 @@ ErrorHandler:
                 subrow("dblMwStSatz") = Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero)
             End If
 
+            'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
+            If subrow("lngKto") < 3000 Then
+                subrow("strMwStKey") = Nothing
+                subrow("lngKST") = 0
+            End If
+
             'MwSt prüfen
-            If Not IsDBNull(subrow("strMwStKey")) And subrow("lngKto") >= 3000 Then
+            If Not IsDBNull(subrow("strMwStKey")) Then
                 intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")), strStrStCodeSage200, subrow("lngKto"))
                 If intReturnValue = 0 Then
                     subrow("strMwStKey") = strStrStCodeSage200
@@ -1498,7 +1504,7 @@ ErrorHandler:
             dblSubBrutto = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
 
             'Konto prüfen
-            If Not IsDBNull(subrow("lngKto")) Then
+            If IIf(IsDBNull(subrow("lngKto")), 0, subrow("lngKto")) Then
                 intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
                 If intReturnValue = 0 Then
                     subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto"))
@@ -1538,7 +1544,7 @@ ErrorHandler:
 
                 End If
             Else
-                'subrow("lngKST") = 0
+                subrow("lngKST") = 0
                 subrow("strKstBez") = "null"
                 intReturnValue = 1
 
@@ -1725,8 +1731,14 @@ ErrorHandler:
             subrow("dblBrutto") = IIf(IsDBNull(subrow("dblBrutto")), 0, Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero))
             subrow("dblMwStSatz") = IIf(IsDBNull(subrow("dblMwStSatz")), 0, Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero))
 
+            'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
+            If subrow("lngKto") < 3000 Then
+                subrow("strMwStKey") = Nothing
+                subrow("lngKST") = 0
+            End If
+
             'MwSt prüfen
-            If Not IsDBNull(subrow("strMwStKey")) And subrow("lngKto") >= 3000 Then
+            If Not IsDBNull(subrow("strMwStKey")) Then
                 intReturnValue = FcCheckMwStToCorrect(objdbconn, subrow("strMwStKey"), subrow("dblMwStSatz"), subrow("dblMwSt"))
                 intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("dblMwStSatz"), strStrStCodeSage200, subrow("lngKto"))
                 If intReturnValue = 0 Then
@@ -1768,7 +1780,7 @@ ErrorHandler:
             End If
 
             'Konto prüfen
-            If Not IsDBNull(subrow("lngKto")) Then
+            If IIf(IsDBNull(subrow("lngKto")), 0, subrow("lngKTo")) > 0 Then
                 intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
                 If intReturnValue = 0 Then
                     subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto"))
@@ -1793,7 +1805,7 @@ ErrorHandler:
             strBitLog += Trim(intReturnValue.ToString)
 
             'Kst/Ktr prüfen
-            If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 And subrow("lngKto") >= 3000 Then
+            If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
                 intReturnValue = FcCheckKstKtr(subrow("lngKST"), objFiBhg, objFiPI, subrow("lngKto"), strKstKtrSage200)
                 If intReturnValue = 0 Then
                     subrow("strKstBez") = strKstKtrSage200

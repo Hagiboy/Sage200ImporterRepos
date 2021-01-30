@@ -364,7 +364,7 @@ Public Class MainDebitor
                     Case "Österreich"
                         strLand = "AT"
                     Case Else
-                        strLand = "NA"
+                        strLand = "CH"
                 End Select
 
                 'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen

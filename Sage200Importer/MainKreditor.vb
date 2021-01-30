@@ -108,7 +108,7 @@ Public Class MainKreditor
 
             'If IsDBNull(objdtKreditor.Rows(0).Item(strKredNewField)) Then
             If objdtKreditor.Rows.Count > 0 Then
-                If IsDBNull(objdtKreditor.Rows(0).Item(strKredNewField)) Then
+                If IsDBNull(objdtKreditor.Rows(0).Item(strKredNewField)) And strTableName <> "Tab_Repbetriebe" Then
                     intKrediNew = 0
                     Return 2
                 Else
@@ -224,7 +224,7 @@ Public Class MainKreditor
                     Case "Österreich"
                         strLand = "AT"
                     Case Else
-                        strLand = "NA"
+                        strLand = "CH"
                 End Select
 
                 'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
