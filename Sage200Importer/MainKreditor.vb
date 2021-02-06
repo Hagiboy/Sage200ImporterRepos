@@ -119,6 +119,12 @@ Public Class MainKreditor
                         If intPKNewField = 0 Then
                             'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
                             intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtKreditor.Rows(0).Item(strKredNewField), intKrediNew)
+                            If intFunctinReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
+                                intFunctinReturns = Main.FcWriteNewDebToRepbetrieb(objdbconn, objdtKreditor.Rows(0).Item("Rep_Nr"), intKrediNew)
+                                If intFunctinReturns = 0 Then 'Schreiben hat geklappt
+                                    Return 1
+                                End If
+                            End If
                             'intKrediNew = 0
                             'Return 3
                         Else
@@ -130,7 +136,13 @@ Public Class MainKreditor
                         If Not IsDBNull(objdtKreditor.Rows(0).Item(strKredNewField)) Then
                             intKrediNew = objdtKreditor.Rows(0).Item(strKredNewField)
                         Else
-                            intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtKreditor.Rows(0).Item(strKredNewField), intKrediNew)
+                            intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtKreditor.Rows(0).Item("Rep_Nr"), intKrediNew)
+                            If intFunctinReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
+                                intFunctinReturns = Main.FcWriteNewDebToRepbetrieb(objdbconn, objdtKreditor.Rows(0).Item("Rep_Nr"), intKrediNew)
+                                If intFunctinReturns = 0 Then 'Schreiben hat geklappt
+                                    Return 1
+                                End If
+                            End If
                         End If
                         Return 0
                     End If
@@ -153,7 +165,8 @@ Public Class MainKreditor
                                                 ByRef objKrBhg As SBSXASLib.AXiKrBhg,
                                                 ByVal strcmbBuha As String,
                                                 ByRef intPayType As Int16,
-                                                ByVal strIBANFromInv As String) As Int16
+                                                ByVal strIBANFromInv As String,
+                                                ByVal intintBank As Int16) As Int16
 
         'Return: 0=creatable und erstellt, 3=Kreditor konnte nicht erstellt werden, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
 
@@ -182,7 +195,9 @@ Public Class MainKreditor
         Try
 
             'Angaben einlesen
-            objdbconnZHDB02.Open()
+            If objdbconnZHDB02.State = ConnectionState.Closed Then
+                objdbconnZHDB02.Open()
+            End If
             objsqlcommandZHDB02.CommandText = "SELECT Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_KredGegenKonto, Rep_Gruppe, Rep_Vertretung, Rep_Ansprechpartner, Rep_Land, Rep_Tel1, Rep_Fax, Rep_Mail, " +
                                                 "Rep_Language, Rep_Kredi_MWSTNr, Rep_Kreditlimite, Rep_Kred_Pay_Def, Rep_Kred_Bank_Name, Rep_Kred_Bank_PLZ, Rep_Kred_Bank_Ort, Rep_Kred_IBAN, Rep_Kred_Bank_BIC, " +
                                                 "Rep_Kred_Currency, Rep_Kred_PCKto, Rep_Kred_Aufwandskonto FROM Tab_Repbetriebe WHERE PKNr=" + lngKrediNbr.ToString
@@ -299,29 +314,30 @@ Public Class MainKreditor
                                           strBankClearing,
                                           IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Currency")), "CHF", objdtKreditor.Rows(0).Item("Rep_Kred_Currency")),
                                           IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto")), 4200, objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto")),
-                                          intKredZB)
+                                          intKredZB,
+                                          intintBank)
 
-                    If intCreatable = 0 Then
-                        'MySQL
-                        'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
-                        '                                     lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
-                        '                                     "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Kreditor " +
-                        '                                     lngKrediNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
-                        ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
-                        'objlocMySQLRGConn.Open()
-                        'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
-                        'objsqlcommandZHDB02.CommandText = strSQL
-                        'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
+                If intCreatable = 0 Then
+                    'MySQL
+                    'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
+                    '                                     lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
+                    '                                     "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Kreditor " +
+                    '                                     lngKrediNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
+                    ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                    'objlocMySQLRGConn.Open()
+                    'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                    'objsqlcommandZHDB02.CommandText = strSQL
+                    'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
 
 
 
-                        Return 0
-                    Else
-                        Return 3
-
-                    End If
+                    Return 0
                 Else
-                    Return 4
+                    Return 3
+
+                End If
+            Else
+                Return 4
             End If
 
         Catch ex As Exception
@@ -361,7 +377,8 @@ Public Class MainKreditor
                                            ByVal strZVClearing As String,
                                            ByVal strCurrency As String,
                                            ByVal intAufwandsKonto As Int16,
-                                           ByVal intKredZB As Int16) As Int16
+                                           ByVal intKredZB As Int16,
+                                           ByVal intintBank As Int16) As Int16
 
         Dim strKredCountry As String = strLand
         Dim strKredCurrency As String = strCurrency
@@ -448,7 +465,7 @@ Public Class MainKreditor
                                                         "")
                 End If
             End If
-            Call objKrBhg.WriteKreditor3(0)
+            Call objKrBhg.WriteKreditor3(intintBank.ToString, 0)
 
             Return 0
             'intDebAdrLaufN = DbBhg.GetAdressLaufnr()

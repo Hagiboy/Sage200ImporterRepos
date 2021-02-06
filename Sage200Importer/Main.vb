@@ -104,6 +104,9 @@ Friend NotInheritable Class Main
         Dim datDebValDatum As DataColumn = New DataColumn("datDebValDatum")
         datDebValDatum.DataType = System.Type.[GetType]("System.DateTime")
         DT.Columns.Add(datDebValDatum)
+        Dim datDebDue As DataColumn = New DataColumn("datDebDue")
+        datDebDue.DataType = System.Type.[GetType]("System.DateTime")
+        DT.Columns.Add(datDebDue)
         Dim strDebiBank As DataColumn = New DataColumn("strDebiBank")
         strDebiBank.DataType = System.Type.[GetType]("System.String")
         strDebiBank.MaxLength = 5
@@ -116,6 +119,10 @@ Friend NotInheritable Class Main
         strZahlBed.DataType = System.Type.[GetType]("System.String")
         strZahlBed.MaxLength = 5
         DT.Columns.Add(strZahlBed)
+        Dim intintBank As DataColumn = New DataColumn("intintBank")
+        intintBank.DataType = System.Type.[GetType]("System.Int16")
+        intintBank.Caption = "IBank"
+        DT.Columns.Add(intintBank)
         Dim strDebStatusBitLog As DataColumn = New DataColumn("strDebStatusBitLog")
         strDebStatusBitLog.DataType = System.Type.[GetType]("System.String")
         strDebStatusBitLog.MaxLength = 50
@@ -326,6 +333,10 @@ Friend NotInheritable Class Main
         strKredRef.DataType = System.Type.[GetType]("System.String")
         strKredRef.MaxLength = 27
         DT.Columns.Add(strKredRef)
+        Dim strKrediBankInt As DataColumn = New DataColumn("strKrediBankInt")
+        strKrediBankInt.DataType = System.Type.[GetType]("System.String")
+        strKrediBankInt.MaxLength = 5
+        DT.Columns.Add(strKrediBankInt)
         'Dim strZahlBed As DataColumn = New DataColumn("strZahlBed")
         'strZahlBed.DataType = System.Type.[GetType]("System.String")
         'strZahlBed.MaxLength = 5
@@ -333,6 +344,10 @@ Friend NotInheritable Class Main
         Dim intPayType As DataColumn = New DataColumn("intPayType")
         intPayType.DataType = System.Type.[GetType]("System.Int16")
         DT.Columns.Add(intPayType)
+        Dim intintBank As DataColumn = New DataColumn("intintBank")
+        intintBank.DataType = System.Type.[GetType]("System.Int16")
+        intintBank.Caption = "IBank"
+        DT.Columns.Add(intintBank)
         Dim strKredStatusBitLog As DataColumn = New DataColumn("strKredStatusBitLog")
         strKredStatusBitLog.DataType = System.Type.[GetType]("System.String")
         strKredStatusBitLog.MaxLength = 50
@@ -1546,7 +1561,7 @@ ErrorHandler:
             Else
                 subrow("lngKST") = 0
                 subrow("strKstBez") = "null"
-                intReturnValue = 1
+                intReturnValue = 0
 
             End If
             strBitLog += Trim(intReturnValue.ToString)
@@ -2379,6 +2394,7 @@ ErrorHandler:
         Dim strKrediSubText As String
         Dim intKreditorNew As Int32
         Dim strCleanOPNbr As String
+        Dim intintBank As Int16
 
         Try
 
@@ -2388,7 +2404,7 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
                 '
-                'If row("lngKredID") = "1103800" Then Stop
+                'If row("lngKredID") = "4062" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -2498,6 +2514,14 @@ ErrorHandler:
                 ''Referenz 12
                 'intReturnValue = IIf(IsDBNull(row("strKredRef")), 1, 0)
                 'strBitLog += Trim(intReturnValue.ToString)
+                'Interne Bank 12
+                'interne Bank
+                intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
+                                                         intAccounting,
+                                                         row("strKrediBankInt"),
+                                                         intintBank)
+                row("intintBank") = intintBank
+
 
                 'Status-String auswerten
                 'Kreditor
@@ -2511,7 +2535,8 @@ ErrorHandler:
                                                                             objKrBuha,
                                                                             strcmbBuha,
                                                                             IIf(IsDBNull(row("intPayType")), 3, row("intPayType")),
-                                                                            row("strKredRef"))
+                                                                            row("strKredRef"),
+                                                                            intintBank)
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
                             row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
@@ -2855,7 +2880,7 @@ ErrorHandler:
 
         Finally
             If objdbconnZHDB02.State = ConnectionState.Open Then
-                objdbconnZHDB02.Close()
+                'objdbconnZHDB02.Close()
             End If
             objDAPKNbrs.Dispose()
             objdsPKNbrs.Dispose()
@@ -3069,7 +3094,9 @@ ErrorHandler:
         Try
 
             strSQL = "UPDATE tab_repbetriebe SET PKNr=" + intNewDebNr.ToString + " WHERE Rep_Nr=" + intRepNr.ToString
-            objdbconnZHDB02.Open()
+            If objdbconnZHDB02.State = ConnectionState.Closed Then
+                objdbconnZHDB02.Open()
+            End If
             objmysqlcmd.Connection = objdbconnZHDB02
             objmysqlcmd.CommandText = strSQL
             intAffected = objmysqlcmd.ExecuteNonQuery()
@@ -3092,4 +3119,62 @@ ErrorHandler:
         End Try
 
     End Function
+
+    Public Shared Function FcCheckDebiIntBank(ByRef objdbconn As MySqlConnection, ByVal intAccounting As Integer, ByVal striBankS50 As String, ByRef intIBankS200 As String) As Int16
+
+        '0=ok, 1=Sage50 iBank nicht gefunden, 2=Kein Standard gesetzt, 3=Nichts angegeben, auf Standard gesetzt, 9=Problem
+
+        Dim objdbcommand As New MySqlCommand
+        Dim objdtiBank As New DataTable
+
+        Try
+
+            If objdbconn.State = ConnectionState.Closed Then
+                objdbconn.Open()
+            End If
+            'wurde i Bank definiert?
+            If striBankS50 <> "" Then
+                'Sage 50 - Bank suchen
+                objdbcommand.Connection = objdbconn
+                'objdbconn.Open()
+                objdbcommand.CommandText = "SELECT intSage200 FROM t_sage_tblaccountingbank WHERE strBank='" + striBankS50 + "' AND intAccountingID=" + intAccounting.ToString
+                objdtiBank.Load(objdbcommand.ExecuteReader)
+                'wurde DS gefunden?
+                If objdtiBank.Rows.Count > 0 Then
+                    intIBankS200 = objdtiBank.Rows(0).Item("intSage200")
+                    Return 0
+                Else
+                    intIBankS200 = 0
+                    Return 1
+                End If
+            Else
+                'Standard nehmen
+                objdbcommand.Connection = objdbconn
+                'objdbconn.Open()
+                objdbcommand.CommandText = "SELECT intSage200 FROM t_sage_tblaccountingbank WHERE booStandard=true AND intAccountingID=" + intAccounting.ToString
+                objdtiBank.Load(objdbcommand.ExecuteReader)
+                'wurde ein Standard definieren
+                If objdtiBank.Rows.Count > 0 Then
+                    intIBankS200 = objdtiBank.Rows(0).Item("intSage200")
+                    Return 3
+                Else
+                    intIBankS200 = 0
+                    Return 2
+                End If
+
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Eigene Bank - Suche")
+            Return 9
+
+        Finally
+            If objdbconn.State = ConnectionState.Open Then
+                'objdbconn.Close()
+            End If
+
+        End Try
+
+    End Function
+
 End Class

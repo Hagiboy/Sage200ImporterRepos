@@ -517,7 +517,7 @@ Friend Class frmImportMain
         dgvBookings.Columns("datKredValDatum").HeaderText = "Val Datum"
         dgvBookings.Columns("datKredValDatum").Width = 70
         dgvBookings.Columns("strKrediBank").DisplayIndex = 17
-        dgvBookings.Columns("strKrediBank").HeaderText = "Bank"
+        dgvBookings.Columns("strKrediBank").HeaderText = "KBank"
         dgvBookings.Columns("strKrediBank").Width = 60
         dgvBookings.Columns("strKredStatusText").DisplayIndex = 18
         dgvBookings.Columns("strKredStatusText").HeaderText = "Status"
@@ -731,8 +731,9 @@ Friend Class frmImportMain
                         Else
                             'Beleg-Nummerierung abschalten
                             DbBhg.IncrBelNbr = "N"
-                            intDebBelegsNummer = row("strOPNr")
+                            intDebBelegsNummer = Main.FcCleanRGNrStrict(row("strOPNr"))
                             'strExtBelegNbr = row("strOPNr")
+
                         End If
 
                         'Variablen zuweisen
@@ -745,7 +746,11 @@ Friend Class frmImportMain
                         strBuchType = "R"
                         strValutaDatum = Format(row("datDebValDatum"), "yyyyMMdd").ToString
                         strBelegDatum = Format(row("datDebRGDatum"), "yyyyMMdd").ToString
-                        strVerfallDatum = ""
+                        If IsDBNull(row("datDebDue")) Then
+                            strVerfallDatum = ""
+                        Else
+                            strVerfallDatum = Format(row("datDebDue"), "yyyyMMdd").ToString
+                        End If
                         strReferenz = row("strDebRef")
                         strMahnerlaubnis = "" 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         dblBetrag = row("dblDebBrutto")
@@ -1149,6 +1154,9 @@ Friend Class frmImportMain
 
         Dim selKrediSub() As DataRow
         Dim strSteuerInfo() As String
+        Dim strDebiLine As String
+        Dim strDebitor() As String
+        Dim strSachBID = strDebitor(29)
 
         Try
 
@@ -1180,24 +1188,36 @@ Friend Class frmImportMain
                         'Eindeutigkeit der internen Beleg-Nummer setzen
                         KrBhg.CheckDoubleIntBelNbr = "J"
 
-                        If IsDBNull(row("strOPNr")) Or row("StrOPNr") = "" Then
-                            'strExtBelegNbr = row("strOPNr")
+                        'If IsDBNull(row("strOPNr")) Or row("StrOPNr") = "" Then
+                        'strExtBelegNbr = row("strOPNr")
 
-                            'Zuerst Beleg-Nummerieungung aktivieren
-                            KrBhg.IncrBelNbr = "J"
-                            'Belegsnummer abholen
-                            intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
-                        Else
-                            'Beleg-Nummerierung abschalten
-                            KrBhg.IncrBelNbr = "N"
-                            intKredBelegsNummer = row("strOPNr")
-                            'strExtBelegNbr = row("strOPNr")
-                        End If
+                        'Zuerst Beleg-Nummerieungung aktivieren
+                        KrBhg.IncrBelNbr = "J"
+                        'Belegsnummer abholen
+                        intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
+                        'Else
+                        'Beleg-Nummerierung abschalten
+                        'KrBhg.IncrBelNbr = "N"
+                        'intKredBelegsNummer = row("strOPNr")
+                        'strExtBelegNbr = row("strOPNr")
+                        'End If
                         strExtKredBelegsNummer = row("strKredRGNbr")
 
                         'Variablen zuweisen
                         intKreditorNbr = row("lngKredNbr")
-                        strBuchType = "R"
+                        If row("dblSaldo") < 0 Then
+                            strBuchType = "G"
+                            'strZahlSperren = "J"
+                            row("dblSaldo") = row("dblSaldo") * -1
+                            'Belegsnummer abholen
+                            intKredBelegsNummer = KrBhg.GetNextBelNbr("G")
+                        Else
+                            strBuchType = "R"
+                            'strZahlSperren = "N"
+                            'Belegsnummer abholen
+                            intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
+                        End If
+
                         strValutaDatum = Format(row("datKredValDatum"), "yyyyMMdd").ToString
                         strBelegDatum = Format(row("datKredRGDatum"), "yyyyMMdd").ToString
                         strVerfallDatum = ""
@@ -1206,20 +1226,29 @@ Friend Class frmImportMain
                         'intTeilnehmer = 0
                         'Else
                         'Teilnehmer nur bei ESR setzen
-                        If row("intPayType") <> 9 Then
+                        If row("intPayType") <> 9 Then 'nicht IBAN
+                            strReferenz = IIf(IsDBNull(row("strRef")), "", row("strRef"))
                             intTeilnehmer = CInt(Val(row("strKrediBank")))
+                            intBankNbr = 0
                         Else
-
+                            'IBAN
+                            strReferenz = IIf(IsDBNull(row("strIBAN")), "", row("strIBAN"))
+                            intBankNbr = IIf(IsDBNull(row("intEBank")), 0, row("intEBank"))
                         End If
                         'End If
                         strMahnerlaubnis = "" 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
+                        'Sachbearbeiter aus Debitor auslesen
+                        strDebiLine = KrBhg.ReadKreditor3(row("intNewDebi") * -1, "")
+                        strDebitor = Split(strDebiLine, "{>}")
+                        strSachBID = strDebitor(29)
+
                         dblBetrag = row("dblKredBrutto")
                         strKrediText = IIf(IsDBNull(row("strKredText")), "", row("strKredText"))
                         strCurrency = row("strKredCur")
-                        intBankNbr = 0
+                        'intBankNbr = 0
                         intKondition = 1
                         intKonditionLN = 0
-                        intEigeneBank = 1
+                        intEigeneBank = row("intintBank")
 
                         If strCurrency <> "CHF" Then 'Muss ergänzt werden => Was ist Leitwährung auf dem Konto
                             dblKurs = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg)

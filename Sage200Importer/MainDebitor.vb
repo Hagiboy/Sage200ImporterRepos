@@ -918,8 +918,8 @@ Public Class MainDebitor
                         '    strField = rsDebiTemp.Fields("strDebRGNbr")
                         'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
                         '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
-                        'Case "rsDebiTemp.Fields([strDebText])"
-                        '    strField = rsDebiTemp.Fields("strDebText")
+                    Case "rsDebiTemp.Fields([strDebText])"
+                        strField = RowDebi(0).Item("strDebText")
                     Case "KUNDENZEICHEN"
                         strField = FcGetKundenzeichen(RowDebi(0).Item("lngDebIdentNbr"), objOracleConn, objOracleCommand)
                     Case Else
