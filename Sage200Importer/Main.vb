@@ -348,6 +348,10 @@ Friend NotInheritable Class Main
         intintBank.DataType = System.Type.[GetType]("System.Int16")
         intintBank.Caption = "IBank"
         DT.Columns.Add(intintBank)
+        Dim intEBank As DataColumn = New DataColumn("intEBank")
+        intEBank.DataType = System.Type.[GetType]("System.Int16")
+        intEBank.Caption = "EBank"
+        DT.Columns.Add(intEBank)
         Dim strKredStatusBitLog As DataColumn = New DataColumn("strKredStatusBitLog")
         strKredStatusBitLog.DataType = System.Type.[GetType]("System.String")
         strKredStatusBitLog.MaxLength = 50
@@ -2553,6 +2557,7 @@ ErrorHandler:
                 Else
                     row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
                     row("lngKredNbr") = intKreditorNew
+                    row("intEBank") = 0
                     intReturnValue = MainKreditor.FcCheckKreditBank(objdbconn,
                                                        objdbconnZHDB02,
                                                        objKrBuha,
@@ -2560,7 +2565,8 @@ ErrorHandler:
                                                        IIf(IsDBNull(row("intPayType")), 3, row("intPayType")),
                                                        IIf(IsDBNull(row("strKredRef")), "", row("strKredRef")),
                                                        IIf(IsDBNull(row("strKredRef")), "", row("strKredRef")),
-                                                       row("strKredCur"))
+                                                       row("strKredCur"),
+                                                       row("intEBank"))
                 End If
                 'Konto
                 If Mid(strBitLog, 2, 1) <> "0" Then

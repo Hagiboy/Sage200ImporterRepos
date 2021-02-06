@@ -1156,7 +1156,6 @@ Friend Class frmImportMain
         Dim strSteuerInfo() As String
         Dim strDebiLine As String
         Dim strDebitor() As String
-        Dim strSachBID = strDebitor(29)
 
         Try
 
@@ -1194,7 +1193,7 @@ Friend Class frmImportMain
                         'Zuerst Beleg-Nummerieungung aktivieren
                         KrBhg.IncrBelNbr = "J"
                         'Belegsnummer abholen
-                        intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
+                        'intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
                         'Else
                         'Beleg-Nummerierung abschalten
                         'KrBhg.IncrBelNbr = "N"
@@ -1205,10 +1204,10 @@ Friend Class frmImportMain
 
                         'Variablen zuweisen
                         intKreditorNbr = row("lngKredNbr")
-                        If row("dblSaldo") < 0 Then
+                        If row("dblKredBrutto") < 0 Then
                             strBuchType = "G"
                             'strZahlSperren = "J"
-                            row("dblSaldo") = row("dblSaldo") * -1
+                            row("dblKredBrutto") = row("dblKredBrutto") * -1
                             'Belegsnummer abholen
                             intKredBelegsNummer = KrBhg.GetNextBelNbr("G")
                         Else
@@ -1227,12 +1226,12 @@ Friend Class frmImportMain
                         'Else
                         'Teilnehmer nur bei ESR setzen
                         If row("intPayType") <> 9 Then 'nicht IBAN
-                            strReferenz = IIf(IsDBNull(row("strRef")), "", row("strRef"))
+                            strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
                             intTeilnehmer = CInt(Val(row("strKrediBank")))
                             intBankNbr = 0
                         Else
                             'IBAN
-                            strReferenz = IIf(IsDBNull(row("strIBAN")), "", row("strIBAN"))
+                            strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
                             intBankNbr = IIf(IsDBNull(row("intEBank")), 0, row("intEBank"))
                         End If
                         'End If

@@ -731,7 +731,8 @@ Public Class MainKreditor
                                          ByVal intPayType As Int16,
                                          ByVal strIBAN As String,
                                          ByVal strBank As String,
-                                         ByVal strKredCur As String) As Int16
+                                         ByVal strKredCur As String,
+                                         ByRef intEBank As Int32) As Int16
 
         'Falls Typetype 9 (IBAN) ist, dann Zahlungsverbindungen prüfen
 
@@ -765,6 +766,7 @@ Public Class MainKreditor
                             If strZahlVerbindung(4) = strIBAN Then
                                 booBankExists = True
                                 'Debug.Print("Gefunden " + strZahlVerbindungLine)
+                                intEBank = strZahlVerbindung(0)
                             End If
 
                         End If
