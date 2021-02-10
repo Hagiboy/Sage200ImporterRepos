@@ -878,14 +878,18 @@ Public Class MainKreditor
 
     End Function
 
-    Public Shared Function FcCheckKrediOPDouble(ByRef objKrBuha As SBSXASLib.AXiKrBhg, ByVal strKreditor As String, ByVal strOPNr As String) As Int16
+    Public Shared Function FcCheckKrediOPDouble(ByRef objKrBuha As SBSXASLib.AXiKrBhg,
+                                                ByVal strKreditor As String,
+                                                ByVal strOPNr As String,
+                                                ByVal strKredCurrency As String) As Int16
 
         'Return 0=ok, 1=Beleg existiert, 9=Problem
 
         Dim intBelegReturn As Int16
 
         Try
-            intBelegReturn = objKrBuha.doesBelegExist(strKreditor, "CHF", strOPNr, "", "", "")
+            'Bei Kreditoren zählt externe RG-Nummer als Test
+            intBelegReturn = objKrBuha.doesBelegExistExtern(strKreditor, strKredCurrency, strOPNr, "", "")
             If intBelegReturn = 0 Then
                 Return 0
             Else

@@ -300,6 +300,7 @@ Public Class MainDebitor
         Dim objdtSachB As New DataTable("tbliSachB")
         Dim strSachB As String
         Dim intPayType As Int16
+        Dim intintBank As Int16
 
         Try
 
@@ -308,7 +309,7 @@ Public Class MainDebitor
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
             objsqlcommandZHDB02.CommandText = "SELECT Rep_Nr, Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_DebiKonto, Rep_Gruppe, Rep_Vertretung, Rep_Ansprechpartner, IF(Rep_Land IS NULL, 'Schweiz', Rep_Land) AS Rep_Land, Rep_Tel1, Rep_Fax, Rep_Mail, " +
                                                 "IF(Rep_Language IS NULL, 'D', Rep_Language) AS Rep_Language, Rep_Kredi_MWSTNr, Rep_Kreditlimite, Rep_Kred_Pay_Def, Rep_Kred_Bank_Name, Rep_Kred_Bank_PLZ, Rep_Kred_Bank_Ort, Rep_Kred_IBAN, Rep_Kred_Bank_BIC, " +
-                                                "IF(Rep_Kred_Currency IS NULL, 'CHF', Rep_Kred_Currency) AS Rep_Kred_Currency, Rep_Kred_PCKto, Rep_DebiErloesKonto FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
+                                                "IF(Rep_Kred_Currency IS NULL, 'CHF', Rep_Kred_Currency) AS Rep_Kred_Currency, Rep_Kred_PCKto, Rep_DebiErloesKonto, Rep_Kred_BankIntern FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
             objdtDebitor.Load(objsqlcommandZHDB02.ExecuteReader)
 
             'Gefunden?
@@ -332,6 +333,12 @@ Public Class MainDebitor
                         MessageBox.Show("Kein Sachbearbeiter - Default gesetzt für Buha " + strcmbBuha, "Debitorenerstellung")
                     End If
                 End If
+
+                'interne Bank
+                intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
+                                                         intAccounting,
+                                                         objdtDebitor.Rows(0).Item("Rep_Kred_BankIntern"),
+                                                         intintBank)
 
                 'Zahlungsbedingung suchen
                 'objdtKreditor.Clear()
@@ -434,19 +441,20 @@ Public Class MainDebitor
                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Currency")), "CHF", objdtDebitor.Rows(0).Item("Rep_Kred_Currency")),
                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")), "3200", objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")),
                                           intDebZB,
-                                          strSachB)
+                                          strSachB,
+                                          intintBank)
 
                 If intCreatable = 0 Then
                     'MySQL
-                    strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
-                                                         intAccounting.ToString + lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
-                                                         "'finance@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
-                                                         lngDebiNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
+                    'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
+                    ' intAccounting.ToString + lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
+                    '                                     "'finance@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
+                    'lngDebiNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
                     ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                     'objlocMySQLRGConn.Open()
                     'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
-                    objsqlcommandZHDB02.CommandText = strSQL
-                    intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
+                    'objsqlcommandZHDB02.CommandText = strSQL
+                    'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
 
                 End If
 
@@ -495,7 +503,8 @@ Public Class MainDebitor
                                        ByVal strCurrency As String,
                                        ByVal intDebErlKto As Int16,
                                        ByVal intDebZB As Int16,
-                                       ByVal strSachB As String) As Int16
+                                       ByVal strSachB As String,
+                                       ByVal intintBank As Int16) As Int16
 
         Dim strDebCountry As String = strLand
         Dim strDebCurrency As String = strCurrency
@@ -577,7 +586,7 @@ Public Class MainDebitor
                                                         "")
                 End If
             End If
-            Call objDbBhg.WriteDebitor3(0)
+            Call objDbBhg.WriteDebitor3(0, intintBank.ToString)
 
             'Mail über Erstellung absetzen
 

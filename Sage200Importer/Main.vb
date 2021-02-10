@@ -144,6 +144,10 @@ Friend NotInheritable Class Main
         Dim lngBelegNr As DataColumn = New DataColumn("lngBelegNr")
         lngBelegNr.DataType = System.Type.[GetType]("System.Int32")
         DT.Columns.Add(lngBelegNr)
+        Dim lngDebiKST As DataColumn = New DataColumn("lngDebiKST")
+        lngDebiKST.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(lngDebiKST)
+
         Return DT
     End Function
 
@@ -759,6 +763,7 @@ ErrorHandler:
         Dim dblSubMwSt As Double
         Dim dblSubBrutto As Double
         Dim booAutoCorrect As Boolean
+        Dim booCpyKSTToSub As Boolean
         Dim selsubrow() As DataRow
         Dim strDebiReferenz As String = ""
         Dim booDiffHeadText As Boolean
@@ -780,7 +785,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "106473" Then Stop
+                'If row("strDebRGNbr") = "1104811" Then Stop
 
                 'Runden
                 row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 2, MidpointRounding.AwayFromZero)
@@ -821,7 +826,21 @@ ErrorHandler:
 
                 'Sub 04
                 booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
-                intReturnValue = FcCheckSubBookings(row("strDebRGNbr"), objdtDebitSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha, objdbPIFb, row("intBuchungsart"), booAutoCorrect)
+                booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_KSTHeadToSub", intAccounting)))
+                intReturnValue = FcCheckSubBookings(row("strDebRGNbr"),
+                                                    objdtDebitSubs,
+                                                    intSubNumber,
+                                                    dblSubBrutto,
+                                                    dblSubNetto,
+                                                    dblSubMwSt,
+                                                    objdbconn,
+                                                    objfiBuha,
+                                                    objdbPIFb,
+                                                    row("intBuchungsart"),
+                                                    booAutoCorrect,
+                                                    booCpyKSTToSub,
+                                                    row("lngDebiKST"))
+
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Autokorrektur 05
@@ -1203,7 +1222,7 @@ ErrorHandler:
                                           ByVal intAccounting As Integer,
                                           ByVal strBank As String,
                                           ByVal strRGNr As String,
-                                          ByVal strOPNr As String,
+                                          ByRef strOPNr As String,
                                           ByVal intBuchungsArt As Integer,
                                           ByRef strReferenz As String) As Integer
 
@@ -1226,6 +1245,7 @@ ErrorHandler:
                 Select Case strRefFrom
                     Case "R"
                         strCleanedNr = strRGNr
+                        strOPNr = strRGNr
                     Case "O"
                         strCleanedNr = strOPNr
 
@@ -1411,7 +1431,9 @@ ErrorHandler:
                                               ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                               ByRef objFiPI As SBSXASLib.AXiPlFin,
                                               ByVal intBuchungsArt As Int32,
-                                              ByVal booAutoCorrect As Boolean) As Int16
+                                              ByVal booAutoCorrect As Boolean,
+                                              ByVal booCpyKSTToSub As Boolean,
+                                              ByVal strKST As String) As Int16
 
         'Functin Returns 0=ok, 1=Problem sub, 2=OP Diff zu Kopf, 3=OP nicht 0, 9=keine Subs
 
@@ -1465,6 +1487,11 @@ ErrorHandler:
                 subrow("dblMwStSatz") = 0
             Else
                 subrow("dblMwStSatz") = Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero)
+            End If
+
+            'Falls KTRToSub dann kopieren
+            If booCpyKSTToSub Then
+                subrow("lngKST") = strKST
             End If
 
             'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
@@ -2507,7 +2534,10 @@ ErrorHandler:
                 row("strOPNr") = strCleanOPNbr
                 strBitLog += Trim(intReturnValue.ToString)
                 'OP - Verdopplung 09
-                intReturnValue = MainKreditor.FcCheckKrediOPDouble(objKrBuha, IIf(IsDBNull(row("lngKredNbr")), 0, row("lngKredNbr")), row("strKredRGNbr"))
+                intReturnValue = MainKreditor.FcCheckKrediOPDouble(objKrBuha,
+                                                                   IIf(IsDBNull(row("lngKredNbr")), 0, row("lngKredNbr")),
+                                                                   row("strKredRGNbr"),
+                                                                   row("strKredCur"))
                 strBitLog += Trim(intReturnValue.ToString)
                 'Valuta - Datum 10
                 intReturnValue = FcChCeckDate(row("datKredValDatum"), objdtInfo)

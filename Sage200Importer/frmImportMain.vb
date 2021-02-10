@@ -1220,7 +1220,7 @@ Friend Class frmImportMain
                         strValutaDatum = Format(row("datKredValDatum"), "yyyyMMdd").ToString
                         strBelegDatum = Format(row("datKredRGDatum"), "yyyyMMdd").ToString
                         strVerfallDatum = ""
-                        strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
+                        'strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
                         'If IsDBNull(row("strKrediBank")) Then
                         'intTeilnehmer = 0
                         'Else
@@ -1237,7 +1237,7 @@ Friend Class frmImportMain
                         'End If
                         strMahnerlaubnis = "" 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         'Sachbearbeiter aus Debitor auslesen
-                        strDebiLine = KrBhg.ReadKreditor3(row("intNewDebi") * -1, "")
+                        strDebiLine = KrBhg.ReadKreditor3(row("lngKredNbr") * -1, "")
                         strDebitor = Split(strDebiLine, "{>}")
                         strSachBID = strDebitor(29)
 
