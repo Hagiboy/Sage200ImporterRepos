@@ -1308,15 +1308,21 @@ Friend Class frmImportMain
                             intGegenKonto = SubRow("lngKto")
                             strFibuText = SubRow("strKredSubText")
                             'Soll auf Minus setzen
-                            If SubRow("intSollHaben") = 1 Then
-                                dblNettoBetrag = SubRow("dblNetto") * -1
-                                dblMwStBetrag = SubRow("dblMwSt") * -1
-                                dblBruttoBetrag = SubRow("dblBrutto") * -1
-                            Else
+                            'If SubRow("intSollHaben") = 1 Then
+                            'dblNettoBetrag = SubRow("dblNetto") * -1
+                            'dblMwStBetrag = SubRow("dblMwSt") * -1
+                            'dblBruttoBetrag = SubRow("dblBrutto") * -1
+                            'Else
+                            If strBuchType = "R" Then
                                 dblNettoBetrag = SubRow("dblNetto")
                                 dblMwStBetrag = SubRow("dblMwSt")
                                 dblBruttoBetrag = SubRow("dblBrutto")
+                            Else
+                                dblNettoBetrag = SubRow("dblNetto") * -1
+                                dblMwStBetrag = SubRow("dblMwSt") * -1
+                                dblBruttoBetrag = SubRow("dblBrutto") * -1
                             End If
+                            'End If
                             'dblBebuBetrag = 1000.0#
                             If SubRow("lngKST") > 0 Then
                                 strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strKredSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"

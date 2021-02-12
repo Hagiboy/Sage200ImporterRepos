@@ -305,7 +305,9 @@ Public Class MainDebitor
         Try
 
             'Angaben einlesen
-            objdbconnZHDB02.Open()
+            If objdbconnZHDB02.State = ConnectionState.Closed Then
+                objdbconnZHDB02.Open()
+            End If
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
             objsqlcommandZHDB02.CommandText = "SELECT Rep_Nr, Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_DebiKonto, Rep_Gruppe, Rep_Vertretung, Rep_Ansprechpartner, IF(Rep_Land IS NULL, 'Schweiz', Rep_Land) AS Rep_Land, Rep_Tel1, Rep_Fax, Rep_Mail, " +
                                                 "IF(Rep_Language IS NULL, 'D', Rep_Language) AS Rep_Language, Rep_Kredi_MWSTNr, Rep_Kreditlimite, Rep_Kred_Pay_Def, Rep_Kred_Bank_Name, Rep_Kred_Bank_PLZ, Rep_Kred_Bank_Ort, Rep_Kred_IBAN, Rep_Kred_Bank_BIC, " +
