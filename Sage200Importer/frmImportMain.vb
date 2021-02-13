@@ -178,6 +178,10 @@ Friend Class frmImportMain
         'Anzahl schreiben
         txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
 
+        ''Ipmort Kredit hiden
+        Me.butImportK.Enabled = False
+        Me.butImport.Enabled = True
+
         'strIncrBelNbr = DbBhg.IncrBelNbr
         'Debug.Print("Increment " + strIncrBelNbr)
 
@@ -1094,6 +1098,10 @@ Friend Class frmImportMain
 
         'Anzahl schreiben
         txtNumber.Text = objdtKreditorenHead.Rows.Count.ToString
+
+        'Import Debitoren desattivate
+        Me.butImport.Enabled = False
+        Me.butImportK.Enabled = True
 
         Me.Cursor = Cursors.Default
 

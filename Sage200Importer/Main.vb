@@ -785,7 +785,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "1104811" Then Stop
+                If row("strDebRGNbr") = "29214" Then Stop
 
                 'Runden
                 row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 2, MidpointRounding.AwayFromZero)
@@ -1546,11 +1546,11 @@ ErrorHandler:
                 dblSubMwSt += IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt"))
                 dblSubBrutto += IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto"))
             Else
-                dblSubNetto += IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) * -1
+                dblSubNetto -= IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))
                 subrow("dblNetto") = Math.Abs(subrow("dblNetto")) * -1
-                dblSubMwSt += IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) * -1
+                dblSubMwSt -= IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt"))
                 subrow("dblMwSt") = Math.Abs(subrow("dblMwSt")) * -1
-                dblSubBrutto += IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto"))
+                dblSubBrutto -= IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto"))
                 subrow("dblBrutto") = Math.Abs(subrow("dblBrutto")) * -1
             End If
 
