@@ -2474,7 +2474,7 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
 
-                If row("lngKredID") = "22425" Then Stop
+                If row("lngKredID") = "93553" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -2580,7 +2580,7 @@ ErrorHandler:
                                                                    row("strKredCur"))
                 strBitLog += Trim(intReturnValue.ToString)
                 'Valuta - Datum 10
-                intReturnValue = FcChCeckDate(row("datKredValDatum"), objdtInfo)
+                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), row("datKredRGDatum"), row("datKredValDatum")), objdtInfo)
                 strBitLog += Trim(intReturnValue.ToString)
                 'RG - Datum 11
                 intReturnValue = FcChCeckDate(row("datKredRGDatum"), objdtInfo)
