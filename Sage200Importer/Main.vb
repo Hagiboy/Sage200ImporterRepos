@@ -377,6 +377,9 @@ Friend NotInheritable Class Main
         Dim lngBelegNr As DataColumn = New DataColumn("lngBelegNr")
         lngBelegNr.DataType = System.Type.[GetType]("System.Int32")
         DT.Columns.Add(lngBelegNr)
+        Dim lngKrediKST As DataColumn = New DataColumn("lngKrediKST")
+        lngKrediKST.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(lngKrediKST)
         Return DT
 
     End Function
@@ -1748,7 +1751,9 @@ ErrorHandler:
                                               ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                               ByRef objFiPI As SBSXASLib.AXiPlFin,
                                               ByVal intBuchungsArt As Int32,
-                                              ByVal booAutoCorrect As Boolean) As Int16
+                                              ByVal booAutoCorrect As Boolean,
+                                              ByVal booCpyKSTToSub As Boolean,
+                                              ByVal lngKrediKST As Int32) As Int16
 
         'Functin Returns 0=ok, 1=Problem sub, 2=OP Diff zu Kopf, 3=OP nicht 0, 9=keine Subs
 
@@ -1807,6 +1812,11 @@ ErrorHandler:
                 subrow("dblMwStSatz") = 0
             Else
                 subrow("dblMwStSatz") = Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero)
+            End If
+
+            'Falls KTRToSub dann kopieren
+            If booCpyKSTToSub Then
+                subrow("lngKST") = lngKrediKST
             End If
 
             'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
@@ -2465,6 +2475,7 @@ ErrorHandler:
         Dim strCleanOPNbr As String
         Dim intintBank As Int16
         Dim intPayType As Int16
+        Dim booCpyKSTToSub As Boolean
 
         Try
 
@@ -2474,7 +2485,7 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
 
-                If row("lngKredID") = "93553" Then Stop
+                'If row("lngKredID") = "93553" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -2514,7 +2525,21 @@ ErrorHandler:
                 'Sub 04
                 booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadKAutoCorrect", intAccounting)))
                 'booAutoCorrect = False
-                intReturnValue = FcCheckKrediSubBookings(row("lngKredID"), objdtKreditSubs, intSubNumber, dblSubBrutto, dblSubNetto, dblSubMwSt, objdbconn, objfiBuha, objdbPIFb, row("intBuchungsart"), booAutoCorrect)
+                booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_KKSTHeadToSub", intAccounting)))
+                intReturnValue = FcCheckKrediSubBookings(row("lngKredID"),
+                                                         objdtKreditSubs,
+                                                         intSubNumber,
+                                                         dblSubBrutto,
+                                                         dblSubNetto,
+                                                         dblSubMwSt,
+                                                         objdbconn,
+                                                         objfiBuha,
+                                                         objdbPIFb,
+                                                         row("intBuchungsart"),
+                                                         booAutoCorrect,
+                                                         booCpyKSTToSub,
+                                                         row("lngKrediKST"))
+
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Autokorrektur 05
