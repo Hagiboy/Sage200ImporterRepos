@@ -788,7 +788,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                If row("strDebRGNbr") = "29214" Then Stop
+                'If row("strDebRGNbr") = "63108" Then Stop
 
                 'Runden
                 row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 2, MidpointRounding.AwayFromZero)
@@ -1101,14 +1101,28 @@ ErrorHandler:
                 'Wird ein anderer Text in der Head-Buchung gewünscht?
                 booDiffHeadText = IIf(FcReadFromSettings(objdbconn, "Buchh_TextSpecial", intAccounting) = "0", False, True)
                 If booDiffHeadText Then
-                    strDebiHeadText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_TextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits, objOrdbconn, objOrcommand)
+                    strDebiHeadText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn,
+                                                                                "Buchh_TextSpecialText",
+                                                                                intAccounting),
+                                                             row("strDebRGNbr"),
+                                                             objdtDebits,
+                                                             objOrdbconn,
+                                                             objOrcommand,
+                                                             "D")
                     row("strDebText") = strDebiHeadText
                 End If
 
                 'Wird ein anderer Text in den Sub-Buchung gewünscht?
                 booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecial", intAccounting) = "0", False, True)
                 If booDiffSubText Then
-                    strDebiSubText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits, objOrdbconn, objOrcommand)
+                    strDebiSubText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn,
+                                                                               "Buchh_SubTextSpecialText",
+                                                                               intAccounting),
+                                                            row("strDebRGNbr"),
+                                                            objdtDebits,
+                                                            objOrdbconn,
+                                                            objOrcommand,
+                                                            "D")
                 Else
                     strDebiSubText = row("strDebText")
                 End If
@@ -1124,6 +1138,7 @@ ErrorHandler:
                 dblSubBrutto = 0
                 dblSubNetto = 0
                 dblSubMwSt = 0
+                Application.DoEvents()
 
             Next
 
@@ -1335,7 +1350,7 @@ ErrorHandler:
             ElseIf dblBrutto = 0 Then
                 Return 1
             ElseIf dblNetto = 0 Then
-                Return 2
+                'Return 2
             ElseIf Decimal.Round(dblBrutto - dblNetto - dblMwSt + dblRDiff, 2, MidpointRounding.AwayFromZero) <> 0 Then 'Math.Round(dblBrutto - dblRDiff - dblMwSt, 2, MidpointRounding.AwayFromZero) <> Math.Round(dblNetto, 2, MidpointRounding.AwayFromZero) Then
                 Return 4
             Else
@@ -1505,7 +1520,7 @@ ErrorHandler:
             End If
 
             'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
-            If subrow("lngKto") < 3000 Then
+            If subrow("lngKto") < 3000 Or subrow("lngKto") >= 10000 Then
                 subrow("strMwStKey") = Nothing
                 subrow("lngKST") = 0
             End If
@@ -1827,6 +1842,8 @@ ErrorHandler:
 
             'MwSt prüfen
             If Not IsDBNull(subrow("strMwStKey")) Then
+                If subrow("dblMwStSatz") > 0 And subrow("dblMwSt") = 0 Then Stop
+                If subrow("dblMwStSatz") > 0 And subrow("dblMwSt") > 0 And subrow("strMwStKey") = "ohne" Then Stop
                 intReturnValue = FcCheckMwStToCorrect(objdbconn, subrow("strMwStKey"), subrow("dblMwStSatz"), subrow("dblMwSt"))
                 intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("dblMwStSatz"), strStrStCodeSage200, subrow("lngKto"))
                 If intReturnValue = 0 Then
@@ -1845,9 +1862,9 @@ ErrorHandler:
                     End If
                 Else
                     subrow("strMwStKey") = "n/a"
-                End If
-            Else
-                subrow("strMwStKey") = "null"
+                    End If
+                Else
+                    subrow("strMwStKey") = "null"
                 subrow("dblMwst") = 0
                 intReturnValue = 0
 
@@ -2468,7 +2485,7 @@ ErrorHandler:
         Dim selsubrow() As DataRow
         Dim strKrediReferenz As String
         Dim booDiffHeadText As Boolean
-        Dim strKrediiHeadText As String
+        Dim strKrediHeadText As String
         Dim booDiffSubText As Boolean
         Dim strKrediSubText As String
         Dim intKreditorNew As Int32
@@ -2476,6 +2493,7 @@ ErrorHandler:
         Dim intintBank As Int16
         Dim intPayType As Int16
         Dim booCpyKSTToSub As Boolean
+        Dim strKredTyp As String
 
         Try
 
@@ -2485,7 +2503,7 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
 
-                'If row("lngKredID") = "93553" Then Stop
+                'If row("lngKredID") = "1636788" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -2599,10 +2617,16 @@ ErrorHandler:
                 row("strOPNr") = strCleanOPNbr
                 strBitLog += Trim(intReturnValue.ToString)
                 'OP - Verdopplung 09
+                If row("dblKredBrutto") < 0 Then
+                    strKredTyp = "G"
+                Else
+                    strKredTyp = "R"
+                End If
                 intReturnValue = MainKreditor.FcCheckKrediOPDouble(objKrBuha,
-                                                                   IIf(IsDBNull(row("lngKredNbr")), 0, row("lngKredNbr")),
+                                                                   intKreditorNew,
                                                                    row("strKredRGNbr"),
-                                                                   row("strKredCur"))
+                                                                   row("strKredCur"),
+                                                                   strKredTyp)
                 strBitLog += Trim(intReturnValue.ToString)
                 'Valuta - Datum 10
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), row("datKredRGDatum"), row("datKredValDatum")), objdtInfo)
@@ -2754,24 +2778,38 @@ ErrorHandler:
                 row("strKredStatusText") = strStatus
                 row("strKredStatusBitLog") = strBitLog
 
-                ''Wird ein anderer Text in der Head-Buchung gewünscht?
-                'booDiffHeadText = IIf(FcReadFromSettings(objdbconn, "Buchh_TextSpecial", intAccounting) = "0", False, True)
-                'If booDiffHeadText Then
-                '    strDebiHeadText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_TextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits)
-                '    row("strDebText") = strDebiHeadText
-                'End If
+                'Wird ein anderer Text in der Head-Buchung gewünscht?
+                booDiffHeadText = IIf(FcReadFromSettings(objdbconn, "Buchh_KTextSpecial", intAccounting) = "0", False, True)
+                If booDiffHeadText Then
+                    strKrediHeadText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn,
+                                                                                "Buchh_KTextSpecialText",
+                                                                                intAccounting),
+                                                                                row("strKredRGNbr"),
+                                                                            objdtKredits,
+                                                                            objOrdbconn,
+                                                                            objOrcommand,
+                                                                            "C")
+                    row("strKredText") = strKrediHeadText
+                End If
 
-                ''Wird ein anderer Text in den Sub-Buchung gewünscht?
-                'booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecial", intAccounting) = "0", False, True)
-                'If booDiffSubText Then
-                '    strDebiSubText = FcSQLParse(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecialText", intAccounting), row("strDebRGNbr"), objdtDebits)
-                'Else
-                '    strDebiSubText = row("strDebText")
-                'End If
-                'selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
-                'For Each subrow In selsubrow
-                '    subrow("strDebSubText") = strDebiSubText
-                'Next
+                'Wird ein anderer Text in den Sub-Buchung gewünscht?
+                booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_KSubTextSpecial", intAccounting) = "0", False, True)
+                If booDiffSubText Then
+                    strKrediSubText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn,
+                                                                                "Buchh_KSubTextSpecialText",
+                                                                                intAccounting),
+                                                                                row("strKredRGNbr"),
+                                                                           objdtKredits,
+                                                                           objOrdbconn,
+                                                                           objOrcommand,
+                                                                           "C")
+                Else
+                    strKrediSubText = row("strKredText")
+                End If
+                selsubrow = objdtKreditSubs.Select("strRGNr='" + row("strKredRGNbr") + "'")
+                For Each subrow In selsubrow
+                    subrow("strKredSubText") = strKrediSubText
+                Next
 
                 'Init
                 strBitLog = ""

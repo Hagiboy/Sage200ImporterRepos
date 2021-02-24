@@ -73,7 +73,14 @@ Public Class MainDebitor
                 '    objdrSub("strDebSubText") = row("Betrifft").ToString + " " + row("betrifft1").ToString
                 '    objdtSub.Rows.Add(objdrSub)
                 'End If
-                strSQLSub = MainDebitor.FcSQLParse(Main.FcReadFromSettings(objdbconn, "Buchh_SQLDetail", intAccounting), row("strDebRGNbr"), objdtHead, objOracleCon, objOracleCmd)
+                strSQLSub = MainDebitor.FcSQLParse(Main.FcReadFromSettings(objdbconn,
+                                                                           "Buchh_SQLDetail",
+                                                                           intAccounting),
+                                                   row("strDebRGNbr"),
+                                                   objdtHead,
+                                                   objOracleCon,
+                                                   objOracleCmd,
+                                                   "D")
                 If strRGTableType = "A" Then
                     objlocOLEdbcmd.CommandText = strSQLSub
                     objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
@@ -178,7 +185,7 @@ Public Class MainDebitor
         strSageName = Main.FcReadFromSettings(objdbconn, "Buchh_PKSageName", intAccounting)
         strDebiAccField = Main.FcReadFromSettings(objdbconn, "Buchh_DPKAccount", intAccounting)
 
-        strSQL = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+        strSQL = "SELECT * " + 'strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
                  " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
 
         If strTableName <> "" And strDebFieldName <> "" Then
@@ -598,7 +605,7 @@ Public Class MainDebitor
             'intDebBankLaufNr = DbBhg.GetZahlungsverbLaufnr()
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Debitor - Erstellung")
+            MessageBox.Show(ex.Message, "Debitor - Erstellung " + intDebitorNewNbr.ToString + ", " + strDebName)
 
             Return 1
 
@@ -887,18 +894,22 @@ Public Class MainDebitor
 
     Public Shared Function FcSQLParse(ByVal strSQLToParse As String,
                                       ByVal strRGNbr As String,
-                                      ByVal objdtDebi As DataTable,
+                                      ByVal objdtBookings As DataTable,
                                       ByRef objOracleConn As OracleClient.OracleConnection,
-                                      ByRef objOracleCommand As OracleClient.OracleCommand) As String
+                                      ByRef objOracleCommand As OracleClient.OracleCommand,
+                                      ByVal strDebiCredit As String) As String
 
         'Funktion setzt in eingelesenem SQL wieder Variablen ein
         Dim intPipePositionBegin, intPipePositionEnd As Integer
         Dim strWork, strField As String
-        Dim RowDebi() As DataRow
+        Dim RowBooking() As DataRow
 
-        'Zuerst Datensatz in Debi-Head suchen
-        RowDebi = objdtDebi.Select("strDebRGNbr='" + strRGNbr + "'")
-
+        If strDebiCredit = "D" Then
+            'Zuerst Datensatz in Debi-Head suchen
+            RowBooking = objdtBookings.Select("strDebRGNbr='" + strRGNbr + "'")
+        Else
+            RowBooking = objdtBookings.Select("strKredRGNbr='" + strRGNbr + "'")
+        End If
         '| suchen
         If InStr(strSQLToParse, "|") > 0 Then
             'Vorkommen gefunden
@@ -908,17 +919,23 @@ Public Class MainDebitor
                 strField = Mid(strSQLToParse, intPipePositionBegin + 1, intPipePositionEnd - intPipePositionBegin - 1)
                 Select Case strField
                     Case "rsDebi.Fields(""RGNr"")"
-                        strField = RowDebi(0).Item("strDebRGNbr")
+                        strField = RowBooking(0).Item("strDebRGNbr")
+                    Case "rsKrediTemp.Fields([strKredRGNbr])"
+                        strField = RowBooking(0).Item("strKredRGNbr")
                     Case "rsDebiTemp.Fields([strDebPKBez])"
-                        strField = RowDebi(0).Item("strDebBez")
+                        strField = RowBooking(0).Item("strDebBez")
+                    Case "rsKrediTemp.Fields([strKredPKBez])"
+                        strField = RowBooking(0).Item("strKredBez")
                     Case "rsDebiTemp.Fields([lngDebIdentNbr])"
-                        strField = RowDebi(0).Item("lngDebIdentNbr")
+                        strField = RowBooking(0).Item("lngDebIdentNbr")
+                    Case "rsKrediTemp.Fields([lngKredIdentNbr])"
+                        strField = RowBooking(0).Item("lngKredIdentNbr")
                     Case "rsDebiTemp.Fields([strRGArt])"
-                        strField = RowDebi(0).Item("strRGArt")
+                        strField = RowBooking(0).Item("strRGArt")
                     Case "rsDebiTemp.Fields([strRGName])"
-                        strField = RowDebi(0).Item("strRGName")
+                        strField = RowBooking(0).Item("strRGName")
                     Case "rsDebiTemp.Fields([strDebIdentNbr2])"
-                        strField = RowDebi(0).Item("strDebIdentNbr2")
+                        strField = RowBooking(0).Item("strDebIdentNbr2")
                         'Case "rsDebi.Fields([RGBemerkung])"
                         '    strField = rsDebi.Fields("RGBemerkung")
                         'Case "rsDebi.Fields([JornalNr])"
@@ -930,9 +947,9 @@ Public Class MainDebitor
                         'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
                         '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
                     Case "rsDebiTemp.Fields([strDebText])"
-                        strField = RowDebi(0).Item("strDebText")
+                        strField = RowBooking(0).Item("strDebText")
                     Case "KUNDENZEICHEN"
-                        strField = FcGetKundenzeichen(RowDebi(0).Item("lngDebIdentNbr"), objOracleConn, objOracleCommand)
+                        strField = FcGetKundenzeichen(RowBooking(0).Item("lngDebIdentNbr"), objOracleConn, objOracleCommand)
                     Case Else
                         strField = "unknown field"
                 End Select

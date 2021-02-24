@@ -654,7 +654,7 @@ Friend Class frmImportMain
     Private Sub butImport_Click(sender As Object, e As EventArgs) Handles butImport.Click
 
 
-        Dim intReturnValue As Int16
+        Dim intReturnValue As Int32
         Dim intDebBelegsNummer As Int32
 
         Dim intDebitorNbr As Int32
@@ -733,16 +733,24 @@ Friend Class frmImportMain
                             'Belegsnummer abholen
                             intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
                         Else
-                            'Beleg-Nummerierung abschalten
-                            DbBhg.IncrBelNbr = "N"
-                            intDebBelegsNummer = Main.FcCleanRGNrStrict(row("strOPNr"))
-                            'strExtBelegNbr = row("strOPNr")
+                            If Strings.Len(row("strOPNr")) > 9 Then
+                                'Zahl zu gross
+                                DbBhg.IncrBelNbr = "J"
+                                'Belegsnummer abholen
+                                intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                                strExtBelegNbr = row("strOPNr")
+                            Else
+                                'Beleg-Nummerierung abschalten
+                                DbBhg.IncrBelNbr = "N"
+                                intDebBelegsNummer = Main.FcCleanRGNrStrict(row("strOPNr"))
+                                'strExtBelegNbr = row("strOPNr")
+                            End If
 
                         End If
 
-                        'Variablen zuweisen
-                        'Sachbearbeiter aus Debitor auslesen
-                        strDebiLine = DbBhg.ReadDebitor3(row("lngDebNbr") * -1, "")
+                            'Variablen zuweisen
+                            'Sachbearbeiter aus Debitor auslesen
+                            strDebiLine = DbBhg.ReadDebitor3(row("lngDebNbr") * -1, "")
                         strDebitor = Split(strDebiLine, "{>}")
                         strSachBID = strDebitor(30)
                         'strExtBelegNbr = row("strDebRGNbr")
@@ -820,6 +828,7 @@ Friend Class frmImportMain
                             strBeBuEintrag = ""
 
                             'Status Sub schreiben
+                            Application.DoEvents()
 
                         Next
 
@@ -837,6 +846,14 @@ Friend Class frmImportMain
                         If IIf(IsDBNull(row("strOPNr")), "", row("strOPNr")) <> "" And IIf(IsDBNull(row("lngDebIdentNbr")), 0, row("lngDebIdentNbr")) <> 0 Then
                             'Belegsnummer abholen fall keine Beleg-Nummer angegeben
                             intDebBelegsNummer = FBhg.GetNextBelNbr()
+                            'Prüfen ob wirklich frei
+                            intReturnValue = 10
+                            Do Until intReturnValue = 0
+                                intReturnValue = FBhg.doesBelegExist(intDebBelegsNummer, "NOT_SET", "NOT_SET", "20210101", "20211231")
+                                If intReturnValue <> 0 Then
+                                    intDebBelegsNummer += 1
+                                End If
+                            Loop
                         Else
                             If IIf(IsDBNull(row("strOPNr")), "", row("strOPNr")) <> "" Then
                                 intDebBelegsNummer = Convert.ToInt32(row("strOPNr"))
@@ -883,7 +900,7 @@ Friend Class frmImportMain
                                     dblKursHaben = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg, intHabenKonto)
                                     'strSteuerInfo = Split(FBhg.GetKontoInfo(intSollKonto.ToString), "{>}")
                                     'Debug.Print("Konto-Info Haben: " + strSteuerInfo(26))
-                                    dblHabenBetrag = SubRow("dblNetto")
+                                    dblHabenBetrag = SubRow("dblNetto") * -1
                                     'dblHabenBetrag = dblSollBetrag
                                     strDebiTextHaben = SubRow("strDebSubText")
                                     If SubRow("dblMwSt") > 0 Then
@@ -898,6 +915,7 @@ Friend Class frmImportMain
                                     MsgBox("Nicht definierter Wert Sub-Buchungs-SollHaben: " + SubRow("intSollHaben").ToString)
 
                                 End If
+                                Application.DoEvents()
 
                             Next
 
@@ -913,6 +931,16 @@ Friend Class frmImportMain
                                                    intSollKonto.ToString, strDebiTextSoll, strCurrency, dblKursSoll.ToString, (dblNettoBetrag * dblKursSoll).ToString, strSteuerFeldSoll,
                                                    intHabenKonto.ToString, strDebiTextHaben, strCurrency, dblKursHaben.ToString, (dblNettoBetrag * dblKursHaben).ToString, strSteuerFeldHaben,
                                                    strCurrency, dblKurs.ToString, dblNettoBetrag.ToString, (dblNettoBetrag * dblKurs).ToString, strBeBuEintragSoll, strBeBuEintragHaben, strValutaDatum)
+                            'Initialisieren
+                            dblNettoBetrag = 0
+                            dblSollBetrag = 0
+                            dblHabenBetrag = 0
+                            strBeBuEintrag = ""
+                            strBeBuEintragSoll = ""
+                            strBeBuEintragHaben = ""
+                            strSteuerFeld = ""
+                            strSteuerFeldHaben = ""
+                            strSteuerFeldSoll = ""
 
                         Else
                             MsgBox("Nicht 2 Subbuchungen.")
@@ -927,6 +955,7 @@ Friend Class frmImportMain
                     row("booBooked") = True
                     row("datBooked") = Now()
                     row("lngBelegNr") = intDebBelegsNummer
+                    Application.DoEvents()
 
                     'Status in File RG-Tabelle schreiben
                     intReturnValue = MainDebitor.FcWriteToRGTable(cmbBuha.SelectedValue, row("strDebRGNbr"), row("datBooked"), row("lngBelegNr"), objdbAccessConn, objOracleConn, objdbConn)
@@ -943,7 +972,7 @@ Friend Class frmImportMain
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString)
 
         Finally
             'Neu aufbauen
@@ -1350,11 +1379,13 @@ Friend Class frmImportMain
                             Call KrBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
 
                             'Status Sub schreiben
+                            Application.DoEvents()
 
                         Next
 
 
                         Call KrBhg.WriteBuchung()
+                        Application.DoEvents()
 
                     Else
 
