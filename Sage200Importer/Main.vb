@@ -6,6 +6,7 @@ Imports System.Data.OracleClient
 Imports System.Net
 Imports System.IO
 Imports System.Xml
+Imports Microsoft.VisualBasic
 
 'Imports System.Data.OleDb
 
@@ -920,7 +921,7 @@ ErrorHandler:
                             'dblSubMwSt = Decimal.Round(dblSubMwSt - dblRDiffMwSt, 2, MidpointRounding.AwayFromZero)
                             'dblSubNetto = Decimal.Round(dblSubNetto - dblRDiffNetto, 2, MidpointRounding.AwayFromZero)
                             If Math.Abs(dblRDiffBrutto) > 1 Then
-                                strBitLog += "1"
+                                strBitLog += "3"
                             Else
                                 strBitLog += "0"
                             End If
@@ -1049,7 +1050,15 @@ ErrorHandler:
                 End If
                 'Autokorretkur
                 If Mid(strBitLog, 5, 1) <> "0" Then
-                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "AutoC"
+                    If Mid(strBitLog, 5, 1) = "1" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "AutoC"
+                    ElseIf Mid(strBitLog, 5, 1) = "2" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Round"
+                        'Wieder auf 1 setzen damit Beleg gebucht werden kann
+                        Mid(strBitLog, 5, 1) = "1"
+                    ElseIf Mid(strBitLog, 5, 1) = "3" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Rnd>1"
+                    End If
                 End If
                 'Diff zu Subbuchungen
                 If Mid(strBitLog, 6, 1) <> "0" Then
@@ -1535,15 +1544,16 @@ ErrorHandler:
                     If Val(strSteuer(2)) <> IIf(IsDBNull(subrow("dblMwst")), 0, subrow("dblMwst")) Then
                         'Im Fall von Auto-Korrekt anpassen
                         'Stop
-                        'If booAutoCorrect Then
-                        strStatusText += "MwSt " + subrow("dblMwst").ToString
-                        subrow("dblMwst") = Val(strSteuer(2))
-                        subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
-                        'subrow("dblNetto") = Decimal.Round(subrow("dblBrutto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
-                        strStatusText += " -> " + subrow("dblMwst").ToString + ", "
-                        'Else
-                        'intReturnValue = 1
-                        'End If
+                        If booAutoCorrect Then
+                            strStatusText += "MwSt " + subrow("dblMwst").ToString
+                            subrow("dblMwst") = Val(strSteuer(2))
+                            subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                            'subrow("dblNetto") = Decimal.Round(subrow("dblBrutto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                            strStatusText += " -> " + subrow("dblMwst").ToString + ", "
+                        Else
+                            intReturnValue = 1
+                            strStatusText += " -> " + strSteuer(2).ToString + ", "
+                        End If
                     End If
                 Else
                     subrow("strMwStKey") = "n/a"
@@ -1854,9 +1864,11 @@ ErrorHandler:
                         'Im Fall von Auto-Korrekt anpassen
                         'Stop
                         If booAutoCorrect Then
+                            strStatusText = "MwSt " + subrow("dblMwst").ToString + " -> " + Val(strSteuer(2)).ToString
                             subrow("dblMwst") = Val(strSteuer(2))
                             subrow("dblBrutto") = subrow("dblNetto") + subrow("dblMwSt")
                         Else
+                            strStatusText = "MwSt K " + Val(strSteuer(2)).ToString
                             intReturnValue = 1
                         End If
                     End If
@@ -1991,7 +2003,7 @@ ErrorHandler:
 
 
             'Statustext zusammen setzten
-            strStatusText = ""
+            'strStatusText = ""
             'MwSt
             If Left(strBitLog, 1) <> "0" Then
                 strStatusText += IIf(strStatusText <> "", ", ", "") + "MwSt"
@@ -2028,7 +2040,7 @@ ErrorHandler:
             End If
 
             If Val(strBitLog) = 0 Then
-                strStatusText = "ok"
+                strStatusText += " ok"
             End If
 
             'BitLog und Text schreiben
@@ -2036,6 +2048,8 @@ ErrorHandler:
             subrow("strStatusUBText") = strStatusText
 
             strStatusOverAll = strStatusOverAll Or strBitLog
+            strStatusText = ""
+            Application.DoEvents()
 
         Next
 
@@ -2494,6 +2508,8 @@ ErrorHandler:
         Dim intPayType As Int16
         Dim booCpyKSTToSub As Boolean
         Dim strKredTyp As String
+        Dim strIBANToPass As String
+        Dim lngKrediID As Int32
 
         Try
 
@@ -2503,11 +2519,12 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
 
-                'If row("lngKredID") = "1636788" Then Stop
+                'If row("lngKredID") = "93099" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredBrutto") = Decimal.Round(row("dblKredBrutto"), 2, MidpointRounding.AwayFromZero)
+                lngKrediID = row("lngKredID")
 
                 'Status-String erstellen
                 'Kreditor 01
@@ -2657,7 +2674,11 @@ ErrorHandler:
                                                      IIf(IsDBNull(row("strKredRef")), "", row("strKredRef")),
                                                      IIf(IsDBNull(row("strKrediBank")), "", row("strKrediBank")))
                 row("intPayType") = intPayType
-                strBitLog += Trim(intReturnValue.ToString)
+                If intReturnValue >= 4 Then
+                    strBitLog += Trim(intReturnValue.ToString)
+                Else
+                    strBitLog += "0"
+                End If
 
 
                 'Status-String auswerten
@@ -2673,7 +2694,8 @@ ErrorHandler:
                                                                             strcmbBuha,
                                                                             IIf(IsDBNull(row("intPayType")), 3, row("intPayType")),
                                                                             IIf(IsDBNull(row("strKredRef")), "", row("strKredRef")),
-                                                                            intintBank)
+                                                                            intintBank,
+                                                                            IIf(IsDBNull(row("strKrediBank")), "", row("strKrediBank")))
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
                             row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
@@ -2691,15 +2713,22 @@ ErrorHandler:
                     row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
                     row("lngKredNbr") = intKreditorNew
                     row("intEBank") = 0
-                    intReturnValue = MainKreditor.FcCheckKreditBank(objdbconn,
+                    If row("intPayType") = 9 Then
+                        strIBANToPass = row("strKredRef")
+                    ElseIf row("intPayType") = 10 Then
+                        strIBANToPass = row("strKrediBank")
+                    End If
+                    If row("intPayType") = 9 Or row("intPayType") = 10 Then
+                        intReturnValue = MainKreditor.FcCheckKreditBank(objdbconn,
                                                        objdbconnZHDB02,
                                                        objKrBuha,
                                                        intKreditorNew,
                                                        IIf(IsDBNull(row("intPayType")), 3, row("intPayType")),
-                                                       IIf(IsDBNull(row("strKredRef")), "", row("strKredRef")),
-                                                       IIf(IsDBNull(row("strKredRef")), "", row("strKredRef")),
+                                                       strIBANToPass,
+                                                       IIf(IsDBNull(row("strKrediBank")), "", row("strKrediBank")),
                                                        row("strKredCur"),
                                                        row("intEBank"))
+                    End If
                 End If
                 'Konto
                 If Mid(strBitLog, 2, 1) <> "0" Then
@@ -2823,7 +2852,7 @@ ErrorHandler:
             Next
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Check-Kredit " + intKreditorNew.ToString + " ID " + lngKrediID.ToString)
 
         Finally
             If objOrdbconn.State = ConnectionState.Open Then
@@ -2842,29 +2871,62 @@ ErrorHandler:
                                           ByVal strReferenz As String,
                                           ByVal strKrediBank As String) As Int16
 
-        '0=ok, 1=IBAN Nr. aber nicht IBAN, 3=ESR-Nr aber keine Bank oder ungültige, 4=keine Referenz, 9=Problem
+        '0=ok, 1=IBAN Nr. aber nicht IBAN-Typ, 6=ESR-Nr aber keine Bank oder ungültige, 4=keine Referenz, 5=keine korrekte QR-IBAN 2=QR-ESR, 9=Problem
 
         Try
 
             If Len(strReferenz) > 0 Then
                 'Wurde eine IBAN - Nr. übergeben aber Typ ist nicht IBAN
-                If Len(strReferenz) >= 21 And intPayType <> 9 Then
-                    'Sind die ersten 2 Positionen nicht numerisch?
-                    If Strings.Asc(Left(strReferenz, 1)) < 48 And Strings.Asc(Left(strReferenz, 1)) > 57 Then '1 Zeichen nicht numerisch
-                        If Strings.Asc(Mid(strReferenz, 2, 1)) < 48 And Strings.Asc(Mid(strReferenz, 2, 1)) > 57 Then '2 Zeichen nicht numerisch
+                If Len(strReferenz) >= 21 Then ' And intPayType <> 9 Then
+                    ''Sind die ersten 2 Positionen nicht numerisch?
+                    'If Strings.Asc(Left(strReferenz, 1)) < 48 And Strings.Asc(Left(strReferenz, 1)) > 57 Then '1 Zeichen nicht numerisch
+                    '    If Strings.Asc(Mid(strReferenz, 2, 1)) < 48 And Strings.Asc(Mid(strReferenz, 2, 1)) > 57 Then '2 Zeichen nicht numerisch
+                    '        intPayType = 9
+                    '        Return 1
+                    '    End If
+                    'End If
+                    If Main.FcAreFirst2Chars(strReferenz) = 0 And intPayType <> 9 Then 'Falscher PayType bei IBAN-Nr.
+                        intPayType = 9
+                        Return 1
+                    End If
+                    'QR-ESR?
+                    'Bank - Referenz IBAN?
+                    If Main.FcAreFirst2Chars(strReferenz) = 0 Then 'IBAN - Referenz
+                        If Main.FcAreFirst2Chars(strKrediBank) = 0 Then
                             intPayType = 9
-                            Return 1
+                            Return 0
+                        End If
+                    Else 'QR-ESR ?
+                        If Main.FcAreFirst2Chars(IIf(strKrediBank = "", "00", strKrediBank)) = 0 Then 'IBAN als Bank
+                            'QR-IBAN?
+                            If Mid(strKrediBank, 5, 1) = "3" Then
+                                intPayType = 10
+                                Return 2
+                            Else
+                                'keine QR-IBAN-ESR-Ref
+                                'intPayType = 3
+                                Return 5
+                            End If
+                        Else
+                            If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
+                                'ESR, falsch deklariert
+                                If intPayType <> 3 Then
+                                    intPayType = 3
+                                End If
+                                Return 6
+                            Else
+                                Return 0 'Bank ok
+                            End If
                         End If
                     End If
-                Else
-                    Return 0
                 End If
+                'If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
+                '    Return 3
+                'Else
+                '    Return 0 'Bank ok
+                'End If
 
-                If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
-                    Return 3
-                Else
-                    Return 0 'Bank ok
-                End If
+                'Else
             Else
                 If intPayType = 9 And Len(strReferenz) = 0 Then
                     intPayType = 3 'Nicht IBAN
@@ -2872,6 +2934,32 @@ ErrorHandler:
                 Return 4
             End If
 
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Fc CheckPayType")
+            Return 9
+
+        Finally
+
+        End Try
+
+    End Function
+
+    Public Shared Function FcAreFirst2Chars(ByVal strToCheck As String) As Int16
+
+        '0=Nicht numerisch, 1=numerisch, 9=Problem
+
+        Try
+            'Sind die ersten 2 Positionen nicht numerisch?
+            If Asc(Left(strToCheck, 1)) < 48 Or Asc(Left(strToCheck, 1)) > 57 Then '1 Zeichen nicht numerisch
+                If Asc(Mid(strToCheck, 2, 1)) < 48 Or Asc(Mid(strToCheck, 2, 1)) > 57 Then '2 Zeichen nicht numerisch
+                    Return 0
+                Else
+                    Return 1
+                End If
+            Else
+                Return 1
+            End If
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
@@ -3273,7 +3361,7 @@ ErrorHandler:
             End If
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Fehler auf IBAN-Check " + strIBAN)
             Return 9
 
         Finally

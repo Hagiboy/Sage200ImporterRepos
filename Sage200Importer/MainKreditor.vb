@@ -166,7 +166,8 @@ Public Class MainKreditor
                                                 ByVal strcmbBuha As String,
                                                 ByRef intPayType As Int16,
                                                 ByVal strIBANFromInv As String,
-                                                ByVal intintBank As Int16) As Int16
+                                                ByVal intintBank As Int16,
+                                                ByVal strKrediBank As String) As Int16
 
         'Return: 0=creatable und erstellt, 3=Kreditor konnte nicht erstellt werden, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
 
@@ -288,6 +289,22 @@ Public Class MainKreditor
                     strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
                 End If
 
+                If intPayType = 10 And Len(strKrediBank) >= 21 Then
+                    strIBANNr = strKrediBank
+                    intReturnValue = Main.FcGetIBANDetails(objdbconn,
+                                                      strIBANNr,
+                                                      strBankName,
+                                                      strBankAddress1,
+                                                      strBankAddress2,
+                                                      strBankBIC,
+                                                      strBankCountry,
+                                                      strBankClearing)
+
+                    'Kombinierte PLZ / Ort Feld trennen
+                    strBankPLZ = Left(strBankAddress2, InStr(strBankAddress2, " "))
+                    strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
+                End If
+
                 intCreatable = FcCreateKreditor(objKrBhg,
                                           lngKrediNbr,
                                           IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Firma")), "", objdtKreditor.Rows(0).Item("Rep_Firma")),
@@ -317,31 +334,31 @@ Public Class MainKreditor
                                           intKredZB,
                                           intintBank)
 
-                If intCreatable = 0 Then
-                    'MySQL
-                    'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
-                    '                                     lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
-                    '                                     "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Kreditor " +
-                    '                                     lngKrediNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
-                    ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
-                    'objlocMySQLRGConn.Open()
-                    'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
-                    'objsqlcommandZHDB02.CommandText = strSQL
-                    'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
+                    If intCreatable = 0 Then
+                        'MySQL
+                        'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
+                        '                                     lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
+                        '                                     "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Kreditor " +
+                        '                                     lngKrediNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
+                        ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                        'objlocMySQLRGConn.Open()
+                        'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                        'objsqlcommandZHDB02.CommandText = strSQL
+                        'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
 
 
 
-                    Return 0
+                        Return 0
+                    Else
+                        Return 3
+
+                    End If
                 Else
-                    Return 3
-
-                End If
-            Else
-                Return 4
+                    Return 4
             End If
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Fehler Erstellung Kreditor " + lngKrediNbr.ToString + ", IBAN " + strIBANNr + " Bank " + strKrediBank)
             Return 9
 
         Finally
@@ -465,6 +482,28 @@ Public Class MainKreditor
                                                         "")
                 End If
             End If
+
+            If intPayDefault = 10 Then 'QR - IBAN
+
+                Call objKrBhg.SetZahlungsverbindung("Q",
+                                                    strZVIBAN,
+                                                    strZVBankName,
+                                                    "",
+                                                    "",
+                                                    strZVBankPLZ.ToString,
+                                                    strZVBankOrt,
+                                                    Left(strZVIBAN, 2),
+                                                    strZVClearing,
+                                                    "J",
+                                                    strZVBIC,
+                                                    "",
+                                                    "",
+                                                    "",
+                                                    strZVIBAN,
+                                                    "")
+
+            End If
+
             Call objKrBhg.WriteKreditor3(intintBank.ToString, 0)
 
             Return 0
@@ -751,7 +790,7 @@ Public Class MainKreditor
 
         Try
 
-            If intPayType = 9 Then 'IBAN
+            If intPayType = 9 Or intPayType = 10 Then 'IBAN oder QR-
 
                 Call objKrBhg.ReadZahlungsverb(intKreditor * -1)
 
@@ -789,7 +828,9 @@ Public Class MainKreditor
                         'Kombinierte PLZ / Ort Feld trennen
                         strBankPLZ = Left(strBankAddress2, InStr(strBankAddress2, " "))
                         strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
-                        Call objKrBhg.WriteBank2(intKreditor,
+
+                        If intPayType = 9 Then
+                            Call objKrBhg.WriteBank2(intKreditor,
                                                  strKredCur,
                                                  "B",
                                                  strIBAN,
@@ -806,6 +847,30 @@ Public Class MainKreditor
                                                  "0",
                                                  "",
                                                  strIBAN)
+
+                        Else
+
+                            Stop
+                            Call objKrBhg.WriteBank2(intKreditor,
+                                                     strKredCur,
+                                                     "Q",
+                                                     strIBAN,
+                                                     strBankName,
+                                                     "",
+                                                     "",
+                                                     strBankPLZ,
+                                                     strBankOrt,
+                                                     strBankCountry,
+                                                     strBankClearing,
+                                                     "J",
+                                                     strBankBIC,
+                                                     "",
+                                                     "",
+                                                     "",
+                                                     strIBAN)
+
+
+                        End If
                         Return 0
                     End If
 
@@ -815,7 +880,7 @@ Public Class MainKreditor
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Fehler Check-Kredi-Bank " + intKreditor.ToString + ", " + strIBAN)
             Return 9
 
         End Try

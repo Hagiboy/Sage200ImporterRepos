@@ -748,9 +748,9 @@ Friend Class frmImportMain
 
                         End If
 
-                            'Variablen zuweisen
-                            'Sachbearbeiter aus Debitor auslesen
-                            strDebiLine = DbBhg.ReadDebitor3(row("lngDebNbr") * -1, "")
+                        'Variablen zuweisen
+                        'Sachbearbeiter aus Debitor auslesen
+                        strDebiLine = DbBhg.ReadDebitor3(row("lngDebNbr") * -1, "")
                         strDebitor = Split(strDebiLine, "{>}")
                         strSachBID = strDebitor(30)
                         'strExtBelegNbr = row("strDebRGNbr")
@@ -1165,6 +1165,7 @@ Friend Class frmImportMain
         Dim strVorausZahlung As String = "N"
         Dim strErfassungsArt As String = "K"
         Dim intTeilnehmer As Int32
+        Dim strTeilnehmer As String
         Dim intEigeneBank As Int32
 
         Dim intGegenKonto As Int32
@@ -1263,8 +1264,13 @@ Friend Class frmImportMain
                         'Else
                         'Teilnehmer nur bei ESR setzen
                         If row("intPayType") <> 9 Then 'nicht IBAN
+                            'QR-Referenz
                             strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
-                            intTeilnehmer = CInt(Val(row("strKrediBank")))
+                            If row("intPayType") = 10 Then
+                                strTeilnehmer = row("strKrediBank")
+                            Else
+                                strTeilnehmer = Val(row("strKrediBank"))
+                            End If
                             intBankNbr = 0
                         Else
                             'IBAN
@@ -1335,7 +1341,7 @@ Friend Class frmImportMain
                                                      dblKurs.ToString,
                                                      strCurrency,
                                                      "",
-                                                     intTeilnehmer.ToString,
+                                                     strTeilnehmer,
                                                      intEigeneBank.ToString)
 
                         selKrediSub = objdtKreditorenSub.Select("lngKredID=" + row("lngKredID").ToString)
@@ -1386,6 +1392,11 @@ Friend Class frmImportMain
 
                         Call KrBhg.WriteBuchung()
                         Application.DoEvents()
+                        strBeBuEintrag = ""
+                        strSteuerFeld = ""
+                        dblNettoBetrag = 0
+                        dblMwStBetrag = 0
+                        dblBruttoBetrag = 0
 
                     Else
 
