@@ -701,6 +701,15 @@ Friend Class frmImportMain
         Dim strDebitor() As String
         Dim strDebiLine As String
 
+        'Sammelbeleg
+        Dim intCommonKonto As Int32
+        Dim strDebiCurrency As String
+        Dim strKrediCurrency As String
+        Dim dblBuchBetrag As Double
+        Dim dblBasisBetrag As Double
+        Dim strErfassungsDatum As String
+        Dim strRGNbr As String
+
         Try
 
             'Debitor erstellen, minimal - Angaben
@@ -797,6 +806,7 @@ Friend Class frmImportMain
                                                  intEigeneBank.ToString)
 
                         selDebiSub = objdtDebitorenSub.Select("strRGNr='" + row("strDebRGNbr") + "'")
+                        strRGNbr = row("strDebRGNbr")
 
                         For Each SubRow As DataRow In selDebiSub
 
@@ -873,6 +883,7 @@ Friend Class frmImportMain
                         End If
 
                         selDebiSub = objdtDebitorenSub.Select("strRGNr='" + row("strDebRGNbr") + "'")
+                        strRGNbr = row("strDebRGNbr")
 
                         If selDebiSub.Length = 2 Then
 
@@ -903,8 +914,8 @@ Friend Class frmImportMain
                                     dblHabenBetrag = SubRow("dblNetto") * -1
                                     'dblHabenBetrag = dblSollBetrag
                                     strDebiTextHaben = SubRow("strDebSubText")
-                                    If SubRow("dblMwSt") > 0 Then
-                                        strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto") * dblKursHaben, SubRow("strMwStKey"), SubRow("dblMwSt"))
+                                    If SubRow("dblMwSt") * -1 > 0 Then
+                                        strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto") * dblKursHaben * -1, SubRow("strMwStKey"), SubRow("dblMwSt") * -1)
                                     End If
                                     If SubRow("lngKST") > 0 Then
                                         strBeBuEintragHaben = SubRow("lngKST").ToString + "{<}" + strDebiTextHaben + "{<}" + "CALCULATE" + "{>}"
@@ -927,10 +938,29 @@ Friend Class frmImportMain
                             End If
 
                             'Buchung ausführen
-                            Call FBhg.WriteBuchung(0, intDebBelegsNummer, strBelegDatum,
-                                                   intSollKonto.ToString, strDebiTextSoll, strCurrency, dblKursSoll.ToString, (dblNettoBetrag * dblKursSoll).ToString, strSteuerFeldSoll,
-                                                   intHabenKonto.ToString, strDebiTextHaben, strCurrency, dblKursHaben.ToString, (dblNettoBetrag * dblKursHaben).ToString, strSteuerFeldHaben,
-                                                   strCurrency, dblKurs.ToString, dblNettoBetrag.ToString, (dblNettoBetrag * dblKurs).ToString, strBeBuEintragSoll, strBeBuEintragHaben, strValutaDatum)
+                            Call FBhg.WriteBuchung(0,
+                                                   intDebBelegsNummer,
+                                                   strBelegDatum,
+                                                   intSollKonto.ToString,
+                                                   strDebiTextSoll,
+                                                   strCurrency,
+                                                   dblKursSoll.ToString,
+                                                   (dblNettoBetrag * dblKursSoll).ToString,
+                                                   strSteuerFeldSoll,
+                                                   intHabenKonto.ToString,
+                                                   strDebiTextHaben,
+                                                   strCurrency,
+                                                   dblKursHaben.ToString,
+                                                   (dblNettoBetrag * dblKursHaben).ToString,
+                                                   strSteuerFeldHaben,
+                                                   strCurrency,
+                                                   dblKurs.ToString,
+                                                   dblNettoBetrag.ToString,
+                                                   (dblNettoBetrag * dblKurs).ToString,
+                                                   strBeBuEintragSoll,
+                                                   strBeBuEintragHaben,
+                                                   strValutaDatum)
+
                             'Initialisieren
                             dblNettoBetrag = 0
                             dblSollBetrag = 0
@@ -942,11 +972,142 @@ Friend Class frmImportMain
                             strSteuerFeldHaben = ""
                             strSteuerFeldSoll = ""
 
+
+                            'Vergebene Nummer checken
+                            'intDebBelegsNummer = FBhg.GetBuchLaufnr()
+
                         Else
-                            MsgBox("Nicht 2 Subbuchungen.")
+                            'Sammelbeleg
+                            'MsgBox("Nicht 2 Subbuchungen.")
+                            'Variablen initiieren
+                            strDebiText = row("strDebText")
+                            intCommonKonto = row("lngDebKtoNbr") 'Sammelkonto
+
+                            'Beleg-Kopf
+                            Call FBhg.SetSammelBhgCommonT2(strValutaDatum,
+                                                           intDebBelegsNummer.ToString,
+                                                           intCommonKonto.ToString,
+                                                           strDebiText,
+                                                           strBelegDatum)
+
+                            'Buchungen
+                            For Each SubRow As DataRow In selDebiSub
+
+                                'Common - Konto ausblenden da sonst Doppelbuchung
+                                If SubRow("lngKto") <> intCommonKonto Then
+
+                                    intSollKonto = 0
+                                    strDebiTextSoll = ""
+                                    strDebiCurrency = ""
+                                    dblKursSoll = 0
+                                    dblSollBetrag = 0
+                                    strSteuerFeldSoll = ""
+                                    intHabenKonto = 0
+                                    strDebiTextHaben = ""
+                                    strKrediCurrency = ""
+                                    dblKursHaben = 0
+                                    dblHabenBetrag = 0
+                                    strSteuerFeldHaben = ""
+                                    dblBuchBetrag = 0
+                                    dblBasisBetrag = 0
+                                    strBeBuEintragSoll = ""
+                                    strBeBuEintragHaben = ""
+                                    strErfassungsDatum = Format(Date.Today(), "yyyyMMdd").ToString
+
+                                    If SubRow("intSollHaben") = 0 And SubRow("lngKto") <> intCommonKonto Then 'Soll
+
+                                        intSollKonto = SubRow("lngKto")
+                                        strDebiTextSoll = SubRow("strDebSubText")
+                                        strDebiCurrency = strCurrency
+                                        dblKursSoll = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg, intSollKonto)
+                                        dblSollBetrag = SubRow("dblNetto")
+                                        If SubRow("dblMwSt") > 0 Then
+                                            strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextSoll, SubRow("dblBrutto") * dblKursSoll, SubRow("strMwStKey"), SubRow("dblMwSt"))
+                                        End If
+                                        If SubRow("lngKST") > 0 Then
+                                            strBeBuEintragSoll = SubRow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                                        End If
+
+                                        'Haben Seite Common-Konto
+                                        intHabenKonto = intCommonKonto
+                                        strDebiTextHaben = SubRow("strDebSubText")
+                                        strKrediCurrency = strCurrency
+                                        dblKursHaben = dblKursSoll
+                                        dblHabenBetrag = SubRow("dblNetto")
+                                        'If SubRow("dblMwSt") > 0 Then
+                                        ' strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextSoll, SubRow("dblBrutto") * dblKursSoll, SubRow("strMwStKey"), SubRow("dblMwSt"))
+                                        'End If
+                                        If SubRow("lngKST") > 0 Then
+                                            strBeBuEintragHaben = SubRow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                                        End If
+
+                                        'Betrag
+                                        dblBuchBetrag = SubRow("dblBrutto")
+                                        dblBasisBetrag = SubRow("dblBrutto") 'Bei nicht CHF umrechnen
+
+                                    ElseIf SubRow("intSollHaben") = 1 Then 'Haben
+
+                                        intHabenKonto = SubRow("lngKto")
+                                        strDebiTextHaben = SubRow("strDebSubText")
+                                        strKrediCurrency = strCurrency
+                                        dblKursHaben = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg, intHabenKonto)
+                                        dblHabenBetrag = SubRow("dblNetto") * -1
+                                        If (SubRow("dblMwSt") * -1) > 0 Then
+                                            strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto") * dblKursHaben * -1, SubRow("strMwStKey"), SubRow("dblMwSt") * -1)
+                                        End If
+                                        If SubRow("lngKST") > 0 Then
+                                            strBeBuEintragHaben = SubRow("lngKST").ToString + "{<}" + strDebiTextHaben + "{<}" + "CALCULATE" + "{>}"
+                                        End If
+
+                                        'Soll - Seite Common - Konto 
+                                        intSollKonto = intCommonKonto
+                                        strDebiTextSoll = SubRow("strDebSubText")
+                                        strDebiCurrency = strCurrency
+                                        dblKursSoll = dblKursHaben
+                                        dblSollBetrag = SubRow("dblNetto") * -1
+
+                                        'If SubRow("dblMwSt") * -1 > 0 Then
+                                        ' strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextSoll, SubRow("dblBrutto") * dblKursSoll * -1, SubRow("strMwStKey"), SubRow("dblMwSt") * -1)
+                                        'End If
+                                        If SubRow("lngKST") > 0 Then
+                                            strBeBuEintragSoll = SubRow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                                        End If
+
+                                        dblBuchBetrag = SubRow("dblBrutto") * -1
+                                        dblBasisBetrag = SubRow("dblBrutto") * -1 'Bei nicht CHF umrechnen
+
+                                    End If
+                                    'Buchungsbetrag von Kopfbuchung nehmen
+                                    'dblBuchBetrag = row("dblDebBrutto")
+                                    'dblBasisBetrag = row("dblDebBrutto")
+
+                                    Call FBhg.SetSammelBhgT(intSollKonto.ToString,
+                                                            strDebiTextSoll,
+                                                            strDebiCurrency,
+                                                            dblKursSoll.ToString,
+                                                            dblSollBetrag.ToString,
+                                                            strSteuerFeldSoll,
+                                                            intHabenKonto.ToString,
+                                                            strDebiTextHaben,
+                                                            strKrediCurrency,
+                                                            dblKursHaben.ToString,
+                                                            dblHabenBetrag.ToString,
+                                                            strSteuerFeldHaben,
+                                                            strCurrency,
+                                                            dblKurs.ToString,
+                                                            dblBuchBetrag.ToString,
+                                                            dblBasisBetrag.ToString,
+                                                            strBeBuEintragSoll,
+                                                            strBeBuEintragHaben,
+                                                            strErfassungsDatum)
+                                End If
+
+                            Next
+
+                            'Sammelbeleg schreiben
+                            Call FBhg.WriteSammelBhgT()
+
                         End If
-
-
 
                     End If
 
@@ -972,7 +1133,7 @@ Friend Class frmImportMain
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString)
+            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
 
         Finally
             'Neu aufbauen
@@ -1194,6 +1355,11 @@ Friend Class frmImportMain
         Dim strSteuerInfo() As String
         Dim strDebiLine As String
         Dim strDebitor() As String
+
+        'Sammelbeleg
+        Dim intCommonKonto As Int32
+
+
 
         Try
 
@@ -1458,7 +1624,9 @@ Friend Class frmImportMain
 
                                 Else
 
+                                    'Sammelbeleg
                                     MsgBox("Nicht definierter Wert Sub-Buchungs-SollHaben: " + SubRow("intSollHaben").ToString)
+                                    'strKrediText = IIf(IsDBNull(row("strKredText")), "", row("strKredText"))
 
                                 End If
 

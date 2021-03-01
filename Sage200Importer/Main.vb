@@ -874,15 +874,15 @@ ErrorHandler:
                         dblRDiffBrutto = 0
                         'row("dblDebNetto") = dblSubNetto * -1
                         'row("dblDebMwSt") = dblSubMwSt * -1
-                        If IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) <> dblSubMwSt Then
-                            row("dblDebMwSt") = dblSubMwSt
+                        If IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) <> dblSubMwSt * -1 Then
+                            row("dblDebMwSt") = dblSubMwSt * -1
                         End If
-                        If IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) <> dblSubNetto Then
-                            row("dblDebNetto") = dblSubNetto
+                        If IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) <> dblSubNetto * -1 Then
+                            row("dblDebNetto") = dblSubNetto * -1
                         End If
 
                         'Für evtl. Rundungsdifferenzen einen Datensatz in die Sub-Tabelle hinzufügen
-                        If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) - dblSubBrutto <> 0 Then '0 _
+                        If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) - dblSubBrutto * -1 <> 0 Then '0 _
                             'Or IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) + dblSubMwSt <> 0 _
                             'Or IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) + dblSubNetto <> 0 Then
 
@@ -890,7 +890,7 @@ ErrorHandler:
                             'row("dblDebMwSt") = dblSubMwSt * -1
 
 
-                            dblRDiffBrutto = Decimal.Round(dblSubBrutto - row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
+                            dblRDiffBrutto = Decimal.Round(dblSubBrutto * -1 - row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
                             dblRDiffMwSt = 0 'row("dblDebMwSt") - Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
                             dblRDiffNetto = 0 ' row("dblDebNetto") - Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
 
@@ -938,9 +938,9 @@ ErrorHandler:
 
                 'Diff Kopf - Sub? 06
                 If row("intBuchungsart") = 1 Then 'OP
-                    If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) - dblSubBrutto <> 0 _
-                        Or IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) - dblSubMwSt <> 0 _
-                        Or IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) - dblSubNetto <> 0 Then
+                    If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) + dblSubBrutto <> 0 _
+                        Or IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) + dblSubMwSt <> 0 _
+                        Or IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) + dblSubNetto <> 0 Then
                         strBitLog += "1"
                     Else
                         strBitLog += "0"
@@ -984,11 +984,11 @@ ErrorHandler:
                         row("strDebBez") = "n/a"
                     End If
                 Else
-                    If row("intBuchungsart") = 1 Then
-                        row("strDebBez") = MainDebitor.FcReadDebitorName(objdbBuha, intDebitorNew, row("strDebCur"))
-                    Else
-                        row("strDebBez") = "Nicht relevant"
-                    End If
+                    'If row("intBuchungsart") = 1 Then
+                    row("strDebBez") = MainDebitor.FcReadDebitorName(objdbBuha, intDebitorNew, row("strDebCur"))
+                    'Else
+                    'row("strDebBez") = "Nicht relevant"
+                    'End If
                     row("lngDebNbr") = intDebitorNew
                 End If
 
