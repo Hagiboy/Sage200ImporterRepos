@@ -734,26 +734,45 @@ Friend Class frmImportMain
                         'Verdopplung interne BelegsNummer verhindern
                         DbBhg.CheckDoubleIntBelNbr = "J"
 
-                        If IIf(IsDBNull(row("strOPNr")), "", row("strOPNr")) = "" Then
-                            'strExtBelegNbr = row("strOPNr")
-
+                        If row("dblDebBrutto") < 0 Then
+                            'Gutschrift
                             'Zuerst Beleg-Nummerieungung aktivieren
                             DbBhg.IncrBelNbr = "J"
                             'Belegsnummer abholen
-                            intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                            intDebBelegsNummer = DbBhg.GetNextBelNbr("G")
+                            'Beträge drehen
+                            row("dblDebBrutto") = row("dblDebBrutto") * -1
+                            row("dblDebMwSt") = row("dblDebMwSt") * -1
+                            row("dblDebNetto") = row("dblDebNetto") * -1
+
+                            strBuchType = "G"
+
                         Else
-                            If Strings.Len(row("strOPNr")) > 9 Then
-                                'Zahl zu gross
+
+                            If IIf(IsDBNull(row("strOPNr")), "", row("strOPNr")) = "" Then
+                                'strExtBelegNbr = row("strOPNr")
+
+                                'Zuerst Beleg-Nummerieungung aktivieren
                                 DbBhg.IncrBelNbr = "J"
                                 'Belegsnummer abholen
                                 intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
-                                strExtBelegNbr = row("strOPNr")
                             Else
-                                'Beleg-Nummerierung abschalten
-                                DbBhg.IncrBelNbr = "N"
-                                intDebBelegsNummer = Main.FcCleanRGNrStrict(row("strOPNr"))
-                                'strExtBelegNbr = row("strOPNr")
+                                If Strings.Len(row("strOPNr")) > 9 Then
+                                    'Zahl zu gross
+                                    DbBhg.IncrBelNbr = "J"
+                                    'Belegsnummer abholen
+                                    intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                                    strExtBelegNbr = row("strOPNr")
+                                Else
+                                    'Beleg-Nummerierung abschalten
+                                    DbBhg.IncrBelNbr = "N"
+                                    intDebBelegsNummer = Main.FcCleanRGNrStrict(row("strOPNr"))
+                                    'strExtBelegNbr = row("strOPNr")
+                                End If
+
                             End If
+
+                            strBuchType = "R"
 
                         End If
 
@@ -764,7 +783,6 @@ Friend Class frmImportMain
                         strSachBID = strDebitor(30)
                         'strExtBelegNbr = row("strDebRGNbr")
                         intDebitorNbr = row("lngDebNbr")
-                        strBuchType = "R"
                         strValutaDatum = Format(row("datDebValDatum"), "yyyyMMdd").ToString
                         strBelegDatum = Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         If IsDBNull(row("datDebDue")) Then
@@ -785,25 +803,25 @@ Friend Class frmImportMain
                         intEigeneBank = row("strDebiBank")
 
                         Call DbBhg.SetBelegKopf2(intDebBelegsNummer,
-                                                 strValutaDatum,
-                                                 intDebitorNbr,
-                                                 strBuchType,
-                                                 strBelegDatum,
-                                                 strVerfallDatum,
-                                                 strDebiText,
-                                                 strReferenz,
-                                                 intKondition,
-                                                 strSachBID,
-                                                 strVerkID,
-                                                 strMahnerlaubnis,
-                                                 sngAktuelleMahnstufe,
-                                                 dblBetrag.ToString,
-                                                 dblKurs.ToString,
-                                                 strExtBelegNbr,
-                                                 strSkonto,
-                                                 strCurrency,
-                                                 "",
-                                                 intEigeneBank.ToString)
+                                                     strValutaDatum,
+                                                     intDebitorNbr,
+                                                     strBuchType,
+                                                     strBelegDatum,
+                                                     strVerfallDatum,
+                                                     strDebiText,
+                                                     strReferenz,
+                                                     intKondition,
+                                                     strSachBID,
+                                                     strVerkID,
+                                                     strMahnerlaubnis,
+                                                     sngAktuelleMahnstufe,
+                                                     dblBetrag.ToString,
+                                                     dblKurs.ToString,
+                                                     strExtBelegNbr,
+                                                     strSkonto,
+                                                     strCurrency,
+                                                     "",
+                                                     intEigeneBank.ToString)
 
                         selDebiSub = objdtDebitorenSub.Select("strRGNr='" + row("strDebRGNbr") + "'")
                         strRGNbr = row("strDebRGNbr")
@@ -813,9 +831,9 @@ Friend Class frmImportMain
                             intGegenKonto = SubRow("lngKto")
                             strFibuText = SubRow("strDebSubText")
                             If intGegenKonto <> 6906 Then
-                                dblNettoBetrag = SubRow("dblNetto")
+                                dblNettoBetrag = SubRow("dblNetto") * -1
                             Else 'Rundungsdifferenzen
-                                dblNettoBetrag = SubRow("dblBrutto")
+                                dblNettoBetrag = SubRow("dblBrutto") * -1
                             End If
                             'dblBebuBetrag = 1000.0#
                             If SubRow("lngKST") > 0 Then
@@ -824,7 +842,7 @@ Friend Class frmImportMain
                                 'strBeBuEintrag = "999999" + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"
                             End If
                             If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then 'And SubRow("strMwStKey") <> "25" Then
-                                strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"), SubRow("dblMwSt"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                                strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto") * -1, SubRow("strMwStKey"), SubRow("dblMwSt") * -1)     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
                             Else
                                 strSteuerFeld = "STEUERFREI"
                             End If
@@ -1023,6 +1041,8 @@ Friend Class frmImportMain
                                         dblSollBetrag = SubRow("dblNetto")
                                         If SubRow("dblMwSt") > 0 Then
                                             strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextSoll, SubRow("dblBrutto") * dblKursSoll, SubRow("strMwStKey"), SubRow("dblMwSt"))
+                                        Else
+                                            strSteuerFeldSoll = "STEUERFREI"
                                         End If
                                         If SubRow("lngKST") > 0 Then
                                             strBeBuEintragSoll = SubRow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
@@ -1054,6 +1074,8 @@ Friend Class frmImportMain
                                         dblHabenBetrag = SubRow("dblNetto") * -1
                                         If (SubRow("dblMwSt") * -1) > 0 Then
                                             strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto") * dblKursHaben * -1, SubRow("strMwStKey"), SubRow("dblMwSt") * -1)
+                                        Else
+                                            strSteuerFeldHaben = "STEUERFREI"
                                         End If
                                         If SubRow("lngKST") > 0 Then
                                             strBeBuEintragHaben = SubRow("lngKST").ToString + "{<}" + strDebiTextHaben + "{<}" + "CALCULATE" + "{>}"

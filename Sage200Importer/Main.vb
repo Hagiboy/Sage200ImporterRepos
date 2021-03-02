@@ -99,6 +99,10 @@ Friend NotInheritable Class Main
         strRGBemerkung.DataType = System.Type.[GetType]("System.String")
         strRGBemerkung.MaxLength = 1024
         DT.Columns.Add(strRGBemerkung)
+        Dim strDebReferenz As DataColumn = New DataColumn("strDebReferenz")
+        strDebReferenz.DataType = System.Type.[GetType]("System.String")
+        strDebReferenz.MaxLength = 50
+        DT.Columns.Add(strDebReferenz)
         Dim datDebRGDatum As DataColumn = New DataColumn("datDebRGDatum")
         datDebRGDatum.DataType = System.Type.[GetType]("System.DateTime")
         DT.Columns.Add(datDebRGDatum)
@@ -795,6 +799,8 @@ ErrorHandler:
                 row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblDebMwSt") = Decimal.Round(row("dblDebMwst"), 2, MidpointRounding.AwayFromZero)
                 row("dblDebBrutto") = Decimal.Round(row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
+                'OP - Nummer nicht numerische Zeichen entfernen
+                row("strOPNr") = Main.FcCleanRGNrStrict(row("strOPNr"))
 
                 'Status-String erstellen
                 'Debitor 01
@@ -963,7 +969,12 @@ ErrorHandler:
                 strBitLog += Trim(intReturnValue.ToString)
                 'strBitLog += "0"
                 'Referenz 08
-                intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("strOPNr"), row("intBuchungsart"), strDebiReferenz)
+                If IIf(IsDBNull(row("strDebReferenz")), "", row("strDebReferenz")) = "" Then
+                    intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("strOPNr"), row("intBuchungsart"), strDebiReferenz)
+                Else
+                    strDebiReferenz = row("strDebReferenz")
+                    intReturnValue = 0
+                End If
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Status-String auswerten, vorziehen um neue PK - Nummer auszulesen
@@ -993,7 +1004,7 @@ ErrorHandler:
                 End If
 
                 'OP - Verdopplung 09
-                intReturnValue = FcCheckOPDouble(objdbBuha, IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")), row("strDebRGNbr"))
+                intReturnValue = FcCheckOPDouble(objdbBuha, IIf(IsDBNull(row("strOPNr")), "", row("lngDebNbr")), row("strOPNr"))
                 strBitLog += Trim(intReturnValue.ToString)
                 'Valuta - Datum 10
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")), objdtInfo)
@@ -1542,9 +1553,9 @@ ErrorHandler:
                     'Check ob korrekt berechnet
                     strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
                     If Val(strSteuer(2)) <> IIf(IsDBNull(subrow("dblMwst")), 0, subrow("dblMwst")) Then
-                        'Im Fall von Auto-Korrekt anpassen
+                        'Im Fall von Auto-Korrekt anpassen wenn Toleranz
                         'Stop
-                        If booAutoCorrect Then
+                        If booAutoCorrect And Val(strSteuer(2)) - subrow("dblMwst") <= 0.5 Then
                             strStatusText += "MwSt " + subrow("dblMwst").ToString
                             subrow("dblMwst") = Val(strSteuer(2))
                             subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
@@ -1575,11 +1586,11 @@ ErrorHandler:
                 dblSubBrutto += IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto"))
             Else
                 dblSubNetto -= IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))
-                subrow("dblNetto") = Math.Abs(subrow("dblNetto")) * -1
+                subrow("dblNetto") = subrow("dblNetto") * -1
                 dblSubMwSt -= IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt"))
-                subrow("dblMwSt") = Math.Abs(subrow("dblMwSt")) * -1
+                subrow("dblMwSt") = subrow("dblMwSt") * -1
                 dblSubBrutto -= IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto"))
-                subrow("dblBrutto") = Math.Abs(subrow("dblBrutto")) * -1
+                subrow("dblBrutto") = subrow("dblBrutto") * -1
             End If
 
             'Runden
