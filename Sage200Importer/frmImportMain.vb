@@ -740,6 +740,7 @@ Friend Class frmImportMain
                             DbBhg.IncrBelNbr = "J"
                             'Belegsnummer abholen
                             intDebBelegsNummer = DbBhg.GetNextBelNbr("G")
+                            strExtBelegNbr = row("strOPNr")
                             'Beträge drehen
                             row("dblDebBrutto") = row("dblDebBrutto") * -1
                             row("dblDebMwSt") = row("dblDebMwSt") * -1
@@ -767,7 +768,7 @@ Friend Class frmImportMain
                                     'Beleg-Nummerierung abschalten
                                     DbBhg.IncrBelNbr = "N"
                                     intDebBelegsNummer = Main.FcCleanRGNrStrict(row("strOPNr"))
-                                    'strExtBelegNbr = row("strOPNr")
+                                    strExtBelegNbr = row("strOPNr")
                                 End If
 
                             End If
@@ -790,7 +791,7 @@ Friend Class frmImportMain
                         Else
                             strVerfallDatum = Format(row("datDebDue"), "yyyyMMdd").ToString
                         End If
-                        strReferenz = row("strDebRef")
+                        strReferenz = row("strDebReferenz")
                         strMahnerlaubnis = "" 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         dblBetrag = row("dblDebBrutto")
                         strDebiText = row("strDebText")
@@ -831,18 +832,30 @@ Friend Class frmImportMain
                             intGegenKonto = SubRow("lngKto")
                             strFibuText = SubRow("strDebSubText")
                             If intGegenKonto <> 6906 Then
-                                dblNettoBetrag = SubRow("dblNetto") * -1
+                                If strBuchType = "R" Then
+                                    dblNettoBetrag = SubRow("dblNetto") * -1
+                                Else
+                                    dblNettoBetrag = SubRow("dblNetto")
+                                End If
                             Else 'Rundungsdifferenzen
-                                dblNettoBetrag = SubRow("dblBrutto") * -1
+                                If strBuchType = "R" Then
+                                    dblNettoBetrag = SubRow("dblBrutto") * -1
+                                Else
+                                    dblNettoBetrag = SubRow("dblBrutto")
+                                End If
                             End If
-                            'dblBebuBetrag = 1000.0#
-                            If SubRow("lngKST") > 0 Then
+                                'dblBebuBetrag = 1000.0#
+                                If SubRow("lngKST") > 0 Then
                                 strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
                             Else
                                 'strBeBuEintrag = "999999" + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"
                             End If
                             If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then 'And SubRow("strMwStKey") <> "25" Then
-                                strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto") * -1, SubRow("strMwStKey"), SubRow("dblMwSt") * -1)     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                                If strBuchType = "R" Then
+                                    strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto") * -1, SubRow("strMwStKey"), SubRow("dblMwSt") * -1)     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                                Else
+                                    strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"), SubRow("dblMwSt"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                                End If
                             Else
                                 strSteuerFeld = "STEUERFREI"
                             End If

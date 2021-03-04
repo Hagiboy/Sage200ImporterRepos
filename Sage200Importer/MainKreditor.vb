@@ -115,7 +115,7 @@ Public Class MainKreditor
 
                     If strTableName <> "Tab_Repbetriebe" Then
                         'intPKNewField = objdtKreditor.Rows(0).Item(strKredNewField)
-                        intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtKreditor.Rows(0).Item(strKredNewField)) 'Rep_Nr
+                        intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtKreditor.Rows(0).Item(strKredNewField), "R") 'Rep_Nr
                         If intPKNewField = 0 Then
                             'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
                             intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtKreditor.Rows(0).Item(strKredNewField), intKrediNew)

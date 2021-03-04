@@ -224,16 +224,36 @@ Public Class MainDebitor
             End If
 
             If objdtDebitor.Rows.Count > 0 Then
-                If IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) And strTableName <> "Tab_Repbetriebe" Then 'Es steht nichts im Feld welches auf den Rep_Betrieb verweist oder wenn direkt
-                    intDebiNew = 0
-                    Return 2
-                Else
+                'If IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) And strTableName <> "Tab_Repbetriebe" Then 'Es steht nichts im Feld welches auf den Rep_Betrieb verweist oder wenn direkt
+                ' intDebiNew = 0
+                'Return 2
+                'Else
 
-                    If strTableName <> "Tab_Repbetriebe" Then
-                        'intPKNewField = objdtDebitor.Rows(0).Item(strDebNewField)
-                        intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtDebitor.Rows(0).Item(strDebNewField))
-                        If intPKNewField = 0 Then
-                            'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
+                If strTableName <> "Tab_Repbetriebe" Then
+                    'intPKNewField = objdtDebitor.Rows(0).Item(strDebNewField)
+                    If strTableName = "t_customer" Then
+                        intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02,
+                                                           objsqlcommandZHDB02,
+                                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item("ID")), 0, objdtDebitor.Rows(0).Item("ID")),
+                                                           "P")
+                    Else
+                        intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02,
+                                                           objsqlcommandZHDB02,
+                                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)), 0, objdtDebitor.Rows(0).Item(strDebNewField)),
+                                                           "R")
+                    End If
+
+                    If intPKNewField = 0 Then
+                        'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
+                        If strTableName = "t_customer" Then
+                            intFunctionReturns = Main.FcNextPrivatePKNr(objdbconn, objdtDebitor.Rows(0).Item("ID"), intDebiNew)
+                            If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
+                                intFunctionReturns = Main.FcWriteNewPrivateDebToRepbetrieb(objdbconn, objdtDebitor.Rows(0).Item("ID"), intDebiNew)
+                                If intFunctionReturns = 0 Then 'Schreiben hat geklappt
+                                    Return 1
+                                End If
+                            End If
+                        Else
                             intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtDebitor.Rows(0).Item(strDebNewField), intDebiNew)
                             If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
                                 intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02, objdtDebitor.Rows(0).Item(strDebNewField), intDebiNew)
@@ -241,34 +261,35 @@ Public Class MainDebitor
                                     Return 1
                                 End If
                             End If
-                            'intDebiNew = 0
-                            'Return 3
-                        Else
-                            intDebiNew = intPKNewField
-                            Return 0
                         End If
-                    Else 'Wenn Angaben nicht von anderer Tabelle kommen
-                        'Prüfen ob Repbetrieb schon eine neue Nummer erhalten hat.
-                        If Not IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
-                            intDebiNew = objdtDebitor.Rows(0).Item(strDebNewField)
-                        Else
-                            intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02, lngDebiNbr.ToString, intDebiNew)
-                            If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
-                                intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02, lngDebiNbr, intDebiNew)
-                                If intFunctionReturns = 0 Then 'Schreiben hat geklappt
-                                    Return 1
-                                End If
-                            End If
-                        End If
+                        'intDebiNew = 0
+                        'Return 3
+                    Else
+                        intDebiNew = intPKNewField
                         Return 0
                     End If
+                Else 'Wenn Angaben nicht von anderer Tabelle kommen
+                    'Prüfen ob Repbetrieb schon eine neue Nummer erhalten hat.
+                    If Not IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
+                        intDebiNew = objdtDebitor.Rows(0).Item(strDebNewField)
+                    Else
+                        intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02, lngDebiNbr, intDebiNew)
+                        If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
+                            intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02, lngDebiNbr, intDebiNew)
+                            If intFunctionReturns = 0 Then 'Schreiben hat geklappt
+                                Return 1
+                            End If
+                        End If
+                    End If
+                    Return 0
                 End If
-            Else
-                intDebiNew = 0
-                Return 4
             End If
-
+            'Else
+            'intDebiNew = 0
+            'Return 4
         End If
+
+        'End If
 
         Return intPKNewField
 
@@ -451,7 +472,8 @@ Public Class MainDebitor
                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")), "3200", objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")),
                                           intDebZB,
                                           strSachB,
-                                          intintBank)
+                                          intintBank,
+                                          "")
 
                 If intCreatable = 0 Then
                     'MySQL
@@ -513,7 +535,8 @@ Public Class MainDebitor
                                        ByVal intDebErlKto As Int16,
                                        ByVal intDebZB As Int16,
                                        ByVal strSachB As String,
-                                       ByVal intintBank As Int16) As Int16
+                                       ByVal intintBank As Int16,
+                                       ByVal strFirtName As String) As Int16
 
         Dim strDebCountry As String = strLand
         Dim strDebCurrency As String = strCurrency
@@ -538,7 +561,7 @@ Public Class MainDebitor
 
             Call objDbBhg.SetCommonInfo2(intDebitorNewNbr,
                                          strDebName,
-                                         "",
+                                         strFirtName,
                                          "",
                                          strDebStreet,
                                          "",
@@ -613,7 +636,9 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcCheckDebitor(ByVal lngDebitor As Long, ByVal intBuchungsart As Integer, ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
+    Public Shared Function FcCheckDebitor(ByVal lngDebitor As Long,
+                                          ByVal intBuchungsart As Integer,
+                                          ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
 
         Dim strReturn As String
 
@@ -976,5 +1001,295 @@ Public Class MainDebitor
         Return objdtJournalKZ.Rows(0).Item(0)
 
     End Function
+
+    Public Shared Function FcIsPrivateDebitorCreatable(ByRef objdbconn As MySqlConnection,
+                                             ByRef objdbconnZHDB02 As MySqlConnection,
+                                             ByRef objsqlcommandZHDB02 As MySqlCommand,
+                                             ByVal lngDebiNbr As Long,
+                                             ByRef objDbBhg As SBSXASLib.AXiDbBhg,
+                                             ByVal strcmbBuha As String,
+                                             ByVal intAccounting As Int16) As Int16
+
+        'Return: 0=creatable und erstellt, 3=Sage - Suchtext nicht erfasst, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
+
+        Dim intCreatable As Int16
+        Dim objdtDebitor As New DataTable
+        Dim strLand As String
+        Dim intLangauage As Int32
+        'Dim intPKNewField As Int32
+        Dim strSQL As String
+        Dim intAffected As Int16
+        Dim strIBANNr As String
+        Dim strBankName As String = ""
+        Dim strBankAddress1 As String = ""
+        Dim strBankAddress2 As String = ""
+        Dim strBankPLZ As String = ""
+        Dim strBankOrt As String = ""
+        Dim strBankBIC As String = ""
+        Dim strBankCountry As String = ""
+        Dim strBankClearing As String = ""
+        Dim intReturnValue As Int16
+        Dim intDebZB As Int16
+        Dim objdsDebitor As New DataSet
+        Dim objDADebitor As New MySqlDataAdapter
+        Dim objdtSachB As New DataTable("tbliSachB")
+        Dim strSachB As String
+        Dim intPayType As Int16
+        Dim strCurrency As String
+        Dim intintBank As Int16
+
+        Try
+
+            'Angaben einlesen
+            objdbconnZHDB02.Open()
+            objsqlcommandZHDB02.Connection = objdbconnZHDB02
+            objsqlcommandZHDB02.CommandText = "SELECT Lastname, Firstname, Street, ZipCode, City, DebiKonto, 'Privatperson' AS Gruppe, IF(Country IS NULL, 'CH', country) AS country, Phone, Fax, Email, " +
+                                                "IF(Language IS NULL, 'DE',Language) AS Language, BankName, BankZipCode, BankCountry, IBAN, BankBIC, " +
+                                                "IF(Currency IS NULL, 'CHF', Currency) AS Currency, DebiKonto, '3200' AS ErloesKonto, BankIntern, DebiZKonditionID FROM t_customer WHERE PKNr=" + lngDebiNbr.ToString
+            objdtDebitor.Load(objsqlcommandZHDB02.ExecuteReader)
+
+            'Gefunden?
+            If objdtDebitor.Rows.Count > 0 Then
+                'Debug.Print("Gefunden, kann erstellt werden")
+
+                'Sachbearbeiter suchen
+                'Default setzen
+                objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=2535 AND Buchh_Nr=" + intAccounting.ToString
+                objdtSachB.Load(objsqlcommandZHDB02.ExecuteReader)
+                If objdtSachB.Rows.Count > 0 Then 'Default ist definiert
+                    strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
+                Else
+                    strSachB = ""
+                    MessageBox.Show("Kein Sachbearbeiter - Default gesetzt für Buha " + strcmbBuha, "Debitorenerstellung")
+                End If
+
+                'interne Bank
+                intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
+                                                         intAccounting,
+                                                         objdtDebitor.Rows(0).Item("BankIntern"),
+                                                         intintBank)
+
+
+                'Zahlungsbedingung suchen
+                'objdtKreditor.Clear()
+                'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
+                'objsqlcommandZHDB02.CommandText = "Select Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
+                '                                  "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition On Tab_Repbetriebe.Rep_DebiZKonditionID = t_sage_zahlungskondition.ID " +
+                '                                  "WHERE Tab_Repbetriebe.PKNr=" + lngDebiNbr.ToString
+                'objDADebitor.SelectCommand = objsqlcommandZHDB02
+                'objdsDebitor.EnforceConstraints = False
+                'objDADebitor.Fill(objdsDebitor)
+
+                ''objdsKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
+                ''objdtKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
+                'If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
+                If IIf(IsDBNull(objdtDebitor.Rows(0).Item("DebiZKonditionID")), 0, objdtDebitor.Rows(0).Item("DebiZKonditionID")) <> 0 Then
+                    intDebZB = objdtDebitor.Rows(0).Item("DebiZKonditionID")
+                Else
+                    intDebZB = 1
+                End If
+
+                ''Land von Text auf Auto-Kennzeichen ändern
+                'Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Land")), "Schweiz", objdtDebitor.Rows(0).Item("Rep_Land"))
+                '    Case "Schweiz"
+                strLand = objdtDebitor.Rows(0).Item("country")
+                '    Case "Deutschland"
+                '        strLand = "DE"
+                '    Case "Frankreich"
+                '        strLand = "FR"
+                '    Case "Italien"
+                '        strLand = "IT"
+                '    Case "Österreich"
+                '        strLand = "AT"
+                '    Case Else
+                '        strLand = "CH"
+                'End Select
+
+                'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
+                Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Language")), "DE", objdtDebitor.Rows(0).Item("Language"))
+                    Case "DE", ""
+                        intLangauage = 2055
+                    Case "FR"
+                        intLangauage = 4108
+                    Case "IT"
+                        intLangauage = 2064
+                    Case Else
+                        intLangauage = 2057 'Englisch
+                End Select
+
+                'Variablen zuweisen für die Erstellung des Debitors
+                strIBANNr = IIf(IsDBNull(objdtDebitor.Rows(0).Item("IBAN")), "", objdtDebitor.Rows(0).Item("IBAN"))
+                strBankName = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankName")), "", objdtDebitor.Rows(0).Item("BankName"))
+                strBankAddress1 = ""
+                strBankPLZ = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankZipCode")), "", objdtDebitor.Rows(0).Item("BankZipCode"))
+                strBankOrt = ""
+                strBankAddress2 = strBankPLZ + " " + strBankOrt
+                strBankBIC = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankBIC")), "", objdtDebitor.Rows(0).Item("BankBIC"))
+                strBankClearing = ""
+
+                If Len(strIBANNr) = 21 Then 'IBAN
+                    'If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
+                    intPayType = 9
+                    'End If
+                    intReturnValue = Main.FcGetIBANDetails(objdbconn,
+                                                      strIBANNr,
+                                                      strBankName,
+                                                      strBankAddress1,
+                                                      strBankAddress2,
+                                                      strBankBIC,
+                                                      strBankCountry,
+                                                      strBankClearing)
+
+                    'Kombinierte PLZ / Ort Feld trennen
+                    strBankPLZ = Left(strBankAddress2, InStr(strBankAddress2, " "))
+                    strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
+                End If
+
+                'Currency - Check
+                If objdtDebitor.Rows(0).Item("DebiKonto") = 1105 And lngDebiNbr >= 40000 Then
+                    strCurrency = "EUR"
+                Else
+                    strCurrency = "CHF"
+                End If
+
+                intCreatable = FcCreateDebitor(objDbBhg,
+                                              lngDebiNbr,
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("LastName")), "", objdtDebitor.Rows(0).Item("LastName")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Street")), "", objdtDebitor.Rows(0).Item("Street")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("ZipCode")), "", objdtDebitor.Rows(0).Item("ZipCode")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("City")), "", objdtDebitor.Rows(0).Item("City")),
+                                              objdtDebitor.Rows(0).Item("DebiKonto"),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Gruppe")), "", objdtDebitor.Rows(0).Item("Gruppe")),
+                                              "",
+                                              "",
+                                              strLand,
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Phone")), "", objdtDebitor.Rows(0).Item("Phone")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Fax")), "", objdtDebitor.Rows(0).Item("Fax")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Email")), "", objdtDebitor.Rows(0).Item("Email")),
+                                              intLangauage,
+                                              "",
+                                              0,
+                                              intPayType,
+                                              strBankName,
+                                              strBankPLZ,
+                                              strBankOrt,
+                                              strIBANNr,
+                                              strBankBIC,
+                                              strBankClearing,
+                                              strCurrency,
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("ErloesKonto")), "3200", objdtDebitor.Rows(0).Item("ErloesKonto")),
+                                              intDebZB,
+                                              strSachB,
+                                              intintBank,
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Firstname")), "", objdtDebitor.Rows(0).Item("Firstname")))
+
+                If intCreatable = 0 Then
+                    'MySQL
+                    'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
+                    '                                     intAccounting.ToString + lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
+                    '                                     "'finance@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
+                    '                                     lngDebiNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
+                    '' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                    ''objlocMySQLRGConn.Open()
+                    ''objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                    'objsqlcommandZHDB02.CommandText = strSQL
+                    'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
+
+                    intCreatable = MainDebitor.FcWriteDatetoPrivate(objdbconn,
+                                                             lngDebiNbr,
+                                                             intAccounting,
+                                                             0)
+
+
+                End If
+
+
+                Return 0
+            Else
+                Return 4
+
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Debitor - Erstellbar - Abklärung")
+            Return 9
+
+        Finally
+            objdbconnZHDB02.Close()
+
+        End Try
+
+    End Function
+
+    Public Shared Function FcWriteDatetoPrivate(ByRef objdbcon As MySqlConnection,
+                                                   ByVal intNewPKNr As Int32,
+                                                   ByVal intAccounting As Int16,
+                                                   ByVal intDebitKredit As Int16) As Int16
+
+        '0=ok, 1=PKNr nicht existent, 2=DS konnte nicht erstellt werden, 9=Problem
+
+        Dim objdbCmd As New MySqlCommand
+        Dim intAffected As Int16
+        Dim strSQL As String
+        Dim intRepNr As Int32
+        Dim objdtPrivate As New DataTable
+        Dim strDebiCreatedField As String
+
+        Try
+
+            If intDebitKredit = 0 Then
+                strDebiCreatedField = "DebiCreatedPKOn"
+            Else
+                strDebiCreatedField = "CrediCreatedPKON"
+            End If
+
+            'Zuerst CustomerID suchen
+            If objdbcon.State = ConnectionState.Closed Then
+                objdbcon.Open()
+            End If
+            objdbCmd.Connection = objdbcon
+            objdbCmd.CommandText = "SELECT ID FROM t_customer WHERE PKNr=" + intNewPKNr.ToString
+            objdtPrivate.Load(objdbCmd.ExecuteReader)
+
+            If objdtPrivate.Rows.Count > 0 Then 'Gefunden
+                intRepNr = objdtPrivate.Rows(0).Item("ID")
+                'Nun in t_customer_sagepknrcreation UPDATE probieren
+                strSQL = "UPDATE t_customer_sagepkcreating SET " + strDebiCreatedField + " = CURRENT_DATE WHERE CustomerID=" + intRepNr.ToString + " AND Buchh_Nr=" + intAccounting.ToString
+                objdbCmd.CommandText = strSQL
+                intAffected = objdbCmd.ExecuteNonQuery()
+                If intAffected <> 1 Then
+                    'DS muss angelegt werden
+                    strSQL = "INSERT INTO t_customer_sagepkcreating (CustomerID, Buchh_Nr, " + strDebiCreatedField + ", CreatedBy) VALUES(" + intRepNr.ToString + ", " + intAccounting.ToString + ", CURRENT_DATE, 'Sage 50 Transfer')"
+                    objdbCmd.CommandText = strSQL
+                    intAffected = objdbCmd.ExecuteNonQuery()
+                    If intAffected <> 1 Then
+                        Return 2
+                    Else
+                        Return 0
+                    End If
+                Else
+                    'DS war schon da und konnte geupdated werden
+                    Return 0
+                End If
+
+            Else
+                Return 1
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Fehler Scrheiben t_rep_sagepknrcreation")
+            Return 9
+
+        Finally
+            If objdbcon.State() = ConnectionState.Open Then
+                objdbcon.Close()
+            End If
+            objdtPrivate.Dispose()
+            objdbCmd.Dispose()
+
+        End Try
+
+    End Function
+
 
 End Class

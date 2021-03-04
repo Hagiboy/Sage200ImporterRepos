@@ -783,6 +783,7 @@ ErrorHandler:
         Dim dblRDiffNetto As Double
         Dim dblRDiffMwSt As Double
         Dim dblRDiffBrutto As Double
+        Dim booPKPrivate As Boolean
         'Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
 
         Try
@@ -857,12 +858,12 @@ ErrorHandler:
                 'booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
                 If booAutoCorrect And row("intBuchungsart") = 1 Then
                     'Git es etwas zu korrigieren?
-                    If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) <> dblSubBrutto Or
-                        IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) <> dblSubNetto Or
-                        IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) <> dblSubMwSt Then
-                        row("dblDebBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
-                        row("dblDebNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
-                        row("dblDebMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
+                    If IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) <> dblSubNetto * -1 Or
+                        IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) <> dblSubMwSt * -1 Then
+                        'IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) <> dblSubBrutto * -1 Or
+                        row("dblDebBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero) * -1
+                        row("dblDebNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero) * -1
+                        row("dblDebMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero) * -1
                         ''In Sub korrigieren
                         'selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "' AND intSollHaben=2")
                         'If selsubrow.Length = 1 Then
@@ -888,7 +889,7 @@ ErrorHandler:
                         End If
 
                         'Für evtl. Rundungsdifferenzen einen Datensatz in die Sub-Tabelle hinzufügen
-                        If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) - dblSubBrutto * -1 <> 0 Then '0 _
+                        If IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) + dblSubBrutto <> 0 Then '0 _
                             'Or IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) + dblSubMwSt <> 0 _
                             'Or IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) + dblSubNetto <> 0 Then
 
@@ -896,7 +897,7 @@ ErrorHandler:
                             'row("dblDebMwSt") = dblSubMwSt * -1
 
 
-                            dblRDiffBrutto = Decimal.Round(dblSubBrutto * -1 - row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
+                            dblRDiffBrutto = Decimal.Round(dblSubBrutto + row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
                             dblRDiffMwSt = 0 'row("dblDebMwSt") - Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
                             dblRDiffNetto = 0 ' row("dblDebNetto") - Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
 
@@ -971,6 +972,11 @@ ErrorHandler:
                 'Referenz 08
                 If IIf(IsDBNull(row("strDebReferenz")), "", row("strDebReferenz")) = "" Then
                     intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("strOPNr"), row("intBuchungsart"), strDebiReferenz)
+                    If Len(strDebiReferenz) > 0 Then
+                        row("strDebReferenz") = strDebiReferenz
+                    Else
+                        intReturnValue = 1
+                    End If
                 Else
                     strDebiReferenz = row("strDebReferenz")
                     intReturnValue = 0
@@ -978,11 +984,28 @@ ErrorHandler:
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Status-String auswerten, vorziehen um neue PK - Nummer auszulesen
+                booPKPrivate = IIf(FcReadFromSettings(objdbconn, "Buchh_PKTable", intAccounting) = "t_customer", True, False)
                 'Debitor
                 If Left(strBitLog, 1) <> "0" Then
                     strStatus += "Deb"
                     If Left(strBitLog, 1) <> "2" Then
-                        intReturnValue = MainDebitor.FcIsDebitorCreatable(objdbconn, objdbconnZHDB02, objsqlcommandZHDB02, intDebitorNew, objdbBuha, strcmbBuha, intAccounting)
+                        If booPKPrivate = True Then
+                            intReturnValue = MainDebitor.FcIsPrivateDebitorCreatable(objdbconn,
+                                                                                     objdbconnZHDB02,
+                                                                                     objsqlcommandZHDB02,
+                                                                                     intDebitorNew,
+                                                                                     objdbBuha,
+                                                                                     strcmbBuha,
+                                                                                     intAccounting)
+                        Else
+                            intReturnValue = MainDebitor.FcIsDebitorCreatable(objdbconn,
+                                                                              objdbconnZHDB02,
+                                                                              objsqlcommandZHDB02,
+                                                                              intDebitorNew,
+                                                                              objdbBuha,
+                                                                              strcmbBuha,
+                                                                              intAccounting)
+                        End If
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
                         Else
@@ -1004,7 +1027,7 @@ ErrorHandler:
                 End If
 
                 'OP - Verdopplung 09
-                intReturnValue = FcCheckOPDouble(objdbBuha, IIf(IsDBNull(row("strOPNr")), "", row("lngDebNbr")), row("strOPNr"))
+                intReturnValue = FcCheckOPDouble(objdbBuha, IIf(IsDBNull(row("strOPNr")), "", row("lngDebNbr")), row("strOPNr"), IIf(row("dblDebBrutto") > 0, "R", "G"))
                 strBitLog += Trim(intReturnValue.ToString)
                 'Valuta - Datum 10
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")), objdtInfo)
@@ -1082,8 +1105,8 @@ ErrorHandler:
                 'Referenz
                 If Mid(strBitLog, 8, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Ref"
-                Else
-                    row("strDebRef") = strDebiReferenz
+                    'Else
+                    '    row("strDebRef") = strDebiReferenz
                 End If
                 'OP
                 If Mid(strBitLog, 9, 1) <> "0" Then
@@ -1239,14 +1262,14 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcCheckOPDouble(ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal strDebitor As String, ByVal strOPNr As String) As Int16
+    Public Shared Function FcCheckOPDouble(ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal strDebitor As String, ByVal strOPNr As String, ByVal strType As String) As Int16
 
         'Return 0=ok, 1=Beleg existiert, 9=Problem
 
         Dim intBelegReturn As Int16
 
         Try
-            intBelegReturn = objdbBuha.doesBelegExist(strDebitor, "CHF", strOPNr, "0", "", "")
+            intBelegReturn = objdbBuha.doesBelegExist(strDebitor, "CHF", strOPNr, "NOT_SET", strType, "")
             If intBelegReturn = 0 Then
                 Return 0
             Else
@@ -1371,7 +1394,7 @@ ErrorHandler:
                 Return 1
             ElseIf dblNetto = 0 Then
                 'Return 2
-            ElseIf Decimal.Round(dblBrutto - dblNetto - dblMwSt + dblRDiff, 2, MidpointRounding.AwayFromZero) <> 0 Then 'Math.Round(dblBrutto - dblRDiff - dblMwSt, 2, MidpointRounding.AwayFromZero) <> Math.Round(dblNetto, 2, MidpointRounding.AwayFromZero) Then
+            ElseIf Decimal.Round(dblBrutto - dblNetto - dblMwSt - dblRDiff, 2, MidpointRounding.AwayFromZero) <> 0 Then 'Math.Round(dblBrutto - dblRDiff - dblMwSt, 2, MidpointRounding.AwayFromZero) <> Math.Round(dblNetto, 2, MidpointRounding.AwayFromZero) Then
                 Return 4
             Else
                 Return 0
@@ -2216,7 +2239,10 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcGetPKNewFromRep(ByRef objdbconnZHDB02 As MySqlConnection, ByRef objsqlcommandZHDB02 As MySqlCommand, ByVal intPKRefField As Int32) As Int32
+    Public Shared Function FcGetPKNewFromRep(ByRef objdbconnZHDB02 As MySqlConnection,
+                                             ByRef objsqlcommandZHDB02 As MySqlCommand,
+                                             ByVal intPKRefField As Int32,
+                                             ByVal strMode As String) As Int32
 
         'Aus Tabelle Rep_Betriebe auf ZHDB02 auslesen 
         Dim objdtRepBetrieb As New DataTable
@@ -2225,7 +2251,11 @@ ErrorHandler:
 
             objdbconnZHDB02.Open()
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
-            objsqlcommandZHDB02.CommandText = "SELECT PKNr From tab_repbetriebe WHERE Rep_Nr=" + intPKRefField.ToString
+            If strMode = "P" Then
+                objsqlcommandZHDB02.CommandText = "SELECT PKNr From t_customer WHERE ID=" + intPKRefField.ToString
+            Else
+                objsqlcommandZHDB02.CommandText = "SELECT PKNr From tab_repbetriebe WHERE Rep_Nr=" + intPKRefField.ToString
+            End If
             objdtRepBetrieb.Load(objsqlcommandZHDB02.ExecuteReader)
             If (objdtRepBetrieb.Rows.Count > 0) Then
                 If Not IsDBNull(objdtRepBetrieb.Rows(0).Item("PKNr")) Then
@@ -2593,10 +2623,10 @@ ErrorHandler:
                 'booAutoCorrect = False
                 If booAutoCorrect Then
                     'Git es etwas zu korrigieren?
-                    If IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")) <> dblSubBrutto Or
-                        IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")) <> dblSubNetto Or
+                    If IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")) <> dblSubNetto Or
                         IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")) <> dblSubMwSt Then
-                        row("dblKredBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
+                        'IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")) <> dblSubBrutto Or
+                        'row("dblKredBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
                         row("dblKredNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
                         row("dblKredMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
                         ''In Sub korrigieren
@@ -2657,6 +2687,9 @@ ErrorHandler:
                                                                    strKredTyp)
                 strBitLog += Trim(intReturnValue.ToString)
                 'Valuta - Datum 10
+                If IsDBNull(row("datKredValDatum")) Then
+                    row("datKredValDatum") = row("datKredRGDatum")
+                End If
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), row("datKredRGDatum"), row("datKredValDatum")), objdtInfo)
                 strBitLog += Trim(intReturnValue.ToString)
                 'RG - Datum 11
@@ -3026,7 +3059,7 @@ ErrorHandler:
 
                 For Each rowdebitquery As DataRow In objDTTransitDebits.Rows
 
-                    If Not IsDBNull(rowdebitquery("strCondition")) Then
+                    If IIf(IsDBNull(rowdebitquery("strCondition")), "", rowdebitquery("strCondition")) <> "" Then
                         'Es wurde eine Bedingung definiert
                         booTransitcond = Convert.ToBoolean(tblCompute.Compute("#" + DateTime.Now.ToString("yyyy-MM-dd") + "#" + rowdebitquery("strCondition"), Nothing))
                         'Debug.Print("Result " + "#" + DateTime.Now.ToString("yyyy-MM-dd") + "#" + rowdebitquery("strCondition") + ", " + booTransitcond.ToString)
@@ -3051,6 +3084,7 @@ ErrorHandler:
                             objlocMySQLcmd.Connection = objRGMySQLConn
                             objlocMySQLcmd.CommandText = rowdebitquery("strSQL")
                             intAffected = objlocMySQLcmd.ExecuteNonQuery()
+                            objRGMySQLConn.Close()
                         End If
                     End If
 
@@ -3474,6 +3508,136 @@ ErrorHandler:
         Finally
             If objdbconn.State = ConnectionState.Open Then
                 'objdbconn.Close()
+            End If
+
+        End Try
+
+    End Function
+
+    Public Shared Function FcNextPrivatePKNr(ByRef objdbconnZHDB02 As MySqlConnection, ByVal intPersNr As Int32, ByRef intNewPKNr As Int32) As Int16
+
+        '0=ok, 1=Rep - Nr. existiert nicht, 2=Bereich voll, 3=keine Bereichdefinition 9=Problem
+
+        'PK - Nummer soll der Funktion gegeben werden, Funktion sucht sich dann die PK_Gruppe 
+        'Konzept: Tabelle füllen und dann durchsteppen
+        Dim objsqlcommand As New MySqlCommand
+        Dim objdtPKNr As New DataTable
+        Dim intPKNrGuppenID As Int16
+        Dim intRangeStart, intRangeEnd, i, intRecordCounter As Int32
+        Dim objdsPKNbrs As New DataSet
+        Dim objDAPKNbrs As New MySqlDataAdapter
+        Dim objDAPersons As New MySqlDataAdapter
+        Dim objdsPersons As New DataSet
+
+        Try
+
+            If objdbconnZHDB02.State = ConnectionState.Closed Then
+                objdbconnZHDB02.Open()
+            End If
+            objsqlcommand.Connection = objdbconnZHDB02
+            objsqlcommand.CommandText = "SELECT PKNrGruppeID FROM t_customer WHERE ID=" + intPersNr.ToString
+            objDAPersons.SelectCommand = objsqlcommand
+            objdsPersons.EnforceConstraints = False
+            objDAPersons.Fill(objdsPersons)
+
+            If objdsPersons.Tables(0).Rows.Count > 0 Then 'Person gefunden
+                intPKNrGuppenID = objdsPersons.Tables(0).Rows(0).Item("PKNrGruppeID")
+                'Start und End des Bereichs setzen
+                objdtPKNr.Clear()
+                objsqlcommand.CommandText = "SELECT RangeStart, RangeEnd " +
+                                            "FROM tab_repbetriebe_pknrgruppe " +
+                                            "WHERE ID=" + intPKNrGuppenID.ToString
+                objdtPKNr.Load(objsqlcommand.ExecuteReader)
+                If objdtPKNr.Rows.Count > 0 Then 'Bereichsdefinition gefunden
+                    intRangeStart = objdtPKNr.Rows(0).Item("RangeStart")
+                    intRangeEnd = objdtPKNr.Rows(0).Item("RangeEnd")
+                    'PK - Bereich laden und durchsteppen und Lücke oder nächste PK-Nr suchen
+                    'Muss über Dataset gehen da Datatable ein Fehler bringt
+                    'objdtPKNr.Clear()
+
+                    objsqlcommand.CommandText = "SELECT PKNr " +
+                                                "FROM t_customer " +
+                                                "WHERE PKNr BETWEEN " + intRangeStart.ToString + " AND " + intRangeEnd.ToString + " " +
+                                                "ORDER BY PKNr"
+                    'objdtPKNr.Load(objsqlcommand.ExecuteReader)
+                    objDAPKNbrs.SelectCommand = objsqlcommand
+                    objdsPKNbrs.EnforceConstraints = False
+                    objDAPKNbrs.Fill(objdsPKNbrs)
+
+                    intNewPKNr = 0
+                    i = intRangeStart
+                    If objdsPKNbrs.Tables(0).Rows.Count = 0 Then
+                        intNewPKNr = i
+                    Else
+                        intRecordCounter = 0
+                        Do Until intRecordCounter = objdsPKNbrs.Tables(0).Rows.Count
+                            If Not objdsPKNbrs.Tables(0).Rows(intRecordCounter).Item("PKNr") = i Then
+                                intNewPKNr = i
+                                Return 0
+                            End If
+                            i += 1
+                            intRecordCounter += 1
+                        Loop
+                        If i <= intRangeEnd Then
+                            intNewPKNr = i
+                        End If
+                    End If
+                    If intNewPKNr = 0 Then
+                        Return 2
+                    End If
+                Else
+                    Return 3
+                End If
+            Else
+                Return 1
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 9
+
+        Finally
+            If objdbconnZHDB02.State = ConnectionState.Open Then
+                objdbconnZHDB02.Close()
+            End If
+            objDAPKNbrs.Dispose()
+            objdsPKNbrs.Dispose()
+            objsqlcommand = Nothing
+            objdtPKNr.Dispose()
+
+        End Try
+
+    End Function
+
+    Public Shared Function FcWriteNewPrivateDebToRepbetrieb(ByRef objdbconnZHDB02 As MySqlConnection, ByVal intPersNr As Int32, intNewDebNr As Int32) As Int16
+
+        '0=Update ok, 1=Update hat nicht geklappt, 9=Error
+
+        Dim strSQL As String
+        Dim objmysqlcmd As New MySqlCommand
+        Dim intAffected As Int16
+
+        Try
+
+            strSQL = "UPDATE t_customer SET PKNr=" + intNewDebNr.ToString + " WHERE ID=" + intPersNr.ToString
+            objdbconnZHDB02.Open()
+            objmysqlcmd.Connection = objdbconnZHDB02
+            objmysqlcmd.CommandText = strSQL
+            intAffected = objmysqlcmd.ExecuteNonQuery()
+            If intAffected <> 1 Then
+                Return 1
+            Else
+                Return 0
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 9
+
+        Finally
+            If objdbconnZHDB02.State = ConnectionState.Open Then
+                objdbconnZHDB02.Close()
             End If
 
         End Try
