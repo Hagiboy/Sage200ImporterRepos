@@ -876,7 +876,9 @@ Public Class MainDebitor
             If striBankS50 <> "" Then
                 'Sage 50 - Bank suchen
                 objdbcommand.Connection = objdbconn
-                'objdbconn.Open()
+                If objdbconn.State = ConnectionState.Closed Then
+                    objdbconn.Open()
+                End If
                 objdbcommand.CommandText = "SELECT intSage200 FROM t_sage_tblaccountingbank WHERE strBank='" + striBankS50 + "' AND intAccountingID=" + intAccounting.ToString
                 objdtiBank.Load(objdbcommand.ExecuteReader)
                 'wurde DS gefunden?

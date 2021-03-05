@@ -1704,7 +1704,7 @@ Friend Class frmImportMain
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " bei Buchung-Beleg " + strExtKredBelegsNummer)
 
         Finally
             'Neu aufbauen

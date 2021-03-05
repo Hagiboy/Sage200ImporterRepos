@@ -1027,7 +1027,10 @@ ErrorHandler:
                 End If
 
                 'OP - Verdopplung 09
-                intReturnValue = FcCheckOPDouble(objdbBuha, IIf(IsDBNull(row("strOPNr")), "", row("lngDebNbr")), row("strOPNr"), IIf(row("dblDebBrutto") > 0, "R", "G"))
+                intReturnValue = FcCheckOPDouble(objdbBuha,
+                                                 IIf(IsDBNull(row("strOPNr")), "", row("lngDebNbr")), row("strOPNr"),
+                                                 IIf(row("dblDebBrutto") > 0, "R", "G"),
+                                                 row("strDebCur"))
                 strBitLog += Trim(intReturnValue.ToString)
                 'Valuta - Datum 10
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")), objdtInfo)
@@ -1262,16 +1265,26 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcCheckOPDouble(ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal strDebitor As String, ByVal strOPNr As String, ByVal strType As String) As Int16
+    Public Shared Function FcCheckOPDouble(ByRef objdbBuha As SBSXASLib.AXiDbBhg,
+                                           ByVal strDebitor As String,
+                                           ByVal strOPNr As String,
+                                           ByVal strType As String,
+                                           ByVal strCurrency As String) As Int16
 
         'Return 0=ok, 1=Beleg existiert, 9=Problem
 
         Dim intBelegReturn As Int16
 
         Try
-            intBelegReturn = objdbBuha.doesBelegExist(strDebitor, "CHF", strOPNr, "NOT_SET", strType, "")
+            intBelegReturn = objdbBuha.doesBelegExist(strDebitor, strCurrency, strOPNr, "NOT_SET", strType, "")
             If intBelegReturn = 0 Then
-                Return 0
+                'Zusätzlich extern überprüfen
+                intBelegReturn = objdbBuha.doesBelegExistExtern(strDebitor, strCurrency, strOPNr, strType, "")
+                If intBelegReturn <> 0 Then
+                    Return 1
+                Else
+                    Return 0
+                End If
             Else
                 Return 1
             End If
@@ -2490,7 +2503,7 @@ ErrorHandler:
             If strKursZeile <> "EOF" Then
                 strKursZeileAr = Split(strKursZeile, "{>}")
                 If strKursZeileAr(0) = strCurrency Then
-                    If strKursZeileAr(0) = "EUR" Then Stop
+                    'If strKursZeileAr(0) = "EUR" Then Stop
                     'Prüfen ob Currency Leitwährung auf Konto. Falls ja Return 1
                     If intKonto <> 0 Then
                         strKontoInfo = Split(objFBhg.GetKontoInfo(intKonto.ToString), "{>}")
@@ -3637,7 +3650,7 @@ ErrorHandler:
 
         Finally
             If objdbconnZHDB02.State = ConnectionState.Open Then
-                objdbconnZHDB02.Close()
+                'objdbconnZHDB02.Close()
             End If
 
         End Try
