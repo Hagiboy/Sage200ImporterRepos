@@ -844,8 +844,8 @@ Friend Class frmImportMain
                                     dblNettoBetrag = SubRow("dblBrutto")
                                 End If
                             End If
-                                'dblBebuBetrag = 1000.0#
-                                If SubRow("lngKST") > 0 Then
+                            'dblBebuBetrag = 1000.0#
+                            If SubRow("lngKST") > 0 Then
                                 strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
                             Else
                                 'strBeBuEintrag = "999999" + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"

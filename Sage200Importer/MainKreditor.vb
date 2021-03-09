@@ -964,7 +964,7 @@ Public Class MainKreditor
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Kreditor - Doppelcheck auf Kreditor " + strKreditor + ", OP " + strOPNr)
             Return 9
 
         End Try
