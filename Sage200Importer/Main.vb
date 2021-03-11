@@ -2413,75 +2413,6 @@ ErrorHandler:
     End Function
 
 
-    'Public Shared Function FcSetBuchMode(ByRef objdbBuha As SBSXASLib.AXiDbBhg, ByVal strMode As String) As Int16
-
-    '    objdbBuha.SetBuchMode(strMode)
-
-    '    Return 0
-
-    'End Function
-
-    'Public Shared Function FcSetBelegKopf4(ByRef objdbBuha As SBSXASLib.AXiDbBhg,
-    '                                       ByVal lngBelegNr As Long,
-    '                                       ByVal strValutaDatum As String,
-    '                                       ByVal lngDebitor As Long,
-    '                                       ByVal strBelegTyp As String,
-    '                                       ByVal strBelegDatum As String,
-    '                                       ByVal strVerFallDatum As String,
-    '                                       ByVal strBelegText As String,
-    '                                       ByVal strReferenz As String,
-    '                                       ByVal lngKondition As Long,
-    '                                       ByVal strSachbearbeiter As String,
-    '                                       ByVal strVerkaeufer As String,
-    '                                       ByVal strMahnSperre As String,
-    '                                       ByVal shrMahnstufe As Short,
-    '                                       ByVal strBetraBrutto As String,
-    '                                       ByVal strKurs As String,
-    '                                       ByVal strBelegExt As String,
-    '                                       ByVal strSKonto As String,
-    '                                       ByVal strDebiCur As String,
-    '                                       ByVal strSammelKonto As String,
-    '                                       ByVal strVerzugsZ As String,
-    '                                       ByVal strZusatzText As String,
-    '                                       ByVal strEBankKonto As String,
-    '                                       ByVal strIkoDebitor As String) As Integer
-
-
-    '    'Zuerst prüfen ob Zwingende Werte angegeben worden sind
-
-    '    'Ausführung
-    '    objdbBuha.SetBelegKopf4(lngBelegNr, strValutaDatum, lngDebitor, strBelegTyp, strBelegDatum, strVerFallDatum, strBelegText, strReferenz, lngKondition, strSachbearbeiter, strVerkaeufer, strMahnSperre, shrMahnstufe, strBetraBrutto,
-    '                            strKurs, strBelegExt, strSKonto, strDebiCur, strSammelKonto, strVerzugsZ, strZusatzText, strEBankKonto, strIkoDebitor)
-
-    '    Return 0
-
-    'End Function
-
-    'Public Shared Function FcSetVerteilung(ByRef objdbBuha As SBSXASLib.AXiDbBhg,
-    '                                       ByVal strGegenKonto As String,
-    '                                       ByVal strFibuText As String,
-    '                                       ByVal strNettoBetrag As String,
-    '                                       ByVal strArraySteuer As String,
-    '                                       ByVal strArrayKST As String,
-    '                                       ByVal strArrayKSTE As String) As Integer
-
-    '    'Prüfen ob Daten vollständig
-
-    '    'Ausführung
-    '    objdbBuha.SetVerteilung(strGegenKonto, strFibuText, strNettoBetrag, strArraySteuer, strArrayKST, strArrayKSTE)
-
-    '    Return 0
-
-    'End Function
-
-    'Public Shared Function FcWriteBuchung(ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
-
-    '    'Ausführung
-    '    objdbBuha.WriteBuchung()
-
-    '    Return 0
-
-    'End Function
 
     Public Shared Function FcGetSteuerFeld(ByRef objFBhg As SBSXASLib.AXiFBhg, ByVal lngKto As Long, ByVal strDebiSubText As String, ByVal dblBrutto As Double, ByVal strMwStKey As String, ByVal dblMwSt As Double) As String
 
@@ -2596,7 +2527,7 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
 
-                If row("lngKredID") = "1637207" Then Stop
+                'If row("lngKredID") = "1637207" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -2715,7 +2646,7 @@ ErrorHandler:
                             objdrKrediSub("dblMwStSatz") = 0
                             objdrKrediSub("strMwStKey") = "null"
                             objdrKrediSub("strArtikel") = "Rundungsdifferenz"
-                            objdrKrediSub("strKredSubText") = "Eingefügt"
+                            objdrKrediSub("strKredSubText") = "Rundung"
                             objdrKrediSub("strStatusUBBitLog") = "00000000"
                             If Math.Abs(dblRDiffBrutto) > 1 Then
                                 objdrKrediSub("strStatusUBText") = "Rund > 1"
@@ -2940,6 +2871,8 @@ ErrorHandler:
                         strStatus += "NoR"
                     ElseIf Mid(strBitLog, 14, 1) = "6" Then
                         strStatus += "BRef"
+                    ElseIf Mid(strBitLog, 14, 1) = "7" Then
+                        strStatus += "QIBAN"
                     Else
                         strStatus += Mid(strBitLog, 14, 1)
                     End If
@@ -3017,7 +2950,7 @@ ErrorHandler:
                                           ByVal strReferenz As String,
                                           ByVal strKrediBank As String) As Int16
 
-        '0=ok, 1=IBAN Nr. aber nicht IBAN-Typ, 6=ESR-Nr aber keine Bank oder ungültige, 4=keine Referenz, 5=keine korrekte QR-IBAN 2=QR-ESR, 6=ESR Bank-Referenz nicht korrekt, 9=Problem
+        '0=ok, 1=IBAN Nr. aber nicht IBAN-Typ, 6=ESR-Nr aber keine Bank oder ungültige, 4=keine Referenz, 5=keine korrekte QR-IBAN 2=QR-ESR, 6=ESR Bank-Referenz nicht korrekt, 7=IBAN ist QR-IBAN, 9=Problem
 
         Try
 
@@ -3038,10 +2971,19 @@ ErrorHandler:
                     'QR-ESR?
                     'Bank - Referenz IBAN?
                     If Main.FcAreFirst2Chars(strReferenz) = 0 Then 'IBAN - Referenz
-                        If Main.FcAreFirst2Chars(strKrediBank) = 0 Then
+                        'If Main.FcAreFirst2Chars(strKrediBank) = 0 Then
+                        'intPayType = 9
+                        'Return 0
+                        'Else
+                        'normale IBAN
+                        'Check ob nicht QR-IBAN als Zahl-IBAN erfasst
+                        If Mid(strReferenz, 5, 1) = "3" Then
+                            Return 7
+                        Else
                             intPayType = 9
                             Return 0
                         End If
+                        'End If
                     Else 'QR-ESR ?
                         If Main.FcAreFirst2Chars(IIf(strKrediBank = "", "00", strKrediBank)) = 0 Then 'IBAN als Bank
                             'QR-IBAN?
@@ -3055,31 +2997,31 @@ ErrorHandler:
                             End If
                         Else
                             If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
-                                'ESR, falsch deklariert
-                                If intPayType <> 3 Then
-                                    intPayType = 3
-                                End If
-                                Return 6
-                            Else
-                                'Debug.Print("Checksum " + Strings.Left(strKrediBank, 8) + " " + Strings.Right(strKrediBank, 1) + ", " + Main.FcModulo10(Strings.Left(strKrediBank, 8)).ToString)
-                                If Main.FcModulo10(Strings.Left(strKrediBank, 8)).ToString <> Strings.Right(strKrediBank, 1) Then
+                                    'ESR, falsch deklariert
+                                    If intPayType <> 3 Then
+                                        intPayType = 3
+                                    End If
                                     Return 6
                                 Else
-                                    Return 0 'Bank ok
-                                End If
+                                    'Debug.Print("Checksum " + Strings.Left(strKrediBank, 8) + " " + Strings.Right(strKrediBank, 1) + ", " + Main.FcModulo10(Strings.Left(strKrediBank, 8)).ToString)
+                                    If Main.FcModulo10(Strings.Left(strKrediBank, 8)).ToString <> Strings.Right(strKrediBank, 1) Then
+                                        Return 6
+                                    Else
+                                        Return 0 'Bank ok
+                                    End If
 
+                                End If
                             End If
                         End If
                     End If
-                End If
-                'If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
-                '    Return 3
-                'Else
-                '    Return 0 'Bank ok
-                'End If
+                    'If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
+                    '    Return 3
+                    'Else
+                    '    Return 0 'Bank ok
+                    'End If
 
-                'Else
-            Else
+                    'Else
+                Else
                 If intPayType = 9 And Len(strReferenz) = 0 Then
                     intPayType = 3 'Nicht IBAN
                 End If

@@ -511,9 +511,9 @@ Friend Class frmImportMain
         ''dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
         ''dgvDebitoren.Columns("intBuchungsart").HeaderText = "BA"
         ''dgvDebitoren.Columns("intBuchungsart").Width = 40
-        dgvBookings.Columns("strOPNr").DisplayIndex = 14
-        dgvBookings.Columns("strOPNr").HeaderText = "OP-Nr"
-        dgvBookings.Columns("strOPNr").Width = 100
+        dgvBookings.Columns("strKredRGNbr").DisplayIndex = 14
+        dgvBookings.Columns("strKredRGNbr").HeaderText = "RG-Nr"
+        dgvBookings.Columns("strKredRGNbr").Width = 100
         dgvBookings.Columns("datKredRGDatum").DisplayIndex = 15
         dgvBookings.Columns("datKredRGDatum").HeaderText = "RG Datum"
         dgvBookings.Columns("datKredRGDatum").Width = 70
@@ -639,6 +639,12 @@ Friend Class frmImportMain
         dgvInfo.Columns("strInfoT").Width = 100
         dgvInfo.Columns("strInfoV").HeaderText = "Wert"
         dgvInfo.Columns("strInfoV").Width = 250
+
+        'Version
+        'Debug.Print("1 " + System.Reflection.Assembly.GetExecutingAssembly().GetName.Version.ToString)
+        lblVersion.Text = "V " + System.Reflection.Assembly.GetExecutingAssembly().GetName.Version.ToString
+        'Debug.Print("2 " + My.Application.Info.Version.ToString)
+        'Debug.Print("3 " + Application.ProductVersion.ToString)
 
         'Call InitdgvDebitoren()
 
@@ -1477,6 +1483,7 @@ Friend Class frmImportMain
                             'IBAN
                             strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
                             intBankNbr = IIf(IsDBNull(row("intEBank")), 0, row("intEBank"))
+                            strTeilnehmer = ""
                         End If
                         'End If
                         strMahnerlaubnis = "" 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
@@ -1498,27 +1505,6 @@ Friend Class frmImportMain
                         Else
                             dblKurs = 1.0#
                         End If
-
-                        'Call KrBhg.SetBelegKopf2(intKredBelegsNummer,
-                        '                         strValutaDatum,
-                        '                         intKreditorNbr,
-                        '                         intKredBelegsNummer.ToString,
-                        '                         strBelegDatum,
-                        '                         ,
-                        '                         strKrediText,
-                        '                         0,
-                        '                         "R",
-                        '                         "N",
-                        '                         "N",
-                        '                         1,
-                        '                         ,
-                        '                         ,
-                        '                         strReferenz,
-                        '                         ,
-                        '                         dblBetrag.ToString,
-                        '                         "K",
-                        '                         dblKurs.ToString,
-                        '                         strCurrency)
 
 
                         Call KrBhg.SetBelegKopf2(intKredBelegsNummer,
@@ -1557,15 +1543,38 @@ Friend Class frmImportMain
                             'dblMwStBetrag = SubRow("dblMwSt") * -1
                             'dblBruttoBetrag = SubRow("dblBrutto") * -1
                             'Else
-                            If strBuchType = "R" Then
-                                dblNettoBetrag = SubRow("dblNetto")
-                                dblMwStBetrag = SubRow("dblMwSt")
-                                dblBruttoBetrag = SubRow("dblBrutto")
-                            Else
-                                dblNettoBetrag = SubRow("dblNetto") * -1
-                                dblMwStBetrag = SubRow("dblMwSt") * -1
-                                dblBruttoBetrag = SubRow("dblBrutto") * -1
+                            If intGegenKonto <> 6906 Then
+                                If strBuchType = "R" Then
+                                    dblNettoBetrag = SubRow("dblNetto")
+                                    dblMwStBetrag = SubRow("dblMwSt")
+                                    dblBruttoBetrag = SubRow("dblBrutto")
+                                Else
+                                    dblNettoBetrag = SubRow("dblNetto") * -1
+                                    dblMwStBetrag = SubRow("dblMwSt") * -1
+                                    dblBruttoBetrag = SubRow("dblBrutto") * -1
+                                End If
+                            Else 'Rundungsdifferenzen
+                                If strBuchType = "R" Then
+                                    dblNettoBetrag = SubRow("dblBrutto")
+                                    dblMwStBetrag = SubRow("dblMwSt")
+                                    dblBruttoBetrag = SubRow("dblBrutto")
+                                Else
+                                    dblNettoBetrag = SubRow("dblBrutto") * -1
+                                    dblMwStBetrag = SubRow("dblMwSt") * -1
+                                    dblBruttoBetrag = SubRow("dblBrutto") * -1
+                                End If
+
                             End If
+
+                            'If strBuchType = "R" Then
+                            '    dblNettoBetrag = SubRow("dblNetto")
+                            '    dblMwStBetrag = SubRow("dblMwSt")
+                            '    dblBruttoBetrag = SubRow("dblBrutto")
+                            'Else
+                            '    dblNettoBetrag = SubRow("dblNetto") * -1
+                            '    dblMwStBetrag = SubRow("dblMwSt") * -1
+                            '    dblBruttoBetrag = SubRow("dblBrutto") * -1
+                            'End If
                             'End If
                             'dblBebuBetrag = 1000.0#
                             If SubRow("lngKST") > 0 Then
@@ -1584,6 +1593,9 @@ Friend Class frmImportMain
 
 
                             Call KrBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
+
+                            strSteuerFeld = ""
+                            strBeBuEintrag = ""
 
                             'Status Sub schreiben
                             Application.DoEvents()
