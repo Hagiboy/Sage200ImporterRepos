@@ -715,6 +715,7 @@ Friend Class frmImportMain
         Dim dblBasisBetrag As Double
         Dim strErfassungsDatum As String
         Dim strRGNbr As String
+        Dim booBooingok As Boolean
 
         Try
 
@@ -809,7 +810,9 @@ Friend Class frmImportMain
                         End If
                         intEigeneBank = row("strDebiBank")
 
-                        Call DbBhg.SetBelegKopf2(intDebBelegsNummer,
+                        Try
+                            booBooingok = True
+                            Call DbBhg.SetBelegKopf2(intDebBelegsNummer,
                                                      strValutaDatum,
                                                      intDebitorNbr,
                                                      strBuchType,
@@ -829,6 +832,13 @@ Friend Class frmImportMain
                                                      strCurrency,
                                                      "",
                                                      intEigeneBank.ToString)
+
+                        Catch ex As Exception
+                            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegkopf " + intDebBelegsNummer.ToString + ", RG " + strRGNbr + ", Debitor " + intDebitorNbr.ToString)
+                            booBooingok = False
+
+                        End Try
+
 
                         selDebiSub = objdtDebitorenSub.Select("strRGNr='" + row("strDebRGNbr") + "'")
                         strRGNbr = row("strDebRGNbr")
@@ -869,7 +879,18 @@ Friend Class frmImportMain
                             'Debug.Print("Konto-Info: " + strSteuerInfo(26))
 
 
-                            Call DbBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
+                            Try
+
+                                booBooingok = True
+                                Call DbBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
+
+                            Catch ex As Exception
+                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Verteilung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr + ", Konto " + SubRow("lngKto").ToString)
+                                booBooingok = False
+
+                            End Try
+
+
 
                             strSteuerFeld = ""
                             strBeBuEintrag = ""
@@ -879,8 +900,17 @@ Friend Class frmImportMain
 
                         Next
 
+                        Try
 
-                        Call DbBhg.WriteBuchung()
+                            booBooingok = True
+                            Call DbBhg.WriteBuchung()
+
+                        Catch ex As Exception
+                            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
+                            booBooingok = False
+
+                        End Try
+
 
                     Else
 
@@ -974,8 +1004,11 @@ Friend Class frmImportMain
                                 dblNettoBetrag = dblHabenBetrag
                             End If
 
-                            'Buchung ausführen
-                            Call FBhg.WriteBuchung(0,
+                            Try
+
+                                booBooingok = True
+                                'Buchung ausführen
+                                Call FBhg.WriteBuchung(0,
                                                    intDebBelegsNummer,
                                                    strBelegDatum,
                                                    intSollKonto.ToString,
@@ -997,6 +1030,12 @@ Friend Class frmImportMain
                                                    strBeBuEintragSoll,
                                                    strBeBuEintragHaben,
                                                    strValutaDatum)
+
+                            Catch ex As Exception
+                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
+                                booBooingok = False
+
+                            End Try
 
                             'Initialisieren
                             dblNettoBetrag = 0
@@ -1146,27 +1185,39 @@ Friend Class frmImportMain
                             Next
 
                             'Sammelbeleg schreiben
-                            Call FBhg.WriteSammelBhgT()
+                            Try
+
+                                booBooingok = True
+                                Call FBhg.WriteSammelBhgT()
+
+                            Catch ex As Exception
+                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
+                                booBooingok = False
+
+                            End Try
+
 
                         End If
 
                     End If
 
-                    'Status Head schreiben
-                    row("strDebBookStatus") = row("strDebStatusBitLog")
-                    row("booBooked") = True
-                    row("datBooked") = Now()
-                    row("lngBelegNr") = intDebBelegsNummer
-                    Application.DoEvents()
+                    If booBooingok Then
+                        'Status Head schreiben
+                        row("strDebBookStatus") = row("strDebStatusBitLog")
+                        row("booBooked") = True
+                        row("datBooked") = Now()
+                        row("lngBelegNr") = intDebBelegsNummer
+                        Application.DoEvents()
 
-                    'Status in File RG-Tabelle schreiben
-                    intReturnValue = MainDebitor.FcWriteToRGTable(cmbBuha.SelectedValue, row("strDebRGNbr"), row("datBooked"), row("lngBelegNr"), objdbAccessConn, objOracleConn, objdbConn)
-                    If intReturnValue <> 0 Then
-                        'Throw an exception
+                        'Status in File RG-Tabelle schreiben
+                        intReturnValue = MainDebitor.FcWriteToRGTable(cmbBuha.SelectedValue, row("strDebRGNbr"), row("datBooked"), row("lngBelegNr"), objdbAccessConn, objOracleConn, objdbConn)
+                        If intReturnValue <> 0 Then
+                            'Throw an exception
+                        End If
+
+                        'Evtl. Query nach Buchung ausführen
+                        Call MainDebitor.FcExecuteAfterDebit(cmbBuha.SelectedValue, objdbConn)
                     End If
-
-                    'Evtl. Query nach Buchung ausführen
-                    Call MainDebitor.FcExecuteAfterDebit(cmbBuha.SelectedValue, objdbConn)
 
                 End If
 

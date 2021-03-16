@@ -511,7 +511,7 @@ Public Class MainKreditor
             'intDebBankLaufNr = DbBhg.GetZahlungsverbLaufnr()
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Problem beim Anlegen Kreditor " + intKreditorNewNbr.ToString + ", " + strKredName)
 
             Return 1
 

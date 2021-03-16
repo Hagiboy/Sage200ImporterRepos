@@ -784,6 +784,7 @@ ErrorHandler:
         Dim dblRDiffMwSt As Double
         Dim dblRDiffBrutto As Double
         Dim booPKPrivate As Boolean
+        Dim booCashSollCorrect As Boolean
         'Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
 
         Try
@@ -794,7 +795,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "63108" Then Stop
+                If row("strDebRGNbr") = "64398" Then Stop
 
                 'Runden
                 row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 2, MidpointRounding.AwayFromZero)
@@ -838,6 +839,7 @@ ErrorHandler:
                 'Sub 04
                 booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
                 booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_KSTHeadToSub", intAccounting)))
+                booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_CashSollKontoKorr", intAccounting)))
                 intReturnValue = FcCheckSubBookings(row("strDebRGNbr"),
                                                     objdtDebitSubs,
                                                     intSubNumber,
@@ -850,7 +852,9 @@ ErrorHandler:
                                                     row("intBuchungsart"),
                                                     booAutoCorrect,
                                                     booCpyKSTToSub,
-                                                    row("lngDebiKST"))
+                                                    row("lngDebiKST"),
+                                                    row("lngDebKtoNbr"),
+                                                    booCashSollCorrect)
 
                 strBitLog += Trim(intReturnValue.ToString)
 
@@ -1449,7 +1453,7 @@ ErrorHandler:
             objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
 
             If objlocdtMwSt.Rows.Count = 0 Then
-                MessageBox.Show("MwSt " + strStrCode + " ist nicht definiert für Sage 50 MsSt-Key " + strStrCode + ".")
+                MessageBox.Show("MwSt " + strStrCode + " ist nicht definiert für Sage 50 MsSt-Key " + strStrCode + ".", "MwSt-Key Check S50 " + strStrCode)
                 Return 1
             Else
                 'Wert von Tabelle übergeben
@@ -1514,7 +1518,9 @@ ErrorHandler:
                                               ByVal intBuchungsArt As Int32,
                                               ByVal booAutoCorrect As Boolean,
                                               ByVal booCpyKSTToSub As Boolean,
-                                              ByVal strKST As String) As Int16
+                                              ByVal strKST As String,
+                                              ByRef lngDebKonto As Int32,
+                                              ByVal booCashSollKorrekt As Boolean) As Int16
 
         'Functin Returns 0=ok, 1=Problem sub, 2=OP Diff zu Kopf, 3=OP nicht 0, 9=keine Subs
 
@@ -1535,6 +1541,7 @@ ErrorHandler:
         Dim selsubrow() As DataRow
         Dim strStatusOverAll As String = "0000000"
         Dim strSteuer() As String
+        Dim intSollKonto As Int32 = lngDebKonto
 
         'Summen bilden und Angaben prüfen
         intSubNumber = 0
@@ -1620,8 +1627,11 @@ ErrorHandler:
                 dblSubNetto += IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))
                 dblSubMwSt += IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt"))
                 dblSubBrutto += IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto"))
+                If Strings.Left(subrow("lngKto").ToString, 1) = "1" Then
+                    intSollKonto = subrow("lngKto") 'Für Sollkonto - Korretkur
+                End If
             Else
-                dblSubNetto -= IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))
+                    dblSubNetto -= IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))
                 subrow("dblNetto") = subrow("dblNetto") * -1
                 dblSubMwSt -= IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt"))
                 subrow("dblMwSt") = subrow("dblMwSt") * -1
@@ -1784,6 +1794,11 @@ ErrorHandler:
             strStatusOverAll = strStatusOverAll Or strBitLog
 
         Next
+
+        'Falls Soll-Konto-Korretkur gesetzt hier Konto ändern
+        If booCashSollKorrekt And intBuchungsArt = 4 Then
+            lngDebKonto = intSollKonto
+        End If
 
         'Rückgabe der ganzen Funktion Sub-Prüfung
         If intSubNumber = 0 Then 'keine Subs
@@ -2527,12 +2542,12 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
 
-                'If row("lngKredID") = "1637207" Then Stop
+                'If row("lngKredID") = "94222" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredBrutto") = Decimal.Round(row("dblKredBrutto"), 2, MidpointRounding.AwayFromZero)
-                lngKrediID = row("lngKredID")
+                'lngKrediID = row("lngKredID")
 
                 'Status-String erstellen
                 'Kreditor 01
@@ -2590,29 +2605,33 @@ ErrorHandler:
                 'booAutoCorrect = False
                 If booAutoCorrect Then
                     'Git es etwas zu korrigieren?
-                    If IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")) <> dblSubNetto Or
-                        IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")) <> dblSubMwSt Then
-                        'IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")) <> dblSubBrutto Or
-                        'row("dblKredBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
-                        'Limit korrektur setzen 1 Fr.
-                        If Math.Abs(IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")) - dblSubNetto) > 1 Or
-                           Math.Abs(IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")) - dblSubMwSt) > 1 Then
-                            'Nicht korrigieren
-                            strBitLog += "3"
-                        Else
+                    If IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")) = dblSubBrutto Then
+                        If IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")) <> dblSubNetto Or
+                            IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")) <> dblSubMwSt Then
+                            'IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")) <> dblSubBrutto Or
+                            'row("dblKredBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
+                            'Limit korrektur setzen 1 Fr.
+                            'If Math.Abs(IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")) - dblSubNetto) > 1 Or
+                            '   Math.Abs(IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")) - dblSubMwSt) > 1 Then
+                            '    'Nicht korrigieren
+                            '    strBitLog += "3"
+                            'Else
                             row("dblKredNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
                             row("dblKredMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
                             strBitLog += "1"
+                            'End If
+                            ''In Sub korrigieren
+                            'selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "' AND intSollHaben=2")
+                            'If selsubrow.Length = 1 Then
+                            '    selsubrow(0).Item("dblBrutto") = dblSubBrutto * -1
+                            '    selsubrow(0).Item("dblMwSt") = dblSubMwSt * -1
+                            '    selsubrow(0).Item("dblNetto") = dblSubNetto * -1
+                            'End If
+                        Else
+                            strBitLog += "0"
                         End If
-                        ''In Sub korrigieren
-                        'selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "' AND intSollHaben=2")
-                        'If selsubrow.Length = 1 Then
-                        '    selsubrow(0).Item("dblBrutto") = dblSubBrutto * -1
-                        '    selsubrow(0).Item("dblMwSt") = dblSubMwSt * -1
-                        '    selsubrow(0).Item("dblNetto") = dblSubNetto * -1
-                        'End If
                     Else
-                        strBitLog += "0"
+                        strBitLog += "3"
                     End If
                 Else
                     If row("intBuchungsart") = 1 Then
@@ -2825,6 +2844,9 @@ ErrorHandler:
                 'Autokorretkur
                 If Mid(strBitLog, 5, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "AutoC"
+                    If Mid(strBitLog, 5, 1) = "3" Then
+                        strStatus += " >1"
+                    End If
                 End If
                 'Diff zu Subbuchungen
                 If Mid(strBitLog, 6, 1) <> "0" Then
