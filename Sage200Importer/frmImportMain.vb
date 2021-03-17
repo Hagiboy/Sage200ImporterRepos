@@ -1025,8 +1025,8 @@ Friend Class frmImportMain
                                                    strSteuerFeldHaben,
                                                    strCurrency,
                                                    dblKurs.ToString,
-                                                   dblNettoBetrag.ToString,
                                                    (dblNettoBetrag * dblKurs).ToString,
+                                                   dblNettoBetrag.ToString,
                                                    strBeBuEintragSoll,
                                                    strBeBuEintragHaben,
                                                    strValutaDatum)
@@ -1095,7 +1095,7 @@ Friend Class frmImportMain
                                         intSollKonto = SubRow("lngKto")
                                         strDebiTextSoll = SubRow("strDebSubText")
                                         strDebiCurrency = strCurrency
-                                        dblKursSoll = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg, intSollKonto)
+                                        dblKursSoll = 1 / Main.FcGetKurs(strCurrency, strValutaDatum, FBhg, intSollKonto)
                                         dblSollBetrag = SubRow("dblNetto")
                                         If SubRow("dblMwSt") > 0 Then
                                             strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextSoll, SubRow("dblBrutto") * dblKursSoll, SubRow("strMwStKey"), SubRow("dblMwSt"))
@@ -1128,7 +1128,7 @@ Friend Class frmImportMain
                                         intHabenKonto = SubRow("lngKto")
                                         strDebiTextHaben = SubRow("strDebSubText")
                                         strKrediCurrency = strCurrency
-                                        dblKursHaben = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg, intHabenKonto)
+                                        dblKursHaben = 1 / Main.FcGetKurs(strCurrency, strValutaDatum, FBhg, intHabenKonto)
                                         dblHabenBetrag = SubRow("dblNetto") * -1
                                         If (SubRow("dblMwSt") * -1) > 0 Then
                                             strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto") * dblKursHaben * -1, SubRow("strMwStKey"), SubRow("dblMwSt") * -1)
