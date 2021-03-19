@@ -865,9 +865,14 @@ ErrorHandler:
                     If IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) <> dblSubNetto * -1 Or
                         IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) <> dblSubMwSt * -1 Then
                         'IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) <> dblSubBrutto * -1 Or
-                        row("dblDebBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero) * -1
-                        row("dblDebNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero) * -1
-                        row("dblDebMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero) * -1
+                        If Math.Abs(row("dblDebBrutto") + dblSubBrutto) < 1 Then
+                            row("dblDebBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero) * -1
+                            row("dblDebNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero) * -1
+                            row("dblDebMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero) * -1
+                            strBitLog += "1"
+                        Else
+                            strBitLog += "3"
+                        End If
                         ''In Sub korrigieren
                         'selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "' AND intSollHaben=2")
                         'If selsubrow.Length = 1 Then
@@ -875,7 +880,7 @@ ErrorHandler:
                         '    selsubrow(0).Item("dblMwSt") = dblSubMwSt * -1
                         '    selsubrow(0).Item("dblNetto") = dblSubNetto * -1
                         'End If
-                        strBitLog += "1"
+
                     Else
                         strBitLog += "0"
                     End If
@@ -911,7 +916,7 @@ ErrorHandler:
                             objdrDebiSub("intSollHaben") = 1
                             objdrDebiSub("lngKto") = 6906
                             objdrDebiSub("strKtoBez") = "Rundungsdifferenzen"
-                            objdrDebiSub("lngKST") = 999999
+                            objdrDebiSub("lngKST") = 40
                             objdrDebiSub("strKstBez") = "SystemKST"
                             objdrDebiSub("dblNetto") = dblRDiffNetto
                             objdrDebiSub("dblMwSt") = dblRDiffMwSt
