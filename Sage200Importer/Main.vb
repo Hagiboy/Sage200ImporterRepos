@@ -653,6 +653,9 @@ ErrorHandler:
             intLooper += 1
         Loop
 
+        'Auf letzte gehen
+        cmbPeriods.SelectedIndex = cmbPeriods.Items.Count - 1
+
 
     End Function
 
@@ -795,7 +798,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                If row("strDebRGNbr") = "64398" Then Stop
+                'If row("strDebRGNbr") = "106962" Then Stop
 
                 'Runden
                 row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 2, MidpointRounding.AwayFromZero)
@@ -1048,7 +1051,10 @@ ErrorHandler:
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebRGDatum")), #1789-09-17#, row("datDebRGDatum")), objdtInfo)
                 strBitLog += Trim(intReturnValue.ToString)
                 'Interne Bank 12
-                intReturnValue = MainDebitor.FcCheckDebiIntBank(objdbconn, intAccounting, IIf(IsDBNull(row("strDebiBank")), "", row("strDebiBank")), intiBankSage200)
+                intReturnValue = MainDebitor.FcCheckDebiIntBank(objdbconn,
+                                                                intAccounting,
+                                                                IIf(IsDBNull(row("strDebiBank")), "", row("strDebiBank")),
+                                                                intiBankSage200)
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Status-String auswerten
@@ -1282,7 +1288,7 @@ ErrorHandler:
 
         'Return 0=ok, 1=Beleg existiert, 9=Problem
 
-        Dim intBelegReturn As Int16
+        Dim intBelegReturn As Int32
 
         Try
             intBelegReturn = objdbBuha.doesBelegExist(strDebitor, strCurrency, strOPNr, "NOT_SET", strType, "")
@@ -1595,6 +1601,10 @@ ErrorHandler:
 
             'MwSt prüfen
             If Not IsDBNull(subrow("strMwStKey")) Then
+                If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And subrow("strMwStKey") <> "ohne" Then
+                    'Stop
+                    subrow("strMwStKey") = "ohne"
+                End If
                 intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")), strStrStCodeSage200, subrow("lngKto"))
                 If intReturnValue = 0 Then
                     subrow("strMwStKey") = strStrStCodeSage200
@@ -1610,7 +1620,9 @@ ErrorHandler:
                             'subrow("dblNetto") = Decimal.Round(subrow("dblBrutto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
                             strStatusText += " -> " + subrow("dblMwst").ToString + ", "
                         Else
-                            intReturnValue = 1
+                            If Val(strSteuer(2)) - subrow("dblMwst") > 0.5 Then
+                                intReturnValue = 1
+                            End If
                             strStatusText += " -> " + strSteuer(2).ToString + ", "
                         End If
                     End If
@@ -1624,7 +1636,6 @@ ErrorHandler:
 
             End If
             strBitLog += Trim(intReturnValue.ToString)
-
 
             'If subrow("intSollHaben") <> 2 Then
             intSubNumber += 1
@@ -2752,7 +2763,7 @@ ErrorHandler:
                 'interne Bank
                 intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
                                                          intAccounting,
-                                                         row("strKrediBankInt"),
+                                                         row("strKrediBank"),
                                                          intintBank)
                 row("intintBank") = intintBank
                 strBitLog += Trim(intReturnValue.ToString)
