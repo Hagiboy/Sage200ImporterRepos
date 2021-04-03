@@ -951,7 +951,7 @@ Public Class MainKreditor
 
         'Return 0=ok, 1=Beleg existiert, 9=Problem
 
-        Dim intBelegReturn As Int16
+        Dim intBelegReturn As Int32
 
         Try
             'Bei Kreditoren zählt externe RG-Nummer als Test

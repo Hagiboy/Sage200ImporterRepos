@@ -798,7 +798,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "106962" Then Stop
+                If row("strDebRGNbr") = "559" Then Stop
 
                 'Runden
                 row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 2, MidpointRounding.AwayFromZero)
@@ -1515,7 +1515,6 @@ ErrorHandler:
 
 
     End Function
-
 
     Public Shared Function FcCheckSubBookings(ByVal strDebRgNbr As String,
                                               ByRef objDtDebiSub As DataTable,
@@ -2673,7 +2672,7 @@ ErrorHandler:
                             objdrKrediSub("intSollHaben") = 1
                             objdrKrediSub("lngKto") = 6906
                             objdrKrediSub("strKtoBez") = "Rundungsdifferenzen"
-                            objdrKrediSub("lngKST") = 999999
+                            objdrKrediSub("lngKST") = 40
                             objdrKrediSub("strKstBez") = "SystemKST"
                             objdrKrediSub("dblNetto") = dblRDiffNetto
                             objdrKrediSub("dblMwSt") = dblRDiffMwSt
@@ -2763,7 +2762,7 @@ ErrorHandler:
                 'interne Bank
                 intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
                                                          intAccounting,
-                                                         row("strKrediBank"),
+                                                         row("strKrediBankInt"),
                                                          intintBank)
                 row("intintBank") = intintBank
                 strBitLog += Trim(intReturnValue.ToString)
