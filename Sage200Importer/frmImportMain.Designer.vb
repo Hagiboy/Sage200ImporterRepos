@@ -36,6 +36,7 @@ Partial Class frmImportMain
         Me.butImportK = New System.Windows.Forms.Button()
         Me.cmbPerioden = New System.Windows.Forms.ComboBox()
         Me.lblVersion = New System.Windows.Forms.Label()
+        Me.butMail = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -168,11 +169,21 @@ Partial Class frmImportMain
         Me.lblVersion.Size = New System.Drawing.Size(0, 13)
         Me.lblVersion.TabIndex = 11
         '
+        'butMail
+        '
+        Me.butMail.Location = New System.Drawing.Point(1492, 21)
+        Me.butMail.Name = "butMail"
+        Me.butMail.Size = New System.Drawing.Size(58, 26)
+        Me.butMail.TabIndex = 12
+        Me.butMail.Text = "&Mail"
+        Me.butMail.UseVisualStyleBackColor = True
+        '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1637, 637)
+        Me.Controls.Add(Me.butMail)
         Me.Controls.Add(Me.lblVersion)
         Me.Controls.Add(Me.cmbPerioden)
         Me.Controls.Add(Me.butImportK)
@@ -208,4 +219,5 @@ Partial Class frmImportMain
     Friend WithEvents butImportK As Button
     Friend WithEvents cmbPerioden As ComboBox
     Friend WithEvents lblVersion As Label
+    Friend WithEvents butMail As Button
 End Class

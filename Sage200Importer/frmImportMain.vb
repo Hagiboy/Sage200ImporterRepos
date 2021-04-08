@@ -1738,10 +1738,28 @@ Friend Class frmImportMain
                             End If
 
                             'Buchung ausführen
-                            Call FBhg.WriteBuchung(0, intKredBelegsNummer, strBelegDatum,
-                                                   intSollKonto.ToString, strKrediTextSoll, strCurrency, dblKursSoll.ToString, (dblNettoBetrag * dblKursSoll).ToString, strSteuerFeldSoll,
-                                                   intHabenKonto.ToString, strKrediTextHaben, strCurrency, dblKursHaben.ToString, (dblNettoBetrag * dblKursHaben).ToString, strSteuerFeldHaben,
-                                                   strCurrency, dblKurs.ToString, dblNettoBetrag.ToString, (dblNettoBetrag * dblKurs).ToString, strBeBuEintragSoll, strBeBuEintragHaben, strValutaDatum)
+                            Call FBhg.WriteBuchung(0,
+                                                   intKredBelegsNummer,
+                                                   strBelegDatum,
+                                                   intSollKonto.ToString,
+                                                   strKrediTextSoll,
+                                                   strCurrency,
+                                                   dblKursSoll.ToString,
+                                                   (dblNettoBetrag * dblKursSoll).ToString,
+                                                   strSteuerFeldSoll,
+                                                   intHabenKonto.ToString,
+                                                   strKrediTextHaben,
+                                                   strCurrency,
+                                                   dblKursHaben.ToString,
+                                                   (dblNettoBetrag * dblKursHaben).ToString,
+                                                   strSteuerFeldHaben,
+                                                   strCurrency,
+                                                   dblKurs.ToString,
+                                                   dblNettoBetrag.ToString,
+                                                   (dblNettoBetrag * dblKurs).ToString,
+                                                   strBeBuEintragSoll,
+                                                   strBeBuEintragHaben,
+                                                   strValutaDatum)
 
                         Else
                             MsgBox("Nicht 2 Subbuchungen.")
@@ -1756,7 +1774,13 @@ Friend Class frmImportMain
                     row("lngBelegNr") = intKredBelegsNummer
 
                     'Status in File RG-Tabelle schreiben
-                    intReturnValue = MainKreditor.FcWriteToKrediRGTable(cmbBuha.SelectedValue, row("lngKredID"), row("datBooked"), row("lngBelegNr"), objdbAccessConn, objOracleConn, objdbConn)
+                    intReturnValue = MainKreditor.FcWriteToKrediRGTable(cmbBuha.SelectedValue,
+                                                                        row("lngKredID"),
+                                                                        row("datBooked"),
+                                                                        row("lngBelegNr"),
+                                                                        objdbAccessConn,
+                                                                        objOracleConn,
+                                                                        objdbConn)
                     If intReturnValue <> 0 Then
                         'Throw an exception
                     End If
@@ -1790,5 +1814,52 @@ Friend Class frmImportMain
 
     End Sub
 
+    Private Sub butMail_Click(sender As Object, e As EventArgs) Handles butMail.Click
 
+        Dim strMailText As String
+        Dim intColCounter As Int16
+        Dim intRowCounter As Int32
+
+        'String zusammensetzen für Mailtext
+
+        strMailText = "<table border=""1px solid black"">" + vbCrLf
+        strMailText += "    <thead>" + vbCrLf
+        strMailText += "    <caption>Debitoren</caption>"
+        strMailText += "    <tr>" + vbCrLf
+
+        intColCounter = 0
+
+        'Zuerst Titel zusammen setzen
+        For intColCounter = 0 To dgvBookings.Columns.Count - 1
+            strMailText += "        <th>" + dgvBookings.Columns(intColCounter).HeaderText + "</th>" + vbCrLf
+        Next
+        strMailText += "    </tr>" + vbCrLf
+        strMailText += "    </thead>" + vbCrLf
+
+        'Footer mit Legende
+        strMailText += "    <tfoot>" + vbCrLf
+        strMailText += "    <tr>" + vbCrLf
+        strMailText += "    <td colspan=""6"">ValD = Valuta-Datum nicht möglich</td>"
+        strMailText += "    </tr>" + vbCrLf
+        strMailText += "    <tr>" + vbCrLf
+        strMailText += "    <td colspan=""6"">RgD = Rechnungs-Datum nicht möglich</td>"
+        strMailText += "    </tr>" + vbCrLf
+        strMailText += "    </tfoot>" + vbCrLf
+
+        'Durch die Tabelle steppen
+        strMailText += "    <tbody>" + vbCrLf
+        For intRowCounter = 0 To dgvBookings.Rows.Count - 1
+            strMailText += "    <tr>" + vbCrLf
+            For intColCounter = 0 To dgvBookings.Columns.Count - 1
+                strMailText += "        <td>" + dgvBookings.Rows(intRowCounter).Cells(intColCounter).Value.ToString + "</td>" + vbCrLf
+            Next
+            strMailText += "    </tr>" + vbCrLf
+        Next
+        strMailText += "    </tbody>" + vbCrLf
+
+
+        strMailText += "</table>"
+        Debug.Print(strMailText)
+
+    End Sub
 End Class
