@@ -1293,5 +1293,158 @@ Public Class MainDebitor
 
     End Function
 
+    Public Shared Function FcCheckLinkedRG(ByRef objDbBhg As SBSXASLib.AXiDbBhg,
+                                           ByVal intNewDebiNbr As Int32,
+                                           ByVal strDebiCur As String,
+                                           ByVal intBelegNbr As Int32) As Int16
+
+        'Returns 0=ok, 1=Beleg nicht existent, 9=Problem
+
+        Dim intLaufNbr As Int32
+
+        Try
+
+            intLaufNbr = objDbBhg.doesBelegExist2(intNewDebiNbr.ToString,
+                                                  strDebiCur,
+                                                  intBelegNbr.ToString,
+                                                  "NOT_SET",
+                                                  "R",
+                                                  "NOT_SET",
+                                                  "NOT_SET",
+                                                  "NOT_SET")
+
+            If intLaufNbr > 0 Then
+                Return 0
+            Else
+                Return 1
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Fehler Prüfen Splitt-Bill Bel " + intBelegNbr.ToString)
+            Return 9
+
+        Finally
+
+        End Try
+
+    End Function
+
+    Public Shared Function FcGetDebitorFromLinkedRG(ByRef objdbconn As MySqlConnection,
+                                                    ByRef objdbconnZHDB02 As MySqlConnection,
+                                                    ByRef objsqlcommand As MySqlCommand,
+                                                    ByRef objsqlcommandZHDB02 As MySqlCommand,
+                                                    ByRef objOrdbconn As OracleClient.OracleConnection,
+                                                    ByRef objOrcommand As OracleClient.OracleCommand,
+                                                    ByRef objdbAccessConn As OleDb.OleDbConnection,
+                                                    ByVal lngRGNbr As Int32,
+                                                    ByVal intAccounting As Int32,
+                                                    ByRef intDebiNew As Int32) As Int16
+
+        'Return 0=ok, 1=Neue Debi genereiert und gesetzt, 2=Rep_Ref nicht definiert, 3=Nicht in Tab_Repbetriebe, 4=keine Angaben in Tab_Repbetriebe
+
+        ', , , strDebNewField, strDebNewFieldType, strCompFieldName, strStreetFieldName, strZIPFieldName, strTownFieldName, strSageName, strDebiAccField As String
+        'Dim intCreatable As Int16
+        Dim objdtDebitor As New DataTable
+        Dim intPKNewField As Int32
+        Dim objdbConnDeb As New MySqlConnection
+        Dim objsqlCommDeb As New MySqlCommand
+        Dim strTableName As String
+        Dim strTableType As String
+        Dim strDebFieldName As String
+
+        'Dim objlocOLEdbcmd As New OleDb.OleDbCommand
+        'Dim strMDBName As String = Main.FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting)
+        Dim strSQL As String
+        'Dim intFunctionReturns As Int16
+
+        Try
+
+            strTableName = Main.FcReadFromSettings(objdbconn, "Buchh_TableDeb", intAccounting)
+            strTableType = Main.FcReadFromSettings(objdbconn, "Buchh_RGTableType", intAccounting)
+            strDebFieldName = "RGNr"
+            'strDebNewField = Main.FcReadFromSettings(objdbconn, "Buchh_PKNewField", intAccounting)
+            'strDebNewFieldType = Main.FcReadFromSettings(objdbconn, "Buchh_PKNewFType", intAccounting)
+            'strCompFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKCompany", intAccounting)
+            'strStreetFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKStreet", intAccounting)
+            'strZIPFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKZIP", intAccounting)
+            'strTownFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKTown", intAccounting)
+            'strSageName = Main.FcReadFromSettings(objdbconn, "Buchh_PKSageName", intAccounting)
+            'strDebiAccField = Main.FcReadFromSettings(objdbconn, "Buchh_DPKAccount", intAccounting)
+
+            strSQL = "SELECT PKNr " + 'strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+                     "FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngRGNbr.ToString
+
+            If strTableName <> "" And strDebFieldName <> "" Then
+
+                If strTableType = "O" Then 'Oracle
+                    'objOrdbconn.Open()
+                    'objOrcommand.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+                    '                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
+                    objOrcommand.CommandText = strSQL
+                    objdtDebitor.Load(objOrcommand.ExecuteReader)
+                    'Ist DebiNrNew Linked oder Direkt
+                    'If strDebNewFieldType = "D" Then
+
+                    'objOrdbconn.Close()
+                ElseIf strTableType = "M" Then 'MySQL
+                    intDebiNew = 0
+                    'MySQL - Tabelle einlesen
+                    objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buchh_RGTableMDB", intAccounting))
+                    objdbConnDeb.Open()
+                    'objsqlCommDeb.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+                    '                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
+                    objsqlCommDeb.CommandText = strSQL
+                    objsqlCommDeb.Connection = objdbConnDeb
+                    objdtDebitor.Load(objsqlCommDeb.ExecuteReader)
+                    objdbConnDeb.Close()
+
+                    'ElseIf strTableType = "A" Then 'Access
+                    '    'Access
+                    '    Call Main.FcInitAccessConnecation(objdbAccessConn, strMDBName)
+                    '    objlocOLEdbcmd.CommandText = strSQL
+                    '    objdbAccessConn.Open()
+                    '    objlocOLEdbcmd.Connection = objdbAccessConn
+                    '    objdtDebitor.Load(objlocOLEdbcmd.ExecuteReader)
+                    '    objdbAccessConn.Close()
+
+                End If
+
+                If objdtDebitor.Rows.Count > 0 Then
+                    'If IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) And strTableName <> "Tab_Repbetriebe" Then 'Es steht nichts im Feld welches auf den Rep_Betrieb verweist oder wenn direkt
+                    ' intDebiNew = 0
+                    'Return 2
+                    'Else
+
+
+                    'Prüfen ob Repbetrieb schon eine neue Nummer erhalten hat.
+                    If Not IsDBNull(objdtDebitor.Rows(0).Item("PKNr")) Then
+                        intDebiNew = objdtDebitor.Rows(0).Item("PKNr")
+                        'Else
+                        '    intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02, lngDebiNbr, intDebiNew)
+                        '    If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
+                        '        intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02, lngDebiNbr, intDebiNew)
+                        '        If intFunctionReturns = 0 Then 'Schreiben hat geklappt
+                        '            Return 1
+                        '        End If
+                        '    End If
+                    End If
+                    Return 0
+                End If
+            Else
+                Return 1
+            End If
+
+            'Return intPKNewField
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Fehler Prüfen Splitt-Bill")
+            Return 9
+
+        Finally
+
+        End Try
+
+    End Function
+
 
 End Class

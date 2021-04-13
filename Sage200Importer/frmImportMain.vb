@@ -365,10 +365,10 @@ Friend Class frmImportMain
         dgvBookings.Columns("strDebStatusText").Width = 200
         dgvBookings.Columns("intBuchhaltung").Visible = False
         dgvBookings.Columns("intBuchungsart").Visible = False
-        dgvBookings.Columns("intRGArt").Visible = False
+        'dgvBookings.Columns("intRGArt").Visible = False
         dgvBookings.Columns("strRGArt").Visible = False
         'dgvBookings.Columns("lngLinkedRG").Visible = False
-        dgvBookings.Columns("booLinked").Visible = False
+        'dgvBookings.Columns("booLinked").Visible = False
         dgvBookings.Columns("strRGName").Visible = False
         dgvBookings.Columns("strDebIdentnbr2").Visible = False
         'dgvBookings.Columns("strDebText").Visible = False
@@ -717,6 +717,12 @@ Friend Class frmImportMain
         Dim strRGNbr As String
         Dim booBooingok As Boolean
 
+        Dim intLaufNbr As Int32
+        Dim strBeleg As String
+        Dim strBelegArr() As String
+        Dim dblSplitPayed As Double
+
+
         Try
 
             'Debitor erstellen, minimal - Angaben
@@ -801,7 +807,13 @@ Friend Class frmImportMain
                         strReferenz = row("strDebReferenz")
                         strMahnerlaubnis = "" 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         dblBetrag = row("dblDebBrutto")
-                        strDebiText = row("strDebText")
+                        'Bei SplittBill 2ter Rechnung Text anfügen
+                        If row("booLinked") Then
+                            strDebiText = row("strDebText") + ", Splitt-Bill"
+                        Else
+                            strDebiText = row("strDebText")
+                        End If
+                        'strDebiText = row("strDebText")
                         strCurrency = row("strDebCur")
                         If strCurrency <> "CHF" Then 'Muss ergänzt werden => Was ist Leitwährung auf dem Konto
                             dblKurs = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg)
@@ -845,7 +857,16 @@ Friend Class frmImportMain
 
                         For Each SubRow As DataRow In selDebiSub
 
-                            intGegenKonto = SubRow("lngKto")
+                            'Bei zweiter Splitt-Bill 2ter Rechung hier eingreifen
+                            'Gegenkonto auf 1092, MwStKey auf 'null' setzen, KST = 0
+                            If row("booLinked") Then
+                                intGegenKonto = 1092
+                                SubRow("dblNetto") = SubRow("dblBrutto")
+                                SubRow("strMwStKey") = "null"
+                                SubRow("lngKST") = 0
+                            Else
+                                intGegenKonto = SubRow("lngKto")
+                            End If
                             strFibuText = SubRow("strDebSubText")
                             If intGegenKonto <> 6906 Then
                                 If strBuchType = "R" Then
@@ -878,7 +899,6 @@ Friend Class frmImportMain
                             'strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
                             'Debug.Print("Konto-Info: " + strSteuerInfo(26))
 
-
                             Try
 
                                 booBooingok = True
@@ -889,8 +909,6 @@ Friend Class frmImportMain
                                 booBooingok = False
 
                             End Try
-
-
 
                             strSteuerFeld = ""
                             strBeBuEintrag = ""
@@ -904,6 +922,56 @@ Friend Class frmImportMain
 
                             booBooingok = True
                             Call DbBhg.WriteBuchung()
+
+                            'Bei SplittBill 2ter Rechnung TZahlung auf LinkedRG machen
+                            'Prinzip: Beleg einlesen anhand und Betrag ausrechnen => Summe Beleg - diesen Beleg
+                            If row("booLinked") Then
+                                'Betrag von Beleg 1 holen
+                                intLaufNbr = DbBhg.doesBelegExist2(row("lngLinkedDeb").ToString,
+                                                                   row("strDebCur"),
+                                                                   row("lngLinkedRG").ToString,
+                                                                   "NOT_SET",
+                                                                   "R",
+                                                                   "NOT_SET",
+                                                                   "NOT_SET",
+                                                                   "NOT_SET")
+
+                                If intLaufNbr > 0 Then
+                                    strBeleg = DbBhg.GetBeleg(row("lngLinkedDeb").ToString,
+                                                              intLaufNbr.ToString)
+
+                                    strBelegArr = Split(strBeleg, "{>}")
+
+                                    'Welcher Betrag wurde schon bezahlt?
+                                    dblSplitPayed = dblBetrag
+
+                                    'Teilzahlung buchen
+                                    Call DbBhg.SetZahlung(344,
+                                                          strBelegDatum,
+                                                          strValutaDatum,
+                                                          row("strDebCur"),
+                                                          dblKurs,
+                                                          dblSplitPayed.ToString,
+                                                          dblSplitPayed.ToString,
+                                                          row("lngLinkedDeb"),
+                                                          dblSplitPayed.ToString,
+                                                          row("strDebCur"),
+                                                          ,
+                                                          strDebiText + ", TZ auf RG1")
+
+                                    Call DbBhg.WriteTeilzahlung3(intLaufNbr.ToString,
+                                                                 strDebiText + ", TZ auf RG1",
+                                                                 "NOT_SET",
+                                                                 ,
+                                                                 "NOT_SET",
+                                                                 "NOT_SET",
+                                                                 "DEFAULT",
+                                                                 "DEFAULT")
+
+
+                                End If
+
+                            End If
 
                         Catch ex As Exception
                             MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)

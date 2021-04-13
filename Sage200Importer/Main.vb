@@ -40,6 +40,9 @@ Friend NotInheritable Class Main
         Dim lngLinkedRG As DataColumn = New DataColumn("lngLinkedRG")
         lngLinkedRG.DataType = System.Type.[GetType]("System.Int32")
         DT.Columns.Add(lngLinkedRG)
+        Dim lngLinkedDeb As DataColumn = New DataColumn("lngLinkedDeb")
+        lngLinkedDeb.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(lngLinkedDeb)
         Dim booLinked As DataColumn = New DataColumn("booLinked")
         booLinked.DataType = System.Type.[GetType]("System.Boolean")
         DT.Columns.Add(booLinked)
@@ -774,6 +777,7 @@ ErrorHandler:
         Dim dblSubMwSt As Double
         Dim dblSubBrutto As Double
         Dim booAutoCorrect As Boolean
+        Dim booSplittBill As Boolean
         Dim booCpyKSTToSub As Boolean
         Dim selsubrow() As DataRow
         Dim strDebiReferenz As String = ""
@@ -788,6 +792,8 @@ ErrorHandler:
         Dim dblRDiffBrutto As Double
         Dim booPKPrivate As Boolean
         Dim booCashSollCorrect As Boolean
+        Dim strRGNbr As String
+        Dim intLinkedDebitor As Int32
         'Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
 
         Try
@@ -798,7 +804,8 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                If row("strDebRGNbr") = "559" Then Stop
+                If row("strDebRGNbr") = "1106179" Then Stop
+                strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
                 row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 2, MidpointRounding.AwayFromZero)
@@ -842,6 +849,12 @@ ErrorHandler:
                 'Sub 04
                 booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
                 booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_KSTHeadToSub", intAccounting)))
+                booSplittBill = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_LinkedBookings", intAccounting)))
+                If booSplittBill And row("intRGArt") = 10 Then
+                    row("booLinked") = True
+                Else
+                    row("booLinked") = False
+                End If
                 booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_CashSollKontoKorr", intAccounting)))
                 intReturnValue = FcCheckSubBookings(row("strDebRGNbr"),
                                                     objdtDebitSubs,
@@ -857,11 +870,18 @@ ErrorHandler:
                                                     booCpyKSTToSub,
                                                     row("lngDebiKST"),
                                                     row("lngDebKtoNbr"),
-                                                    booCashSollCorrect)
+                                                    booCashSollCorrect,
+                                                    booSplittBill)
 
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Autokorrektur 05
+                'Bei SplitBill - erste Rechnung evtl. Rückzahlung im Total nicht beachten
+                If booSplittBill And row("intRGArt") = 1 And row("lngLinkedRG") > 0 Then
+                    row("dblDebBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero) * -1
+                    row("dblDebNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero) * -1
+                    row("dblDebMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero) * -1
+                End If
                 'booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
                 If booAutoCorrect And row("intBuchungsart") = 1 Then
                     'Git es etwas zu korrigieren?
@@ -1056,6 +1076,29 @@ ErrorHandler:
                                                                 IIf(IsDBNull(row("strDebiBank")), "", row("strDebiBank")),
                                                                 intiBankSage200)
                 strBitLog += Trim(intReturnValue.ToString)
+                'Bei SplittBill: Existiert verlinkter Beleg?
+                If row("booLinked") Then
+                    'Zuerst Debitor von erstem Beleg suchen
+                    intDebitorNew = MainDebitor.FcGetDebitorFromLinkedRG(objdbconn,
+                                                                         objdbconnZHDB02,
+                                                                         objsqlcommand,
+                                                                         objsqlcommandZHDB02,
+                                                                         objOrdbconn,
+                                                                         objOrcommand,
+                                                                         objdbAccessConn,
+                                                                         IIf(IsDBNull(row("lngLinkedRG")), 0, row("lngLinkedRG")),
+                                                                         intAccounting,
+                                                                         intLinkedDebitor)
+                    row("lngLinkedDeb") = intLinkedDebitor
+
+                    intReturnValue = MainDebitor.FcCheckLinkedRG(objdbBuha,
+                                                                 intLinkedDebitor,
+                                                                 row("strDebCur"),
+                                                                 row("lngLinkedRG"))
+                Else
+                    intReturnValue = 0
+                End If
+                strBitLog += Trim(intReturnValue.ToString)
 
                 'Status-String auswerten
                 ''Debitor
@@ -1150,9 +1193,13 @@ ErrorHandler:
                 Else
                     row("strDebiBank") = intiBankSage200
                 End If
+                'Splitt-Bill
+                If Mid(strBitLog, 13, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "SplB"
+                End If
 
                 'Status schreiben
-                If Val(strBitLog) = 0 Or Val(strBitLog) = 10000000 Then
+                If Val(strBitLog) = 0 Or Val(strBitLog) = 100000000 Then
                     row("booDebBook") = True
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
                 End If
@@ -1204,7 +1251,7 @@ ErrorHandler:
             Next
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Debitor Kopfdaten-Check")
+            MessageBox.Show(ex.Message + vbCrLf + "Auf RG " + strRGNbr, "Debitor Kopfdaten-Check")
 
         Finally
 
@@ -1530,7 +1577,8 @@ ErrorHandler:
                                               ByVal booCpyKSTToSub As Boolean,
                                               ByVal strKST As String,
                                               ByRef lngDebKonto As Int32,
-                                              ByVal booCashSollKorrekt As Boolean) As Int16
+                                              ByVal booCashSollKorrekt As Boolean,
+                                              ByVal booSplittBill As Boolean) As Int16
 
         'Functin Returns 0=ok, 1=Problem sub, 2=OP Diff zu Kopf, 3=OP nicht 0, 9=keine Subs
 
@@ -1593,7 +1641,7 @@ ErrorHandler:
             End If
 
             'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
-            If subrow("lngKto") < 3000 Or subrow("lngKto") >= 10000 Then
+            If subrow("lngKto") >= 10000 And subrow("lngKto") < 3000 Then
                 subrow("strMwStKey") = Nothing
                 subrow("lngKST") = 0
             End If
@@ -1646,7 +1694,7 @@ ErrorHandler:
                     intSollKonto = subrow("lngKto") 'Für Sollkonto - Korretkur
                 End If
             Else
-                    dblSubNetto -= IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))
+                dblSubNetto -= IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))
                 subrow("dblNetto") = subrow("dblNetto") * -1
                 dblSubMwSt -= IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt"))
                 subrow("dblMwSt") = subrow("dblMwSt") * -1
@@ -1738,7 +1786,7 @@ ErrorHandler:
             End If
 
             'Netto = 0
-            If IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) = 0 Then
+            If IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) = 0 And Not booSplittBill Then
                 strBitLog += "1"
 
             Else
@@ -1926,7 +1974,9 @@ ErrorHandler:
 
                 'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
                 If subrow("lngKto") < 3000 Then
-                    subrow("strMwStKey") = Nothing
+                    If subrow("lngKto") <> 1120 Then 'Ausnahme AW24
+                        subrow("strMwStKey") = Nothing
+                    End If
                     subrow("lngKST") = 0
                 End If
 
