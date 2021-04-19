@@ -951,15 +951,15 @@ Friend Class frmImportMain
                                                           strValutaDatum,
                                                           row("strDebCur"),
                                                           dblKurs,
-                                                          dblSplitPayed.ToString,
-                                                          dblSplitPayed.ToString,
+                                                          "",
+                                                          "",
                                                           row("lngLinkedDeb"),
                                                           dblSplitPayed.ToString,
                                                           row("strDebCur"),
                                                           ,
                                                           strDebiText + ", TZ auf RG1")
 
-                                    Call DbBhg.WriteTeilzahlung3(intLaufNbr.ToString,
+                                    Call DbBhg.WriteTeilzahlung4(intLaufNbr.ToString,
                                                                  strDebiText + ", TZ auf RG1",
                                                                  "NOT_SET",
                                                                  ,
@@ -967,7 +967,6 @@ Friend Class frmImportMain
                                                                  "NOT_SET",
                                                                  "DEFAULT",
                                                                  "DEFAULT")
-
 
                                 End If
 
@@ -1022,6 +1021,17 @@ Friend Class frmImportMain
 
                         If selDebiSub.Length = 2 Then
 
+                            'Initialisieren
+                            dblNettoBetrag = 0
+                            dblSollBetrag = 0
+                            dblHabenBetrag = 0
+                            strBeBuEintrag = ""
+                            strBeBuEintragSoll = ""
+                            strBeBuEintragHaben = ""
+                            strSteuerFeld = ""
+                            strSteuerFeldHaben = ""
+                            strSteuerFeldSoll = ""
+
                             For Each SubRow As DataRow In selDebiSub
 
                                 If SubRow("intSollHaben") = 0 Then 'Soll
@@ -1033,7 +1043,14 @@ Friend Class frmImportMain
                                     dblSollBetrag = SubRow("dblNetto")
                                     strDebiTextSoll = SubRow("strDebSubText")
                                     If SubRow("dblMwSt") > 0 Then
-                                        strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextSoll, SubRow("dblBrutto") * dblKursSoll, SubRow("strMwStKey"), SubRow("dblMwSt"))
+                                        strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg,
+                                                                                 SubRow("lngKto"),
+                                                                                 strDebiTextSoll,
+                                                                                 SubRow("dblBrutto") * dblKursSoll,
+                                                                                 SubRow("strMwStKey"),
+                                                                                 SubRow("dblMwSt"))
+                                    Else
+                                        strSteuerFeldSoll = "STEUERFREI"
                                     End If
                                     If SubRow("lngKST") > 0 Then
                                         strBeBuEintragSoll = SubRow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
@@ -1050,7 +1067,14 @@ Friend Class frmImportMain
                                     'dblHabenBetrag = dblSollBetrag
                                     strDebiTextHaben = SubRow("strDebSubText")
                                     If SubRow("dblMwSt") * -1 > 0 Then
-                                        strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto") * dblKursHaben * -1, SubRow("strMwStKey"), SubRow("dblMwSt") * -1)
+                                        strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg,
+                                                                                  SubRow("lngKto"),
+                                                                                  strDebiTextHaben,
+                                                                                  SubRow("dblBrutto") * dblKursHaben * -1,
+                                                                                  SubRow("strMwStKey"),
+                                                                                  SubRow("dblMwSt") * -1)
+                                    Else
+                                        strSteuerFeldHaben = "STEUERFREI"
                                     End If
                                     If SubRow("lngKST") > 0 Then
                                         strBeBuEintragHaben = SubRow("lngKST").ToString + "{<}" + strDebiTextHaben + "{<}" + "CALCULATE" + "{>}"
@@ -1106,15 +1130,15 @@ Friend Class frmImportMain
                             End Try
 
                             'Initialisieren
-                            dblNettoBetrag = 0
-                            dblSollBetrag = 0
-                            dblHabenBetrag = 0
-                            strBeBuEintrag = ""
-                            strBeBuEintragSoll = ""
-                            strBeBuEintragHaben = ""
-                            strSteuerFeld = ""
-                            strSteuerFeldHaben = ""
-                            strSteuerFeldSoll = ""
+                            'dblNettoBetrag = 0
+                            'dblSollBetrag = 0
+                            'dblHabenBetrag = 0
+                            'strBeBuEintrag = ""
+                            'strBeBuEintragSoll = ""
+                            'strBeBuEintragHaben = ""
+                            'strSteuerFeld = ""
+                            'strSteuerFeldHaben = ""
+                            'strSteuerFeldSoll = ""
 
 
                             'Vergebene Nummer checken

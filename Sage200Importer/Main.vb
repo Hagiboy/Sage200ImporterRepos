@@ -804,7 +804,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                If row("strDebRGNbr") = "1106179" Then Stop
+                If row("strDebRGNbr") = "1105070" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -877,7 +877,7 @@ ErrorHandler:
 
                 'Autokorrektur 05
                 'Bei SplitBill - erste Rechnung evtl. Rückzahlung im Total nicht beachten
-                If booSplittBill And row("intRGArt") = 1 And row("lngLinkedRG") > 0 Then
+                If booSplittBill And row("intRGArt") = 1 And IIf(IsDBNull(row("lngLinkedRG")), 0, row("lngLinkedRG")) > 0 Then
                     row("dblDebBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero) * -1
                     row("dblDebNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero) * -1
                     row("dblDebMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero) * -1
@@ -1002,7 +1002,7 @@ ErrorHandler:
                 strBitLog += Trim(intReturnValue.ToString)
                 'strBitLog += "0"
                 'Referenz 08
-                If IIf(IsDBNull(row("strDebReferenz")), "", row("strDebReferenz")) = "" Then
+                If IIf(IsDBNull(row("strDebReferenz")), "", row("strDebReferenz")) = "" And row("intBuchungsart") = 1 Then
                     intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("strOPNr"), row("intBuchungsart"), strDebiReferenz)
                     If Len(strDebiReferenz) > 0 Then
                         row("strDebReferenz") = strDebiReferenz
@@ -1010,7 +1010,7 @@ ErrorHandler:
                         intReturnValue = 1
                     End If
                 Else
-                    strDebiReferenz = row("strDebReferenz")
+                    strDebiReferenz = IIf(IsDBNull(row("strDebReferenz")), "", row("strDebReferenz"))
                     intReturnValue = 0
                 End If
                 strBitLog += Trim(intReturnValue.ToString)
