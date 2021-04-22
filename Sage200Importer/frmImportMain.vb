@@ -1639,7 +1639,8 @@ Friend Class frmImportMain
                         strKrediText = IIf(IsDBNull(row("strKredText")), "", row("strKredText"))
                         strCurrency = row("strKredCur")
                         'intBankNbr = 0
-                        intKondition = 1
+                        intKondition = IIf(IsDBNull(row("intZKond")), 1, row("intZKond"))
+                        'LN 0=automatsich ersterfasste Kondition, -1=Schlechteste Kondition, -2=Beste Kondition
                         intKonditionLN = 0
                         intEigeneBank = row("intintBank")
 

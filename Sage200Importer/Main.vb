@@ -388,6 +388,10 @@ Friend NotInheritable Class Main
         Dim lngKrediKST As DataColumn = New DataColumn("lngKrediKST")
         lngKrediKST.DataType = System.Type.[GetType]("System.Int32")
         DT.Columns.Add(lngKrediKST)
+        Dim intZKond As DataColumn = New DataColumn("intZKond")
+        intZKond.DataType = System.Type.[GetType]("System.Int16")
+        DT.Columns.Add(intZKond)
+
         Return DT
 
     End Function
@@ -804,7 +808,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                If row("strDebRGNbr") = "1105070" Then Stop
+                'If row("strDebRGNbr") = "1105070" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
