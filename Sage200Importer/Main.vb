@@ -247,7 +247,7 @@ Friend NotInheritable Class Main
         Dim lngKredID As DataColumn = New DataColumn("lngKredID")
         lngKredID.DataType = System.Type.[GetType]("System.Int32")
         DT.Columns.Add(lngKredID)
-        DT.PrimaryKey = New DataColumn() {DT.Columns("lngKredID")}
+        'DT.PrimaryKey = New DataColumn() {DT.Columns("lngKredID")}
         Dim strKredRGNbr As DataColumn = New DataColumn("strKredRGNbr")
         strKredRGNbr.DataType = System.Type.[GetType]("System.String")
         strKredRGNbr.MaxLength = 50
@@ -343,7 +343,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(strKrediBank)
         Dim strKredRef As DataColumn = New DataColumn("strKredRef")
         strKredRef.DataType = System.Type.[GetType]("System.String")
-        strKredRef.MaxLength = 27
+        strKredRef.MaxLength = 30
         DT.Columns.Add(strKredRef)
         Dim strKrediBankInt As DataColumn = New DataColumn("strKrediBankInt")
         strKrediBankInt.DataType = System.Type.[GetType]("System.String")
@@ -808,7 +808,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "1105070" Then Stop
+                'If row("strDebRGNbr") = "1105915" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -2611,7 +2611,7 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
 
-                'If row("lngKredID") = "94222" Then Stop
+                If row("lngKredID") = "94490" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -2674,7 +2674,7 @@ ErrorHandler:
                 'booAutoCorrect = False
                 If booAutoCorrect Then
                     'Git es etwas zu korrigieren?
-                    If IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")) = dblSubBrutto Then
+                    If Math.Abs(IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")) - dblSubBrutto) < 0.1 Then
                         If IIf(IsDBNull(row("dblKredNetto")), 0, row("dblKredNetto")) <> dblSubNetto Or
                             IIf(IsDBNull(row("dblKredMwSt")), 0, row("dblKredMwSt")) <> dblSubMwSt Then
                             'IIf(IsDBNull(row("dblKredBrutto")), 0, row("dblKredBrutto")) <> dblSubBrutto Or
@@ -2685,6 +2685,7 @@ ErrorHandler:
                             '    'Nicht korrigieren
                             '    strBitLog += "3"
                             'Else
+                            row("dblKredBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
                             row("dblKredNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
                             row("dblKredMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
                             strBitLog += "1"
@@ -2964,6 +2965,8 @@ ErrorHandler:
                         strStatus += "BRef"
                     ElseIf Mid(strBitLog, 14, 1) = "7" Then
                         strStatus += "QIBAN"
+                    ElseIf Mid(strBitLog, 14, 1) = "5" Then
+                        strStatus += "BNoQ"
                     Else
                         strStatus += Mid(strBitLog, 14, 1)
                     End If

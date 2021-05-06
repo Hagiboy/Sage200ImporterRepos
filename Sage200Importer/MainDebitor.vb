@@ -73,6 +73,7 @@ Public Class MainDebitor
                 '    objdrSub("strDebSubText") = row("Betrifft").ToString + " " + row("betrifft1").ToString
                 '    objdtSub.Rows.Add(objdrSub)
                 'End If
+                'If row("strDebRGNbr") = "" Then Stop
                 strSQLSub = MainDebitor.FcSQLParse(Main.FcReadFromSettings(objdbconn,
                                                                            "Buchh_SQLDetail",
                                                                            intAccounting),
