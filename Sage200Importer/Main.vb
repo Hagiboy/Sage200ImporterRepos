@@ -808,7 +808,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "1105915" Then Stop
+                'If row("strDebRGNbr") = "1107850" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -2611,7 +2611,7 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
 
-                If row("lngKredID") = "94490" Then Stop
+                'If row("lngKredID") = "1107850" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
