@@ -847,7 +847,11 @@ Friend Class frmImportMain
 
                         Catch ex As Exception
                             MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegkopf " + intDebBelegsNummer.ToString + ", RG " + strRGNbr + ", Debitor " + intDebitorNbr.ToString)
-                            booBooingok = False
+                            If (Err.Number And 65535) < 10000 Then
+                                booBooingok = False
+                            Else
+                                booBooingok = True
+                            End If
 
                         End Try
 
@@ -886,6 +890,7 @@ Friend Class frmImportMain
                                 strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
                             Else
                                 'strBeBuEintrag = "999999" + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"
+                                strBeBuEintrag = ""
                             End If
                             If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then 'And SubRow("strMwStKey") <> "25" Then
                                 If strBuchType = "R" Then
@@ -906,7 +911,11 @@ Friend Class frmImportMain
 
                             Catch ex As Exception
                                 MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Verteilung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr + ", Konto " + SubRow("lngKto").ToString)
-                                booBooingok = False
+                                If (Err.Number And 65535) < 10000 Then
+                                    booBooingok = False
+                                Else
+                                    booBooingok = True
+                                End If
 
                             End Try
 
@@ -973,8 +982,14 @@ Friend Class frmImportMain
                             End If
 
                         Catch ex As Exception
-                            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
-                            booBooingok = False
+                            'MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
+                            If (Err.Number And 65535) < 10000 Then
+                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung nicht möglich" + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
+                                booBooingok = False
+                            Else
+                                MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
+                                booBooingok = True
+                            End If
 
                         End Try
 
@@ -993,11 +1008,16 @@ Friend Class frmImportMain
                             'Prüfen ob wirklich frei
                             intReturnValue = 10
                             Do Until intReturnValue = 0
-                                intReturnValue = FBhg.doesBelegExist(intDebBelegsNummer, "NOT_SET", "NOT_SET", "20210101", "20211231")
+                                intReturnValue = FBhg.doesBelegExist(intDebBelegsNummer,
+                                                                     "NOT_SET",
+                                                                     "NOT_SET",
+                                                                     Microsoft.VisualBasic.Left(cmbPerioden.SelectedItem, 4) + "0101",
+                                                                     Microsoft.VisualBasic.Left(cmbPerioden.SelectedItem, 4) + "1231")
                                 If intReturnValue <> 0 Then
                                     intDebBelegsNummer += 1
                                 End If
                             Loop
+                            Debug.Print("Belegnummer taken: " + intDebBelegsNummer.ToString)
                         Else
                             If IIf(IsDBNull(row("strOPNr")), "", row("strOPNr")) <> "" Then
                                 intDebBelegsNummer = Convert.ToInt32(row("strOPNr"))
@@ -1125,7 +1145,11 @@ Friend Class frmImportMain
 
                             Catch ex As Exception
                                 MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
-                                booBooingok = False
+                                If (Err.Number And 65535) < 10000 Then
+                                    booBooingok = False
+                                Else
+                                    booBooingok = True
+                                End If
 
                             End Try
 
@@ -1284,8 +1308,11 @@ Friend Class frmImportMain
 
                             Catch ex As Exception
                                 MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
-                                booBooingok = False
-
+                                If (Err.Number And 65535) < 10000 Then
+                                    booBooingok = False
+                                Else
+                                    booBooingok = True
+                                End If
                             End Try
 
 
@@ -1540,6 +1567,8 @@ Friend Class frmImportMain
         Dim strDebiLine As String
         Dim strDebitor() As String
 
+        Dim booBookingok As Boolean
+
         'Sammelbeleg
         Dim intCommonKonto As Int32
 
@@ -1650,8 +1679,9 @@ Friend Class frmImportMain
                             dblKurs = 1.0#
                         End If
 
-
-                        Call KrBhg.SetBelegKopf2(intKredBelegsNummer,
+                        Try
+                            booBookingok = True
+                            Call KrBhg.SetBelegKopf2(intKredBelegsNummer,
                                                      strValutaDatum,
                                                      intKreditorNbr,
                                                      strExtKredBelegsNummer,
@@ -1674,6 +1704,16 @@ Friend Class frmImportMain
                                                      "",
                                                      strTeilnehmer,
                                                      intEigeneBank.ToString)
+
+                        Catch ex As Exception
+                            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegkopf ")
+                            If (Err.Number And 65535) < 10000 Then
+                                booBookingok = False
+                            Else
+                                booBookingok = True
+                            End If
+
+                        End Try
 
                         selKrediSub = objdtKreditorenSub.Select("lngKredID=" + row("lngKredID").ToString)
 
@@ -1735,8 +1775,20 @@ Friend Class frmImportMain
                             'strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
                             'Debug.Print("Konto-Info: " + strSteuerInfo(26))
 
+                            Try
+                                booBookingok = True
+                                Call KrBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
 
-                            Call KrBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
+                            Catch ex As Exception
+                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Verteilung " + SubRow("strKredSubText") + ", Konto " + SubRow("lngKto").ToString)
+                                If (Err.Number And 65535) < 10000 Then
+                                    booBookingok = False
+                                Else
+                                    booBookingok = True
+                                End If
+
+                            End Try
+
 
                             strSteuerFeld = ""
                             strBeBuEintrag = ""
@@ -1747,8 +1799,23 @@ Friend Class frmImportMain
                         Next
 
 
-                        Call KrBhg.WriteBuchung()
+                        Try
+                            booBookingok = True
+                            Call KrBhg.WriteBuchung()
+
+                        Catch ex As Exception
+                            If (Err.Number And 65535) < 10000 Then
+                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung nicht möglich")
+                                booBookingok = False
+                            Else
+                                MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString + " Belegerstellung")
+                                booBookingok = True
+                            End If
+
+                        End Try
+
                         Application.DoEvents()
+
                         strBeBuEintrag = ""
                         strSteuerFeld = ""
                         dblNettoBetrag = 0
@@ -1763,6 +1830,8 @@ Friend Class frmImportMain
                         'DbBhg.IncrBelNbr = "J"
                         'Belegsnummer abholen
                         intKredBelegsNummer = FBhg.GetNextBelNbr()
+
+                        booBookingok = True
 
                         'Variablen zuweisen
                         strBelegDatum = Format(row("datKredRGDatum"), "yyyyMMdd").ToString
@@ -1860,22 +1929,25 @@ Friend Class frmImportMain
 
                     End If
 
-                    'Status Head schreiben
-                    row("strKredBookStatus") = row("strKredStatusBitLog")
-                    row("booBooked") = True
-                    row("datBooked") = Now()
-                    row("lngBelegNr") = intKredBelegsNummer
+                    If booBookingok Then
+                        'Status Head schreiben
+                        row("strKredBookStatus") = row("strKredStatusBitLog")
+                        row("booBooked") = True
+                        row("datBooked") = Now()
+                        row("lngBelegNr") = intKredBelegsNummer
 
-                    'Status in File RG-Tabelle schreiben
-                    intReturnValue = MainKreditor.FcWriteToKrediRGTable(cmbBuha.SelectedValue,
+                        'Status in File RG-Tabelle schreiben
+                        intReturnValue = MainKreditor.FcWriteToKrediRGTable(cmbBuha.SelectedValue,
                                                                         row("lngKredID"),
                                                                         row("datBooked"),
                                                                         row("lngBelegNr"),
                                                                         objdbAccessConn,
                                                                         objOracleConn,
                                                                         objdbConn)
-                    If intReturnValue <> 0 Then
-                        'Throw an exception
+                        If intReturnValue <> 0 Then
+                            'Throw an exception
+                        End If
+
                     End If
 
                 End If

@@ -3058,7 +3058,7 @@ ErrorHandler:
                     '        Return 1
                     '    End If
                     'End If
-                    If Main.FcAreFirst2Chars(strReferenz) = 0 And intPayType <> 9 Then 'Falscher PayType bei IBAN-Nr.
+                    If Main.FcAreFirst2Chars(strReferenz) = 0 And intPayType <> 9 And Mid(strReferenz, 5, 1) <> "3" Then 'Falscher PayType bei IBAN-Nr.
                         intPayType = 9
                         Return 1
                     End If
@@ -3072,6 +3072,7 @@ ErrorHandler:
                         'normale IBAN
                         'Check ob nicht QR-IBAN als Zahl-IBAN erfasst
                         If Mid(strReferenz, 5, 1) = "3" Then
+                            intPayType = 9
                             Return 7
                         Else
                             intPayType = 9
