@@ -843,7 +843,8 @@ ErrorHandler:
                 strBitLog = Trim(intReturnValue.ToString)
 
                 'Kto 02
-                intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha, row("dblDebMwSt"), 0)
+                'intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha, row("dblDebMwSt"), 0)
+                intReturnValue = 0
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Currency 03
@@ -1650,7 +1651,7 @@ ErrorHandler:
                 subrow("lngKST") = 0
             End If
 
-            'MwSt prüfen
+            'MwSt prüfen 01
             If Not IsDBNull(subrow("strMwStKey")) Then
                 If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And subrow("strMwStKey") <> "ohne" Then
                     'Stop
@@ -1664,14 +1665,14 @@ ErrorHandler:
                     If Val(strSteuer(2)) <> IIf(IsDBNull(subrow("dblMwst")), 0, subrow("dblMwst")) Then
                         'Im Fall von Auto-Korrekt anpassen wenn Toleranz
                         'Stop
-                        If booAutoCorrect And Val(strSteuer(2)) - subrow("dblMwst") <= 0.5 Then
+                        If booAutoCorrect And Val(strSteuer(2)) - subrow("dblMwst") <= 1.5 Then
                             strStatusText += "MwSt " + subrow("dblMwst").ToString
                             subrow("dblMwst") = Val(strSteuer(2))
                             subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
                             'subrow("dblNetto") = Decimal.Round(subrow("dblBrutto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
                             strStatusText += " -> " + subrow("dblMwst").ToString + ", "
                         Else
-                            If Val(strSteuer(2)) - subrow("dblMwst") > 0.5 Then
+                            If Val(strSteuer(2)) - subrow("dblMwst") > 1.5 Then
                                 intReturnValue = 1
                             End If
                             strStatusText += " -> " + strSteuer(2).ToString + ", "
@@ -1711,19 +1712,26 @@ ErrorHandler:
             dblSubMwSt = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
             dblSubBrutto = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
 
-            'Konto prüfen
-            If IIf(IsDBNull(subrow("lngKto")), 0, subrow("lngKto")) Then
+            'Konto prüfen 02
+            If IIf(IsDBNull(subrow("lngKto")), 0, subrow("lngKto")) > 0 Then
+                'Falls KSt nicht gültig, entfernen
+                If CInt(Left(subrow("lngKto").ToString, 1)) < 3 Then
+                    subrow("lngKST") = 0
+                    subrow("strKtoBez") = "K<3KST ->"
+                End If
                 intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
                 If intReturnValue = 0 Then
-                    subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto"))
+                    subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto"))
                 ElseIf intReturnValue = 2 Then
-                    subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " MwSt!"
+                    subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " MwSt!"
                 ElseIf intReturnValue = 3 Then
-                    subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " NoKST"
-                ElseIf intReturnValue = 4 Then
-                    subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " K<3KST"
-                    subrow("lngKST") = 0
-                    intReturnValue = 0
+                    subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " NoKST"
+                    'ElseIf intReturnValue = 4 Then
+                    '    subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " K<3KST"
+                    '    subrow("lngKST") = 0
+                    '    intReturnValue = 0
+                ElseIf intReturnValue = 5 Then
+                    subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " K<3MwSt"
                 Else
                     subrow("strKtoBez") = "n/a"
 
@@ -1736,7 +1744,7 @@ ErrorHandler:
             End If
             strBitLog += Trim(intReturnValue.ToString)
 
-            'Kst/Ktr prüfen
+            'Kst/Ktr prüfen 03
             If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
                 intReturnValue = FcCheckKstKtr(IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")), objFiBhg, objFiPI, subrow("lngKto"), strKstKtrSage200)
                 If intReturnValue = 0 Then
@@ -1984,7 +1992,7 @@ ErrorHandler:
                     subrow("lngKST") = 0
                 End If
 
-                'MwSt prüfen
+                'MwSt prüfen 01
                 If Not IsDBNull(subrow("strMwStKey")) Then
                     If subrow("dblMwStSatz") > 0 And subrow("dblMwSt") = 0 Then Stop
                     If subrow("dblMwStSatz") > 0 And subrow("dblMwSt") > 0 And subrow("strMwStKey") = "ohne" Then Stop
@@ -2048,7 +2056,7 @@ ErrorHandler:
                 dblSubMwSt = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
                 dblSubBrutto = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
 
-                'Konto prüfen
+                'Konto prüfen 02
                 If IIf(IsDBNull(subrow("lngKto")), 0, subrow("lngKTo")) > 0 Then
                     intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
                     If intReturnValue = 0 Then
@@ -2434,6 +2442,8 @@ ErrorHandler:
         Dim strReturn As String
         Dim strKontoInfo() As String
 
+        'If lngKtoNbr = 1173 Then Stop
+
         strReturn = objfiBuha.GetKontoInfo(lngKtoNbr.ToString)
         If strReturn = "EOF" Then
             Return 1
@@ -2441,13 +2451,22 @@ ErrorHandler:
             'If dblMwSt = 0 Then
             'Return 0
             'KST?
+            strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
             If lngKST > 0 Then
                 If CInt(Left(lngKtoNbr.ToString, 1)) >= 3 Then
-                    strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
+                    'strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
                     If strKontoInfo(22) = "" Then
                         Return 3
                     Else
-                        Return 0
+                        If dblMwSt <> 0 Then
+                            If strKontoInfo(26) = "" Then
+                                Return 5
+                            Else
+                                Return 0
+                            End If
+                        Else
+                            Return 0
+                        End If
 
                         'Else
                         'Steuerpflichtig?
@@ -2461,6 +2480,16 @@ ErrorHandler:
                     End If
                 Else
                     Return 4
+                End If
+            Else
+                If dblMwSt <> 0 Then
+                    If strKontoInfo(26) = "" Then
+                        Return 5
+                    Else
+                        Return 0
+                    End If
+                Else
+                    Return 0
                 End If
             End If
         End If
@@ -2642,7 +2671,8 @@ ErrorHandler:
                 strBitLog = Trim(intReturnValue.ToString)
 
                 'Kto 02
-                intReturnValue = FcCheckKonto(row("lngKredKtoNbr"), objfiBuha, row("dblKredMwSt"), 0)
+                'intReturnValue = FcCheckKonto(row("lngKredKtoNbr"), objfiBuha, row("dblKredMwSt"), 0)
+                intReturnValue = 0
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Currency 03
@@ -3071,7 +3101,7 @@ ErrorHandler:
                         'Else
                         'normale IBAN
                         'Check ob nicht QR-IBAN als Zahl-IBAN erfasst
-                        If Mid(strReferenz, 5, 1) = "3" Then
+                        If Mid(strReferenz, 5, 1) = "3" And Left(strReferenz, 2) = "CH" Then
                             intPayType = 9
                             Return 7
                         Else
