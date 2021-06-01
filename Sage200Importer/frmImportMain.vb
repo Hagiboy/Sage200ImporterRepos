@@ -950,12 +950,15 @@ Friend Class frmImportMain
                                                               intLaufNbr.ToString)
 
                                     strBelegArr = Split(strBeleg, "{>}")
+                                    If strBelegArr(4) = "B" Then 'schon bezahlt
+                                        'Ausbuchen?
+                                    Else
 
-                                    'Welcher Betrag wurde schon bezahlt?
-                                    dblSplitPayed = dblBetrag
+                                        'Welcher Betrag wurde schon bezahlt?
+                                        dblSplitPayed = dblBetrag
 
-                                    'Teilzahlung buchen
-                                    Call DbBhg.SetZahlung(344,
+                                        'Teilzahlung buchen
+                                        Call DbBhg.SetZahlung(344,
                                                           strBelegDatum,
                                                           strValutaDatum,
                                                           row("strDebCur"),
@@ -968,7 +971,7 @@ Friend Class frmImportMain
                                                           ,
                                                           strDebiText + ", TZ auf RG1")
 
-                                    Call DbBhg.WriteTeilzahlung4(intLaufNbr.ToString,
+                                        Call DbBhg.WriteTeilzahlung4(intLaufNbr.ToString,
                                                                  strDebiText + ", TZ auf RG1",
                                                                  "NOT_SET",
                                                                  ,
@@ -976,6 +979,8 @@ Friend Class frmImportMain
                                                                  "NOT_SET",
                                                                  "DEFAULT",
                                                                  "DEFAULT")
+
+                                    End If
 
                                 End If
 
@@ -985,7 +990,7 @@ Friend Class frmImportMain
                             'MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
                             If (Err.Number And 65535) < 10000 Then
                                 MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung nicht möglich" + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
-                                booBooingok = False
+                                'booBooingok = False
                             Else
                                 MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
                                 booBooingok = True
