@@ -166,8 +166,9 @@ Partial Class frmImportMain
         Me.lblVersion.AutoSize = True
         Me.lblVersion.Location = New System.Drawing.Point(263, 63)
         Me.lblVersion.Name = "lblVersion"
-        Me.lblVersion.Size = New System.Drawing.Size(0, 13)
+        Me.lblVersion.Size = New System.Drawing.Size(42, 13)
         Me.lblVersion.TabIndex = 11
+        Me.lblVersion.Text = "Version"
         '
         'butMail
         '

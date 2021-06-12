@@ -499,7 +499,6 @@ Friend NotInheritable Class Main
 
     End Function
 
-
     Public Shared Function FcLoginSage(ByRef objdbconn As MySqlConnection,
                                        ByRef objsqlConn As SqlClient.SqlConnection,
                                        ByRef objsqlCom As SqlClient.SqlCommand,
@@ -569,7 +568,10 @@ Friend NotInheritable Class Main
         'objdtInfo.Rows.Add("Perioden-Def", FcReadPeriodenDef(objsqlConn, objsqlCom, strPeriode(8))(0))
         'objdtInfo.Rows.Add("Defintion von", FcReadPeriodenDef(objsqlConn, objsqlCom, strPeriode(8))(1))
 
-        FcReturns = FcReadPeriodenDef(objsqlConn, objsqlCom, strPeriode(8), objdtInfo)
+        FcReturns = FcReadPeriodenDef(objsqlConn,
+                                      objsqlCom,
+                                      strPeriode(8),
+                                      objdtInfo)
 
 
         If b = 0 Then GoTo isOk
@@ -666,7 +668,10 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcReadPeriodenDef(ByRef objSQLConnection As SqlClient.SqlConnection, ByRef objSQLCommand As SqlClient.SqlCommand, ByVal intPeriodenNr As Int32, ByRef objdtInfo As DataTable) As Int16
+    Public Shared Function FcReadPeriodenDef(ByRef objSQLConnection As SqlClient.SqlConnection,
+                                             ByRef objSQLCommand As SqlClient.SqlCommand,
+                                             ByVal intPeriodenNr As Int32,
+                                             ByRef objdtInfo As DataTable) As Int16
 
         'Returns 0=definiert, 1=nicht defeniert, 9=Problem
 
@@ -808,7 +813,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "110755" Then Stop
+                'If row("strDebRGNbr") = "1114447" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -3038,7 +3043,7 @@ ErrorHandler:
                 Else
                     strKrediSubText = row("strKredText")
                 End If
-                selsubrow = objdtKreditSubs.Select("strRGNr='" + row("strKredRGNbr") + "'")
+                selsubrow = objdtKreditSubs.Select("strRGNr='" + Replace(row("strKredRGNbr"), "'", "''") + "'")
                 For Each subrow In selsubrow
                     subrow("strKredSubText") = strKrediSubText
                 Next
@@ -3121,15 +3126,16 @@ ErrorHandler:
                                 Return 5
                             End If
                         Else
+
                             If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
-                                    'ESR, falsch deklariert
-                                    If intPayType <> 3 Then
-                                        intPayType = 3
-                                    End If
-                                    Return 6
-                                Else
-                                    'Debug.Print("Checksum " + Strings.Left(strKrediBank, 8) + " " + Strings.Right(strKrediBank, 1) + ", " + Main.FcModulo10(Strings.Left(strKrediBank, 8)).ToString)
-                                    If Main.FcModulo10(Strings.Left(strKrediBank, 8)).ToString <> Strings.Right(strKrediBank, 1) Then
+                                'ESR, falsch deklariert
+                                If intPayType <> 3 Then
+                                    intPayType = 3
+                                End If
+                                Return 6
+                            Else
+                                'Debug.Print("Checksum " + Strings.Left(strKrediBank, 8) + " " + Strings.Right(strKrediBank, 1) + ", " + Main.FcModulo10(Strings.Left(strKrediBank, 8)).ToString)
+                                If Main.FcModulo10(Strings.Left(strKrediBank, 8)).ToString <> Strings.Right(strKrediBank, 1) Then
                                         Return 6
                                     Else
                                         Return 0 'Bank ok
@@ -3193,7 +3199,7 @@ ErrorHandler:
     Public Shared Function fcCheckTransitorischeDebit(ByVal intAccounting As Int16, ByRef objdbconn As MySqlConnection,
                                        ByRef objdbAccessConn As OleDb.OleDbConnection)
 
-        Dim strSQL As String
+        Dim strSQLMan As String
         'Dim strSQLSub As String
         Dim strRGTableType As String
         Dim objRGMySQLConn As New MySqlConnection
@@ -3224,10 +3230,10 @@ ErrorHandler:
                 strMDBName = FcReadFromSettings(objdbconn, "Buchh_RGTableMDB", intAccounting)
 
                 'Debitzoren Transit-Queries für Mandant einlesen
-                strSQL = "SELECT * FROM t_sage_buchhaltungen_sub WHERE strType='D' AND refMandant=" + intAccounting.ToString
+                strSQLMan = "SELECT * FROM t_sage_buchhaltungen_sub WHERE strType='D' AND refMandant=" + intAccounting.ToString
                 objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
                 objlocMySQLcmd.Connection = objRGMySQLConn
-                objlocMySQLcmd.CommandText = strSQL
+                objlocMySQLcmd.CommandText = strSQLMan
                 objRGMySQLConn.Open()
                 objDTTransitDebits.Load(objlocMySQLcmd.ExecuteReader)
                 objRGMySQLConn.Close()

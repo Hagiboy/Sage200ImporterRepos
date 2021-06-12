@@ -141,15 +141,33 @@ Friend Class frmImportMain
 
         Call InitVar()
 
-        Call Main.FcLoginSage(objdbConn, objdbMSSQLConn, objdbSQLcommand, Finanz, FBhg, DbBhg, PIFin, KrBhg, cmbBuha.SelectedValue, objdtInfo, cmbPerioden.SelectedItem)
+        Call Main.FcLoginSage(objdbConn,
+                              objdbMSSQLConn,
+                              objdbSQLcommand,
+                              Finanz,
+                              FBhg,
+                              DbBhg,
+                              PIFin,
+                              KrBhg,
+                              cmbBuha.SelectedValue,
+                              objdtInfo,
+                              cmbPerioden.SelectedItem)
 
         'Transitorische Buchungen?
-        Call Main.fcCheckTransitorischeDebit(cmbBuha.SelectedValue, objdbConn, objdbAccessConn)
+        Call Main.fcCheckTransitorischeDebit(cmbBuha.SelectedValue,
+                                             objdbConn,
+                                             objdbAccessConn)
 
         'Gibt es eine Query auszuführen bevor dem Buchen?
         Call MainDebitor.FcExecuteBeforeDebit(cmbBuha.SelectedValue, objdbConn)
 
-        Call MainDebitor.FcFillDebit(cmbBuha.SelectedValue, objdtDebitorenHeadRead, objdtDebitorenSub, objdbConn, objdbAccessConn, objOracleConn, objOracleCmd)
+        Call MainDebitor.FcFillDebit(cmbBuha.SelectedValue,
+                                     objdtDebitorenHeadRead,
+                                     objdtDebitorenSub,
+                                     objdbConn,
+                                     objdbAccessConn,
+                                     objOracleConn,
+                                     objOracleCmd)
 
         Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead, objdtDebitorenHead)
 
@@ -2032,4 +2050,5 @@ Friend Class frmImportMain
         Debug.Print(strMailText)
 
     End Sub
+
 End Class
