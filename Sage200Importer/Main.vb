@@ -799,6 +799,9 @@ ErrorHandler:
         Dim dblRDiffNetto As Double
         Dim dblRDiffMwSt As Double
         Dim dblRDiffBrutto As Double
+
+
+
         Dim booPKPrivate As Boolean
         Dim booCashSollCorrect As Boolean
         Dim strRGNbr As String
@@ -813,7 +816,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "1114447" Then Stop
+                If row("strDebRGNbr") = "66403" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -1819,7 +1822,7 @@ ErrorHandler:
             End If
 
             'Brutto - MwSt <> Netto
-            If Math.Round(IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) - IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), 2, MidpointRounding.AwayFromZero) <> IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
+            If Math.Abs(IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) - IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) - IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))) > 1 Then
                 strBitLog += "1"
 
             Else
