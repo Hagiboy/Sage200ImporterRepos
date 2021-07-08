@@ -124,7 +124,11 @@ Public Class MainDebitor
 
         strDebitorKAr = Split(strDebitorKName, "{>}")
 
-        Return strDebitorKAr(8)
+        If strDebitorKName <> "EOF" Then
+            Return strDebitorKAr(8)
+        Else
+            Return "EOF"
+        End If
 
     End Function
 

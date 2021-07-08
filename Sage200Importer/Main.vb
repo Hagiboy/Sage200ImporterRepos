@@ -816,7 +816,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                If row("strDebRGNbr") = "66403" Then Stop
+                If row("strDebRGNbr") = "1107458" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
