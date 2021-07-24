@@ -1614,300 +1614,310 @@ ErrorHandler:
         Dim strSteuer() As String
         Dim intSollKonto As Int32 = lngDebKonto
 
-        'Summen bilden und Angaben prüfen
-        intSubNumber = 0
-        dblSubNetto = 0
-        dblSubMwSt = 0
-        dblSubBrutto = 0
+        Try
 
-        selsubrow = objDtDebiSub.Select("strRGNr='" + strDebRgNbr + "'")
+            'Summen bilden und Angaben prüfen
+            intSubNumber = 0
+            dblSubNetto = 0
+            dblSubMwSt = 0
+            dblSubBrutto = 0
 
-        For Each subrow As DataRow In selsubrow
+            selsubrow = objDtDebiSub.Select("strRGNr='" + strDebRgNbr + "'")
 
-            strBitLog = ""
+            For Each subrow As DataRow In selsubrow
 
-            'Runden
-            If IsDBNull(subrow("dblNetto")) Then
-                subrow("dblNetto") = 0
-            Else
-                subrow("dblNetto") = Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero)
-            End If
-            If IsDBNull(subrow("dblMwst")) Then
-                subrow("dblMwst") = 0
-            Else
-                subrow("dblMwst") = Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero)
-            End If
-            If IsDBNull(subrow("dblBrutto")) Then
-                subrow("dblBrutto") = 0
-            Else
-                subrow("dblBrutto") = Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero)
-            End If
-            If IsDBNull(subrow("dblMwStSatz")) Then
-                subrow("dblMwStSatz") = 0
-            Else
-                subrow("dblMwStSatz") = Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero)
-            End If
+                strBitLog = ""
 
-            'Falls KTRToSub dann kopieren
-            If booCpyKSTToSub Then
-                subrow("lngKST") = strKST
-            End If
-
-            'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
-            If subrow("lngKto") >= 10000 And subrow("lngKto") < 3000 Then
-                subrow("strMwStKey") = Nothing
-                subrow("lngKST") = 0
-            End If
-
-            'MwSt prüfen 01
-            If Not IsDBNull(subrow("strMwStKey")) Then
-                If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And subrow("strMwStKey") <> "ohne" Then
-                    'Stop
-                    subrow("strMwStKey") = "ohne"
+                'Runden
+                If IsDBNull(subrow("dblNetto")) Then
+                    subrow("dblNetto") = 0
+                Else
+                    subrow("dblNetto") = Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero)
                 End If
-                intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")), strStrStCodeSage200, subrow("lngKto"))
-                If intReturnValue = 0 Then
-                    subrow("strMwStKey") = strStrStCodeSage200
-                    'Check ob korrekt berechnet
-                    strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
-                    If Val(strSteuer(2)) <> IIf(IsDBNull(subrow("dblMwst")), 0, subrow("dblMwst")) Then
-                        'Im Fall von Auto-Korrekt anpassen wenn Toleranz
+                If IsDBNull(subrow("dblMwst")) Then
+                    subrow("dblMwst") = 0
+                Else
+                    subrow("dblMwst") = Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero)
+                End If
+                If IsDBNull(subrow("dblBrutto")) Then
+                    subrow("dblBrutto") = 0
+                Else
+                    subrow("dblBrutto") = Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero)
+                End If
+                If IsDBNull(subrow("dblMwStSatz")) Then
+                    subrow("dblMwStSatz") = 0
+                Else
+                    subrow("dblMwStSatz") = Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero)
+                End If
+
+                'Falls KTRToSub dann kopieren
+                If booCpyKSTToSub Then
+                    subrow("lngKST") = strKST
+                End If
+
+                'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
+                If subrow("lngKto") >= 10000 And subrow("lngKto") < 3000 Then
+                    subrow("strMwStKey") = Nothing
+                    subrow("lngKST") = 0
+                End If
+
+                'MwSt prüfen 01
+                If Not IsDBNull(subrow("strMwStKey")) Then
+                    If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And subrow("strMwStKey") <> "ohne" Then
                         'Stop
-                        If booAutoCorrect And Val(strSteuer(2)) - subrow("dblMwst") <= 1.5 Then
-                            strStatusText += "MwSt " + subrow("dblMwst").ToString
-                            subrow("dblMwst") = Val(strSteuer(2))
-                            subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
-                            'subrow("dblNetto") = Decimal.Round(subrow("dblBrutto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
-                            strStatusText += " -> " + subrow("dblMwst").ToString + ", "
-                        Else
-                            If Val(strSteuer(2)) - subrow("dblMwst") > 1.5 Then
-                                intReturnValue = 1
+                        subrow("strMwStKey") = "ohne"
+                    End If
+                    intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")), strStrStCodeSage200, subrow("lngKto"))
+                    If intReturnValue = 0 Then
+                        subrow("strMwStKey") = strStrStCodeSage200
+                        'Check ob korrekt berechnet
+                        strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
+                        If Val(strSteuer(2)) <> IIf(IsDBNull(subrow("dblMwst")), 0, subrow("dblMwst")) Then
+                            'Im Fall von Auto-Korrekt anpassen wenn Toleranz
+                            'Stop
+                            If booAutoCorrect And Val(strSteuer(2)) - subrow("dblMwst") <= 1.5 Then
+                                strStatusText += "MwSt " + subrow("dblMwst").ToString
+                                subrow("dblMwst") = Val(strSteuer(2))
+                                subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                                'subrow("dblNetto") = Decimal.Round(subrow("dblBrutto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                                strStatusText += " -> " + subrow("dblMwst").ToString + ", "
+                            Else
+                                If Val(strSteuer(2)) - subrow("dblMwst") > 1.5 Then
+                                    intReturnValue = 1
+                                End If
+                                strStatusText += " -> " + strSteuer(2).ToString + ", "
                             End If
-                            strStatusText += " -> " + strSteuer(2).ToString + ", "
                         End If
+                    Else
+                        subrow("strMwStKey") = "n/a"
                     End If
                 Else
-                    subrow("strMwStKey") = "n/a"
+                    subrow("strMwStKey") = "null"
+                    subrow("dblMwst") = 0
+                    intReturnValue = 0
+
                 End If
-            Else
-                subrow("strMwStKey") = "null"
-                subrow("dblMwst") = 0
-                intReturnValue = 0
+                strBitLog += Trim(intReturnValue.ToString)
 
-            End If
-            strBitLog += Trim(intReturnValue.ToString)
-
-            'If subrow("intSollHaben") <> 2 Then
-            intSubNumber += 1
-            If subrow("intSollHaben") = 0 Then
-                dblSubNetto += IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))
-                dblSubMwSt += IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt"))
-                dblSubBrutto += IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto"))
-                If Strings.Left(subrow("lngKto").ToString, 1) = "1" Then
-                    intSollKonto = subrow("lngKto") 'Für Sollkonto - Korretkur
+                'If subrow("intSollHaben") <> 2 Then
+                intSubNumber += 1
+                If subrow("intSollHaben") = 0 Then
+                    dblSubNetto += IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))
+                    dblSubMwSt += IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt"))
+                    dblSubBrutto += IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto"))
+                    If Strings.Left(subrow("lngKto").ToString, 1) = "1" Then
+                        intSollKonto = subrow("lngKto") 'Für Sollkonto - Korretkur
+                    End If
+                Else
+                    dblSubNetto -= IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))
+                    subrow("dblNetto") = subrow("dblNetto") * -1
+                    dblSubMwSt -= IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt"))
+                    subrow("dblMwSt") = subrow("dblMwSt") * -1
+                    dblSubBrutto -= IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto"))
+                    subrow("dblBrutto") = subrow("dblBrutto") * -1
                 End If
-            Else
-                dblSubNetto -= IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))
-                subrow("dblNetto") = subrow("dblNetto") * -1
-                dblSubMwSt -= IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt"))
-                subrow("dblMwSt") = subrow("dblMwSt") * -1
-                dblSubBrutto -= IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto"))
-                subrow("dblBrutto") = subrow("dblBrutto") * -1
-            End If
 
-            'Runden
-            dblSubNetto = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
-            dblSubMwSt = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
-            dblSubBrutto = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
+                'Runden
+                dblSubNetto = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
+                dblSubMwSt = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
+                dblSubBrutto = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
 
-            'Konto prüfen 02
-            If IIf(IsDBNull(subrow("lngKto")), 0, subrow("lngKto")) > 0 Then
-                'Falls KSt nicht gültig, entfernen
-                If CInt(Left(subrow("lngKto").ToString, 1)) < 3 Then
+                'Konto prüfen 02
+                If IIf(IsDBNull(subrow("lngKto")), 0, subrow("lngKto")) > 0 Then
+                    'Falls KSt nicht gültig, entfernen
+                    If CInt(Left(subrow("lngKto").ToString, 1)) < 3 Then
+                        subrow("lngKST") = 0
+                        subrow("strKtoBez") = "K<3KST ->"
+                    End If
+                    intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
+                    If intReturnValue = 0 Then
+                        subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto"))
+                    ElseIf intReturnValue = 2 Then
+                        subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " MwSt!"
+                    ElseIf intReturnValue = 3 Then
+                        subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " NoKST"
+                        'ElseIf intReturnValue = 4 Then
+                        '    subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " K<3KST"
+                        '    subrow("lngKST") = 0
+                        '    intReturnValue = 0
+                    ElseIf intReturnValue = 5 Then
+                        subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " K<3MwSt"
+                    Else
+                        subrow("strKtoBez") = "n/a"
+
+                    End If
+                Else
+                    subrow("strKtoBez") = "null"
+                    subrow("lngKto") = 0
+                    intReturnValue = 1
+
+                End If
+                strBitLog += Trim(intReturnValue.ToString)
+
+                'Kst/Ktr prüfen 03
+                If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
+                    intReturnValue = FcCheckKstKtr(IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")), objFiBhg, objFiPI, subrow("lngKto"), strKstKtrSage200)
+                    If intReturnValue = 0 Then
+                        subrow("strKstBez") = strKstKtrSage200
+                    ElseIf intReturnValue = 1 Then
+                        subrow("strKstBez") = "KoArt"
+                    ElseIf intReturnValue = 3 Then
+                        subrow("strKstBez") = "NoKST"
+                        subrow("lngKST") = 0
+                        intReturnValue = 0 'Kein Fehler
+                    Else
+                        subrow("strKstBez") = "n/a"
+
+                    End If
+                Else
                     subrow("lngKST") = 0
-                    subrow("strKtoBez") = "K<3KST ->"
-                End If
-                intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
-                If intReturnValue = 0 Then
-                    subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto"))
-                ElseIf intReturnValue = 2 Then
-                    subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " MwSt!"
-                ElseIf intReturnValue = 3 Then
-                    subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " NoKST"
-                    'ElseIf intReturnValue = 4 Then
-                    '    subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " K<3KST"
-                    '    subrow("lngKST") = 0
-                    '    intReturnValue = 0
-                ElseIf intReturnValue = 5 Then
-                    subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " K<3MwSt"
-                Else
-                    subrow("strKtoBez") = "n/a"
+                    subrow("strKstBez") = "null"
+                    intReturnValue = 0
 
                 End If
-            Else
-                subrow("strKtoBez") = "null"
-                subrow("lngKto") = 0
-                intReturnValue = 1
+                strBitLog += Trim(intReturnValue.ToString)
 
-            End If
-            strBitLog += Trim(intReturnValue.ToString)
-
-            'Kst/Ktr prüfen 03
-            If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
-                intReturnValue = FcCheckKstKtr(IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")), objFiBhg, objFiPI, subrow("lngKto"), strKstKtrSage200)
-                If intReturnValue = 0 Then
-                    subrow("strKstBez") = strKstKtrSage200
-                ElseIf intReturnValue = 1 Then
-                    subrow("strKstBez") = "KoArt"
-                ElseIf intReturnValue = 3 Then
-                    subrow("strKstBez") = "NoKST"
-                    subrow("lngKST") = 0
-                    intReturnValue = 0 'Kein Fehler
-                Else
-                    subrow("strKstBez") = "n/a"
-
-                End If
-            Else
-                subrow("lngKST") = 0
-                subrow("strKstBez") = "null"
-                intReturnValue = 0
-
-            End If
-            strBitLog += Trim(intReturnValue.ToString)
-
-            ''MwSt prüfen
-            'If Not IsDBNull(subrow("strMwStKey")) Then
-            '    intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("lngMwStSatz"), strStrStCodeSage200)
-            '    If intReturnValue = 0 Then
-            '        subrow("strMwStKey") = strStrStCodeSage200
-            '        'Check of korrekt berechnet
-            '        strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
-            '        If Val(strSteuer(2)) <> subrow("dblMwst") Then
-            '            'Im Fall von Auto-Korrekt anpassen
-            '            Stop
-            '        End If
-            '    Else
-            '        subrow("strMwStKey") = "n/a"
-
-            '    End If
-            'Else
-            '    subrow("strMwStKey") = "null"
-            '    intReturnValue = 0
-
-            'End If
-            'strBitLog += Trim(intReturnValue.ToString)
-
-            'Brutto + MwSt + Netto = 0
-            If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 And IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) = 0 And IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
-                strBitLog += "1"
-
-            Else
-                strBitLog += "0"
-            End If
-
-            'Netto = 0
-            If IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) = 0 And Not booSplittBill Then
-                strBitLog += "1"
-
-            Else
-                strBitLog += "0"
-            End If
-
-            'Brutto = 0
-            If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 Then
-                strBitLog += "1"
-
-            Else
-                strBitLog += "0"
-            End If
-
-            'Brutto - MwSt <> Netto
-            If Math.Abs(IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) - IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) - IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))) > 1 Then
-                strBitLog += "1"
-
-            Else
-                strBitLog += "0"
-            End If
-
-
-            'Statustext zusammen setzten
-            'strStatusText = ""
-            'MwSt
-            If Left(strBitLog, 1) <> "0" Then
-                strStatusText += IIf(strStatusText <> "", ", ", "") + "MwSt"
-            End If
-            'Konto
-            If Mid(strBitLog, 2, 1) <> "0" Then
-                If Left(strBitLog, 1) = "2" Then
-                    strStatusText = "Kto MwSt"
-                Else
-                    strStatusText = "Kto"
-                End If
-            End If
-            'Kst/Ktr
-            If Mid(strBitLog, 3, 1) <> "0" Then
-                strStatusText += IIf(strStatusText <> "", ", ", "") + "KST"
-            End If
-            'Alles 0
-            If Mid(strBitLog, 4, 1) <> "0" Then
-                strStatusText += IIf(strStatusText <> "", ", ", "") + "All0"
-            End If
-            'Netto 0
-            If Mid(strBitLog, 5, 1) <> "0" Then
-                strStatusText += IIf(strStatusText <> "", ", ", "") + "Net0"
-            End If
-            'Brutto 0
-            If Mid(strBitLog, 6, 1) <> "0" Then
-                strStatusText += IIf(strStatusText <> "", ", ", "") + "Brut0"
-            End If
-            'Diff
-            If Mid(strBitLog, 7, 1) <> "0" Then
-                strStatusText += IIf(strStatusText <> "", ", ", "") + "Diff"
-            End If
-
-            If Val(strBitLog) = 0 Then
-                strStatusText += " ok"
-            End If
-
-            'BitLog und Text schreiben
-            subrow("strStatusUBBitLog") = strBitLog
-            subrow("strStatusUBText") = strStatusText
-            strStatusText = ""
-
-            strStatusOverAll = strStatusOverAll Or strBitLog
-
-        Next
-
-        'Falls Soll-Konto-Korretkur gesetzt hier Konto ändern
-        If booCashSollKorrekt And intBuchungsArt = 4 Then
-            lngDebKonto = intSollKonto
-        End If
-
-        'Rückgabe der ganzen Funktion Sub-Prüfung
-        If intSubNumber = 0 Then 'keine Subs
-            Return 9
-        Else
-            If Val(strStatusOverAll) > 0 Then
-                Return 1
-            Else
-                Return 0
-                'If intBuchungsArt = 1 Then
-                '    'OP - Buchung
-                '    'If dblSubNetto <> 0 Or dblSubBrutto <> 0 Or dblSubMwSt <> 0 Then 'Diff
-                '    'Return 2
-                '    'Else
-                '    Return 0
-                '    'End If
-                'Else
-                '    'Belegsbuchung 'Nur Brutto 0 - Test
-                '    If dblSubBrutto <> 0 Then
-                '        Return 3
+                ''MwSt prüfen
+                'If Not IsDBNull(subrow("strMwStKey")) Then
+                '    intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("lngMwStSatz"), strStrStCodeSage200)
+                '    If intReturnValue = 0 Then
+                '        subrow("strMwStKey") = strStrStCodeSage200
+                '        'Check of korrekt berechnet
+                '        strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
+                '        If Val(strSteuer(2)) <> subrow("dblMwst") Then
+                '            'Im Fall von Auto-Korrekt anpassen
+                '            Stop
+                '        End If
                 '    Else
-                '        Return 0
+                '        subrow("strMwStKey") = "n/a"
+
                 '    End If
+                'Else
+                '    subrow("strMwStKey") = "null"
+                '    intReturnValue = 0
+
                 'End If
+                'strBitLog += Trim(intReturnValue.ToString)
+
+                'Brutto + MwSt + Netto = 0
+                If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 And IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) = 0 And IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
+                    strBitLog += "1"
+
+                Else
+                    strBitLog += "0"
+                End If
+
+                'Netto = 0
+                If IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) = 0 And Not booSplittBill Then
+                    strBitLog += "1"
+
+                Else
+                    strBitLog += "0"
+                End If
+
+                'Brutto = 0
+                If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 Then
+                    strBitLog += "1"
+
+                Else
+                    strBitLog += "0"
+                End If
+
+                'Brutto - MwSt <> Netto
+                If Math.Abs(IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) - IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) - IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))) > 1 Then
+                    strBitLog += "1"
+
+                Else
+                    strBitLog += "0"
+                End If
+
+
+                'Statustext zusammen setzten
+                'strStatusText = ""
+                'MwSt
+                If Left(strBitLog, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "MwSt"
+                End If
+                'Konto
+                If Mid(strBitLog, 2, 1) <> "0" Then
+                    If Left(strBitLog, 1) = "2" Then
+                        strStatusText = "Kto MwSt"
+                    Else
+                        strStatusText = "Kto"
+                    End If
+                End If
+                'Kst/Ktr
+                If Mid(strBitLog, 3, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "KST"
+                End If
+                'Alles 0
+                If Mid(strBitLog, 4, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "All0"
+                End If
+                'Netto 0
+                If Mid(strBitLog, 5, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "Net0"
+                End If
+                'Brutto 0
+                If Mid(strBitLog, 6, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "Brut0"
+                End If
+                'Diff
+                If Mid(strBitLog, 7, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "Diff"
+                End If
+
+                If Val(strBitLog) = 0 Then
+                    strStatusText += " ok"
+                End If
+
+                'BitLog und Text schreiben
+                subrow("strStatusUBBitLog") = strBitLog
+                subrow("strStatusUBText") = strStatusText
+                strStatusText = ""
+
+                strStatusOverAll = strStatusOverAll Or strBitLog
+
+            Next
+
+            'Falls Soll-Konto-Korretkur gesetzt hier Konto ändern
+            If booCashSollKorrekt And intBuchungsArt = 4 Then
+                lngDebKonto = intSollKonto
             End If
-        End If
+
+            'Rückgabe der ganzen Funktion Sub-Prüfung
+            If intSubNumber = 0 Then 'keine Subs
+                Return 9
+            Else
+                If Val(strStatusOverAll) > 0 Then
+                    Return 1
+                Else
+                    Return 0
+                    'If intBuchungsArt = 1 Then
+                    '    'OP - Buchung
+                    '    'If dblSubNetto <> 0 Or dblSubBrutto <> 0 Or dblSubMwSt <> 0 Then 'Diff
+                    '    'Return 2
+                    '    'Else
+                    '    Return 0
+                    '    'End If
+                    'Else
+                    '    'Belegsbuchung 'Nur Brutto 0 - Test
+                    '    If dblSubBrutto <> 0 Then
+                    '        Return 3
+                    '    Else
+                    '        Return 0
+                    '    End If
+                    'End If
+                End If
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Fehler Debi-Subbuchungen ")
+
+        Finally
+
+        End Try
+
 
     End Function
 
