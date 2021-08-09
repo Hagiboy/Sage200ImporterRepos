@@ -799,7 +799,7 @@ ErrorHandler:
         Dim dblRDiffNetto As Double
         Dim dblRDiffMwSt As Double
         Dim dblRDiffBrutto As Double
-
+        Dim decDebiDiff As Decimal
 
 
         Dim booPKPrivate As Boolean
@@ -816,7 +816,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                If row("strDebRGNbr") = "1107458" Then Stop
+                If row("strDebRGNbr") = "3338" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -897,11 +897,13 @@ ErrorHandler:
                 End If
                 'booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
                 If booAutoCorrect And row("intBuchungsart") = 1 Then
+                    decDebiDiff = 0
                     'Git es etwas zu korrigieren?
                     If IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) <> dblSubNetto * -1 Or
                         IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) <> dblSubMwSt * -1 Then
                         'IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) <> dblSubBrutto * -1 Or
                         If Math.Abs(row("dblDebBrutto") + dblSubBrutto) < 1 Then
+                            decDebiDiff = Decimal.Round(Math.Abs(row("dblDebBrutto") + dblSubBrutto), 2, MidpointRounding.AwayFromZero)
                             row("dblDebBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero) * -1
                             row("dblDebNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero) * -1
                             row("dblDebMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero) * -1
@@ -1159,7 +1161,7 @@ ErrorHandler:
                 'Autokorretkur
                 If Mid(strBitLog, 5, 1) <> "0" Then
                     If Mid(strBitLog, 5, 1) = "1" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "AutoC"
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "AutoC " + decDebiDiff.ToString
                     ElseIf Mid(strBitLog, 5, 1) = "2" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Round"
                         'Wieder auf 1 setzen damit Beleg gebucht werden kann
@@ -1655,19 +1657,34 @@ ErrorHandler:
                     subrow("lngKST") = strKST
                 End If
 
+                'Zuerst key auf 'ohne' setzen wenn MwSt-Satz = 0 und Mwst-Betrag = 0
+                If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And subrow("strMwStKey") <> "ohne" Then
+                    'Stop
+                    If subrow("strMwStKey") <> "AUSL0" Then
+                        subrow("strMwStKey") = "ohne"
+                    End If
+                End If
+
                 'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
-                If subrow("lngKto") >= 10000 And subrow("lngKto") < 3000 Then
-                    subrow("strMwStKey") = Nothing
-                    subrow("lngKST") = 0
+                If (subrow("lngKto") >= 10000 Or subrow("lngKto") < 3000) Then 'Or subrow("strMwStKey") = "ohne" Then
+                    Select Case subrow("lngKto")
+                        Case 1200, 1500 To 1599, 1600 To 1699, 1700 To 1799
+                            'Nur KST - Buchung resetten
+                            subrow("lngKST") = 0
+                        Case Else
+                            subrow("strMwStKey") = Nothing
+                            subrow("lngKST") = 0
+                    End Select
                 End If
 
                 'MwSt prüfen 01
                 If Not IsDBNull(subrow("strMwStKey")) Then
-                    If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And subrow("strMwStKey") <> "ohne" Then
-                        'Stop
-                        subrow("strMwStKey") = "ohne"
-                    End If
-                    intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")), strStrStCodeSage200, subrow("lngKto"))
+                    intReturnValue = FcCheckMwSt(objdbconn,
+                                                 objFiBhg,
+                                                 subrow("strMwStKey"),
+                                                 IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")),
+                                                 strStrStCodeSage200,
+                                                 subrow("lngKto"))
                     If intReturnValue = 0 Then
                         subrow("strMwStKey") = strStrStCodeSage200
                         'Check ob korrekt berechnet
@@ -1675,18 +1692,20 @@ ErrorHandler:
                         If Val(strSteuer(2)) <> IIf(IsDBNull(subrow("dblMwst")), 0, subrow("dblMwst")) Then
                             'Im Fall von Auto-Korrekt anpassen wenn Toleranz
                             'Stop
-                            If booAutoCorrect And Val(strSteuer(2)) - subrow("dblMwst") <= 1.5 Then
-                                strStatusText += "MwSt " + subrow("dblMwst").ToString
+                            '                            If booAutoCorrect Then 'And Val(strSteuer(2)) - subrow("dblMwst") <= 1.5 Then
+                            strStatusText += "MwSt " + subrow("dblMwst").ToString
                                 subrow("dblMwst") = Val(strSteuer(2))
                                 subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
                                 'subrow("dblNetto") = Decimal.Round(subrow("dblBrutto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
-                                strStatusText += " -> " + subrow("dblMwst").ToString + ", "
-                            Else
-                                If Val(strSteuer(2)) - subrow("dblMwst") > 1.5 Then
-                                    intReturnValue = 1
-                                End If
-                                strStatusText += " -> " + strSteuer(2).ToString + ", "
-                            End If
+                                strStatusText += " cor -> " + subrow("dblMwst").ToString + ", "
+                            '                           Else
+                            '                          If Val(strSteuer(2)) - subrow("dblMwst") > 10 Then
+                            '                         strStatusText += " -> " + strSteuer(2).ToString + ", "
+                            '                        intReturnValue = 1
+                            '                   Else
+                            '                      strStatusText += " Tol -> " + strSteuer(2).ToString + ", "
+                            '                 End If
+                            '                End If
                         End If
                     Else
                         subrow("strMwStKey") = "n/a"
@@ -3406,7 +3425,7 @@ ErrorHandler:
             End If
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            MessageBox.Show(ex.Message, "Problem Debitoren-Nummer-Vergabe Rep_Nr " + intRepNr.ToString)
             Return 9
 
         Finally

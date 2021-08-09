@@ -31,11 +31,12 @@ Friend Class frmImportMain
     Public objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
     Public objdbConnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
     Public objdbMSSQLConn As New SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
+    Public objdbMySQLMail As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringMail"))
     Public objdbAccessConn As New OleDb.OleDbConnection
     Public objdbcommand As New MySqlCommand
     Public objdbcommandZHDB02 As New MySqlCommand
     Public objdbSQLcommand As New SqlCommand
-    Public objDABuchhaltungen As New MySqlDataAdapter("SELECT * FROM t_sage_buchhaltungen WHERE NOT Buchh200_Name IS NULL ORDER BY Buchh_Bez", objdbConn)
+    Public objDABuchhaltungen As New MySqlDataAdapter("SELECT * FROM t_sage_buchhaltungen WHERE NOT Buchh200_Name IS NULL AND NOT Buchh_TableDeb IS NULL ORDER BY Buchh_Bez", objdbConn)
     'Public objDACarsGrid As New MySqlDataAdapter("SELECT tblcars.idCar, tblunits.strUnit, tblplates.strPlate, tblcars.strVIN, tblmodelle.strModell FROM tblcars LEFT JOIN tblunits ON tblcars.refUnit = tblunits.idUnit LEFT JOIN tblplates ON tblcars.refPlate = tblplates.idPlate LEFT JOIN tblmodelle ON tblcars.refModell = tblmodelle.idModell", objdbConn)
     'Public objdtDebitor As New DataTable("tbliDebitor")
     Public objdtBuchhaltungen As New DataTable("tbliBuchhaltungen")
@@ -908,7 +909,7 @@ Friend Class frmImportMain
                                 strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
                             Else
                                 'strBeBuEintrag = "999999" + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"
-                                strBeBuEintrag = ""
+                                strBeBuEintrag = Nothing
                             End If
                             If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then 'And SubRow("strMwStKey") <> "25" Then
                                 If strBuchType = "R" Then
@@ -937,8 +938,8 @@ Friend Class frmImportMain
 
                             End Try
 
-                            strSteuerFeld = ""
-                            strBeBuEintrag = ""
+                            strSteuerFeld = Nothing
+                            strBeBuEintrag = Nothing
 
                             'Status Sub schreiben
                             Application.DoEvents()
@@ -1008,7 +1009,7 @@ Friend Class frmImportMain
                             'MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
                             If (Err.Number And 65535) < 10000 Then
                                 MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung nicht möglich" + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
-                                'booBooingok = False
+                                booBooingok = False
                             Else
                                 MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
                                 booBooingok = True
@@ -2007,47 +2008,133 @@ Friend Class frmImportMain
         Dim strMailText As String
         Dim intColCounter As Int16
         Dim intRowCounter As Int32
+        Dim intAffected As Int16
+        Dim strMailTo As String
 
-        'String zusammensetzen für Mailtext
+        Try
 
-        strMailText = "<table border=""1px solid black"">" + vbCrLf
-        strMailText += "    <thead>" + vbCrLf
-        strMailText += "    <caption>Debitoren</caption>"
-        strMailText += "    <tr>" + vbCrLf
+            Me.Cursor = Cursors.WaitCursor
 
-        intColCounter = 0
-
-        'Zuerst Titel zusammen setzen
-        For intColCounter = 0 To dgvBookings.Columns.Count - 1
-            strMailText += "        <th>" + dgvBookings.Columns(intColCounter).HeaderText + "</th>" + vbCrLf
-        Next
-        strMailText += "    </tr>" + vbCrLf
-        strMailText += "    </thead>" + vbCrLf
-
-        'Footer mit Legende
-        strMailText += "    <tfoot>" + vbCrLf
-        strMailText += "    <tr>" + vbCrLf
-        strMailText += "    <td colspan=""6"">ValD = Valuta-Datum nicht möglich</td>"
-        strMailText += "    </tr>" + vbCrLf
-        strMailText += "    <tr>" + vbCrLf
-        strMailText += "    <td colspan=""6"">RgD = Rechnungs-Datum nicht möglich</td>"
-        strMailText += "    </tr>" + vbCrLf
-        strMailText += "    </tfoot>" + vbCrLf
-
-        'Durch die Tabelle steppen
-        strMailText += "    <tbody>" + vbCrLf
-        For intRowCounter = 0 To dgvBookings.Rows.Count - 1
+            'String zusammensetzen für Mailtext
+            strMailText = "<html>" + vbCrLf
+            strMailText += "<head>" + vbCrLf
+            strMailText += "<style>" + vbCrLf
+            strMailText += "   table, th, td {border: 1px solid; border-collapse: collapse;}" + vbCrLf
+            strMailText += "</style>" + vbCrLf
+            strMailText += "</head>" + vbCrLf
+            strMailText += "<body>" + vbCrLf
+            strMailText += "<table border=""1px solid black"">" + vbCrLf
+            strMailText += "    <thead>" + vbCrLf
+            strMailText += "    <caption><h1> " + cmbBuha.Text + " Debitoren</h1></caption>"
             strMailText += "    <tr>" + vbCrLf
+
+            intColCounter = 0
+
+            'Zuerst Titel zusammen setzen
             For intColCounter = 0 To dgvBookings.Columns.Count - 1
-                strMailText += "        <td>" + dgvBookings.Rows(intRowCounter).Cells(intColCounter).Value.ToString + "</td>" + vbCrLf
+                'Ausblenden intBuchhaltung, ok
+                'Debug.Print("Spalte " + intColCounter.ToString + ", " + dgvBookings.Columns(intColCounter).HeaderText)
+                If intColCounter = 0 Or intColCounter = 11 Or
+                intColCounter = 12 Or intColCounter = 10 Or
+                intColCounter = 15 Or intColCounter = 16 Or
+                intColCounter = 17 Or intColCounter = 18 Or
+                intColCounter = 20 Or
+                intColCounter = 21 Or intColCounter = 23 Or
+                intColCounter = 26 Or intColCounter = 27 Or
+                intColCounter = 39 Then
+                    strMailText += "        <th>" + dgvBookings.Columns(intColCounter).HeaderText + "</th>" + vbCrLf
+                End If
             Next
+            strMailText += "        <th style=""background-color:#FF0000"">" + dgvBookings.Columns(34).HeaderText + "</th>" + vbCrLf
             strMailText += "    </tr>" + vbCrLf
-        Next
-        strMailText += "    </tbody>" + vbCrLf
+            strMailText += "    </thead>" + vbCrLf
 
 
-        strMailText += "</table>"
-        Debug.Print(strMailText)
+            'Durch die Tabelle steppen
+            strMailText += "    <tbody>" + vbCrLf
+            For intRowCounter = 0 To dgvBookings.Rows.Count - 1
+                strMailText += "    <tr>" + vbCrLf
+                For intColCounter = 0 To dgvBookings.Columns.Count - 1
+                    If intColCounter = 0 Or intColCounter = 11 Or
+                intColCounter = 12 Or intColCounter = 10 Or
+                intColCounter = 15 Or intColCounter = 16 Or
+                intColCounter = 17 Or intColCounter = 18 Or
+                intColCounter = 20 Or
+                intColCounter = 21 Or intColCounter = 23 Or
+                intColCounter = 26 Or intColCounter = 27 Or
+                intColCounter = 39 Then
+                        strMailText += "        <td>" + dgvBookings.Rows(intRowCounter).Cells(intColCounter).Value.ToString + "</td>" + vbCrLf
+                    End If
+                Next
+                strMailText += "        <td style=""background-color:#FF0000"">" + dgvBookings.Rows(intRowCounter).Cells(34).Value.ToString + "</td>" + vbCrLf
+                strMailText += "    </tr>" + vbCrLf
+            Next
+            strMailText += "    </tbody>" + vbCrLf
+
+            'Footer mit Legende
+            strMailText += "    <tfoot>" + vbCrLf
+            strMailText += "    <tr>" + vbCrLf
+            strMailText += "    <td colspan=""6"" style=""background-color:#FFA07A""><b>FEHLERMELDUNG</b></td>"
+            strMailText += "    <td colspan=""6"" style=""background-color:#8FBC8F""><b>LOESUNG</b></td>"
+            strMailText += "    </tr>" + vbCrLf
+            strMailText += "    <tr>" + vbCrLf
+            strMailText += "    <td colspan=""6"" style=""background-color:#FFA07A"">ValD = Valuta-Datum nicht möglich</td>"
+            strMailText += "    <td colspan=""6"" style=""background-color:#8FBC8F"">Valuta Datum auf aktuelle Periode anpassen</td>"
+            strMailText += "    </tr>" + vbCrLf
+            strMailText += "    <tr>" + vbCrLf
+            strMailText += "    <td colspan=""6"" style=""background-color:#FFA07A"">RgD = Rechnungs-Datum nicht möglich</td>"
+            strMailText += "    </tr>" + vbCrLf
+            strMailText += "    <tr>" + vbCrLf
+            strMailText += "    <td colspan=""6"" style=""background-color:#FFA07A"">Sub = Problem in den Buchungen</td>"
+            strMailText += "    </tr>" + vbCrLf
+            strMailText += "    <tr>" + vbCrLf
+            strMailText += "    <td colspan=""6"" style=""background-color:#FFA07A"">Rnd>1 = Rundungsbetrag zu gross</td>"
+            strMailText += "    </tr>" + vbCrLf
+            strMailText += "    <tr>" + vbCrLf
+            strMailText += "    <td colspan=""6"" style=""background-color:#FFA07A"">SplB = Verlinkte RG nicht gefunden</td>"
+            strMailText += "    </tr>" + vbCrLf
+            strMailText += "    <tr>" + vbCrLf
+            strMailText += "    <td colspan=""6"" style=""background-color:#FFA07A"">OPDbl = OP existiert schon</td>"
+            strMailText += "    </tr>" + vbCrLf
+            strMailText += "    <tr>" + vbCrLf
+            strMailText += "    <td colspan=""6"" style=""background-color:#FFA07A"">Deb keine Ref = Der Debitor ist nicht spezifiziert</td>"
+            strMailText += "    </tr>" + vbCrLf
+            strMailText += "    </tfoot>" + vbCrLf
+
+            strMailText += "</table>" + vbCrLf
+            strMailText += "</body>" + vbCrLf
+            strMailText += "</html>"
+
+            Debug.Print(strMailText)
+
+            'In Mail Tabelle schreiben
+            If objdbConn.State <> ConnectionState.Open Then
+                objdbConn.Open()
+            End If
+            strMailTo = Main.FcReadFromSettings(objdbConn, "Buchh_ErrDMailTo", cmbBuha.SelectedValue)
+            'objdbConn.Close()
+            objdbMySQLMail.Open()
+            objdbcommand.Connection = objdbMySQLMail
+            objdbcommand.CommandText = "INSERT INTO t_mailout (MailBoxID, Totext, SubjectText, " +
+                                                           "BodyFormat, BodyText, Importance, " +
+                                                           "InterfaceID, SentStatusID, CreatedBy, " +
+                                                           "CreatedByTool) VALUES (" +
+                                                            "7, '" + strMailTo + "', 'Import Sage 200 - Debitoren', " +
+                                                            "1, '" + strMailText + "', 1, " +
+                                                            "3, 1, 'Sage200I', " +
+                                                            "'Sage200 - Importer')"
+            intAffected = objdbcommand.ExecuteNonQuery()
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem " + (Err.Number.ToString))
+
+        Finally
+            objdbConn.Close()
+            objdbMySQLMail.Close()
+            Me.Cursor = Cursors.Default
+
+        End Try
+
 
     End Sub
 

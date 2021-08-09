@@ -178,125 +178,137 @@ Public Class MainDebitor
         Dim strSQL As String
         Dim intFunctionReturns As Int16
 
-        strTableName = Main.FcReadFromSettings(objdbconn, "Buchh_PKTable", intAccounting)
-        strTableType = Main.FcReadFromSettings(objdbconn, "Buchh_PKTableType", intAccounting)
-        strDebFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKField", intAccounting)
-        strDebNewField = Main.FcReadFromSettings(objdbconn, "Buchh_PKNewField", intAccounting)
-        strDebNewFieldType = Main.FcReadFromSettings(objdbconn, "Buchh_PKNewFType", intAccounting)
-        strCompFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKCompany", intAccounting)
-        strStreetFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKStreet", intAccounting)
-        strZIPFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKZIP", intAccounting)
-        strTownFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKTown", intAccounting)
-        strSageName = Main.FcReadFromSettings(objdbconn, "Buchh_PKSageName", intAccounting)
-        strDebiAccField = Main.FcReadFromSettings(objdbconn, "Buchh_DPKAccount", intAccounting)
+        Try
 
-        strSQL = "SELECT * " + 'strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+            strTableName = Main.FcReadFromSettings(objdbconn, "Buchh_PKTable", intAccounting)
+            strTableType = Main.FcReadFromSettings(objdbconn, "Buchh_PKTableType", intAccounting)
+            strDebFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKField", intAccounting)
+            strDebNewField = Main.FcReadFromSettings(objdbconn, "Buchh_PKNewField", intAccounting)
+            strDebNewFieldType = Main.FcReadFromSettings(objdbconn, "Buchh_PKNewFType", intAccounting)
+            strCompFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKCompany", intAccounting)
+            strStreetFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKStreet", intAccounting)
+            strZIPFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKZIP", intAccounting)
+            strTownFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKTown", intAccounting)
+            strSageName = Main.FcReadFromSettings(objdbconn, "Buchh_PKSageName", intAccounting)
+            strDebiAccField = Main.FcReadFromSettings(objdbconn, "Buchh_DPKAccount", intAccounting)
+
+            strSQL = "SELECT * " + 'strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
                  " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
 
-        If strTableName <> "" And strDebFieldName <> "" Then
+            If strTableName <> "" And strDebFieldName <> "" Then
 
-            If strTableType = "O" Then 'Oracle
-                'objOrdbconn.Open()
-                'objOrcommand.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
-                '                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
-                objOrcommand.CommandText = strSQL
-                objdtDebitor.Load(objOrcommand.ExecuteReader)
-                'Ist DebiNrNew Linked oder Direkt
-                'If strDebNewFieldType = "D" Then
+                If strTableType = "O" Then 'Oracle
+                    'objOrdbconn.Open()
+                    'objOrcommand.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+                    '                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
+                    objOrcommand.CommandText = strSQL
+                    objdtDebitor.Load(objOrcommand.ExecuteReader)
+                    'Ist DebiNrNew Linked oder Direkt
+                    'If strDebNewFieldType = "D" Then
 
-                'objOrdbconn.Close()
-            ElseIf strTableType = "M" Then 'MySQL
-                intDebiNew = 0
-                'MySQL - Tabelle einlesen
-                objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting))
-                objdbConnDeb.Open()
-                'objsqlCommDeb.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
-                '                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
-                objsqlCommDeb.CommandText = strSQL
-                objsqlCommDeb.Connection = objdbConnDeb
-                objdtDebitor.Load(objsqlCommDeb.ExecuteReader)
-                objdbConnDeb.Close()
+                    'objOrdbconn.Close()
+                ElseIf strTableType = "M" Then 'MySQL
+                    intDebiNew = 0
+                    'MySQL - Tabelle einlesen
+                    objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting))
+                    objdbConnDeb.Open()
+                    'objsqlCommDeb.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+                    '                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
+                    objsqlCommDeb.CommandText = strSQL
+                    objsqlCommDeb.Connection = objdbConnDeb
+                    objdtDebitor.Load(objsqlCommDeb.ExecuteReader)
+                    objdbConnDeb.Close()
 
-            ElseIf strTableType = "A" Then 'Access
-                'Access
-                Call Main.FcInitAccessConnecation(objdbAccessConn, strMDBName)
-                objlocOLEdbcmd.CommandText = strSQL
-                objdbAccessConn.Open()
-                objlocOLEdbcmd.Connection = objdbAccessConn
-                objdtDebitor.Load(objlocOLEdbcmd.ExecuteReader)
-                objdbAccessConn.Close()
+                ElseIf strTableType = "A" Then 'Access
+                    'Access
+                    Call Main.FcInitAccessConnecation(objdbAccessConn, strMDBName)
+                    objlocOLEdbcmd.CommandText = strSQL
+                    objdbAccessConn.Open()
+                    objlocOLEdbcmd.Connection = objdbAccessConn
+                    objdtDebitor.Load(objlocOLEdbcmd.ExecuteReader)
+                    objdbAccessConn.Close()
 
-            End If
+                End If
 
-            If objdtDebitor.Rows.Count > 0 Then
-                'If IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) And strTableName <> "Tab_Repbetriebe" Then 'Es steht nichts im Feld welches auf den Rep_Betrieb verweist oder wenn direkt
-                ' intDebiNew = 0
-                'Return 2
-                'Else
+                If objdtDebitor.Rows.Count > 0 Then
+                    'If IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) And strTableName <> "Tab_Repbetriebe" Then 'Es steht nichts im Feld welches auf den Rep_Betrieb verweist oder wenn direkt
+                    ' intDebiNew = 0
+                    'Return 2
+                    'Else
 
-                If strTableName <> "Tab_Repbetriebe" Then
-                    'intPKNewField = objdtDebitor.Rows(0).Item(strDebNewField)
-                    If strTableName = "t_customer" Then
-                        intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02,
+                    If strTableName <> "Tab_Repbetriebe" Then
+                        'intPKNewField = objdtDebitor.Rows(0).Item(strDebNewField)
+                        If strTableName = "t_customer" Then
+                            intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02,
                                                            objsqlcommandZHDB02,
                                                            IIf(IsDBNull(objdtDebitor.Rows(0).Item("ID")), 0, objdtDebitor.Rows(0).Item("ID")),
                                                            "P")
-                    Else
-                        intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02,
+                        Else
+                            intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02,
                                                            objsqlcommandZHDB02,
                                                            IIf(IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)), 0, objdtDebitor.Rows(0).Item(strDebNewField)),
                                                            "R")
-                    End If
+                        End If
 
-                    If intPKNewField = 0 Then
-                        'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
-                        If strTableName = "t_customer" Then
-                            intFunctionReturns = Main.FcNextPrivatePKNr(objdbconn, objdtDebitor.Rows(0).Item("ID"), intDebiNew)
-                            If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
-                                intFunctionReturns = Main.FcWriteNewPrivateDebToRepbetrieb(objdbconn, objdtDebitor.Rows(0).Item("ID"), intDebiNew)
-                                If intFunctionReturns = 0 Then 'Schreiben hat geklappt
-                                    Return 1
+                        If intPKNewField = 0 Then
+                            'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
+                            If strTableName = "t_customer" Then
+                                intFunctionReturns = Main.FcNextPrivatePKNr(objdbconn, objdtDebitor.Rows(0).Item("ID"), intDebiNew)
+                                If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
+                                    intFunctionReturns = Main.FcWriteNewPrivateDebToRepbetrieb(objdbconn, objdtDebitor.Rows(0).Item("ID"), intDebiNew)
+                                    If intFunctionReturns = 0 Then 'Schreiben hat geklappt
+                                        Return 1
+                                    End If
+                                End If
+                            Else
+                                intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtDebitor.Rows(0).Item(strDebNewField), intDebiNew)
+                                If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
+                                    intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02, objdtDebitor.Rows(0).Item(strDebNewField), intDebiNew)
+                                    If intFunctionReturns = 0 Then 'Schreiben hat geklappt
+                                        Return 1
+                                    End If
                                 End If
                             End If
+                            'intDebiNew = 0
+                            'Return 3
                         Else
-                            intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtDebitor.Rows(0).Item(strDebNewField), intDebiNew)
+                            intDebiNew = intPKNewField
+                            Return 0
+                        End If
+                    Else 'Wenn Angaben nicht von anderer Tabelle kommen
+                        'Prüfen ob Repbetrieb schon eine neue Nummer erhalten hat.
+                        If Not IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
+                            intDebiNew = objdtDebitor.Rows(0).Item(strDebNewField)
+                        Else
+                            intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02, lngDebiNbr, intDebiNew)
                             If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
-                                intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02, objdtDebitor.Rows(0).Item(strDebNewField), intDebiNew)
+                                intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02, lngDebiNbr, intDebiNew)
                                 If intFunctionReturns = 0 Then 'Schreiben hat geklappt
                                     Return 1
                                 End If
                             End If
                         End If
-                        'intDebiNew = 0
-                        'Return 3
-                    Else
-                        intDebiNew = intPKNewField
                         Return 0
                     End If
-                Else 'Wenn Angaben nicht von anderer Tabelle kommen
-                    'Prüfen ob Repbetrieb schon eine neue Nummer erhalten hat.
-                    If Not IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
-                        intDebiNew = objdtDebitor.Rows(0).Item(strDebNewField)
-                    Else
-                        intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02, lngDebiNbr, intDebiNew)
-                        If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
-                            intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02, lngDebiNbr, intDebiNew)
-                            If intFunctionReturns = 0 Then 'Schreiben hat geklappt
-                                Return 1
-                            End If
-                        End If
-                    End If
-                    Return 0
                 End If
+                'Else
+                'intDebiNew = 0
+                'Return 4
             End If
-            'Else
-            'intDebiNew = 0
-            'Return 4
-        End If
 
-        'End If
+            'End If
 
-        Return intPKNewField
+            Return intPKNewField
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Debitor - Suche")
+            Return 9
+
+        Finally
+            'objdbconnZHDB02.Close()
+
+        End Try
+
 
     End Function
 
@@ -405,6 +417,8 @@ Public Class MainDebitor
                         strLand = "IT"
                     Case "Österreich"
                         strLand = "AT"
+                    Case "USA"
+                        strLand = "US"
                     Case Else
                         strLand = "CH"
                 End Select
