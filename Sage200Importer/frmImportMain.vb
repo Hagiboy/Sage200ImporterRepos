@@ -149,6 +149,7 @@ Friend Class frmImportMain
                               FBhg,
                               DbBhg,
                               PIFin,
+                              BeBu,
                               KrBhg,
                               cmbBuha.SelectedValue,
                               objdtInfo,
@@ -184,6 +185,7 @@ Friend Class frmImportMain
                                FBhg,
                                DbBhg,
                                PIFin,
+                               BeBu,
                                objdbConn,
                                objdbConnZHDB02,
                                objdbcommand,
@@ -420,6 +422,10 @@ Friend Class frmImportMain
         dgvBookingSub.Columns("lngKST").HeaderText = "KST"
         dgvBookingSub.Columns("strKSTBez").Width = 60
         dgvBookingSub.Columns("strKSTBez").HeaderText = "Bezeichnung"
+        dgvBookingSub.Columns("lngProj").Width = 40
+        dgvBookingSub.Columns("lngProj").HeaderText = "Proj"
+        dgvBookingSub.Columns("strProjBez").HeaderText = "Pr.-Bez."
+        dgvBookingSub.Columns("strProjBez").Width = 60
         dgvBookingSub.Columns("dblNetto").Width = 60
         dgvBookingSub.Columns("dblNetto").HeaderText = "Netto"
         dgvBookingSub.Columns("dblNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
@@ -1490,9 +1496,24 @@ Friend Class frmImportMain
 
         Call InitVar()
 
-        Call Main.FcLoginSage(objdbConn, objdbMSSQLConn, objdbSQLcommand, Finanz, FBhg, DbBhg, PIFin, KrBhg, cmbBuha.SelectedValue, objdtInfo, cmbPerioden.SelectedValue)
+        Call Main.FcLoginSage(objdbConn,
+                              objdbMSSQLConn,
+                              objdbSQLcommand,
+                              Finanz,
+                              FBhg,
+                              DbBhg,
+                              PIFin,
+                              BeBu,
+                              KrBhg,
+                              cmbBuha.SelectedValue,
+                              objdtInfo,
+                              cmbPerioden.SelectedValue)
 
-        intReturnValue = MainKreditor.FcFillKredit(cmbBuha.SelectedValue, objdtKreditorenHeadRead, objdtKreditorenSub, objdbConn, objdbAccessConn)
+        intReturnValue = MainKreditor.FcFillKredit(cmbBuha.SelectedValue,
+                                                   objdtKreditorenHeadRead,
+                                                   objdtKreditorenSub,
+                                                   objdbConn,
+                                                   objdbAccessConn)
         If intReturnValue = 1 Then
             MessageBox.Show("Keine Kreditoren-Defintion hinterlegt.", "Keine Definition")
         End If

@@ -99,13 +99,13 @@ Partial Class frmImportMain
         Me.dgvBookings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvBookings.Location = New System.Drawing.Point(12, 158)
         Me.dgvBookings.Name = "dgvBookings"
-        Me.dgvBookings.Size = New System.Drawing.Size(1613, 467)
+        Me.dgvBookings.Size = New System.Drawing.Size(1656, 467)
         Me.dgvBookings.TabIndex = 3
         '
         'butImport
         '
         Me.butImport.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.butImport.Location = New System.Drawing.Point(1493, 54)
+        Me.butImport.Location = New System.Drawing.Point(1536, 54)
         Me.butImport.Name = "butImport"
         Me.butImport.Size = New System.Drawing.Size(132, 41)
         Me.butImport.TabIndex = 4
@@ -117,7 +117,7 @@ Partial Class frmImportMain
         Me.dgvBookingSub.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvBookingSub.Location = New System.Drawing.Point(353, 19)
         Me.dgvBookingSub.Name = "dgvBookingSub"
-        Me.dgvBookingSub.Size = New System.Drawing.Size(774, 133)
+        Me.dgvBookingSub.Size = New System.Drawing.Size(817, 133)
         Me.dgvBookingSub.TabIndex = 5
         '
         'dgvInfo
@@ -131,7 +131,7 @@ Partial Class frmImportMain
         DataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText
         DataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
         Me.dgvInfo.DefaultCellStyle = DataGridViewCellStyle1
-        Me.dgvInfo.Location = New System.Drawing.Point(1133, 19)
+        Me.dgvInfo.Location = New System.Drawing.Point(1176, 19)
         Me.dgvInfo.Name = "dgvInfo"
         Me.dgvInfo.Size = New System.Drawing.Size(354, 133)
         Me.dgvInfo.TabIndex = 7
@@ -139,7 +139,7 @@ Partial Class frmImportMain
         'txtNumber
         '
         Me.txtNumber.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.txtNumber.Location = New System.Drawing.Point(1556, 19)
+        Me.txtNumber.Location = New System.Drawing.Point(1599, 19)
         Me.txtNumber.Name = "txtNumber"
         Me.txtNumber.Size = New System.Drawing.Size(60, 29)
         Me.txtNumber.TabIndex = 8
@@ -147,7 +147,7 @@ Partial Class frmImportMain
         'butImportK
         '
         Me.butImportK.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.butImportK.Location = New System.Drawing.Point(1493, 111)
+        Me.butImportK.Location = New System.Drawing.Point(1536, 111)
         Me.butImportK.Name = "butImportK"
         Me.butImportK.Size = New System.Drawing.Size(132, 41)
         Me.butImportK.TabIndex = 9
@@ -173,7 +173,7 @@ Partial Class frmImportMain
         '
         'butMail
         '
-        Me.butMail.Location = New System.Drawing.Point(1492, 21)
+        Me.butMail.Location = New System.Drawing.Point(1535, 21)
         Me.butMail.Name = "butMail"
         Me.butMail.Size = New System.Drawing.Size(58, 26)
         Me.butMail.TabIndex = 12
@@ -184,7 +184,7 @@ Partial Class frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1637, 637)
+        Me.ClientSize = New System.Drawing.Size(1672, 637)
         Me.Controls.Add(Me.butMail)
         Me.Controls.Add(Me.lblVersion)
         Me.Controls.Add(Me.cmbPerioden)

@@ -195,6 +195,15 @@ Friend NotInheritable Class Main
         strKstBez.MaxLength = 50
         strKstBez.Caption = "Bez."
         DT.Columns.Add(strKstBez)
+        Dim lngProj As DataColumn = New DataColumn("lngProj")
+        lngProj.DataType = System.Type.[GetType]("System.Int32")
+        lngProj.Caption = "Proj"
+        DT.Columns.Add(lngProj)
+        Dim strProjBez As DataColumn = New DataColumn("strProjBez")
+        strProjBez.DataType = System.Type.[GetType]("System.String")
+        strProjBez.MaxLength = 50
+        strProjBez.Caption = "Pr-Bez."
+        DT.Columns.Add(strProjBez)
         Dim dblNetto As DataColumn = New DataColumn("dblNetto")
         dblNetto.DataType = System.Type.[GetType]("System.Double")
         dblNetto.Caption = "Netto"
@@ -506,6 +515,7 @@ Friend NotInheritable Class Main
                                        ByRef objfiBuha As SBSXASLib.AXiFBhg,
                                        ByRef objdbBuha As SBSXASLib.AXiDbBhg,
                                        ByRef objdbPIFb As SBSXASLib.AXiPlFin,
+                                       ByRef objFiBebu As SBSXASLib.AXiBeBu,
                                        ByRef objkrBuha As SBSXASLib.AXiKrBhg,
                                        ByVal intAccounting As Int16,
                                        ByRef objdtInfo As DataTable,
@@ -584,13 +594,15 @@ isOk:
         'Finanz Buha öffnen
         objfiBuha = Nothing
         objfiBuha = New SBSXASLib.AXiFBhg
-        objfiBuha = objFinanz.GetFibuObj
+        objfiBuha = objFinanz.GetFibuObj()
         'Debitor öffnen
         objdbBuha = Nothing
         objdbBuha = New SBSXASLib.AXiDbBhg
-        objdbBuha = objFinanz.GetDebiObj
+        objdbBuha = objFinanz.GetDebiObj()
         objdbPIFb = Nothing
-        objdbPIFb = objfiBuha.GetCheckObj
+        objdbPIFb = objfiBuha.GetCheckObj()
+        objFiBebu = Nothing
+        objFiBebu = objFinanz.GetBeBuObj()
         'Kreditor
         objkrBuha = Nothing
         objkrBuha = New SBSXASLib.AXiKrBhg
@@ -767,6 +779,7 @@ ErrorHandler:
                                         ByRef objfiBuha As SBSXASLib.AXiFBhg,
                                         ByRef objdbBuha As SBSXASLib.AXiDbBhg,
                                         ByRef objdbPIFb As SBSXASLib.AXiPlFin,
+                                        ByRef objFiBebu As SBSXASLib.AXiBeBu,
                                         ByRef objdbconn As MySqlConnection,
                                         ByRef objdbconnZHDB02 As MySqlConnection,
                                         ByRef objsqlcommand As MySqlCommand,
@@ -816,7 +829,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                If row("strDebRGNbr") = "3338" Then Stop
+                'If row("strDebRGNbr") = "3338" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -878,6 +891,7 @@ ErrorHandler:
                                                     objdbconn,
                                                     objfiBuha,
                                                     objdbPIFb,
+                                                    objFiBebu,
                                                     row("intBuchungsart"),
                                                     booAutoCorrect,
                                                     booCpyKSTToSub,
@@ -1250,7 +1264,7 @@ ErrorHandler:
                     strDebiSubText = row("strDebText")
                 End If
                 selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
-                            For Each subrow In selsubrow
+                For Each subrow In selsubrow
                     subrow("strDebSubText") = strDebiSubText
                 Next
 
@@ -1495,6 +1509,42 @@ ErrorHandler:
 
     End Function
 
+    Public Shared Function FcCheckProj(ByRef objFiBebu As SBSXASLib.AXiBeBu,
+                                       ByVal intProj As Int32,
+                                       ByRef strProjDesc As String) As Int16
+
+        'Returns 0=ok, 9=Problem
+
+        Dim strLine As String
+        Dim booFoundProject As Boolean
+        Dim strProjectAr() As String
+
+        booFoundProject = False
+        strLine = ""
+
+        Call objFiBebu.ReadProjektTree(0)
+
+        strLine = objFiBebu.GetProjektLine()
+        Do While strLine <> "EOF"
+            strProjectAr = Split(strLine, "{>}")
+            Debug.Print("Aktuelle Line: " + strLine)
+            'Projekt gefunden?
+            If Val(strProjectAr(0)) = intProj Then
+                booFoundProject = True
+                strProjDesc = strProjectAr(1)
+            End If
+            strLine = objFiBebu.GetProjektLine()
+        Loop
+
+        If booFoundProject Then
+            Return 0
+        Else
+            Return 9
+        End If
+
+    End Function
+
+
     Public Shared Function FcCheckMwSt(ByRef objdbconn As MySqlConnection,
                                        ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                        ByVal strStrCode As String,
@@ -1517,6 +1567,9 @@ ErrorHandler:
                 If intKonto >= 3000 And intKonto <= 3999 Then
                     strStrCode = "frei"
                 End If
+            ElseIf strStrCode = "null" Then
+                strStrCode200 = "00"
+                Return 0
             End If
 
             'Besprechung mit Muhi 20201209 => Es soll eine fixe Vergabe des MStSchlüssels passieren 
@@ -1587,6 +1640,7 @@ ErrorHandler:
                                               ByRef objdbconn As MySqlConnection,
                                               ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                               ByRef objFiPI As SBSXASLib.AXiPlFin,
+                                              ByRef objFiBebu As SBSXASLib.AXiBeBu,
                                               ByVal intBuchungsArt As Int32,
                                               ByVal booAutoCorrect As Boolean,
                                               ByVal booCpyKSTToSub As Boolean,
@@ -1615,6 +1669,7 @@ ErrorHandler:
         Dim strStatusOverAll As String = "0000000"
         Dim strSteuer() As String
         Dim intSollKonto As Int32 = lngDebKonto
+        Dim strProjDesc As String
 
         Try
 
@@ -1658,7 +1713,7 @@ ErrorHandler:
                 End If
 
                 'Zuerst key auf 'ohne' setzen wenn MwSt-Satz = 0 und Mwst-Betrag = 0
-                If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And subrow("strMwStKey") <> "ohne" Then
+                If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And subrow("strMwStKey") <> "ohne" And subrow("strMwStKey") <> "null" Then
                     'Stop
                     If subrow("strMwStKey") <> "AUSL0" Then
                         subrow("strMwStKey") = "ohne"
@@ -1678,7 +1733,7 @@ ErrorHandler:
                 End If
 
                 'MwSt prüfen 01
-                If Not IsDBNull(subrow("strMwStKey")) Then
+                If Not IsDBNull(subrow("strMwStKey")) And IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "null" Then
                     intReturnValue = FcCheckMwSt(objdbconn,
                                                  objFiBhg,
                                                  subrow("strMwStKey"),
@@ -1694,10 +1749,10 @@ ErrorHandler:
                             'Stop
                             '                            If booAutoCorrect Then 'And Val(strSteuer(2)) - subrow("dblMwst") <= 1.5 Then
                             strStatusText += "MwSt " + subrow("dblMwst").ToString
-                                subrow("dblMwst") = Val(strSteuer(2))
-                                subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
-                                'subrow("dblNetto") = Decimal.Round(subrow("dblBrutto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
-                                strStatusText += " cor -> " + subrow("dblMwst").ToString + ", "
+                            subrow("dblMwst") = Val(strSteuer(2))
+                            subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                            'subrow("dblNetto") = Decimal.Round(subrow("dblBrutto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                            strStatusText += " cor -> " + subrow("dblMwst").ToString + ", "
                             '                           Else
                             '                          If Val(strSteuer(2)) - subrow("dblMwst") > 10 Then
                             '                         strStatusText += " -> " + strSteuer(2).ToString + ", "
@@ -1793,6 +1848,24 @@ ErrorHandler:
                     subrow("strKstBez") = "null"
                     intReturnValue = 0
 
+                End If
+                strBitLog += Trim(intReturnValue.ToString)
+
+                'Projekt prüfen
+                If IIf(IsDBNull(subrow("lngProj")), 0, subrow("lngProj")) > 0 Then
+                    intReturnValue = FcCheckProj(objFiBebu,
+                                                 subrow("lngProj"),
+                                                 strProjDesc)
+                    If intReturnValue = 0 Then
+                        subrow("strProjBez") = strProjDesc
+                    ElseIf intReturnValue = 9 Then
+                        subrow("strProjBez") = "n/a"
+                    End If
+
+                Else
+                    subrow("lngProj") = 0
+                    subrow("strProjBez") = "null"
+                    intReturnValue = 0
                 End If
                 strBitLog += Trim(intReturnValue.ToString)
 
@@ -2357,7 +2430,11 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcCheckKstKtr(ByVal lngKST As Long, objFiBhg As SBSXASLib.AXiFBhg, ByRef objFiPI As SBSXASLib.AXiPlFin, ByVal lngKonto As Long, ByRef strKstKtrSage200 As String) As Int16
+    Public Shared Function FcCheckKstKtr(ByVal lngKST As Long,
+                                         ByRef objFiBhg As SBSXASLib.AXiFBhg,
+                                         ByRef objFiPI As SBSXASLib.AXiPlFin,
+                                         ByVal lngKonto As Long,
+                                         ByRef strKstKtrSage200 As String) As Int16
 
         'return 0=ok, 1=Kst existiert kene Kostenart, 2=Kst nicht defniert, 3=nicht auf Konto anwendbar 1000 - 2999
 
@@ -2373,22 +2450,22 @@ ErrorHandler:
         Try
             'If CInt(Left(lngKonto.ToString, 1)) >= 3 Then
             strReturn = objFiBhg.GetKstKtrInfo(lngKST.ToString)
-                If strReturn = "EOF" Then
-                    Return 2
-                Else
-                    strReturnAr = Split(strReturn, "{>}")
-                    strKstKtrSage200 = strReturnAr(1)
-                    strKst = Convert.ToString(lngKST)
-                    strKA = Convert.ToString(lngKonto)
-                    'Ist Kst auf Kostenbart definiert?
-                    booKstKAok = objFiPI.CheckKstKtr(strKst, strKA)
+            If strReturn = "EOF" Then
+                Return 2
+            Else
+                strReturnAr = Split(strReturn, "{>}")
+                strKstKtrSage200 = strReturnAr(1)
+                strKst = Convert.ToString(lngKST)
+                strKA = Convert.ToString(lngKonto)
+                'Ist Kst auf Kostenbart definiert?
+                booKstKAok = objFiPI.CheckKstKtr(strKst, strKA)
 
-                    If booKstKAok Then
-                        Return 0
-                    Else
-                        Return 1
-                    End If
+                If booKstKAok Then
+                    Return 0
+                Else
+                    Return 1
                 End If
+            End If
             'Else
             'Return 3
             'End If
