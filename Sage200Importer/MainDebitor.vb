@@ -1019,7 +1019,11 @@ Public Class MainDebitor
         objOracleCmd.CommandText = "SELECT KUNDENZEICHEN FROM TAB_JOURNALSTAMM WHERE JORNALNR=" + lngJournalNr.ToString
         objdtJournalKZ.Load(objOracleCmd.ExecuteReader)
 
-        Return objdtJournalKZ.Rows(0).Item(0)
+        If Not IsDBNull(objdtJournalKZ.Rows(0).Item(0)) Then
+            Return objdtJournalKZ.Rows(0).Item(0)
+        Else
+            Return "n/a"
+        End If
 
     End Function
 

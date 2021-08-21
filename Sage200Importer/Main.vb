@@ -829,7 +829,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "3338" Then Stop
+                'If row("strDebRGNbr") = "1139816" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -3305,8 +3305,9 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function fcCheckTransitorischeDebit(ByVal intAccounting As Int16, ByRef objdbconn As MySqlConnection,
-                                       ByRef objdbAccessConn As OleDb.OleDbConnection)
+    Public Shared Function fcCheckTransitorischeDebit(ByVal intAccounting As Int16,
+                                                      ByRef objdbconn As MySqlConnection,
+                                                      ByRef objdbAccessConn As OleDb.OleDbConnection)
 
         Dim strSQLMan As String
         'Dim strSQLSub As String
@@ -3401,6 +3402,105 @@ ErrorHandler:
 
 
     End Function
+
+    Public Shared Function fcCheckTransitorischeKredit(ByVal intAccounting As Int16,
+                                                       ByRef objdbconn As MySqlConnection,
+                                                       ByRef objdbAccessConn As OleDb.OleDbConnection)
+
+        Dim strSQLMan As String
+        'Dim strSQLSub As String
+        Dim strRGTableType As String
+        Dim objRGMySQLConn As New MySqlConnection
+        Dim objlocMySQLcmd As New MySqlCommand
+        Dim objlocOLEdbcmd As New OleDb.OleDbCommand
+        Dim booTransits As Boolean
+        Dim intAffected As Int16
+
+        Dim tblCompute As New DataTable()
+        Dim booTransitcond As Boolean
+
+
+        Dim objDTTransitDebits As New DataTable
+        Dim strMDBName As String
+
+
+        Try
+
+            objdbconn.Open()
+            'Gibt es transitorische Buchungen?
+            booTransits = CBool(FcReadFromSettings(objdbconn, "Buchh_Transit", intAccounting))
+
+            If booTransits Then
+
+                'Table - Art lesen
+                strRGTableType = FcReadFromSettings(objdbconn, "Buchh_KRGTableType", intAccounting)
+                'Debitoren - Table Name lesen
+                strMDBName = FcReadFromSettings(objdbconn, "Buchh_KRGTableMDB", intAccounting)
+
+                'Debitzoren Transit-Queries für Mandant einlesen
+                strSQLMan = "SELECT * FROM t_sage_buchhaltungen_sub WHERE strType='K' AND refMandant=" + intAccounting.ToString
+                objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
+                objlocMySQLcmd.Connection = objRGMySQLConn
+                objlocMySQLcmd.CommandText = strSQLMan
+                objRGMySQLConn.Open()
+                objDTTransitDebits.Load(objlocMySQLcmd.ExecuteReader)
+                objRGMySQLConn.Close()
+
+                For Each rowdebitquery As DataRow In objDTTransitDebits.Rows
+
+                    If IIf(IsDBNull(rowdebitquery("strCondition")), "", rowdebitquery("strCondition")) <> "" Then
+                        'Es wurde eine Bedingung definiert
+                        booTransitcond = Convert.ToBoolean(tblCompute.Compute("#" + DateTime.Now.ToString("yyyy-MM-dd") + "#" + rowdebitquery("strCondition"), Nothing))
+                        'Debug.Print("Result " + "#" + DateTime.Now.ToString("yyyy-MM-dd") + "#" + rowdebitquery("strCondition") + ", " + booTransitcond.ToString)
+                    Else
+                        booTransitcond = True
+                    End If
+
+                    If booTransitcond Then
+                        'Debug.Print("Running Query " + rowdebitquery("strSQL"))
+                        If strRGTableType = "A" Then
+                            'Access
+                            Call FcInitAccessConnecation(objdbAccessConn, strMDBName)
+                            objdbAccessConn.Open()
+                            objlocOLEdbcmd.Connection = objdbAccessConn
+                            objlocOLEdbcmd.CommandText = rowdebitquery("strSQL")
+                            intAffected = objlocOLEdbcmd.ExecuteNonQuery()
+                            objdbAccessConn.Close()
+                        ElseIf strRGTableType = "M" Then
+                            'MySQL
+                            objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                            objRGMySQLConn.Open()
+                            objlocMySQLcmd.Connection = objRGMySQLConn
+                            objlocMySQLcmd.CommandText = rowdebitquery("strSQL")
+                            intAffected = objlocMySQLcmd.ExecuteNonQuery()
+                            objRGMySQLConn.Close()
+                        End If
+                    End If
+
+                Next
+
+
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Transitorisch-Check Kreditoren", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+
+        Finally
+            If objRGMySQLConn.State = ConnectionState.Open Then
+                objRGMySQLConn.Close()
+            End If
+            If objdbconn.State = ConnectionState.Open Then
+                objdbconn.Close()
+            End If
+            If objdbAccessConn.State = ConnectionState.Open Then
+                objdbAccessConn.Close()
+            End If
+
+        End Try
+
+
+    End Function
+
 
     Public Shared Function FcInitAccessConnecation(ByRef objaccesscon As OleDb.OleDbConnection, ByVal strMDBName As String) As Int16
 

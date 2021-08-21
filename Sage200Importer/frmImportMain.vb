@@ -97,195 +97,111 @@ Friend Class frmImportMain
 
         Dim strIncrBelNbr As String = ""
 
-        ''Compute - Text
-        'Dim tblCompute As New DataTable()
-        'Dim booResult As Boolean
-        'booResult = Convert.ToBoolean(tblCompute.Compute("#" + DateTime.Now.ToString("yyyy-MM-dd") + "#" + ">=#2020-11-19#", Nothing))
-        'Debug.Print("Result " + "#" + DateTime.Now.ToString("yyyy-MM-dd") + "#" + ">=#2020-11-19#" + booResult.ToString)
-        'Stop
 
-        Me.Cursor = Cursors.WaitCursor
+        Try
 
-        intMode = 0
+            Me.Cursor = Cursors.WaitCursor
 
-        objdtDebitorenHead = Nothing
-        objdtDebitorenHeadRead = Nothing
-        objdtDebitorenSub = Nothing
+            intMode = 0
 
-        'Tabelle Debi/ Kredi Head erstellen
-        objdtDebitorenHead = Main.tblDebitorenHead()
-        objdtDebitorenHeadRead = Main.tblDebitorenHead()
-        'objdtKreditorenHead = Main.tblKreditorenHead()
+            objdtDebitorenHead = Nothing
+            objdtDebitorenHeadRead = Nothing
+            objdtDebitorenSub = Nothing
 
-        'Tabelle Debi/ Kredi Sub erstellen
-        objdtDebitorenSub = Main.tblDebitorenSub()
-        'objdtKreditorenSub = Main.tblKreditorenSub()
+            'Tabelle Debi/ Kredi Head erstellen
+            objdtDebitorenHead = Main.tblDebitorenHead()
+            objdtDebitorenHeadRead = Main.tblDebitorenHead()
 
 
-        'objdtDebitorenHead.Clear()
-        'objdtDebitorenHeadRead.Clear()
-        'objdtDebitorenSub.Clear()
-        objdtInfo.Clear()
+            'Tabelle Debi/ Kredi Sub erstellen
+            objdtDebitorenSub = Main.tblDebitorenSub()
 
-        'dgvBookings.Rows.Clear()
-        If dgvBookings.Columns.Contains("intBuchungsart") Then
-            dgvBookings.Columns.Remove("intBuchungsart")
-        End If
+            objdtInfo.Clear()
 
-        'DGV Debitoren
-        dgvBookings.DataSource = objdtDebitorenHead
-        dgvBookingSub.DataSource = objdtDebitorenSub
-        objdbConn.Open()
-        Call InitdgvDebitoren()
-        Call InitdgvDebitorenSub()
-        objdbConn.Close()
+            'dgvBookings.Rows.Clear()
+            If dgvBookings.Columns.Contains("intBuchungsart") Then
+                dgvBookings.Columns.Remove("intBuchungsart")
+            End If
 
-        Call InitVar()
+            'DGV Debitoren
+            dgvBookings.DataSource = objdtDebitorenHead
+            dgvBookingSub.DataSource = objdtDebitorenSub
+            objdbConn.Open()
+            Call InitdgvDebitoren()
+            Call InitdgvDebitorenSub()
+            objdbConn.Close()
 
-        Call Main.FcLoginSage(objdbConn,
-                              objdbMSSQLConn,
-                              objdbSQLcommand,
-                              Finanz,
-                              FBhg,
-                              DbBhg,
-                              PIFin,
-                              BeBu,
-                              KrBhg,
-                              cmbBuha.SelectedValue,
-                              objdtInfo,
-                              cmbPerioden.SelectedItem)
+            Call InitVar()
 
-        'Transitorische Buchungen?
-        Call Main.fcCheckTransitorischeDebit(cmbBuha.SelectedValue,
-                                             objdbConn,
-                                             objdbAccessConn)
+            Call Main.FcLoginSage(objdbConn,
+                                  objdbMSSQLConn,
+                                  objdbSQLcommand,
+                                  Finanz,
+                                  FBhg,
+                                  DbBhg,
+                                  PIFin,
+                                  BeBu,
+                                  KrBhg,
+                                  cmbBuha.SelectedValue,
+                                  objdtInfo,
+                                  cmbPerioden.SelectedItem)
 
-        'Gibt es eine Query auszuführen bevor dem Buchen?
-        Call MainDebitor.FcExecuteBeforeDebit(cmbBuha.SelectedValue, objdbConn)
+            'Transitorische Buchungen?
+            Call Main.fcCheckTransitorischeDebit(cmbBuha.SelectedValue,
+                                                 objdbConn,
+                                                 objdbAccessConn)
 
-        Call MainDebitor.FcFillDebit(cmbBuha.SelectedValue,
-                                     objdtDebitorenHeadRead,
-                                     objdtDebitorenSub,
-                                     objdbConn,
-                                     objdbAccessConn,
-                                     objOracleConn,
-                                     objOracleCmd)
+            'Gibt es eine Query auszuführen bevor dem Buchen?
+            Call MainDebitor.FcExecuteBeforeDebit(cmbBuha.SelectedValue, objdbConn)
 
-        Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead, objdtDebitorenHead)
+            Call MainDebitor.FcFillDebit(cmbBuha.SelectedValue,
+                                         objdtDebitorenHeadRead,
+                                         objdtDebitorenSub,
+                                         objdbConn,
+                                         objdbAccessConn,
+                                         objOracleConn,
+                                         objOracleCmd)
 
-        'Grid neu aufbauen
-        dgvBookingSub.Update()
-        dgvBookings.Update()
-        dgvBookings.Refresh()
+            Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead, objdtDebitorenHead)
 
-        Call Main.FcCheckDebit(cmbBuha.SelectedValue,
-                               objdtDebitorenHead,
-                               objdtDebitorenSub,
-                               Finanz,
-                               FBhg,
-                               DbBhg,
-                               PIFin,
-                               BeBu,
-                               objdbConn,
-                               objdbConnZHDB02,
-                               objdbcommand,
-                               objdbcommandZHDB02,
-                               objOracleConn,
-                               objOracleCmd,
-                               objdbAccessConn,
-                               objdtInfo,
-                               cmbBuha.Text)
+            'Grid neu aufbauen
+            dgvBookingSub.Update()
+            dgvBookings.Update()
+            dgvBookings.Refresh()
 
-        'Anzahl schreiben
-        txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
+            Call Main.FcCheckDebit(cmbBuha.SelectedValue,
+                                   objdtDebitorenHead,
+                                   objdtDebitorenSub,
+                                   Finanz,
+                                   FBhg,
+                                   DbBhg,
+                                   PIFin,
+                                   BeBu,
+                                   objdbConn,
+                                   objdbConnZHDB02,
+                                   objdbcommand,
+                                   objdbcommandZHDB02,
+                                   objOracleConn,
+                                   objOracleCmd,
+                                   objdbAccessConn,
+                                   objdtInfo,
+                                   cmbBuha.Text)
 
-        ''Ipmort Kredit hiden
-        Me.butImportK.Enabled = False
-        Me.butImport.Enabled = True
+            'Anzahl schreiben
+            txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
 
-        'strIncrBelNbr = DbBhg.IncrBelNbr
-        'Debug.Print("Increment " + strIncrBelNbr)
+            ''Ipmort Kredit hiden
+            Me.butImportK.Enabled = False
+            Me.butImport.Enabled = True
 
-        'Call 
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem Debitorenauflistung", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
-        'Debug.Print("Gewählt " + cmbBuha.SelectedValue.ToString)
+        Finally
 
-        'Vorübergehend
-        'strMandant = "ZZ"
+            Me.Cursor = Cursors.Default
 
-        'Finanz = Nothing
-        'Finanz = New SBSXASLib.AXFinanz
-
-        'Loign
-        'Call Finanz.ConnectSBSdbNoPrompt("sage_Sage200", "Sage200", "sage200admin", "sage200", "")
-        'Call Finanz.ConnectSBSdb("ZHAP03", "Sage200", "sage200admin", "sage200", "")
-
-        'Check Mandant
-        'booAccOk = Finanz.CheckMandant(strMandant)
-        'Debug.Print("Ok " + booAccOk.ToString)
-
-        'Check Access-Level
-        'booAccOk = Finanz.CheckAccess(0, strMandant) 'admin
-        'booAccOk = Finanz.CheckAccess(1, strMandant) 'hauptbuch
-        'booAccOk = Finanz.CheckAccess(2, strMandant) 'debi
-        'booAccOk = Finanz.CheckAccess(3, strMandant) 'kredi
-        'booAccOk = Finanz.CheckAccess(4, strMandant) 'lohn
-        'booAccOk = Finanz.CheckAccess(14, strMandant) 'darlehen
-
-        'Check Periode
-        'booAccOk = Finanz.CheckPeriode(strMandant, "2020")
-
-        'Open Mandantg
-        'Finanz.OpenMandant(strMandant, "2020")
-
-        'If b = 0 Then GoTo isOk
-        'b = b - 200
-        'MsgBox("Mandant oder Periode falsch - Programm beendet", 0, "Fehler")
-        'Finanz = Nothing
-        'End
-
-        'isOk:
-        'Debitor öffnen und Konto überprüfen
-        'Dim db As SBSXASLib.AXiDbBhg
-        'DbBhg = Nothing
-        'DbBhg = Finanz.GetDebiObj
-        'db = Main_Renamed.Finanz.GetDebiObj
-        'UPGRADE_WARNING: Couldn't resolve default property of object s. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-        's = db.ReadDebitor3(CInt(DebitorID.Text), WhgID.Text)
-        's = DbBhg.ReadDebitor3(-1000, "")
-        'Debug.Print("Angaben Debitor " + s)
-        'UPGRADE_NOTE: Object db may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
-        'db = Nothing
-
-        'UPGRADE_WARNING: Couldn't resolve default property of object s. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-        'AusgabeText.Text = "ReadDebitor3:" & Chr(13) & Chr(10) & s
-
-
-
-        'MsgBox("OpenMandant:" & Chr(13) & Chr(10) & "Funktionierte")
-        'in Cells ToolTip setzen
-        'Dim ToolTipAr() As DataRow
-        'For Each row In dgvDebitoren.Rows
-        '    row.Cells(0).ToolTipText = objdtDebitorenSub.Columns("strRGNr").Caption + vbTab + objdtDebitorenSub.Columns("intSollHaben").Caption + vbTab + objdtDebitorenSub.Columns("lngKto").Caption + vbTab +
-        '        objdtDebitorenSub.Columns("strKtoBez").Caption + vbTab + objdtDebitorenSub.Columns("lngKST").Caption + vbTab + objdtDebitorenSub.Columns("strKSTBez").Caption + vbTab + objdtDebitorenSub.Columns("dblNetto").Caption +
-        '        vbTab + objdtDebitorenSub.Columns("dblMwSt").Caption + vbTab + objdtDebitorenSub.Columns("dblBrutto").Caption + vbTab + objdtDebitorenSub.Columns("lngMwStSatz").Caption +
-        '        vbTab + objdtDebitorenSub.Columns("strDebSubText").Caption + "/ " + objdtDebitorenSub.Columns("strStatusUBText").Caption
-        '    ToolTipAr = objdtDebitorenSub.Select("strRGNr='" + row.Cells(0).Value + "' AND intSollHaben<2")
-        '    For Each ttrow In ToolTipAr
-        '        row.Cells(0).ToolTipText = row.Cells(0).ToolTipText + vbCrLf + ttrow("strRGNr") + vbTab + ttrow("intSollHaben").ToString + vbTab + ttrow("lngKto").ToString + vbTab + ttrow("strKtoBez") + vbTab + ttrow("lngKST").ToString +
-        '            vbTab + ttrow("strKSTBez") + vbTab + ttrow("dblNetto").ToString + vbTab + ttrow("dblMwSt").ToString + vbTab + ttrow("dblBrutto").ToString + vbTab + ttrow("lngMwStSatz").ToString + vbTab + ttrow("strDebSubText") +
-        '            "/ " + ttrow("strStatusUBText")
-        '    Next
-        'Next
-        Me.Cursor = Cursors.Default
-        Exit Sub
-
-        'ErrorHandler:
-        'UPGRADE_WARNING: Couldn't resolve default property of object b. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-        '        b = Err.Number And 65535
-        'UPGRADE_WARNING: Couldn't resolve default property of object b. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-        '        MsgBox("OpenMandant:" & Chr(13) & Chr(10) & "Error" & Chr(13) & Chr(10) & "Die Button auf dem Main wurden ausgeschaltet !!!" & Chr(13) & Chr(10) & "Error # " & Str(Err.Number) & " was generated by " & Err.Source & Chr(13) & Chr(10) & Err.Description & " Unsere Fehlernummer" & Str(b))
-        '       Err.Clear()
+        End Try
 
 
     End Sub
@@ -1462,41 +1378,43 @@ Friend Class frmImportMain
 
         Dim intReturnValue As Int16
 
-        Me.Cursor = Cursors.WaitCursor
+        Try
 
-        intMode = 1
+            Me.Cursor = Cursors.WaitCursor
 
-        objdtKreditorenHead = Nothing
-        objdtKreditorenHeadRead = Nothing
-        objdtKreditorenSub = Nothing
+            intMode = 1
 
-        'Tabelle Kredi - Head erstellen
-        objdtKreditorenHead = Main.tblKreditorenHead()
-        objdtKreditorenHeadRead = Main.tblKreditorenHead()
+            objdtKreditorenHead = Nothing
+            objdtKreditorenHeadRead = Nothing
+            objdtKreditorenSub = Nothing
 
-        'Tabelle Kreditoren - Sub erstellen
-        objdtKreditorenSub = Main.tblKreditorenSub()
+            'Tabelle Kredi - Head erstellen
+            objdtKreditorenHead = Main.tblKreditorenHead()
+            objdtKreditorenHeadRead = Main.tblKreditorenHead()
 
-        'objdtKreditorenHead.Clear()
-        'objdtKreditorenSub.Clear()
-        'objdtKreditorenHeadRead.Clear()
-        objdtInfo.Clear()
+            'Tabelle Kreditoren - Sub erstellen
+            objdtKreditorenSub = Main.tblKreditorenSub()
 
-        If dgvBookings.Columns.Contains("intBuchungsart") Then
-            dgvBookings.Columns.Remove("intBuchungsart")
-        End If
+            'objdtKreditorenHead.Clear()
+            'objdtKreditorenSub.Clear()
+            'objdtKreditorenHeadRead.Clear()
+            objdtInfo.Clear()
 
-        'DGV Kreditoren
-        dgvBookings.DataSource = objdtKreditorenHead
-        dgvBookingSub.DataSource = objdtKreditorenSub
-        objdbConn.Open()
-        Call InitdgvKreditoren()
-        Call InitdgvKreditorenSub()
-        objdbConn.Close()
+            If dgvBookings.Columns.Contains("intBuchungsart") Then
+                dgvBookings.Columns.Remove("intBuchungsart")
+            End If
 
-        Call InitVar()
+            'DGV Kreditoren
+            dgvBookings.DataSource = objdtKreditorenHead
+            dgvBookingSub.DataSource = objdtKreditorenSub
+            objdbConn.Open()
+            Call InitdgvKreditoren()
+            Call InitdgvKreditorenSub()
+            objdbConn.Close()
 
-        Call Main.FcLoginSage(objdbConn,
+            Call InitVar()
+
+            Call Main.FcLoginSage(objdbConn,
                               objdbMSSQLConn,
                               objdbSQLcommand,
                               Finanz,
@@ -1509,23 +1427,29 @@ Friend Class frmImportMain
                               objdtInfo,
                               cmbPerioden.SelectedValue)
 
-        intReturnValue = MainKreditor.FcFillKredit(cmbBuha.SelectedValue,
+            'Transitorische Buchungen?
+            Call Main.fcCheckTransitorischeKredit(cmbBuha.SelectedValue,
+                                             objdbConn,
+                                             objdbAccessConn)
+
+
+            intReturnValue = MainKreditor.FcFillKredit(cmbBuha.SelectedValue,
                                                    objdtKreditorenHeadRead,
                                                    objdtKreditorenSub,
                                                    objdbConn,
                                                    objdbAccessConn)
-        If intReturnValue = 1 Then
-            MessageBox.Show("Keine Kreditoren-Defintion hinterlegt.", "Keine Definition")
-        End If
+            If intReturnValue = 1 Then
+                MessageBox.Show("Keine Kreditoren-Defintion hinterlegt.", "Keine Definition")
+            End If
 
-        Call Main.InsertDataTableColumnName(objdtKreditorenHeadRead, objdtKreditorenHead)
+            Call Main.InsertDataTableColumnName(objdtKreditorenHeadRead, objdtKreditorenHead)
 
-        'Grid neu aufbauen
-        dgvBookingSub.Update()
-        dgvBookings.Update()
-        dgvBookings.Refresh()
+            'Grid neu aufbauen
+            dgvBookingSub.Update()
+            dgvBookings.Update()
+            dgvBookings.Refresh()
 
-        Call Main.FcCheckKredit(cmbBuha.SelectedValue,
+            Call Main.FcCheckKredit(cmbBuha.SelectedValue,
                                 objdtKreditorenHead,
                                 objdtKreditorenSub,
                                 Finanz,
@@ -1542,14 +1466,23 @@ Friend Class frmImportMain
                                 objdtInfo,
                                 cmbBuha.Text)
 
-        'Anzahl schreiben
-        txtNumber.Text = objdtKreditorenHead.Rows.Count.ToString
+            'Anzahl schreiben
+            txtNumber.Text = objdtKreditorenHead.Rows.Count.ToString
 
-        'Import Debitoren desattivate
-        Me.butImport.Enabled = False
-        Me.butImportK.Enabled = True
+            'Import Debitoren desattivate
+            Me.butImport.Enabled = False
+            Me.butImportK.Enabled = True
 
-        Me.Cursor = Cursors.Default
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem Kreditorenauflistung", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+
+        Finally
+
+            Me.Cursor = Cursors.Default
+
+        End Try
+
 
     End Sub
 
