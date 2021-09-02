@@ -787,7 +787,7 @@ Friend Class frmImportMain
                                                      intEigeneBank.ToString)
 
                         Catch ex As Exception
-                            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegkopf " + intDebBelegsNummer.ToString + ", RG " + strRGNbr + ", Debitor " + intDebitorNbr.ToString)
+                            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegkopf " + intDebBelegsNummer.ToString + ", RG " + strRGNbr + ", Debitor " + intDebitorNbr.ToString, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                             If (Err.Number And 65535) < 10000 Then
                                 booBooingok = False
                             Else
@@ -851,7 +851,7 @@ Friend Class frmImportMain
                                 Call DbBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
 
                             Catch ex As Exception
-                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Verteilung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr + ", Konto " + SubRow("lngKto").ToString)
+                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Verteilung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr + ", Konto " + SubRow("lngKto").ToString, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                                 If (Err.Number And 65535) < 10000 Then
                                     booBooingok = False
                                 Else
@@ -930,10 +930,10 @@ Friend Class frmImportMain
                         Catch ex As Exception
                             'MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
                             If (Err.Number And 65535) < 10000 Then
-                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung nicht möglich" + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
+                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung nicht möglich" + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                                 booBooingok = False
                             Else
-                                MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
+                                MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Warning)
                                 booBooingok = True
                             End If
 
@@ -1090,7 +1090,7 @@ Friend Class frmImportMain
                                                    strValutaDatum)
 
                             Catch ex As Exception
-                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
+                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                                 If (Err.Number And 65535) < 10000 Then
                                     booBooingok = False
                                 Else
@@ -1253,7 +1253,7 @@ Friend Class frmImportMain
                                 Call FBhg.WriteSammelBhgT()
 
                             Catch ex As Exception
-                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
+                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                                 If (Err.Number And 65535) < 10000 Then
                                     booBooingok = False
                                 Else
@@ -1290,7 +1290,7 @@ Friend Class frmImportMain
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
+            MessageBox.Show(ex.Message, "Generelles Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
             'Neu aufbauen
@@ -2092,4 +2092,71 @@ Friend Class frmImportMain
 
     End Sub
 
+    Private Sub butDblDebis_Click(sender As Object, e As EventArgs) Handles butDblDebis.Click
+
+        Dim intCheckDblDebis As Int16
+        Dim tblDebiBelege As New DataTable
+        Dim tblDebiSearch As New DataTable
+        Dim intteqnbr As Int32
+
+        'Überprüfung ob doppelte Debitoren existieren
+        'Gleiche exterene Beleg-Nr., gleicher Betrag, gleiches Belegdatum
+
+        Try
+
+            intCheckDblDebis = MessageBox.Show("Soll wirklich eine Überprüfung auf doppelte Debitoren - Belege erfolgen?", "Doppelte Debi-Belege", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+
+            If intCheckDblDebis = vbYes Then
+
+                Me.Cursor = Cursors.WaitCursor
+
+                'durch die Debitoren - Belege steppen
+                objdbMSSQLConn.Open()
+                intteqnbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
+
+                'Zuerst nach Rechnungen suchen
+                objdbSQLcommand.CommandText = "SELECT * FROM debibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='R' AND NOT belnr IS NULL ORDER BY belnr"
+                objdbSQLcommand.Connection = objdbMSSQLConn
+                tblDebiBelege.Load(objdbSQLcommand.ExecuteReader)
+                For Each drdebibelege In tblDebiBelege.Rows
+                    'Gibt es mehr als einen Beleg mit gleichem Betrag und gleicher externer Beleg-Nr.?
+                    tblDebiSearch.Rows.Clear()
+                    objdbSQLcommand.CommandText = "SELECT COUNT(belnr) FROM debibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='R' AND belnr='" + drdebibelege.item("belnr") + "' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
+                    tblDebiSearch.Load(objdbSQLcommand.ExecuteReader)
+                    If tblDebiSearch.Rows(0).Item(0) > 1 Then
+                        MessageBox.Show("Mögliche Verdopplung gefunden 'R' belnr " + drdebibelege.item("belnr") + vbCrLf + "Betrag " + drdebibelege.item("skontobetrag").ToString, "Verdopplung gefunden", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    End If
+                Next
+
+                'Dann nach Gutschriften
+                tblDebiBelege.Dispose()
+                objdbSQLcommand.CommandText = "SELECT * FROM debibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='G' AND NOT belnr IS NULL ORDER BY belnr"
+                objdbSQLcommand.Connection = objdbMSSQLConn
+                tblDebiBelege.Load(objdbSQLcommand.ExecuteReader)
+                For Each drdebibelege In tblDebiBelege.Rows
+                    'Gibt es mehr als einen Beleg mit gleichem Betrag und gleicher externer Beleg-Nr.?
+                    tblDebiSearch.Rows.Clear()
+                    objdbSQLcommand.CommandText = "SELECT COUNT(belnr) FROM debibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='G' AND belnr='" + drdebibelege.item("belnr") + "' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
+                    tblDebiSearch.Load(objdbSQLcommand.ExecuteReader)
+                    If tblDebiSearch.Rows(0).Item(0) > 1 Then
+                        MessageBox.Show("Mögliche Verdopplung gefunden 'G' belnr " + drdebibelege.item("belnr") + vbCrLf + "Betrag " + drdebibelege.item("skontobetrag").ToString, "Verdopplung gefunden", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    End If
+                Next
+
+                MessageBox.Show("Suche beendet.", "Suche beendet", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem " + (Err.Number.ToString))
+
+        Finally
+            objdbMSSQLConn.Close()
+            tblDebiBelege.Dispose()
+            tblDebiSearch.Dispose()
+            Me.Cursor = Cursors.Default
+
+        End Try
+
+    End Sub
 End Class

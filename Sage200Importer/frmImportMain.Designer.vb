@@ -38,6 +38,7 @@ Partial Class frmImportMain
         Me.cmbPerioden = New System.Windows.Forms.ComboBox()
         Me.lblVersion = New System.Windows.Forms.Label()
         Me.butMail = New System.Windows.Forms.Button()
+        Me.butDblDebis = New System.Windows.Forms.Button()
         Me.GroupBox1.SuspendLayout()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -180,11 +181,21 @@ Partial Class frmImportMain
         Me.butMail.Text = "&Mail"
         Me.butMail.UseVisualStyleBackColor = True
         '
+        'butDblDebis
+        '
+        Me.butDblDebis.Location = New System.Drawing.Point(18, 108)
+        Me.butDblDebis.Name = "butDblDebis"
+        Me.butDblDebis.Size = New System.Drawing.Size(41, 22)
+        Me.butDblDebis.TabIndex = 13
+        Me.butDblDebis.Text = "DD"
+        Me.butDblDebis.UseVisualStyleBackColor = True
+        '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1672, 637)
+        Me.Controls.Add(Me.butDblDebis)
         Me.Controls.Add(Me.butMail)
         Me.Controls.Add(Me.lblVersion)
         Me.Controls.Add(Me.cmbPerioden)
@@ -223,4 +234,5 @@ Partial Class frmImportMain
     Friend WithEvents cmbPerioden As ComboBox
     Friend WithEvents lblVersion As Label
     Friend WithEvents butMail As Button
+    Friend WithEvents butDblDebis As Button
 End Class

@@ -570,7 +570,7 @@ Friend NotInheritable Class Main
         'strPeriodenInfo = objFinanz.GetResource(intLooper)
         'Next
         strPeriode = Split(strPeriodenInfo, "{>}")
-        objdtInfo.Rows.Add("GeschäftsJ", strPeriode(3) + "-" + strPeriode(4))
+        objdtInfo.Rows.Add("GeschäftsJ", strPeriode(3) + "-" + strPeriode(4) + ", teq: " + strPeriode(8).ToString)
         objdtInfo.Rows.Add("Buchungen/ Status", strPeriode(5) + "-" + strPeriode(6) + "/ " + strPeriode(2))
         'objdtInfo.Rows.Add("Status", strPeriode(2))
         'Debug.Print(FcReadPeriodenDef(objsqlConn, objsqlCom, strPeriode(8))(0))
@@ -1280,7 +1280,7 @@ ErrorHandler:
             Next
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message + vbCrLf + "Auf RG " + strRGNbr, "Debitor Kopfdaten-Check")
+            MessageBox.Show(ex.Message + vbCrLf + "Auf RG " + strRGNbr, "Debitor Kopfdaten-Check", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
 
@@ -1713,9 +1713,9 @@ ErrorHandler:
                 End If
 
                 'Zuerst key auf 'ohne' setzen wenn MwSt-Satz = 0 und Mwst-Betrag = 0
-                If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And subrow("strMwStKey") <> "ohne" And subrow("strMwStKey") <> "null" Then
+                If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "ohne" And IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "null" Then
                     'Stop
-                    If subrow("strMwStKey") <> "AUSL0" Then
+                    If IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "AUSL0" Then
                         subrow("strMwStKey") = "ohne"
                     End If
                 End If
@@ -2004,7 +2004,7 @@ ErrorHandler:
             End If
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Fehler Debi-Subbuchungen ")
+            MessageBox.Show(ex.Message, "Fehler Debi-Subbuchungen", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
 
@@ -3601,8 +3601,12 @@ ErrorHandler:
                 Return 1
             End If
 
+        Catch ex As InvalidCastException
+            MessageBox.Show("Rep_Nr " + intRepNr.ToString + " ist keiner Gruppe zugewiesen. Erstellung nicht möglich.", "Gruppe fehlt", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Return 9
+
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Problem Debitoren-Nummer-Vergabe Rep_Nr " + intRepNr.ToString)
+            MessageBox.Show(ex.Message, "Problem Debitoren-Nummer-Vergabe Rep_Nr " + intRepNr.ToString, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
             Return 9
 
         Finally

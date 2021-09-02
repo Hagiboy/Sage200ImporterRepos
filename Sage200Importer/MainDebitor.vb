@@ -354,9 +354,33 @@ Public Class MainDebitor
                 objdbconnZHDB02.Open()
             End If
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
-            objsqlcommandZHDB02.CommandText = "SELECT Rep_Nr, Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_DebiKonto, Rep_Gruppe, Rep_Vertretung, Rep_Ansprechpartner, IF(Rep_Land IS NULL, 'Schweiz', Rep_Land) AS Rep_Land, Rep_Tel1, Rep_Fax, Rep_Mail, " +
-                                                "IF(Rep_Language IS NULL, 'D', Rep_Language) AS Rep_Language, Rep_Kredi_MWSTNr, Rep_Kreditlimite, Rep_Kred_Pay_Def, Rep_Kred_Bank_Name, Rep_Kred_Bank_PLZ, Rep_Kred_Bank_Ort, Rep_Kred_IBAN, Rep_Kred_Bank_BIC, " +
-                                                "IF(Rep_Kred_Currency IS NULL, 'CHF', Rep_Kred_Currency) AS Rep_Kred_Currency, Rep_Kred_PCKto, Rep_DebiErloesKonto, Rep_Kred_BankIntern FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
+            objsqlcommandZHDB02.CommandText = "SELECT Rep_Nr, " +
+                                                      "Rep_Firma, " +
+                                                      "Rep_Strasse, " +
+                                                      "Rep_PLZ, " +
+                                                      "Rep_Ort, " +
+                                                      "Rep_DebiKonto, " +
+                                                      "Rep_Gruppe, " +
+                                                      "Rep_Vertretung, " +
+                                                      "Rep_Ansprechpartner, " +
+                                                      "If(Rep_Land Is NULL, 'Schweiz', Rep_Land) AS Rep_Land, " +
+                                                      "Rep_Tel1, " +
+                                                      "Rep_Fax, " +
+                                                      "Rep_Mail, " +
+                                                      "IF(Rep_Language Is NULL, 'D', Rep_Language) AS Rep_Language, " +
+                                                      "Rep_Kredi_MWSTNr, " +
+                                                      "Rep_Kreditlimite, " +
+                                                      "Rep_Kred_Pay_Def, " +
+                                                      "Rep_Kred_Bank_Name, " +
+                                                      "Rep_Kred_Bank_PLZ, " +
+                                                      "Rep_Kred_Bank_Ort, " +
+                                                      "Rep_Kred_IBAN, " +
+                                                      "Rep_Kred_Bank_BIC, " +
+                                                      "IF(Rep_Kred_Currency Is NULL, 'CHF', Rep_Kred_Currency) AS Rep_Kred_Currency, " +
+                                                      "Rep_Kred_PCKto, " +
+                                                      "Rep_DebiErloesKonto, " +
+                                                      "Rep_Kred_BankIntern " +
+                                                      "FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
             objdtDebitor.Load(objsqlcommandZHDB02.ExecuteReader)
 
             'Gefunden?
@@ -365,13 +389,13 @@ Public Class MainDebitor
 
                 'Sachbearbeiter suchen
                 'Ist Ausnahme definiert?
-                objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=" + objdtDebitor.Rows(0).Item("Rep_Nr").ToString + " AND Buchh_Nr=" + intAccounting.ToString
+                objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=" + objdtDebitor.Rows(0).Item("Rep_Nr").ToString + " And Buchh_Nr=" + intAccounting.ToString
                 objdtSachB.Load(objsqlcommandZHDB02.ExecuteReader)
                 If objdtSachB.Rows.Count > 0 Then 'Ausnahme definiert auf Rep-Betrieb
                     strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
                 Else
                     'Default setzen
-                    objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=2535 AND Buchh_Nr=" + intAccounting.ToString
+                    objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=2535 And Buchh_Nr=" + intAccounting.ToString
                     objdtSachB.Load(objsqlcommandZHDB02.ExecuteReader)
                     If objdtSachB.Rows.Count > 0 Then 'Default ist definiert
                         strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
@@ -516,7 +540,7 @@ Public Class MainDebitor
             End If
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Debitor - Erstellbar - Abklärung")
+            MessageBox.Show(ex.Message, "Debitor - Erstellbar - Abklärung", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
             Return 9
 
         Finally
@@ -1068,9 +1092,29 @@ Public Class MainDebitor
             'Angaben einlesen
             objdbconnZHDB02.Open()
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
-            objsqlcommandZHDB02.CommandText = "SELECT Lastname, Firstname, Street, ZipCode, City, DebiKonto, 'Privatperson' AS Gruppe, IF(Country IS NULL, 'CH', country) AS country, Phone, Fax, Email, " +
-                                                "IF(Language IS NULL, 'DE',Language) AS Language, BankName, BankZipCode, BankCountry, IBAN, BankBIC, " +
-                                                "IF(Currency IS NULL, 'CHF', Currency) AS Currency, DebiKonto, '3200' AS ErloesKonto, BankIntern, DebiZKonditionID FROM t_customer WHERE PKNr=" + lngDebiNbr.ToString
+            objsqlcommandZHDB02.CommandText = "SELECT Lastname, " +
+                                              "Firstname, " +
+                                              "Street, " +
+                                              "ZipCode, " +
+                                              "City, " +
+                                              "DebiKonto, " +
+                                              "'Privatperson' AS Gruppe, " +
+                                              "IF(Country Is NULL, 'CH', country) AS country, " +
+                                              "Phone, " +
+                                              "Fax, " +
+                                              "Email, " +
+                                              "IF(Language Is NULL, 'DE',Language) AS Language, " +
+                                              "BankName, " +
+                                              "BankZipCode, " +
+                                              "BankCountry, " +
+                                              "IBAN, " +
+                                              "BankBIC, " +
+                                              "IF(Currency Is NULL, 'CHF', Currency) AS Currency, " +
+                                              "GegenKonto AS SammelKonto, " +
+                                              "DebiKonto AS ErloesKonto, " +
+                                              "BankIntern, " +
+                                              "DebiZKonditionID " +
+                                              "FROM t_customer WHERE PKNr=" + lngDebiNbr.ToString
             objdtDebitor.Load(objsqlcommandZHDB02.ExecuteReader)
 
             'Gefunden?
@@ -1079,7 +1123,7 @@ Public Class MainDebitor
 
                 'Sachbearbeiter suchen
                 'Default setzen
-                objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=2535 AND Buchh_Nr=" + intAccounting.ToString
+                objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=2535 And Buchh_Nr=" + intAccounting.ToString
                 objdtSachB.Load(objsqlcommandZHDB02.ExecuteReader)
                 If objdtSachB.Rows.Count > 0 Then 'Default ist definiert
                     strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
@@ -1183,7 +1227,7 @@ Public Class MainDebitor
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("Street")), "", objdtDebitor.Rows(0).Item("Street")),
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("ZipCode")), "", objdtDebitor.Rows(0).Item("ZipCode")),
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("City")), "", objdtDebitor.Rows(0).Item("City")),
-                                              objdtDebitor.Rows(0).Item("DebiKonto"),
+                                              objdtDebitor.Rows(0).Item("SammelKonto"),
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("Gruppe")), "", objdtDebitor.Rows(0).Item("Gruppe")),
                                               "",
                                               "",
