@@ -671,7 +671,7 @@ Public Class MainDebitor
             'intDebBankLaufNr = DbBhg.GetZahlungsverbLaufnr()
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Debitor - Erstellung " + intDebitorNewNbr.ToString + ", " + strDebName)
+            MessageBox.Show(ex.Message, "Debitor - Erstellung " + intDebitorNewNbr.ToString + ", " + strDebName, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
             Return 1
 
@@ -1110,8 +1110,8 @@ Public Class MainDebitor
                                               "IBAN, " +
                                               "BankBIC, " +
                                               "IF(Currency Is NULL, 'CHF', Currency) AS Currency, " +
-                                              "GegenKonto AS SammelKonto, " +
-                                              "DebiKonto AS ErloesKonto, " +
+                                              "DebiKonto AS SammelKonto, " +
+                                              "GegenKonto AS ErloesKonto, " +
                                               "BankIntern, " +
                                               "DebiZKonditionID " +
                                               "FROM t_customer WHERE PKNr=" + lngDebiNbr.ToString
@@ -1175,7 +1175,7 @@ Public Class MainDebitor
                 'End Select
 
                 'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
-                Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Language")), "DE", objdtDebitor.Rows(0).Item("Language"))
+                Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Language")), "DE", objdtDebitor.Rows(0).Item("Language").ToUpper())
                     Case "DE", ""
                         intLangauage = 2055
                     Case "FR"
@@ -1196,7 +1196,7 @@ Public Class MainDebitor
                 strBankBIC = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankBIC")), "", objdtDebitor.Rows(0).Item("BankBIC"))
                 strBankClearing = ""
 
-                If Len(strIBANNr) = 21 Then 'IBAN
+                If Len(strIBANNr) >= 21 Then 'IBAN
                     'If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
                     intPayType = 9
                     'End If
@@ -1280,7 +1280,7 @@ Public Class MainDebitor
             End If
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Debitor - Erstellbar - Abklärung")
+            MessageBox.Show(ex.Message, "Debitor - Erstellbar - Abklärung", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
             Return 9
 
         Finally
