@@ -2952,7 +2952,7 @@ ErrorHandler:
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), row("datKredRGDatum"), row("datKredValDatum")), objdtInfo)
                 strBitLog += Trim(intReturnValue.ToString)
                 'RG - Datum 11
-                intReturnValue = FcChCeckDate(row("datKredRGDatum"), objdtInfo)
+                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredRGDatum")), #1789-09-17#, row("datKredRGDatum")), objdtInfo)
                 strBitLog += Trim(intReturnValue.ToString)
                 ''Referenz 12
                 'intReturnValue = IIf(IsDBNull(row("strKredRef")), 1, 0)

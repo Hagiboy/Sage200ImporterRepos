@@ -576,7 +576,9 @@ Public Class MainKreditor
                 objlocMySQLRGcmd.Connection = objlocMySQLRGConn
                 objlocMySQLRGcmd.CommandText = strSQL
                 intAffected = objlocMySQLRGcmd.ExecuteNonQuery()
-
+                If intAffected <> 1 Then
+                    Return 9
+                End If
 
             End If
 

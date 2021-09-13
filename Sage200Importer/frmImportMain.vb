@@ -669,6 +669,8 @@ Friend Class frmImportMain
             'Debitor erstellen, minimal - Angaben
 
             Me.Cursor = Cursors.WaitCursor
+            'Butteon desaktivieren
+            Me.butImport.Enabled = False
 
             'Kopfbuchung
             For Each row In objdtDebitorenHead.Rows
@@ -1297,6 +1299,7 @@ Friend Class frmImportMain
             butDebitoren_Click(butDebitoren, EventArgs.Empty)
 
             Me.Cursor = Cursors.Default
+            Me.butImport.Enabled = True
 
         End Try
 
@@ -1557,6 +1560,8 @@ Friend Class frmImportMain
             'Debitor erstellen, minimal - Angaben
 
             Me.Cursor = Cursors.WaitCursor
+            'Button disablen damit er nicht noch einmal geklickt werden kann.
+            Me.butImportK.Enabled = False
 
             'Kopfbuchung
             For Each row As DataRow In objdtKreditorenHead.Rows
@@ -1581,6 +1586,9 @@ Friend Class frmImportMain
 
                         'Eindeutigkeit der internen Beleg-Nummer setzen
                         KrBhg.CheckDoubleIntBelNbr = "J"
+
+                        'Eindeutigkeit externer Beleg-Nummer setzen
+                        KrBhg.CheckDoubleExtBelNbr = "J"
 
                         'If IsDBNull(row("strOPNr")) Or row("StrOPNr") = "" Then
                         'strExtBelegNbr = row("strOPNr")
@@ -1924,6 +1932,7 @@ Friend Class frmImportMain
                                                                         objdbConn)
                         If intReturnValue <> 0 Then
                             'Throw an exception
+                            MessageBox.Show("Achtung, Beleg-Nummer: " + row("lngBelegNr").ToString + " konnte nicht In die RG-Tabelle geschrieben werden auf RG-ID: " + row("lngKredID").ToString + ".", "RG-Table Update nicht möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                         End If
 
                     End If
@@ -1941,6 +1950,7 @@ Friend Class frmImportMain
             butKreditoren_Click(butDebitoren, EventArgs.Empty)
 
             Me.Cursor = Cursors.Default
+            Me.butImportK.Enabled = True
 
         End Try
 
@@ -1973,7 +1983,7 @@ Friend Class frmImportMain
             strMailText = "<html>" + vbCrLf
             strMailText += "<head>" + vbCrLf
             strMailText += "<style>" + vbCrLf
-            strMailText += "   table, th, td {border: 1px solid; border-collapse: collapse;}" + vbCrLf
+            strMailText += "   table, th, td {border:   1px solid; border-collapse: collapse;}" + vbCrLf
             strMailText += "</style>" + vbCrLf
             strMailText += "</head>" + vbCrLf
             strMailText += "<body>" + vbCrLf
@@ -2154,6 +2164,77 @@ Friend Class frmImportMain
             objdbMSSQLConn.Close()
             tblDebiBelege.Dispose()
             tblDebiSearch.Dispose()
+            Me.Cursor = Cursors.Default
+
+        End Try
+
+    End Sub
+
+    Private Sub butDblKredis_Click(sender As Object, e As EventArgs) Handles butDblKredis.Click
+
+        Dim intCheckDblKredis As Int16
+        Dim tblKrediBelege As New DataTable
+        Dim tblKrediSearch As New DataTable
+        Dim intteqnbr As Int32
+
+        'Überprüfung ob doppelte Kreditoren existieren
+        'Gleiche exterene Beleg-Nr.
+
+        Try
+
+            intCheckDblKredis = MessageBox.Show("Soll wirklich eine Überprüfung auf doppelte Kreditoren - Belege erfolgen?", "Doppelte Kredi-Belege", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+
+            If intCheckDblKredis = vbYes Then
+
+                Me.Cursor = Cursors.WaitCursor
+
+                'durch die Debitoren - Belege steppen
+                objdbMSSQLConn.Open()
+                intteqnbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
+
+                'Zuerst nach Rechnungen suchen
+                objdbSQLcommand.CommandText = "SELECT * FROM kredibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='R' AND NOT belnr IS NULL ORDER BY belnr"
+                objdbSQLcommand.Connection = objdbMSSQLConn
+                tblKrediBelege.Load(objdbSQLcommand.ExecuteReader)
+                For Each drKredibelege In tblKrediBelege.Rows
+                    'Gibt es mehr als einen Beleg mit gleichem Betrag und gleicher externer Beleg-Nr.?
+                    tblKrediSearch.Rows.Clear()
+                    'Debug.Print("Suche " + Replace(drKredibelege.item("belnr"), "'", "''"))
+                    objdbSQLcommand.CommandText = "SELECT COUNT(belnr) FROM kredibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='R' AND belnr='" + Replace(drKredibelege.item("belnr"), "'", "''") + "'" ' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
+                    tblKrediSearch.Load(objdbSQLcommand.ExecuteReader)
+                    If tblKrediSearch.Rows(0).Item(0) > 1 Then
+                        MessageBox.Show("Mögliche Verdopplung gefunden 'R' belnr " + drKredibelege.item("belnr"), "Verdopplung gefunden", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                        Debug.Print("Verdopplung " + Replace(drKredibelege.item("belnr"), "'", "''"))
+                    End If
+                Next
+
+                'Dann nach Gutschriften
+                tblKrediBelege.Dispose()
+                objdbSQLcommand.CommandText = "SELECT * FROM kredibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='G' AND NOT belnr IS NULL ORDER BY belnr"
+                objdbSQLcommand.Connection = objdbMSSQLConn
+                tblKrediBelege.Load(objdbSQLcommand.ExecuteReader)
+                For Each drKredibelege In tblKrediBelege.Rows
+                    'Gibt es mehr als einen Beleg mit gleichem Betrag und gleicher externer Beleg-Nr.?
+                    tblKrediSearch.Rows.Clear()
+                    objdbSQLcommand.CommandText = "SELECT COUNT(belnr) FROM kredibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='G' AND belnr='" + Replace(drKredibelege.item("belnr"), "'", "''") + "'" ' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
+                    tblKrediSearch.Load(objdbSQLcommand.ExecuteReader)
+                    If tblKrediSearch.Rows(0).Item(0) > 1 Then
+                        MessageBox.Show("Mögliche Verdopplung gefunden 'G' belnr " + drKredibelege.item("belnr"), "Verdopplung gefunden", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                        Debug.Print("Verdopplung " + Replace(drKredibelege.item("belnr"), "'", "''"))
+                    End If
+                Next
+
+                MessageBox.Show("Suche beendet.", "Suche beendet", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem " + (Err.Number.ToString))
+
+        Finally
+            objdbMSSQLConn.Close()
+            tblKrediBelege.Dispose()
+            tblKrediSearch.Dispose()
             Me.Cursor = Cursors.Default
 
         End Try
