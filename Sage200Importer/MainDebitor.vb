@@ -99,7 +99,7 @@ Public Class MainDebitor
             'intFcReturns = FcRoundInTable(objdtSub, "dblBrutto", 2)
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Debitoren-Daten-Lesen Problem")
+            MessageBox.Show(ex.Message, "Debitoren-Daten-Lesen Problem", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
 
@@ -301,7 +301,7 @@ Public Class MainDebitor
             Return intPKNewField
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Debitor - Suche")
+            MessageBox.Show(ex.Message, "Debitor - Suche", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
             Return 9
 
         Finally
@@ -1097,7 +1097,7 @@ Public Class MainDebitor
                                               "Street, " +
                                               "ZipCode, " +
                                               "City, " +
-                                              "DebiKonto, " +
+                                              "DebiGegenKonto, " +
                                               "'Privatperson' AS Gruppe, " +
                                               "IF(Country Is NULL, 'CH', country) AS country, " +
                                               "Phone, " +
@@ -1110,8 +1110,8 @@ Public Class MainDebitor
                                               "IBAN, " +
                                               "BankBIC, " +
                                               "IF(Currency Is NULL, 'CHF', Currency) AS Currency, " +
-                                              "DebiKonto AS SammelKonto, " +
-                                              "GegenKonto AS ErloesKonto, " +
+                                              "DebiGegenKonto AS SammelKonto, " +
+                                              "DebiErloesKonto AS ErloesKonto, " +
                                               "BankIntern, " +
                                               "DebiZKonditionID " +
                                               "FROM t_customer WHERE PKNr=" + lngDebiNbr.ToString
@@ -1215,7 +1215,7 @@ Public Class MainDebitor
                 End If
 
                 'Currency - Check
-                If objdtDebitor.Rows(0).Item("DebiKonto") = 1105 And lngDebiNbr >= 40000 Then
+                If objdtDebitor.Rows(0).Item("DebiGegenKonto") = 1105 And lngDebiNbr >= 40000 Then
                     strCurrency = "EUR"
                 Else
                     strCurrency = "CHF"
@@ -1513,5 +1513,47 @@ Public Class MainDebitor
 
     End Function
 
+    Public Shared Function FcWriteEndToSync(ByRef objdbcon As MySqlConnection,
+                                     ByVal intMandant As Int32,
+                                     ByVal intProzess As Int16,
+                                     ByVal datLastRun As Date,
+                                     ByVal intlastDuration As Int32,
+                                     ByVal strLastResult As String) As Int16
+
+        Dim objdbCmd As New MySqlCommand
+        Dim strSQL As String
+        Dim intAffected As Int16
+
+        Try
+            If objdbcon.State = ConnectionState.Closed Then
+                objdbcon.Open()
+            End If
+            objdbCmd.Connection = objdbcon
+            strSQL = "UPDATE t_sage_syncstatus SET LastRun='" + Format(datLastRun, "yyyy-MM-dd HH:mm:ss") + "', " +
+                                                  "LastDuration=" + intlastDuration.ToString + ", " +
+                                                  "LastResult='" + strLastResult + "' " +
+                                     "WHERE MandantID=" + intMandant.ToString +
+                                     " AND ProcessID=" + intProzess.ToString
+
+            objdbCmd.CommandText = strSQL
+            intAffected = objdbCmd.ExecuteNonQuery()
+            If intAffected <> 1 Then
+                Return 2
+            Else
+                Return 0
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Fehler Status in Sync-Tabelle schreiben")
+            Return 9
+
+        Finally
+            If objdbcon.State = ConnectionState.Open Then
+                objdbcon.Close()
+            End If
+
+        End Try
+
+    End Function
 
 End Class

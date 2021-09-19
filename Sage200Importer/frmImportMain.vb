@@ -100,7 +100,9 @@ Friend Class frmImportMain
 
         Try
 
+
             Me.Cursor = Cursors.WaitCursor
+
 
             intMode = 0
 
@@ -1289,12 +1291,21 @@ Friend Class frmImportMain
                 End If
 
             Next
+            'Status in t_sage_syncstatus schreiben
+            intReturnValue = MainDebitor.FcWriteEndToSync(objdbConn,
+                                                          cmbBuha.SelectedValue,
+                                                          1,
+                                                          Date.Now,
+                                                          0,
+                                                          IIf(booBooingok, "ok", "Probleme"))
+
 
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Generelles Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
+
             'Neu aufbauen
             butDebitoren_Click(butDebitoren, EventArgs.Empty)
 

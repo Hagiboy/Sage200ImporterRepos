@@ -1851,7 +1851,7 @@ ErrorHandler:
                 End If
                 strBitLog += Trim(intReturnValue.ToString)
 
-                'Projekt prüfen
+                'Projekt prüfen 04
                 If IIf(IsDBNull(subrow("lngProj")), 0, subrow("lngProj")) > 0 Then
                     intReturnValue = FcCheckProj(objFiBebu,
                                                  subrow("lngProj"),
@@ -1891,7 +1891,7 @@ ErrorHandler:
                 'End If
                 'strBitLog += Trim(intReturnValue.ToString)
 
-                'Brutto + MwSt + Netto = 0
+                'Brutto + MwSt + Netto = 0; 05
                 If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 And IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) = 0 And IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
                     strBitLog += "1"
 
@@ -1899,7 +1899,7 @@ ErrorHandler:
                     strBitLog += "0"
                 End If
 
-                'Netto = 0
+                'Netto = 0; 06
                 If IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) = 0 And Not booSplittBill Then
                     strBitLog += "1"
 
@@ -1907,7 +1907,7 @@ ErrorHandler:
                     strBitLog += "0"
                 End If
 
-                'Brutto = 0
+                'Brutto = 0; 07
                 If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 Then
                     strBitLog += "1"
 
@@ -1915,7 +1915,7 @@ ErrorHandler:
                     strBitLog += "0"
                 End If
 
-                'Brutto - MwSt <> Netto
+                'Brutto - MwSt <> Netto; 08
                 If Math.Abs(IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) - IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) - IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))) > 1 Then
                     strBitLog += "1"
 
@@ -1942,20 +1942,24 @@ ErrorHandler:
                 If Mid(strBitLog, 3, 1) <> "0" Then
                     strStatusText += IIf(strStatusText <> "", ", ", "") + "KST"
                 End If
-                'Alles 0
+                'Projekt 
                 If Mid(strBitLog, 4, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "Proj"
+                End If
+                'Alles 0
+                If Mid(strBitLog, 5, 1) <> "0" Then
                     strStatusText += IIf(strStatusText <> "", ", ", "") + "All0"
                 End If
                 'Netto 0
-                If Mid(strBitLog, 5, 1) <> "0" Then
-                    strStatusText += IIf(strStatusText <> "", ", ", "") + "Net0"
+                If Mid(strBitLog, 6, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "Nett0"
                 End If
                 'Brutto 0
-                If Mid(strBitLog, 6, 1) <> "0" Then
+                If Mid(strBitLog, 7, 1) <> "0" Then
                     strStatusText += IIf(strStatusText <> "", ", ", "") + "Brut0"
                 End If
-                'Diff
-                If Mid(strBitLog, 7, 1) <> "0" Then
+                'Diff 0
+                If Mid(strBitLog, 8, 1) <> "0" Then
                     strStatusText += IIf(strStatusText <> "", ", ", "") + "Diff"
                 End If
 
