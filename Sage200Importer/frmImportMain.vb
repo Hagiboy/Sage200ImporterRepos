@@ -4,6 +4,7 @@ Option Explicit On
 Imports MySql.Data.MySqlClient
 Imports System.Data.OracleClient
 Imports System.Data.SqlClient
+Imports CLClassSage200.WFSage200Import
 'Imports System.Data.OleDb
 
 
@@ -698,6 +699,19 @@ Friend Class frmImportMain
                             DbBhg.IncrBelNbr = "J"
                             'Belegsnummer abholen
                             intDebBelegsNummer = DbBhg.GetNextBelNbr("G")
+                            'Prüfen ob wirklich frei und falls nicht hochzählen
+                            intReturnValue = 10
+                            Do Until intReturnValue = 0
+                                intReturnValue = DbBhg.doesBelegExist(row("lngDebNbr").ToString,
+                                                                      row("strDebCur"),
+                                                                      intDebBelegsNummer.ToString,
+                                                                      "NOT_SET",
+                                                                      "G",
+                                                                      "NOT_SET")
+                                If intReturnValue <> 0 Then
+                                    intDebBelegsNummer += 1
+                                End If
+                            Loop
                             strExtBelegNbr = row("strOPNr")
                             'Beträge drehen
                             row("dblDebBrutto") = row("dblDebBrutto") * -1
@@ -1292,12 +1306,20 @@ Friend Class frmImportMain
 
             Next
             'Status in t_sage_syncstatus schreiben
-            intReturnValue = MainDebitor.FcWriteEndToSync(objdbConn,
-                                                          cmbBuha.SelectedValue,
-                                                          1,
-                                                          Date.Now,
-                                                          0,
-                                                          IIf(booBooingok, "ok", "Probleme"))
+            'intReturnValue = MainDebitor.FcWriteEndToSync(objdbConn,
+            '                                              cmbBuha.SelectedValue,
+            '                                              1,
+            '                                              Date.Now,
+            '                                              0,
+            '                                              IIf(booBooingok, "ok", "Probleme"))
+
+            intReturnValue = WFDBClass.FcWriteEndToSync(objdbConn,
+                                                        cmbBuha.SelectedValue,
+                                                        1,
+                                                        Date.Now(),
+                                                        0,
+                                                        IIf(booBooingok, "ok", "Probleme"))
+
 
 
 
@@ -1624,11 +1646,23 @@ Friend Class frmImportMain
                             row("dblKredBrutto") = row("dblKredBrutto") * -1
                             'Belegsnummer abholen
                             intKredBelegsNummer = KrBhg.GetNextBelNbr("G")
+                            intReturnValue = MainKreditor.FcCheckKrediExistance(KrBhg,
+                                                                                row("lngKredNbr").ToString,
+                                                                                row("strKredCur"),
+                                                                                intKredBelegsNummer,
+                                                                                "G")
+
                         Else
                             strBuchType = "R"
                             'strZahlSperren = "N"
                             'Belegsnummer abholen
                             intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
+                            intReturnValue = MainKreditor.FcCheckKrediExistance(KrBhg,
+                                                                                row("lngKredNbr").ToString,
+                                                                                row("strKredCur"),
+                                                                                intKredBelegsNummer,
+                                                                                "R")
+
                         End If
 
                         strValutaDatum = Format(row("datKredValDatum"), "yyyyMMdd").ToString
@@ -1951,6 +1985,14 @@ Friend Class frmImportMain
                 End If
 
             Next
+
+            'In sync-Tabelle schreiben
+            intReturnValue = WFDBClass.FcWriteEndToSync(objdbConn,
+                                                        cmbBuha.SelectedValue,
+                                                        2,
+                                                        Date.Now(),
+                                                        0,
+                                                        IIf(booBookingok, "ok", "Probleme"))
 
 
         Catch ex As Exception

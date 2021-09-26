@@ -973,6 +973,49 @@ Public Class MainKreditor
 
     End Function
 
+    Public Shared Function FcCheckKrediExistance(ByRef objKrBuha As SBSXASLib.AXiKrBhg,
+                                                 ByVal intKreditor As Int32,
+                                                 ByVal strCurrency As String,
+                                                 ByRef intBelegNbr As Int32,
+                                                 ByVal strTyp As String) As Int16
+
+        '0=ok, 1=Beleg existierte schon, 9=Problem
+
+        Dim intReturnvalue As Int16
+        Dim intIBelegNbr As Int32
+        Dim intStatus As Int16
+
+        Try
+
+            'Prüfung
+            intReturnvalue = 10
+            intIBelegNbr = intBelegNbr
+            intStatus = 0
+            Do Until intReturnvalue = 0
+                intReturnvalue = objKrBuha.doesBelegExist(intKreditor.ToString,
+                                                          strCurrency,
+                                                          intIBelegNbr.ToString,
+                                                          "NOT_SET",
+                                                          strTyp,
+                                                          "NOT_SET")
+                If intReturnvalue <> 0 Then
+                    intIBelegNbr += 1
+                    intStatus = 1
+                End If
+
+            Loop
+            intBelegNbr = intIBelegNbr
+            Return intStatus
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Kreditor - BelegExistenzprüfung Problem " + intBelegNbr.ToString)
+            Return 9
+
+        End Try
+
+
+    End Function
 
 
 End Class

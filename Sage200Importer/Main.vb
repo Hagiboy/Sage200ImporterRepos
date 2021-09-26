@@ -737,13 +737,14 @@ ErrorHandler:
             objlocMySQLcmd.Connection = objdbconn
             objlocdtBank.Load(objlocMySQLcmd.ExecuteReader)
 
+            Return objlocdtBank.Rows(0).Item(0).ToString
+
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Bankleitzahl suchen.")
 
         End Try
 
-        Return objlocdtBank.Rows(0).Item(0).ToString
 
     End Function
 
@@ -829,7 +830,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "1139816" Then Stop
+                'If row("strDebRGNbr") = "71402" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -1032,7 +1033,13 @@ ErrorHandler:
                 'strBitLog += "0"
                 'Referenz 08
                 If IIf(IsDBNull(row("strDebReferenz")), "", row("strDebReferenz")) = "" And row("intBuchungsart") = 1 Then
-                    intReturnValue = FcCreateDebRef(objdbconn, intAccounting, row("strDebiBank"), row("strDebRGNbr"), row("strOPNr"), row("intBuchungsart"), strDebiReferenz)
+                    intReturnValue = FcCreateDebRef(objdbconn,
+                                                    intAccounting,
+                                                    row("strDebiBank"),
+                                                    row("strDebRGNbr"),
+                                                    row("strOPNr"),
+                                                    row("intBuchungsart"),
+                                                    strDebiReferenz)
                     If Len(strDebiReferenz) > 0 Then
                         row("strDebReferenz") = strDebiReferenz
                     Else
@@ -1423,7 +1430,9 @@ ErrorHandler:
 
                 End Select
 
-                strTLNNr = FcReadBankSettings(intAccounting, strBank, objdbconn)
+                strTLNNr = FcReadBankSettings(intAccounting,
+                                              strBank,
+                                              objdbconn)
 
                 strCleanedNr = FcCleanRGNrStrict(strCleanedNr)
 
