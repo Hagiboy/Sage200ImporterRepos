@@ -979,8 +979,8 @@ ErrorHandler:
                             objdrDebiSub("strArtikel") = "Rundungsdifferenz"
                             objdrDebiSub("strDebSubText") = "Eingefügt"
                             objdrDebiSub("strStatusUBBitLog") = "00000000"
-                            If Math.Abs(dblRDiffBrutto) > 1 Then
-                                objdrDebiSub("strStatusUBText") = "Rund > 1"
+                            If Math.Abs(dblRDiffBrutto) > 3 Then
+                                objdrDebiSub("strStatusUBText") = "Rund > 3"
                             Else
                                 objdrDebiSub("strStatusUBText") = "ok"
                             End If
@@ -989,7 +989,7 @@ ErrorHandler:
                             dblSubBrutto = Decimal.Round(dblSubBrutto - dblRDiffBrutto, 2, MidpointRounding.AwayFromZero)
                             'dblSubMwSt = Decimal.Round(dblSubMwSt - dblRDiffMwSt, 2, MidpointRounding.AwayFromZero)
                             'dblSubNetto = Decimal.Round(dblSubNetto - dblRDiffNetto, 2, MidpointRounding.AwayFromZero)
-                            If Math.Abs(dblRDiffBrutto) > 1 Then
+                            If Math.Abs(dblRDiffBrutto) > 3 Then
                                 strBitLog += "3"
                             Else
                                 strBitLog += "0"
@@ -1507,7 +1507,7 @@ ErrorHandler:
                 Return 1
             ElseIf dblNetto = 0 Then
                 'Return 2
-            ElseIf Decimal.Round(dblBrutto - dblNetto - dblMwSt - dblRDiff, 2, MidpointRounding.AwayFromZero) <> 0 Then 'Math.Round(dblBrutto - dblRDiff - dblMwSt, 2, MidpointRounding.AwayFromZero) <> Math.Round(dblNetto, 2, MidpointRounding.AwayFromZero) Then
+            ElseIf Math.Abs(Decimal.Round(dblBrutto - dblNetto - dblMwSt - dblRDiff, 2, MidpointRounding.AwayFromZero)) > 0 Then 'Math.Round(dblBrutto - dblRDiff - dblMwSt, 2, MidpointRounding.AwayFromZero) <> Math.Round(dblNetto, 2, MidpointRounding.AwayFromZero) Then
                 Return 4
             Else
                 Return 0
@@ -1925,7 +1925,7 @@ ErrorHandler:
                 End If
 
                 'Brutto - MwSt <> Netto; 08
-                If Math.Abs(IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) - IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) - IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))) > 1 Then
+                If Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero) <> subrow("dblBrutto") Then
                     strBitLog += "1"
 
                 Else

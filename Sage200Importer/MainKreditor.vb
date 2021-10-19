@@ -3,6 +3,7 @@ Option Explicit On
 
 Imports MySql.Data.MySqlClient
 Imports System.Data.OracleClient
+Imports System.Data.SqlClient
 Imports System.Net
 Imports System.IO
 Imports System.Xml
@@ -973,44 +974,52 @@ Public Class MainKreditor
 
     End Function
 
-    Public Shared Function FcCheckKrediExistance(ByRef objKrBuha As SBSXASLib.AXiKrBhg,
-                                                 ByVal intKreditor As Int32,
-                                                 ByVal strCurrency As String,
+    Public Shared Function FcCheckKrediExistance(ByRef objdbMSSQLConn As SqlConnection,
+                                                 ByRef objdbMSSQLCmd As SqlCommand,
                                                  ByRef intBelegNbr As Int32,
-                                                 ByVal strTyp As String) As Int16
+                                                 ByVal strTyp As String,
+                                                 ByVal intTeqNr As Int32) As Int16
 
         '0=ok, 1=Beleg existierte schon, 9=Problem
 
-        Dim intReturnvalue As Int16
-        Dim intIBelegNbr As Int32
+        'Prinzip: in Tabelle kredibuchung suchen da API - Funktion nur in spezifischen Kreditor sucht
+
+        Dim intReturnvalue As Int32
         Dim intStatus As Int16
+        Dim tblKrediBeleg As New DataTable
 
         Try
 
             'Prüfung
             intReturnvalue = 10
-            intIBelegNbr = intBelegNbr
             intStatus = 0
-            Do Until intReturnvalue = 0
-                intReturnvalue = objKrBuha.doesBelegExist(intKreditor.ToString,
-                                                          strCurrency,
-                                                          intIBelegNbr.ToString,
-                                                          "NOT_SET",
-                                                          strTyp,
-                                                          "NOT_SET")
-                If intReturnvalue <> 0 Then
-                    intIBelegNbr += 1
-                    intStatus = 1
-                End If
 
+            objdbMSSQLConn.Open()
+
+            Do Until intReturnvalue = 0
+
+                objdbMSSQLCmd.CommandText = "SELECT lfnbrk FROM kredibuchung WHERE teqnbr=" + intTeqNr.ToString +
+                                                                        " AND typ='" + strTyp + "'" +
+                                                                        " AND belnbrint=" + intBelegNbr.ToString
+                tblKrediBeleg.Rows.Clear()
+                tblKrediBeleg.Load(objdbMSSQLCmd.ExecuteReader)
+                If tblKrediBeleg.Rows.Count > 0 Then
+                    intReturnvalue = tblKrediBeleg.Rows(0).Item("lfnbrk")
+                    intBelegNbr += 1
+                Else
+                    intReturnvalue = 0
+                End If
             Loop
-            intBelegNbr = intIBelegNbr
+
             Return intStatus
 
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Kreditor - BelegExistenzprüfung Problem " + intBelegNbr.ToString)
             Return 9
+
+        Finally
+            objdbMSSQLConn.Close()
 
         End Try
 

@@ -700,7 +700,13 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcWriteToRGTable(ByVal intMandant As Int32, ByVal strRGNbr As String, ByVal datDate As Date, ByVal intBelegNr As Int32, ByRef objdbAccessConn As OleDb.OleDbConnection, ByRef objOracleConn As OracleConnection, ByRef objMySQLConn As MySqlConnection) As Int16
+    Public Shared Function FcWriteToRGTable(ByVal intMandant As Int32,
+                                            ByVal strRGNbr As String,
+                                            ByVal datDate As Date,
+                                            ByVal intBelegNr As Int32,
+                                            ByRef objdbAccessConn As OleDb.OleDbConnection,
+                                            ByRef objOracleConn As OracleConnection,
+                                            ByRef objMySQLConn As MySqlConnection) As Int16
 
         'Returns 0=ok, 1=Problem
 
@@ -715,6 +721,8 @@ Public Class MainDebitor
         Dim strRGNbrFieldName As String
         Dim strRGTableType As String
         Dim strMDBName As String
+        Dim strBookedFieldName As String
+        Dim strBookedDateFieldName As String
 
 
         objMySQLConn.Open()
@@ -740,7 +748,15 @@ Public Class MainDebitor
 
             ElseIf strRGTableType = "M" Then
                 'MySQL
-                strSQL = "UPDATE " + strNameRGTable + " SET gebucht=true, gebuchtDatum=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " + strBelegNrName + "=" + intBelegNr.ToString + " WHERE " + strRGNbrFieldName + "=" + strRGNbr
+                'Bei IG Felnamen anders
+                If intMandant = 25 Then
+                    strBookedFieldName = "IGBooked"
+                    strBookedDateFieldName = "IGDBDate"
+                Else
+                    strBookedFieldName = "gebucht"
+                    strBookedDateFieldName = "gebuchtDatum"
+                End If
+                strSQL = "UPDATE " + strNameRGTable + " SET " + strBookedFieldName + "=true, " + strBookedDateFieldName + "=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " + strBelegNrName + "=" + intBelegNr.ToString + " WHERE " + strRGNbrFieldName + "=" + strRGNbr
                 objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                 objlocMySQLRGConn.Open()
                 objlocMySQLRGcmd.Connection = objlocMySQLRGConn

@@ -669,11 +669,16 @@ Friend Class frmImportMain
 
         Try
 
-            'Debitor erstellen, minimal - Angaben
 
             Me.Cursor = Cursors.WaitCursor
             'Butteon desaktivieren
             Me.butImport.Enabled = False
+
+            'Start in Sync schreiben
+            intReturnValue = WFDBClass.FcWriteStartToSync(objdbConn,
+                                                          cmbBuha.SelectedValue,
+                                                          1,
+                                                          objdtDebitorenHead.Rows.Count)
 
             'Kopfbuchung
             For Each row In objdtDebitorenHead.Rows
@@ -768,7 +773,7 @@ Friend Class frmImportMain
                         dblBetrag = row("dblDebBrutto")
                         'Bei SplittBill 2ter Rechnung Text anfügen
                         If row("booLinked") Then
-                            strDebiText = row("strDebText") + ", Splitt-Bill"
+                            strDebiText = row("strDebText") + ", FRG "
                         Else
                             strDebiText = row("strDebText")
                         End If
@@ -820,7 +825,7 @@ Friend Class frmImportMain
 
                         For Each SubRow As DataRow In selDebiSub
 
-                            'Bei zweiter Splitt-Bill 2ter Rechung hier eingreifen
+                            'Bei zweiter Splitt-Bill Rechung hier eingreifen
                             'Gegenkonto auf 1092, MwStKey auf 'null' setzen, KST = 0
                             If row("booLinked") Then
                                 intGegenKonto = 1092
@@ -928,10 +933,10 @@ Friend Class frmImportMain
                                                           dblSplitPayed.ToString,
                                                           row("strDebCur"),
                                                           ,
-                                                          strDebiText + ", TZ auf RG1")
+                                                          strDebiText + ", TZ von " + row("lngLinkedRG").ToString)
 
                                         Call DbBhg.WriteTeilzahlung4(intLaufNbr.ToString,
-                                                                 strDebiText + ", TZ auf RG1",
+                                                                 strDebiText + ", TZ von " + row("lngLinkedRG").ToString,
                                                                  "NOT_SET",
                                                                  ,
                                                                  "NOT_SET",
@@ -1293,7 +1298,13 @@ Friend Class frmImportMain
                         Application.DoEvents()
 
                         'Status in File RG-Tabelle schreiben
-                        intReturnValue = MainDebitor.FcWriteToRGTable(cmbBuha.SelectedValue, row("strDebRGNbr"), row("datBooked"), row("lngBelegNr"), objdbAccessConn, objOracleConn, objdbConn)
+                        intReturnValue = MainDebitor.FcWriteToRGTable(cmbBuha.SelectedValue,
+                                                                      row("strDebRGNbr"),
+                                                                      row("datBooked"),
+                                                                      row("lngBelegNr"),
+                                                                      objdbAccessConn,
+                                                                      objOracleConn,
+                                                                      objdbConn)
                         If intReturnValue <> 0 Then
                             'Throw an exception
                         End If
@@ -1316,7 +1327,6 @@ Friend Class frmImportMain
             intReturnValue = WFDBClass.FcWriteEndToSync(objdbConn,
                                                         cmbBuha.SelectedValue,
                                                         1,
-                                                        Date.Now(),
                                                         0,
                                                         IIf(booBooingok, "ok", "Probleme"))
 
@@ -1586,15 +1596,21 @@ Friend Class frmImportMain
         'Sammelbeleg
         Dim intCommonKonto As Int32
 
-
+        Dim intTeqNbr As Int32
 
         Try
-
-            'Debitor erstellen, minimal - Angaben
 
             Me.Cursor = Cursors.WaitCursor
             'Button disablen damit er nicht noch einmal geklickt werden kann.
             Me.butImportK.Enabled = False
+
+            'Start in Sync schreiben
+            intReturnValue = WFDBClass.FcWriteStartToSync(objdbConn,
+                                                          cmbBuha.SelectedValue,
+                                                          2,
+                                                          objdtDebitorenHead.Rows.Count)
+
+            intTeqNbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
 
             'Kopfbuchung
             For Each row As DataRow In objdtKreditorenHead.Rows
@@ -1646,22 +1662,24 @@ Friend Class frmImportMain
                             row("dblKredBrutto") = row("dblKredBrutto") * -1
                             'Belegsnummer abholen
                             intKredBelegsNummer = KrBhg.GetNextBelNbr("G")
-                            intReturnValue = MainKreditor.FcCheckKrediExistance(KrBhg,
-                                                                                row("lngKredNbr").ToString,
-                                                                                row("strKredCur"),
+                            KrBhg.IncrBelNbr = "N"
+                            intReturnValue = MainKreditor.FcCheckKrediExistance(objdbMSSQLConn,
+                                                                                objdbSQLcommand,
                                                                                 intKredBelegsNummer,
-                                                                                "G")
+                                                                                "G",
+                                                                                intTeqNbr)
 
                         Else
                             strBuchType = "R"
                             'strZahlSperren = "N"
                             'Belegsnummer abholen
                             intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
-                            intReturnValue = MainKreditor.FcCheckKrediExistance(KrBhg,
-                                                                                row("lngKredNbr").ToString,
-                                                                                row("strKredCur"),
+                            KrBhg.IncrBelNbr = "N"
+                            intReturnValue = MainKreditor.FcCheckKrediExistance(objdbMSSQLConn,
+                                                                                objdbSQLcommand,
                                                                                 intKredBelegsNummer,
-                                                                                "R")
+                                                                                "R",
+                                                                                intTeqNbr)
 
                         End If
 
@@ -1990,7 +2008,6 @@ Friend Class frmImportMain
             intReturnValue = WFDBClass.FcWriteEndToSync(objdbConn,
                                                         cmbBuha.SelectedValue,
                                                         2,
-                                                        Date.Now(),
                                                         0,
                                                         IIf(booBookingok, "ok", "Probleme"))
 
