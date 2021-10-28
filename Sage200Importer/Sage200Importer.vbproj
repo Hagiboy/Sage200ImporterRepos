@@ -85,8 +85,9 @@
     <ApplicationIcon>AddDictionaryItem_16x.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CLClassSage200">
-      <HintPath>..\..\Sage200Dispatcher\Sage200Dispatcher\CLClassSage200.dll</HintPath>
+    <Reference Include="CLClassSage200, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\CLClassSage200\CLClassSage200\bin\Debug\CLClassSage200.dll</HintPath>
     </Reference>
     <Reference Include="MySql.Data, Version=8.0.20.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
