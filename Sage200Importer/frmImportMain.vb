@@ -187,6 +187,8 @@ Friend Class frmImportMain
                                    objOracleConn,
                                    objOracleCmd,
                                    objdbAccessConn,
+                                   objdbMSSQLConn,
+                                   objdbSQLcommand,
                                    objdtInfo,
                                    cmbBuha.Text)
 
@@ -819,7 +821,6 @@ Friend Class frmImportMain
 
                         End Try
 
-
                         selDebiSub = objdtDebitorenSub.Select("strRGNr='" + row("strDebRGNbr") + "'")
                         strRGNbr = row("strDebRGNbr")
 
@@ -980,13 +981,13 @@ Friend Class frmImportMain
                                 intReturnValue = FBhg.doesBelegExist(intDebBelegsNummer,
                                                                      "NOT_SET",
                                                                      "NOT_SET",
-                                                                     Microsoft.VisualBasic.Left(cmbPerioden.SelectedItem, 4) + "0101",
-                                                                     Microsoft.VisualBasic.Left(cmbPerioden.SelectedItem, 4) + "1231")
+                                                                     String.Concat(Microsoft.VisualBasic.Left(cmbPerioden.SelectedItem, 4) - 1, "0101"),
+                                                                     String.Concat(Microsoft.VisualBasic.Left(cmbPerioden.SelectedItem, 4), "1231"))
                                 If intReturnValue <> 0 Then
                                     intDebBelegsNummer += 1
                                 End If
                             Loop
-                            Debug.Print("Belegnummer taken: " + intDebBelegsNummer.ToString)
+                            'Debug.Print("Belegnummer taken: " + intDebBelegsNummer.ToString)
                         Else
                             If IIf(IsDBNull(row("strOPNr")), "", row("strOPNr")) <> "" Then
                                 intDebBelegsNummer = Convert.ToInt32(row("strOPNr"))
@@ -1534,7 +1535,7 @@ Friend Class frmImportMain
 
     Private Sub butImportK_Click(sender As Object, e As EventArgs) Handles butImportK.Click
 
-        Dim intReturnValue As Int16
+        Dim intReturnValue As Int32
         Dim intKredBelegsNummer As UInt32
         Dim strExtKredBelegsNummer As String
 
@@ -1880,6 +1881,19 @@ Friend Class frmImportMain
                         'Belegsnummer abholen
                         intKredBelegsNummer = FBhg.GetNextBelNbr()
 
+                        'Prüfen, ob wirklich frei
+                        intReturnValue = 10
+                        Do Until intReturnValue = 0
+                            intReturnValue = FBhg.doesBelegExist(intKredBelegsNummer,
+                                                                 "NOT_SET",
+                                                                 "NOT_SET",
+                                                                 Strings.Left(cmbPerioden.SelectedItem, 4) + "0101",
+                                                                 Strings.Left(cmbPerioden.SelectedItem, 4) + "1231")
+                            If intReturnValue <> 0 Then
+                                intKredBelegsNummer += 1
+                            End If
+                        Loop
+
                         booBookingok = True
 
                         'Variablen zuweisen
@@ -1893,7 +1907,7 @@ Friend Class frmImportMain
                             dblKurs = 1.0#
                         End If
 
-                        selKrediSub = objdtDebitorenSub.Select("lngKredID=" + row("lngKredID").ToString)
+                        selKrediSub = objdtKreditorenSub.Select("lngKredID=" + row("lngKredID").ToString)
 
                         If selKrediSub.Length = 2 Then
 
@@ -1906,9 +1920,14 @@ Friend Class frmImportMain
                                     'strSteuerInfo = Split(FBhg.GetKontoInfo(intSollKonto.ToString), "{>}")
                                     'Debug.Print("Konto-Info Soll: " + strSteuerInfo(26))
                                     dblSollBetrag = SubRow("dblNetto")
-                                    strKrediTextSoll = SubRow("strDebSubText")
+                                    strKrediTextSoll = SubRow("strKredSubText")
                                     If SubRow("dblMwSt") > 0 Then
-                                        strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strKrediTextSoll, SubRow("dblBrutto") * dblKursSoll, SubRow("strMwStKey"), SubRow("dblMwSt"))
+                                        strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg,
+                                                                                 SubRow("lngKto"),
+                                                                                 strKrediTextSoll,
+                                                                                 SubRow("dblBrutto") * dblKursSoll,
+                                                                                 SubRow("strMwStKey"),
+                                                                                 SubRow("dblMwSt"))
                                     End If
                                     If SubRow("lngKST") > 0 Then
                                         strBeBuEintragSoll = SubRow("lngKST").ToString + "{<}" + strKrediTextSoll + "{<}" + "CALCULATE" + "{>}"
@@ -1921,11 +1940,16 @@ Friend Class frmImportMain
                                     dblKursHaben = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg, intHabenKonto)
                                     'strSteuerInfo = Split(FBhg.GetKontoInfo(intSollKonto.ToString), "{>}")
                                     'Debug.Print("Konto-Info Haben: " + strSteuerInfo(26))
-                                    dblHabenBetrag = SubRow("dblNetto")
+                                    dblHabenBetrag = SubRow("dblNetto") * -1
                                     'dblHabenBetrag = dblSollBetrag
                                     strKrediTextHaben = SubRow("strKredSubText")
                                     If SubRow("dblMwSt") > 0 Then
-                                        strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), strKrediTextHaben, SubRow("dblBrutto") * dblKursHaben, SubRow("strMwStKey"), SubRow("dblMwSt"))
+                                        strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg,
+                                                                                  SubRow("lngKto"),
+                                                                                  strKrediTextHaben,
+                                                                                  SubRow("dblBrutto") * dblKursHaben * -1,
+                                                                                  SubRow("strMwStKey"),
+                                                                                  SubRow("dblMwSt") * -1)
                                     End If
                                     If SubRow("lngKST") > 0 Then
                                         strBeBuEintragHaben = SubRow("lngKST").ToString + "{<}" + strKrediTextHaben + "{<}" + "CALCULATE" + "{>}"
@@ -2310,4 +2334,26 @@ Friend Class frmImportMain
         End Try
 
     End Sub
+
+    Private Sub cmbPerioden_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles cmbPerioden.SelectionChangeCommitted
+
+        objdtInfo.Rows.Clear()
+        Me.Refresh()
+
+        Call Main.FcLoginSage(objdbConn,
+                              objdbMSSQLConn,
+                              objdbSQLcommand,
+                              Finanz,
+                              FBhg,
+                              DbBhg,
+                              PIFin,
+                              BeBu,
+                              KrBhg,
+                              cmbBuha.SelectedValue,
+                              objdtInfo,
+                              cmbPerioden.SelectedValue)
+
+
+    End Sub
+
 End Class

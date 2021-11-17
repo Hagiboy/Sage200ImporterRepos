@@ -2,6 +2,7 @@
 Option Explicit On
 
 Imports MySql.Data.MySqlClient
+Imports System.Data.SqlClient
 Imports System.Data.OracleClient
 Imports System.Net
 Imports System.IO
@@ -48,7 +49,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(booLinked)
         Dim strRGName As DataColumn = New DataColumn("strRGName")
         strRGName.DataType = System.Type.[GetType]("System.String")
-        strRGName.MaxLength = 50
+        strRGName.MaxLength = 70
         DT.Columns.Add(strRGName)
         Dim strOPNr As DataColumn = New DataColumn("strOPNr")
         strOPNr.DataType = System.Type.[GetType]("System.String")
@@ -59,14 +60,14 @@ Friend NotInheritable Class Main
         DT.Columns.Add(lngDebNbr)
         Dim strDebPKBez As DataColumn = New DataColumn("strDebBez")
         strDebPKBez.DataType = System.Type.[GetType]("System.String")
-        strDebPKBez.MaxLength = 50
+        strDebPKBez.MaxLength = 150
         DT.Columns.Add(strDebPKBez)
         Dim lngDebKtoNbr As DataColumn = New DataColumn("lngDebKtoNbr")
         lngDebKtoNbr.DataType = System.Type.[GetType]("System.Int32")
         DT.Columns.Add(lngDebKtoNbr)
         Dim strDebKtoBez As DataColumn = New DataColumn("strDebKtoBez")
         strDebKtoBez.DataType = System.Type.[GetType]("System.String")
-        strDebKtoBez.MaxLength = 50
+        strDebKtoBez.MaxLength = 150
         DT.Columns.Add(strDebKtoBez)
         Dim strDebCur As DataColumn = New DataColumn("strDebCur")
         strDebCur.DataType = System.Type.[GetType]("System.String")
@@ -183,7 +184,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(lngKto)
         Dim strKtoBez As DataColumn = New DataColumn("strKtoBez")
         strKtoBez.DataType = System.Type.[GetType]("System.String")
-        strKtoBez.MaxLength = 50
+        strKtoBez.MaxLength = 150
         strKtoBez.Caption = "Bezeichnung"
         DT.Columns.Add(strKtoBez)
         Dim lngKST As DataColumn = New DataColumn("lngKST")
@@ -192,7 +193,7 @@ Friend NotInheritable Class Main
         DT.Columns.Add(lngKST)
         Dim strKstBez As DataColumn = New DataColumn("strKstBez")
         strKstBez.DataType = System.Type.[GetType]("System.String")
-        strKstBez.MaxLength = 50
+        strKstBez.MaxLength = 150
         strKstBez.Caption = "Bez."
         DT.Columns.Add(strKstBez)
         Dim lngProj As DataColumn = New DataColumn("lngProj")
@@ -788,6 +789,8 @@ ErrorHandler:
                                         ByRef objOrdbconn As OracleClient.OracleConnection,
                                         ByRef objOrcommand As OracleClient.OracleCommand,
                                         ByRef objdbAccessConn As OleDb.OleDbConnection,
+                                        ByRef objdbSQLConn As SqlConnection,
+                                        ByRef objdbSQLCmd As SqlCommand,
                                         ByRef objdtInfo As DataTable,
                                         ByVal strcmbBuha As String) As Integer
 
@@ -815,14 +818,18 @@ ErrorHandler:
         Dim dblRDiffBrutto As Double
         Dim decDebiDiff As Decimal
 
-
         Dim booPKPrivate As Boolean
         Dim booCashSollCorrect As Boolean
         Dim strRGNbr As String
         Dim intLinkedDebitor As Int32
+        Dim intTeqNbr As Int16
+
         'Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
 
         Try
+
+            'Teq-Nbr extrahieren
+            intTeqNbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
 
             objdbconn.Open()
             objOrdbconn.Open()
@@ -1122,9 +1129,12 @@ ErrorHandler:
                                                                          objOrdbconn,
                                                                          objOrcommand,
                                                                          objdbAccessConn,
+                                                                         objdbSQLConn,
+                                                                         objdbSQLCmd,
                                                                          IIf(IsDBNull(row("lngLinkedRG")), 0, row("lngLinkedRG")),
                                                                          intAccounting,
-                                                                         intLinkedDebitor)
+                                                                         intLinkedDebitor,
+                                                                         intTeqNbr)
                     row("lngLinkedDeb") = intLinkedDebitor
 
                     intReturnValue = MainDebitor.FcCheckLinkedRG(objdbBuha,

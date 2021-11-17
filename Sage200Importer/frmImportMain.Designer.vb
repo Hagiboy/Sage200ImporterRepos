@@ -190,6 +190,7 @@ Partial Class frmImportMain
         Me.butDblDebis.TabIndex = 13
         Me.butDblDebis.Text = "DD"
         Me.butDblDebis.UseVisualStyleBackColor = True
+        Me.butDblDebis.Visible = False
         '
         'butDblKredis
         '
@@ -199,6 +200,7 @@ Partial Class frmImportMain
         Me.butDblKredis.TabIndex = 14
         Me.butDblKredis.Text = "DK"
         Me.butDblKredis.UseVisualStyleBackColor = True
+        Me.butDblKredis.Visible = False
         '
         'frmImportMain
         '
