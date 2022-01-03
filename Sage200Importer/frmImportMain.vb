@@ -54,6 +54,9 @@ Friend Class frmImportMain
                     + "User Id=cis;Password=sugus;")
     Public objOracleCmd As New OracleCommand()
     Public intMode As Int16
+    Public strYear As String
+    Public intTeqNbr As Int16
+    Public intTeqNbrLY As Int16
     'Public boodgvSet As Boolean = False
 
     Public Sub InitVar()
@@ -101,7 +104,6 @@ Friend Class frmImportMain
 
         Try
 
-
             Me.Cursor = Cursors.WaitCursor
 
 
@@ -147,7 +149,10 @@ Friend Class frmImportMain
                                   KrBhg,
                                   cmbBuha.SelectedValue,
                                   objdtInfo,
-                                  cmbPerioden.SelectedItem)
+                                  cmbPerioden.SelectedItem,
+                                  strYear,
+                                  intTeqNbr,
+                                  intTeqNbrLY)
 
             'Transitorische Buchungen?
             Call Main.fcCheckTransitorischeDebit(cmbBuha.SelectedValue,
@@ -168,6 +173,7 @@ Friend Class frmImportMain
             Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead, objdtDebitorenHead)
 
             'Grid neu aufbauen
+            Application.DoEvents()
             dgvBookingSub.Update()
             dgvBookings.Update()
             dgvBookings.Refresh()
@@ -190,7 +196,11 @@ Friend Class frmImportMain
                                    objdbMSSQLConn,
                                    objdbSQLcommand,
                                    objdtInfo,
-                                   cmbBuha.Text)
+                                   cmbBuha.Text,
+                                   intTeqNbr,
+                                   intTeqNbrLY,
+                                   strYear,
+                                   cmbPerioden.SelectedItem)
 
             'Anzahl schreiben
             txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
@@ -828,14 +838,18 @@ Friend Class frmImportMain
 
                             'Bei zweiter Splitt-Bill Rechung hier eingreifen
                             'Gegenkonto auf 1092, MwStKey auf 'null' setzen, KST = 0
-                            If row("booLinked") Then
-                                intGegenKonto = 1092
-                                SubRow("dblNetto") = SubRow("dblBrutto")
-                                SubRow("strMwStKey") = "null"
-                                SubRow("lngKST") = 0
-                            Else
-                                intGegenKonto = SubRow("lngKto")
-                            End If
+                            'If row("booLinked") Then
+                            '    If row("booLinkedPayed") Then
+                            '        intGegenKonto = 2331
+                            '    Else
+                            '        intGegenKonto = 1092
+                            '    End If
+                            '    SubRow("dblNetto") = SubRow("dblBrutto")
+                            '    SubRow("strMwStKey") = "null"
+                            '    SubRow("lngKST") = 0
+                            'Else
+                            intGegenKonto = SubRow("lngKto")
+                            'End If
                             strFibuText = SubRow("strDebSubText")
                             If intGegenKonto <> 6906 Then
                                 If strBuchType = "R" Then
@@ -916,7 +930,7 @@ Friend Class frmImportMain
 
                                     strBelegArr = Split(strBeleg, "{>}")
                                     If strBelegArr(4) = "B" Then 'schon bezahlt
-                                        'Ausbuchen?
+                                        'Ausbuchen?, wohin mit dem Betrag?
                                     Else
 
                                         'Welcher Betrag wurde schon bezahlt?
@@ -934,10 +948,10 @@ Friend Class frmImportMain
                                                           dblSplitPayed.ToString,
                                                           row("strDebCur"),
                                                           ,
-                                                          strDebiText + ", TZ von " + row("lngLinkedRG").ToString)
+                                                          row("lngDebIdentNbr").ToString + ", TZ " + row("strDebRGNbr").ToString)
 
                                         Call DbBhg.WriteTeilzahlung4(intLaufNbr.ToString,
-                                                                 strDebiText + ", TZ von " + row("lngLinkedRG").ToString,
+                                                                 row("lngDebIdentNbr").ToString + ", TZ " + row("strDebRGNbr").ToString,
                                                                  "NOT_SET",
                                                                  ,
                                                                  "NOT_SET",
@@ -1291,6 +1305,40 @@ Friend Class frmImportMain
                     End If
 
                     If booBooingok Then
+                        If row("booPGV") Then
+                            'Bei PGV Buchungen
+                            'Zuerst Auflösung
+                            intReturnValue = MainDebitor.FcPGVDTreatment(FBhg,
+                                                                   Finanz,
+                                                                   DbBhg,
+                                                                   PIFin,
+                                                                   BeBu,
+                                                                   KrBhg,
+                                                                   objdtDebitorenSub,
+                                                                   row("strDebRGNbr"),
+                                                                   intDebBelegsNummer,
+                                                                   row("strDebCur"),
+                                                                   row("datDebValDatum"),
+                                                                   "M",
+                                                                   row("datPGVFrom"),
+                                                                   row("datPGVTo"),
+                                                                   row("intPGVMthsAY") + row("intPGVMthsNY"),
+                                                                   row("intPGVMthsAY"),
+                                                                   row("intPGVMthsNY"),
+                                                                   2311,
+                                                                   2312,
+                                                                   cmbPerioden.SelectedItem,
+                                                                   objdbConn,
+                                                                   objdbMSSQLConn,
+                                                                   objdbSQLcommand,
+                                                                   cmbBuha.SelectedValue,
+                                                                   objdtInfo,
+                                                                   strYear,
+                                                                   intTeqNbr,
+                                                                   intTeqNbrLY)
+
+                        End If
+
                         'Status Head schreiben
                         row("strDebBookStatus") = row("strDebStatusBitLog")
                         row("booBooked") = True
@@ -1472,7 +1520,10 @@ Friend Class frmImportMain
                               KrBhg,
                               cmbBuha.SelectedValue,
                               objdtInfo,
-                              cmbPerioden.SelectedValue)
+                              cmbPerioden.SelectedItem,
+                              strYear,
+                              intTeqNbr,
+                              intTeqNbrLY)
 
             'Transitorische Buchungen?
             Call Main.fcCheckTransitorischeKredit(cmbBuha.SelectedValue,
@@ -1511,7 +1562,9 @@ Friend Class frmImportMain
                                 objOracleCmd,
                                 objdbAccessConn,
                                 objdtInfo,
-                                cmbBuha.Text)
+                                cmbBuha.Text,
+                                strYear,
+                                cmbPerioden.SelectedItem)
 
             'Anzahl schreiben
             txtNumber.Text = objdtKreditorenHead.Rows.Count.ToString
@@ -1597,11 +1650,13 @@ Friend Class frmImportMain
         'Sammelbeleg
         Dim intCommonKonto As Int32
 
-        Dim intTeqNbr As Int32
+        'Dim intTeqNbr As Int32
 
         Try
 
+
             Me.Cursor = Cursors.WaitCursor
+            Application.DoEvents()
             'Button disablen damit er nicht noch einmal geklickt werden kann.
             Me.butImportK.Enabled = False
 
@@ -1611,7 +1666,7 @@ Friend Class frmImportMain
                                                           2,
                                                           objdtDebitorenHead.Rows.Count)
 
-            intTeqNbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
+            'intTeqNbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
 
             'Kopfbuchung
             For Each row As DataRow In objdtKreditorenHead.Rows
@@ -1668,7 +1723,8 @@ Friend Class frmImportMain
                                                                                 objdbSQLcommand,
                                                                                 intKredBelegsNummer,
                                                                                 "G",
-                                                                                intTeqNbr)
+                                                                                intTeqNbr,
+                                                                                intTeqNbrLY)
 
                         Else
                             strBuchType = "R"
@@ -1680,7 +1736,8 @@ Friend Class frmImportMain
                                                                                 objdbSQLcommand,
                                                                                 intKredBelegsNummer,
                                                                                 "R",
-                                                                                intTeqNbr)
+                                                                                intTeqNbr,
+                                                                                intTeqNbrLY)
 
                         End If
 
@@ -2003,28 +2060,62 @@ Friend Class frmImportMain
                     End If
 
                     If booBookingok Then
+                        If row("booPGV") Then
+                            'Bei PGV Buchungen
+                            'Zuerst Auflösung
+                            intReturnValue = MainKreditor.FcPGVKTreatment(FBhg,
+                                                                       Finanz,
+                                                                       DbBhg,
+                                                                       PIFin,
+                                                                       BeBu,
+                                                                       KrBhg,
+                                                                       objdtKreditorenSub,
+                                                                       row("lngKredID"),
+                                                                       intKredBelegsNummer,
+                                                                       row("strKredCur"),
+                                                                       row("datKredValDatum"),
+                                                                       "M",
+                                                                       row("datPGVFrom"),
+                                                                       row("datPGVTo"),
+                                                                       row("intPGVMthsAY") + row("intPGVMthsNY"),
+                                                                       row("intPGVMthsAY"),
+                                                                       row("intPGVMthsNY"),
+                                                                       1311,
+                                                                       1312,
+                                                                       cmbPerioden.SelectedItem,
+                                                                       objdbConn,
+                                                                       objdbMSSQLConn,
+                                                                       objdbSQLcommand,
+                                                                       cmbBuha.SelectedValue,
+                                                                       objdtInfo,
+                                                                       strYear,
+                                                                       intTeqNbr,
+                                                                       intTeqNbrLY)
+
+                        End If
+
                         'Status Head schreiben
                         row("strKredBookStatus") = row("strKredStatusBitLog")
-                        row("booBooked") = True
-                        row("datBooked") = Now()
-                        row("lngBelegNr") = intKredBelegsNummer
+                            row("booBooked") = True
+                            row("datBooked") = Now()
+                            row("lngBelegNr") = intKredBelegsNummer
 
-                        'Status in File RG-Tabelle schreiben
-                        intReturnValue = MainKreditor.FcWriteToKrediRGTable(cmbBuha.SelectedValue,
+                            'Status in File RG-Tabelle schreiben
+                            intReturnValue = MainKreditor.FcWriteToKrediRGTable(cmbBuha.SelectedValue,
                                                                         row("lngKredID"),
                                                                         row("datBooked"),
                                                                         row("lngBelegNr"),
                                                                         objdbAccessConn,
                                                                         objOracleConn,
                                                                         objdbConn)
-                        If intReturnValue <> 0 Then
-                            'Throw an exception
-                            MessageBox.Show("Achtung, Beleg-Nummer: " + row("lngBelegNr").ToString + " konnte nicht In die RG-Tabelle geschrieben werden auf RG-ID: " + row("lngKredID").ToString + ".", "RG-Table Update nicht möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                            If intReturnValue <> 0 Then
+                                'Throw an exception
+                                MessageBox.Show("Achtung, Beleg-Nummer: " + row("lngBelegNr").ToString + " konnte nicht In die RG-Tabelle geschrieben werden auf RG-ID: " + row("lngKredID").ToString + ".", "RG-Table Update nicht möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                            End If
+
                         End If
 
                     End If
-
-                End If
 
             Next
 
@@ -2351,7 +2442,10 @@ Friend Class frmImportMain
                               KrBhg,
                               cmbBuha.SelectedValue,
                               objdtInfo,
-                              cmbPerioden.SelectedValue)
+                              cmbPerioden.SelectedItem,
+                              strYear,
+                              intTeqNbr,
+                              intTeqNbrLY)
 
 
     End Sub

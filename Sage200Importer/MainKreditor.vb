@@ -632,6 +632,7 @@ Public Class MainKreditor
 
         'Head Debitzoren löschen
         objdtHead.Clear()
+        objdtHead.Constraints.Clear()
         strSQL = Main.FcReadFromSettings(objdbconn, "Buchh_SQLHeadKred", intAccounting)
         strKRGTableType = Main.FcReadFromSettings(objdbconn, "Buchh_KRGTableType", intAccounting)
 
@@ -890,7 +891,9 @@ Public Class MainKreditor
 
     End Function
 
-    Public Shared Function FcSQLParseKredi(ByVal strSQLToParse As String, ByVal lngKredID As Int32, ByVal objdtKredi As DataTable) As String
+    Public Shared Function FcSQLParseKredi(ByVal strSQLToParse As String,
+                                           ByVal lngKredID As Int32,
+                                           ByVal objdtKredi As DataTable) As String
 
         'Funktion setzt in eingelesenem SQL wieder Variablen ein
         Dim intPipePositionBegin, intPipePositionEnd As Integer
@@ -978,7 +981,8 @@ Public Class MainKreditor
                                                  ByRef objdbMSSQLCmd As SqlCommand,
                                                  ByRef intBelegNbr As Int32,
                                                  ByVal strTyp As String,
-                                                 ByVal intTeqNr As Int32) As Int16
+                                                 ByVal intTeqNr As Int32,
+                                                 ByVal intTeqNrLY As Int32) As Int16
 
         '0=ok, 1=Beleg existierte schon, 9=Problem
 
@@ -998,7 +1002,7 @@ Public Class MainKreditor
 
             Do Until intReturnvalue = 0
 
-                objdbMSSQLCmd.CommandText = "SELECT lfnbrk FROM kredibuchung WHERE teqnbr=" + intTeqNr.ToString +
+                objdbMSSQLCmd.CommandText = "SELECT lfnbrk FROM kredibuchung WHERE teqnbr IN(" + intTeqNr.ToString + ", " + intTeqNrLY.ToString + ")" +
                                                                         " AND typ='" + strTyp + "'" +
                                                                         " AND belnbrint=" + intBelegNbr.ToString
                 tblKrediBeleg.Rows.Clear()
@@ -1026,5 +1030,365 @@ Public Class MainKreditor
 
     End Function
 
+    Public Shared Function FcPGVKTreatment(ByRef objFBhg As SBSXASLib.AXiFBhg,
+                                                ByRef objFinanz As SBSXASLib.AXFinanz,
+                                                ByRef objDbBhg As SBSXASLib.AXiDbBhg,
+                                                ByRef objPiFin As SBSXASLib.AXiPlFin,
+                                                ByRef objBebu As SBSXASLib.AXiBeBu,
+                                                ByRef objKrBhg As SBSXASLib.AXiKrBhg,
+                                                ByVal tblKrediB As DataTable,
+                                                ByVal intKRGNbr As Int32,
+                                                ByVal intKBelegNr As Int32,
+                                                ByVal strCur As String,
+                                                ByVal datValuta As Date,
+                                                ByVal strIType As String,
+                                                ByVal datPGVStart As Date,
+                                                ByVal datPGVEnd As Date,
+                                                ByVal intITotal As Int16,
+                                                ByVal intITY As Int16,
+                                                ByVal intINY As Int16,
+                                                ByVal intAcctTY As Int16,
+                                                ByVal intAcctNY As Int16,
+                                                ByVal strPeriode As String,
+                                                ByVal objdbcon As MySqlConnection,
+                                                ByVal objsqlcon As SqlConnection,
+                                                ByVal objsqlcmd As SqlCommand,
+                                                ByVal intAccounting As Int16,
+                                                ByRef objdtInfo As DataTable,
+                                                ByRef strYear As String,
+                                                ByRef intTeqNbr As Int16,
+                                                ByRef intTeqNbrLY As Int16) As Int16
+
+        Dim dblNettoBetrag As Double
+        Dim intSollKonto As Int16
+        Dim strBelegDatum As String
+        Dim strDebiTextSoll As String
+        Dim strDebiCurrency As String
+        Dim dblKursD As Double
+        Dim strSteuerFeldSoll As String
+        Dim intHabenKonto As Int16
+        Dim strDebiTextHaben As String
+        Dim dblKursH As Double
+        Dim strValutaDatum As String
+        Dim strSteuerFeldHaben As String
+        Dim drKrediSub() As DataRow
+        Dim strBebuEintragSoll As String
+        Dim strBebuEintragHaben As String
+        Dim strPeriodenInfoA() As String
+        Dim strPeriodenInfo As String
+        Dim intReturnValue As Int32
+        Dim strActualYear As String
+
+        Try
+
+            'Jahr retten
+            strActualYear = strYear
+            'Zuerst betroffene Buchungen selektieren
+            drKrediSub = tblKrediB.Select("lngKredID=" + intKRGNbr.ToString)
+
+            'Durch die Buchungen steppen
+            For Each drKSubrow As DataRow In drKrediSub
+                'Auflösung
+
+                'Evtl. Aufteilen auf 2 Jahre
+                For intYearLooper As Int16 = Year(datValuta) To Year(datPGVEnd)
+
+                    If intYearLooper = 2021 And intITotal > 1 Then
+                        dblNettoBetrag = drKSubrow("dblBrutto") / intITotal * intITY
+                        intSollKonto = intAcctTY
+                    Else
+                        dblNettoBetrag = drKSubrow("dblBrutto") / intITotal * intINY
+                        intSollKonto = intAcctNY
+                    End If
+
+                    If dblNettoBetrag > 0 Then 'Falls in einem Jahr nichts zu buchen ist
+
+                        strBelegDatum = Format(datValuta, "yyyyMMdd").ToString
+
+                        strDebiTextSoll = drKSubrow("strKredSubText") + ", PGV Neutralisierung"
+                        strDebiCurrency = strCur
+                        dblKursD = 1.0#
+                        strSteuerFeldSoll = "STEUERFREI"
+
+                        intHabenKonto = drKSubrow("lngKto")
+
+                        strDebiTextHaben = drKSubrow("strKredSubText") + ", PGV Neutralisierung"
+                        dblKursH = 1.0#
+                        strSteuerFeldHaben = "STEUERFREI"
+                        strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
+
+                        'KORE
+                        If drKSubrow("lngKST") > 0 Then
+
+                            If drKSubrow("intSollHaben") = 1 Then 'Haben
+                                strBebuEintragSoll = drKSubrow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                                strBebuEintragHaben = Nothing
+                            Else
+                                strBebuEintragSoll = Nothing
+                                strBebuEintragHaben = drKSubrow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                            End If
+                        Else
+                            strBebuEintragSoll = Nothing
+                            strBebuEintragHaben = Nothing
+
+                        End If
+
+                        'Buchen
+                        Call objFBhg.WriteBuchung(0,
+                               intKBelegNr,
+                               strBelegDatum,
+                               intSollKonto.ToString,
+                               strDebiTextSoll,
+                               strDebiCurrency,
+                               dblKursD.ToString,
+                               (dblNettoBetrag * dblKursD).ToString,
+                               strSteuerFeldSoll,
+                               intHabenKonto.ToString,
+                               strDebiTextHaben,
+                               strDebiCurrency,
+                               dblKursH.ToString,
+                               (dblNettoBetrag * dblKursH).ToString,
+                               strSteuerFeldHaben,
+                               strDebiCurrency,
+                               dblKursH.ToString,
+                               (dblNettoBetrag * dblKursH).ToString,
+                               dblNettoBetrag.ToString,
+                               strBebuEintragSoll,
+                               strBebuEintragHaben,
+                               strValutaDatum)
+
+                    End If
+
+                Next
+
+                'Falls FY dann 1312 auf 1311
+                'Gab es eine Neutralisierung fürs FJ?
+                If intINY > 0 And intITotal > 1 Then
+                    'Was ist die aktuelle angemeldete Periode ?
+                    strPeriodenInfo = objFinanz.GetPeriListe(0)
+                    strPeriodenInfoA = Split(strPeriodenInfo, "{>}")
+
+                    'Ist aktuell angemeldete Periode = FJ
+                    If Year(datPGVEnd) <> Val(Strings.Left(strPeriodenInfo, 4)) Then
+                        'Zuerst Info-Table löschen
+                        objdtInfo.Clear()
+                        Application.DoEvents()
+                        'Login ins FJ
+                        intReturnValue = Main.FcLoginSage(objdbcon,
+                                                          objsqlcon,
+                                                          objsqlcmd,
+                                                          objFinanz,
+                                                          objFBhg,
+                                                          objDbBhg,
+                                                          objPiFin,
+                                                          objBebu,
+                                                          objKrBhg,
+                                                          intAccounting,
+                                                          objdtInfo,
+                                                          Year(datPGVEnd).ToString,
+                                                          strYear,
+                                                          intTeqNbr,
+                                                          intTeqNbrLY)
+
+                        Application.DoEvents()
+
+                        '1311 -> 1312
+                        datValuta = "2022-01-01" 'Achtung provisorisch
+                        strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
+                        strBelegDatum = strValutaDatum
+                        intSollKonto = intAcctTY
+                        intHabenKonto = intAcctNY
+                        strDebiTextSoll = drKSubrow("strKredSubText") + ", PGV AJ / FJ"
+                        strDebiTextHaben = drKSubrow("strKredSubText") + ", PGV AJ / FJ"
+                        strBebuEintragSoll = Nothing
+                        strBebuEintragHaben = Nothing
+
+                        'Buchen
+                        Call objFBhg.WriteBuchung(0,
+                               intKBelegNr,
+                               strBelegDatum,
+                               intSollKonto.ToString,
+                               strDebiTextSoll,
+                               strDebiCurrency,
+                               dblKursD.ToString,
+                               (dblNettoBetrag * dblKursD).ToString,
+                               strSteuerFeldSoll,
+                               intHabenKonto.ToString,
+                               strDebiTextHaben,
+                               strDebiCurrency,
+                               dblKursH.ToString,
+                               (dblNettoBetrag * dblKursH).ToString,
+                               strSteuerFeldHaben,
+                               strDebiCurrency,
+                               dblKursH.ToString,
+                               (dblNettoBetrag * dblKursH).ToString,
+                               dblNettoBetrag.ToString,
+                               strBebuEintragSoll,
+                               strBebuEintragHaben,
+                               strValutaDatum)
+
+
+                    End If
+
+                End If
+
+                'Einzelene Monate buchen
+                For intMonthLooper As Int16 = 0 To intITotal - 1
+                    datValuta = DateAdd(DateInterval.Month, intMonthLooper, datPGVStart)
+                    strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
+                    strBelegDatum = strValutaDatum
+                    intSollKonto = drKSubrow("lngKto")
+                    strDebiTextSoll = drKSubrow("strKredSubText") + ", PGV M " + (intMonthLooper + 1).ToString
+                    dblNettoBetrag = drKSubrow("dblBrutto") / intITotal
+                    If intITotal = 1 Then
+                        intHabenKonto = intAcctNY
+                    Else
+                        intHabenKonto = intAcctTY
+                    End If
+
+                    strDebiTextHaben = strDebiTextSoll
+
+                    If drKSubrow("intSollHaben") = 1 Then 'Haben
+                        strBebuEintragSoll = Nothing
+                        strBebuEintragHaben = drKSubrow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                    Else
+                        strBebuEintragSoll = drKSubrow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                        strBebuEintragHaben = Nothing
+                    End If
+
+                    If Year(datValuta) = 2021 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                        'Zuerst Info-Table löschen
+                        objdtInfo.Clear()
+                        Application.DoEvents()
+                        'Im 2021 anmelden
+                        intReturnValue = Main.FcLoginSage(objdbcon,
+                                                          objsqlcon,
+                                                          objsqlcmd,
+                                                          objFinanz,
+                                                          objFBhg,
+                                                          objDbBhg,
+                                                          objPiFin,
+                                                          objBebu,
+                                                          objKrBhg,
+                                                          intAccounting,
+                                                          objdtInfo,
+                                                          "2021",
+                                                          strYear,
+                                                          intTeqNbr,
+                                                          intTeqNbrLY)
+                        Application.DoEvents()
+
+                    ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
+                        'Zuerst Info-Table löschen
+                        objdtInfo.Clear()
+                        Application.DoEvents()
+                        'Im 2022 anmelden
+                        intReturnValue = Main.FcLoginSage(objdbcon,
+                                                          objsqlcon,
+                                                          objsqlcmd,
+                                                          objFinanz,
+                                                          objFBhg,
+                                                          objDbBhg,
+                                                          objPiFin,
+                                                          objBebu,
+                                                          objKrBhg,
+                                                          intAccounting,
+                                                          objdtInfo,
+                                                          "2022",
+                                                          strYear,
+                                                          intTeqNbr,
+                                                          intTeqNbrLY)
+                        Application.DoEvents()
+
+                    End If
+
+                    'Buchen
+                    Call objFBhg.WriteBuchung(0,
+                               intKBelegNr,
+                               strBelegDatum,
+                               intSollKonto.ToString,
+                               strDebiTextSoll,
+                               strDebiCurrency,
+                               dblKursD.ToString,
+                               (dblNettoBetrag * dblKursD).ToString,
+                               strSteuerFeldSoll,
+                               intHabenKonto.ToString,
+                               strDebiTextHaben,
+                               strDebiCurrency,
+                               dblKursH.ToString,
+                               (dblNettoBetrag * dblKursH).ToString,
+                               strSteuerFeldHaben,
+                               strDebiCurrency,
+                               dblKursH.ToString,
+                               (dblNettoBetrag * dblKursH).ToString,
+                               dblNettoBetrag.ToString,
+                               strBebuEintragSoll,
+                               strBebuEintragHaben,
+                               strValutaDatum)
+
+                Next
+
+            Next
+            'Für weitere Buchungen ins ursprüngliche Jahr anmelden 
+            If strYear <> strActualYear Then
+                'Zuerst Info-Table löschen
+                objdtInfo.Clear()
+                Application.DoEvents()
+                'Im Aufrufjahr anmelden
+                intReturnValue = Main.FcLoginSage(objdbcon,
+                                                  objsqlcon,
+                                                  objsqlcmd,
+                                                  objFinanz,
+                                                  objFBhg,
+                                                  objDbBhg,
+                                                  objPiFin,
+                                                  objBebu,
+                                                  objKrBhg,
+                                                  intAccounting,
+                                                  objdtInfo,
+                                                  strActualYear,
+                                                  strYear,
+                                                  intTeqNbr,
+                                                  intTeqNbrLY)
+                Application.DoEvents()
+            End If
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem PGV - Buchung Kreditoren", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Return 9
+
+        Finally
+
+        End Try
+
+    End Function
+
+    Public Shared Function FcIsAllKrediRebilled(ByVal objdbKrediSub As DataTable,
+                                                ByVal intRGNummer As Int32) As Int16
+        'Returns 0=mind. nicht 1 Rebill, 1=alle Rebill, 9=Problem
+
+        Dim drKrediSub() As DataRow
+
+        Try
+
+            'Zuerst betroffene Buchungen selektieren
+            drKrediSub = objdbKrediSub.Select("lngKredID=" + intRGNummer.ToString + " AND booRebilling=false")
+
+            If drKrediSub.Length > 0 Then
+                Return 0
+            Else
+                Return 1
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem PGV - Buchung Kreditoren", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Return 9
+
+        Finally
+
+        End Try
+
+    End Function
 
 End Class

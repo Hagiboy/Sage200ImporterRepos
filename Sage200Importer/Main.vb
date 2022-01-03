@@ -47,6 +47,9 @@ Friend NotInheritable Class Main
         Dim booLinked As DataColumn = New DataColumn("booLinked")
         booLinked.DataType = System.Type.[GetType]("System.Boolean")
         DT.Columns.Add(booLinked)
+        Dim booLinkedPayed As DataColumn = New DataColumn("booLinkedPayed")
+        booLinkedPayed.DataType = System.Type.[GetType]("System.Boolean")
+        DT.Columns.Add(booLinkedPayed)
         Dim strRGName As DataColumn = New DataColumn("strRGName")
         strRGName.DataType = System.Type.[GetType]("System.String")
         strRGName.MaxLength = 70
@@ -156,8 +159,23 @@ Friend NotInheritable Class Main
         Dim lngDebiKST As DataColumn = New DataColumn("lngDebiKST")
         lngDebiKST.DataType = System.Type.[GetType]("System.Int32")
         DT.Columns.Add(lngDebiKST)
-
+        Dim booPGV As DataColumn = New DataColumn("booPGV")
+        booPGV.DataType = System.Type.[GetType]("System.Boolean")
+        DT.Columns.Add(booPGV)
+        Dim datPGVFrom As DataColumn = New DataColumn("datPGVFrom")
+        datPGVFrom.DataType = System.Type.[GetType]("System.DateTime")
+        DT.Columns.Add(datPGVFrom)
+        Dim intPGVMthsAY As DataColumn = New DataColumn("intPGVMthsAY")
+        intPGVMthsAY.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(intPGVMthsAY)
+        Dim datPGVTo As DataColumn = New DataColumn("datPGVTo")
+        datPGVTo.DataType = System.Type.[GetType]("System.DateTime")
+        DT.Columns.Add(datPGVTo)
+        Dim intPGVMthsNY As DataColumn = New DataColumn("intPGVMthsNY")
+        intPGVMthsNY.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(intPGVMthsNY)
         Return DT
+
     End Function
 
     Public Shared Function tblDebitorenSub() As DataTable
@@ -401,7 +419,21 @@ Friend NotInheritable Class Main
         Dim intZKond As DataColumn = New DataColumn("intZKond")
         intZKond.DataType = System.Type.[GetType]("System.Int16")
         DT.Columns.Add(intZKond)
-
+        Dim booPGV As DataColumn = New DataColumn("booPGV")
+        booPGV.DataType = System.Type.[GetType]("System.Boolean")
+        DT.Columns.Add(booPGV)
+        Dim datPGVFrom As DataColumn = New DataColumn("datPGVFrom")
+        datPGVFrom.DataType = System.Type.[GetType]("System.DateTime")
+        DT.Columns.Add(datPGVFrom)
+        Dim intPGVMthsAY As DataColumn = New DataColumn("intPGVMthsAY")
+        intPGVMthsAY.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(intPGVMthsAY)
+        Dim datPGVTo As DataColumn = New DataColumn("datPGVTo")
+        datPGVTo.DataType = System.Type.[GetType]("System.DateTime")
+        DT.Columns.Add(datPGVTo)
+        Dim intPGVMthsNY As DataColumn = New DataColumn("intPGVMthsNY")
+        intPGVMthsNY.DataType = System.Type.[GetType]("System.Int32")
+        DT.Columns.Add(intPGVMthsNY)
         Return DT
 
     End Function
@@ -520,7 +552,10 @@ Friend NotInheritable Class Main
                                        ByRef objkrBuha As SBSXASLib.AXiKrBhg,
                                        ByVal intAccounting As Int16,
                                        ByRef objdtInfo As DataTable,
-                                       ByVal strPeriod As String) As Int16
+                                       ByVal strPeriod As String,
+                                       ByRef strYear As String,
+                                       ByRef intTeqNbr As Int16,
+                                       ByRef intTeqNbrLY As Int16) As Int16
 
 
         '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
@@ -531,6 +566,10 @@ Friend NotInheritable Class Main
         Dim strLogonInfo() As String
         Dim strPeriode() As String
         Dim FcReturns As Int16
+        Dim intPeriodenNr As Int16
+        Dim strPeriodenInfo As String
+        Dim objdtPeriodeLY As New DataTable
+        Dim strPeriodeLY As String
 
         b = Nothing
 
@@ -562,17 +601,27 @@ Friend NotInheritable Class Main
 
         'Check Periode
         'booAccOk = objFinanz.CheckPeriode(strMandant, "2020")
-        Dim intPeriodenNr As Int16
-        Dim strPeriodenInfo As String
         'strPeriodenInfo = objFinanz.GetLogonInfo()
         intPeriodenNr = objFinanz.ReadPeri(strMandant, strLogonInfo(7))
         'For intLooper As Int16 = 0 To intPeriodenNr
         strPeriodenInfo = objFinanz.GetPeriListe(0)
         'strPeriodenInfo = objFinanz.GetResource(intLooper)
         'Next
+
         strPeriode = Split(strPeriodenInfo, "{>}")
-        objdtInfo.Rows.Add("GeschäftsJ", strPeriode(3) + "-" + strPeriode(4) + ", teq: " + strPeriode(8).ToString)
+        'Teq-Nr von Vorjar lesen um in Suche nutzen zu können
+        strPeriodeLY = (Val(Left(strPeriode(4), 4)) - 1).ToString + Right(strPeriode(4), 4)
+        objsqlCom.CommandText = "SELECT teqnbr FROM periode WHERE mandid='" + strMandant + "' AND dtebis='" + strPeriodeLY + "'"
+        objsqlCom.Connection = objsqlConn
+        objsqlConn.Open()
+        objdtPeriodeLY.Load(objsqlCom.ExecuteReader)
+        objsqlConn.Close()
+        'Variable übergeben, Achtung nicht definitiv. Situatin ist nicht klar wenn Vorjahr nicht existiert
+        intTeqNbrLY = objdtPeriodeLY.Rows(0).Item("teqnbr")
+        intTeqNbr = strPeriode(8)
+        objdtInfo.Rows.Add("GeschäftsJ", strPeriode(3) + "-" + strPeriode(4) + ", teq: " + strPeriode(8).ToString + ", " + intTeqNbrLY.ToString)
         objdtInfo.Rows.Add("Buchungen/ Status", strPeriode(5) + "-" + strPeriode(6) + "/ " + strPeriode(2))
+        strYear = Strings.Left(strPeriode(4), 4)
         'objdtInfo.Rows.Add("Status", strPeriode(2))
         'Debug.Print(FcReadPeriodenDef(objsqlConn, objsqlCom, strPeriode(8))(0))
 
@@ -675,8 +724,8 @@ ErrorHandler:
             intLooper += 1
         Loop
 
-        'Auf letzte gehen
-        cmbPeriods.SelectedIndex = cmbPeriods.Items.Count - 1
+        'Auf aktuelles Jahr gehen
+        cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now()) - 1).ToString)
 
 
     End Function
@@ -792,7 +841,11 @@ ErrorHandler:
                                         ByRef objdbSQLConn As SqlConnection,
                                         ByRef objdbSQLCmd As SqlCommand,
                                         ByRef objdtInfo As DataTable,
-                                        ByVal strcmbBuha As String) As Integer
+                                        ByVal strcmbBuha As String,
+                                        ByVal intTeqNbr As Int16,
+                                        ByVal intTeqNbrLY As Int16,
+                                        ByVal strYear As String,
+                                        ByVal strPeriode As String) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
         Dim strBitLog As String = ""
@@ -822,14 +875,23 @@ ErrorHandler:
         Dim booCashSollCorrect As Boolean
         Dim strRGNbr As String
         Dim intLinkedDebitor As Int32
-        Dim intTeqNbr As Int16
+        'Dim intTeqNbr As Int16
+        Dim intSBGegenKonto As Int16
+        Dim selSBrows() As DataRow
+
+        Dim datValutaPGV As Date
+        Dim intPGVMonths As Int16
+        Dim intMonthCounter As Int16
+        Dim intMonthsAJ As Int16
+        Dim intMonthsNJ As Int16
+
 
         'Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
 
         Try
 
             'Teq-Nbr extrahieren
-            intTeqNbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
+            'intTeqNbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
 
             objdbconn.Open()
             objOrdbconn.Open()
@@ -886,6 +948,7 @@ ErrorHandler:
                 booSplittBill = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_LinkedBookings", intAccounting)))
                 If booSplittBill And IIf(IsDBNull(row("intRGArt")), 0, row("intRGArt")) = 10 Then
                     row("booLinked") = True
+
                 Else
                     row("booLinked") = False
                 End If
@@ -986,8 +1049,8 @@ ErrorHandler:
                             objdrDebiSub("strArtikel") = "Rundungsdifferenz"
                             objdrDebiSub("strDebSubText") = "Eingefügt"
                             objdrDebiSub("strStatusUBBitLog") = "00000000"
-                            If Math.Abs(dblRDiffBrutto) > 3 Then
-                                objdrDebiSub("strStatusUBText") = "Rund > 3"
+                            If Math.Abs(dblRDiffBrutto) > 4 Then
+                                objdrDebiSub("strStatusUBText") = "Rund > 4"
                             Else
                                 objdrDebiSub("strStatusUBText") = "ok"
                             End If
@@ -996,7 +1059,7 @@ ErrorHandler:
                             dblSubBrutto = Decimal.Round(dblSubBrutto - dblRDiffBrutto, 2, MidpointRounding.AwayFromZero)
                             'dblSubMwSt = Decimal.Round(dblSubMwSt - dblRDiffMwSt, 2, MidpointRounding.AwayFromZero)
                             'dblSubNetto = Decimal.Round(dblSubNetto - dblRDiffNetto, 2, MidpointRounding.AwayFromZero)
-                            If Math.Abs(dblRDiffBrutto) > 3 Then
+                            If Math.Abs(dblRDiffBrutto) > 4 Then
                                 strBitLog += "3"
                             Else
                                 strBitLog += "0"
@@ -1107,6 +1170,38 @@ ErrorHandler:
                                                  IIf(row("dblDebBrutto") > 0, "R", "G"),
                                                  row("strDebCur"))
                 strBitLog += Trim(intReturnValue.ToString)
+
+                'PGV => Prüfung vor Valuta-Datum da Valuta-Datum verändert wird
+                'Jahresübergreifend RG- / Valuta-Datum
+                If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) Or
+                    Not IsDBNull(row("datPGVFrom")) Then
+                    row("booPGV") = True
+                    datValutaPGV = row("datDebValDatum")
+                    'Bei Valuta-Datum in einem anderen Jahr Valuta-Datum ändern
+                    If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) Then
+                        row("datDebValDatum") = row("datDebRGDatum")
+                    End If
+
+                    'Anzahl Monate prüfen
+                    intMonthsAJ = 0
+                    intMonthsNJ = 0
+                    If IsDBNull(row("datPGVFrom")) Then
+                        row("datPGVFrom") = "2022-01-01"
+                        row("datPGVTo") = "2022-01-01"
+                    End If
+                    intPGVMonths = (DateAndTime.Year(row("datPGVTo")) * 12 + DateAndTime.Month(row("datPGVTo"))) - (DateAndTime.Year(row("datPGVFrom")) * 12 + DateAndTime.Month(row("datPGVFrom"))) + 1
+                    For intMonthCounter = 0 To intPGVMonths - 1
+                        If Year(DateAdd(DateInterval.Month, intMonthCounter, row("datPGVFrom"))) > Convert.ToInt32(strYear) Then
+                            intMonthsNJ += 1
+                        Else
+                            intMonthsAJ += 1
+                        End If
+                    Next
+                    row("intPGVMthsAY") = intMonthsAJ
+                    row("intPGVMthsNY") = intMonthsNJ
+
+                End If
+
                 'Valuta - Datum 10
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")), objdtInfo)
                 strBitLog += Trim(intReturnValue.ToString)
@@ -1134,13 +1229,49 @@ ErrorHandler:
                                                                          IIf(IsDBNull(row("lngLinkedRG")), 0, row("lngLinkedRG")),
                                                                          intAccounting,
                                                                          intLinkedDebitor,
-                                                                         intTeqNbr)
+                                                                         intTeqNbr,
+                                                                         intTeqNbrLY)
                     row("lngLinkedDeb") = intLinkedDebitor
 
                     intReturnValue = MainDebitor.FcCheckLinkedRG(objdbBuha,
                                                                  intLinkedDebitor,
                                                                  row("strDebCur"),
                                                                  row("lngLinkedRG"))
+                    'Falls erste Rechnung bezahlt, dann Flag setzen
+                    If intReturnValue = 2 Then
+                        row("booLinkedPayed") = True
+                        intSBGegenKonto = 2331
+                    Else
+                        row("booLinkedPayed") = False
+                        intSBGegenKonto = 1092
+                    End If
+
+                    'UB - Löschen und Buchung erstellen ohne MwSt und ohne KST da schon in RG 1 beinhaltet
+                    selSBrows = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
+
+                    For Each SBsubrow As DataRow In selSBrows
+                        SBsubrow.Delete()
+                    Next
+
+                    Dim drSBBuchung As DataRow = objdtDebitSubs.NewRow
+                    'Felder zuweisen
+                    drSBBuchung("strRGNr") = row("strDebRGNbr")
+                    drSBBuchung("intSollHaben") = 1
+                    drSBBuchung("lngKto") = intSBGegenKonto
+                    drSBBuchung("strKtoBez") = "SB - Buchung"
+                    drSBBuchung("lngKST") = 0
+                    drSBBuchung("strKstBez") = "keine"
+                    drSBBuchung("lngProj") = 0
+                    drSBBuchung("strProjBez") = "null"
+                    drSBBuchung("dblNetto") = row("dblDebBrutto") * -1
+                    drSBBuchung("dblMwSt") = 0
+                    drSBBuchung("dblBrutto") = row("dblDebBrutto") * -1
+                    drSBBuchung("dblMwStSatz") = 0
+                    drSBBuchung("strMwStKey") = "null"
+                    drSBBuchung("strArtikel") = "SB - Buchung"
+                    drSBBuchung("strDebSubText") = row("lngDebIdentNbr").ToString + ", FRG, " + row("lngLinkedRG").ToString
+                    objdtDebitSubs.Rows.Add(drSBBuchung)
+
                 Else
                     intReturnValue = 0
                 End If
@@ -1241,11 +1372,16 @@ ErrorHandler:
                 End If
                 'Splitt-Bill
                 If Mid(strBitLog, 13, 1) <> "0" Then
-                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "SplB"
+                    If Mid(strBitLog, 13, 1) = "1" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "SplBNo1"
+                    Else
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "SplBBez1"
+                    End If
+
                 End If
 
                 'Status schreiben
-                If Val(strBitLog) = 0 Or Val(strBitLog) = 100000000 Then
+                If Val(strBitLog) = 0 Or Val(strBitLog) = 100000002 Or Val(strBitLog) = 2 Then
                     row("booDebBook") = True
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
                 End If
@@ -1268,7 +1404,7 @@ ErrorHandler:
 
                 'Wird ein anderer Text in den Sub-Buchung gewünscht?
                 booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecial", intAccounting) = "0", False, True)
-                If booDiffSubText Then
+                If booDiffSubText And Not row("booLinked") Then
                     strDebiSubText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn,
                                                                                "Buchh_SubTextSpecialText",
                                                                                intAccounting),
@@ -1280,10 +1416,13 @@ ErrorHandler:
                 Else
                     strDebiSubText = row("strDebText")
                 End If
-                selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
-                For Each subrow In selsubrow
-                    subrow("strDebSubText") = strDebiSubText
-                Next
+                'Falls nicht SB - Linked dann Text in SB ersetzen
+                If Not row("booLinked") Then
+                    selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
+                    For Each subrow In selsubrow
+                        subrow("strDebSubText") = strDebiSubText
+                    Next
+                End If
 
                 'Init
                 strBitLog = ""
@@ -2740,7 +2879,9 @@ ErrorHandler:
                                         ByRef objOrcommand As OracleClient.OracleCommand,
                                         ByRef objdbAccessConn As OleDb.OleDbConnection,
                                         ByRef objdtInfo As DataTable,
-                                        ByVal strcmbBuha As String) As Integer
+                                        ByVal strcmbBuha As String,
+                                        ByVal strYear As String,
+                                        ByVal strPeriode As String) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
         Dim strBitLog As String = ""
@@ -2768,6 +2909,11 @@ ErrorHandler:
         Dim dblRDiffBrutto As Double
         Dim dblRDiffMwSt As Double
         Dim dblRDiffNetto As Double
+        Dim datValutaPGV As Date
+        Dim intPGVMonths As Int16
+        Dim intMonthCounter As Int16
+        Dim intMonthsAJ As Int16
+        Dim intMonthsNJ As Int16
 
         Try
 
@@ -2777,7 +2923,7 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
 
-                'If row("lngKredID") = "1107850" Then Stop
+                'If row("lngKredID") = "1643026" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -2968,6 +3114,38 @@ ErrorHandler:
                                                                    row("strKredCur"),
                                                                    strKredTyp)
                 strBitLog += Trim(intReturnValue.ToString)
+                'PGV => Prüfung vor Valuta-Datum da Valuta-Datum verändert wird
+                'Jahresübergreifend RG- / Valuta-Datum
+                If (Year(row("datKredRGDatum")) <> Year(row("datKredValDatum")) And MainKreditor.FcIsAllKrediRebilled(objdtKreditSubs, row("lngKredID")) = 0) Or
+                    (Not IsDBNull(row("datPGVFrom")) And MainKreditor.FcIsAllKrediRebilled(objdtKreditSubs, row("lngKredID")) = 0) Then
+
+                    row("booPGV") = True
+                    datValutaPGV = row("datKredValDatum")
+                    'Bei Valuta-Datum in einem anderen Jahr Valuta-Datum ändern
+                    If Year(row("datKredRGDatum")) <> Year(row("datKredValDatum")) Then
+                        row("datKredValDatum") = row("datKredRGDatum")
+                    End If
+
+                    'Anzahl Monate prüfen
+                    intMonthsAJ = 0
+                    intMonthsNJ = 0
+                    If IsDBNull(row("datPGVFrom")) Then
+                        row("datPGVFrom") = "2022-01-01"
+                        row("datPGVTo") = "2022-01-01"
+                    End If
+                    intPGVMonths = (DateAndTime.Year(row("datPGVTo")) * 12 + DateAndTime.Month(row("datPGVTo"))) - (DateAndTime.Year(row("datPGVFrom")) * 12 + DateAndTime.Month(row("datPGVFrom"))) + 1
+                    For intMonthCounter = 0 To intPGVMonths - 1
+                        If Year(DateAdd(DateInterval.Month, intMonthCounter, row("datPGVFrom"))) > Convert.ToInt32(strYear) Then
+                            intMonthsNJ += 1
+                        Else
+                            intMonthsAJ += 1
+                        End If
+                    Next
+                    row("intPGVMthsAY") = intMonthsAJ
+                    row("intPGVMthsNY") = intMonthsNJ
+
+                End If
+
                 'Valuta - Datum 10
                 If IsDBNull(row("datKredValDatum")) Then
                     row("datKredValDatum") = row("datKredRGDatum")
@@ -2978,23 +3156,32 @@ ErrorHandler:
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredRGDatum")), #1789-09-17#, row("datKredRGDatum")), objdtInfo)
                 strBitLog += Trim(intReturnValue.ToString)
                 ''Referenz 12
+                If (Not String.IsNullOrEmpty(row("strKredRef"))) And (row("intPayType") = 3 Or row("intPayType") = 10) Then
+                    If Right(row("strKredRef"), 1) <> Main.FcModulo10(Left(row("strKredRef"), Len(row("strKredRef")) - 1)) Then
+                        strBitLog += "1"
+                    Else
+                        strBitLog += "0"
+                    End If
+                Else
+                    strBitLog += "0"
+                End If
+                'Debug.Print("Erfasste Prüfziffer " + Right(row("strKredRef"), 1) + ", kalkuliert " + Main.FcModulo10(Left(row("strKredRef"), Len(row("strKredRef")) - 1)).ToString)
                 'intReturnValue = IIf(IsDBNull(row("strKredRef")), 1, 0)
                 'strBitLog += Trim(intReturnValue.ToString)
-                'Interne Bank 12
-                'interne Bank
+                'interne Bank 13
                 intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
                                                          intAccounting,
                                                          row("strKrediBankInt"),
                                                          intintBank)
                 row("intintBank") = intintBank
                 strBitLog += Trim(intReturnValue.ToString)
-                'Buchungstext 13
+                'Buchungstext 14
                 If IIf(IsDBNull(row("strKredText")), "", row("strKredText")) = "" Then
                     strBitLog += "1"
                 Else
                     strBitLog += "0"
                 End If
-                'Zalungstyp logisch 14
+                'Zalungstyp logisch 15
                 intPayType = IIf(IsDBNull(row("intPayType")), 0, row("intPayType"))
                 intReturnValue = Main.FcCheckPayType(intPayType,
                                                      IIf(IsDBNull(row("strKredRef")), "", row("strKredRef")),
@@ -3006,9 +3193,8 @@ ErrorHandler:
                     strBitLog += "0"
                 End If
 
-
                 'Status-String auswerten
-                'Kreditor
+                'Kreditor 1
                 If Left(strBitLog, 1) <> "0" Then
                     strStatus = "Kred"
                     If Left(strBitLog, 1) <> "2" Then
@@ -3056,7 +3242,7 @@ ErrorHandler:
                                                        row("intEBank"))
                     End If
                 End If
-                'Konto
+                'Konto 2
                 If Mid(strBitLog, 2, 1) <> "0" Then
                     If Mid(strBitLog, 2, 1) <> 2 Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Kto"
@@ -3067,64 +3253,68 @@ ErrorHandler:
                 Else
                     row("strKredKtoBez") = MainDebitor.FcReadDebitorKName(objfiBuha, row("lngKredKtoNbr"))
                 End If
-                'Währung
+                'Währung 3
                 If Mid(strBitLog, 3, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Cur"
                 End If
-                'Subbuchungen
+                'Subbuchungen 4
                 'Totale in Head schreiben
                 row("intSubBookings") = intSubNumber.ToString
                 row("dblSumSubBookings") = dblSubBrutto.ToString
                 If Mid(strBitLog, 4, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Sub"
                 End If
-                'Autokorretkur
+                'Autokorretkur 5
                 If Mid(strBitLog, 5, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "AutoC"
                     If Mid(strBitLog, 5, 1) = "3" Then
                         strStatus += " >1"
                     End If
                 End If
-                'Diff zu Subbuchungen
+                'Diff zu Subbuchungen 6
                 If Mid(strBitLog, 6, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "DiffS"
                 End If
-                'OP Kopf
+                'OP Kopf 7
                 If Mid(strBitLog, 7, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "BelK"
                 End If
-                'OP Nummer
+                'OP Nummer 8
                 If Mid(strBitLog, 8, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "OPNbr"
                 End If
-                'OP Doppelt
+                'OP Doppelt 9
                 If Mid(strBitLog, 9, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "OPDbl"
                     'Else
                     '   row("strDebRef") = strDebiReferenz
                 End If
-                'Valuta Datum 
+                'Valuta Datum 10
                 If Mid(strBitLog, 10, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValD"
                     'Else
                     '    row("strDebRef") = strDebiReferenz
                 End If
-                'RG Datum 
+                'RG Datum 11
                 If Mid(strBitLog, 11, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgD"
                     'Else
                     '    row("strDebRef") = strDebiReferenz
                 End If
-                'Int Bank
+                'Referenz 12
                 If Mid(strBitLog, 12, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Ref "
+                End If
+                'Int Bank 13
+                If Mid(strBitLog, 13, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "IBank "
                 End If
-                'Keinen Text
-                If Mid(strBitLog, 13, 1) <> "0" Then
+                'Keinen Text 14
+                If Mid(strBitLog, 14, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Text "
                 End If
-                'PayType
-                If Mid(strBitLog, 14, 1) <> "0" Then
+                'PayType 15
+                If Mid(strBitLog, 15, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PType "
                     If Mid(strBitLog, 14, 1) = "4" Then
                         strStatus += "NoR"
@@ -3138,9 +3328,13 @@ ErrorHandler:
                         strStatus += Mid(strBitLog, 14, 1)
                     End If
                 End If
+                'PGV keine Ziffer
+                If row("booPGV") Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGV "
+                End If
 
                 'Status schreiben
-                If Val(strBitLog) = 0 Or Val(strBitLog) = 1000000000 Then
+                If Val(strBitLog) = 0 Or Val(strBitLog) = 10000000000 Then
                     row("booKredBook") = True
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
                 End If
@@ -3175,8 +3369,8 @@ ErrorHandler:
                 Else
                     strKrediSubText = row("strKredText")
                 End If
-                selsubrow = objdtKreditSubs.Select("strRGNr='" + Replace(row("strKredRGNbr"), "'", "''") + "'")
-                For Each subrow In selsubrow
+                selsubrow = objdtKreditSubs.Select("lngKredID=" + row("lngKredID").ToString)
+                For Each subrow As DataRow In selsubrow
                     subrow("strKredSubText") = strKrediSubText
                 Next
 
@@ -3250,16 +3444,16 @@ ErrorHandler:
                         If Main.FcAreFirst2Chars(IIf(strKrediBank = "", "00", strKrediBank)) = 0 Then 'IBAN als Bank
                             'QR-IBAN?
                             If Mid(strKrediBank, 5, 1) = "3" Then
-                                intPayType = 10
-                                Return 2
+                                    intPayType = 10
+                                    Return 2
+                                Else
+                                    'keine QR-IBAN-ESR-Ref
+                                    'intPayType = 3
+                                    Return 5
+                                End If
                             Else
-                                'keine QR-IBAN-ESR-Ref
-                                'intPayType = 3
-                                Return 5
-                            End If
-                        Else
 
-                            If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
+                                If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
                                 'ESR, falsch deklariert
                                 If intPayType <> 3 Then
                                     intPayType = 3

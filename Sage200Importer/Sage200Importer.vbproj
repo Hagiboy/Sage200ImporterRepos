@@ -28,7 +28,7 @@
     <MapFileExtensions>true</MapFileExtensions>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
-    <ApplicationRevision>32</ApplicationRevision>
+    <ApplicationRevision>33</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -67,10 +67,10 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>5756259E4201A1BA5B57B67E55D57198F2EF8ED4</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>5AC06365130D23F44942E5A1CFC90347DBA62944</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestKeyFile>Sage200Importer_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestKeyFile>Sage200Importer_1_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
@@ -122,7 +122,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApplicationEvents.vb" />
-    <Compile Include="frmImportMain.vb" />
+    <Compile Include="frmImportMain.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="frmImportMain.Designer.vb">
       <DependentUpon>frmImportMain.vb</DependentUpon>
       <SubType>Form</SubType>
@@ -172,6 +174,7 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Sage200Importer_1_TemporaryKey.pfx" />
     <None Include="Sage200Importer_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
