@@ -1250,7 +1250,7 @@ Public Class MainDebitor
 
                 intCreatable = FcCreateDebitor(objDbBhg,
                                               lngDebiNbr,
-                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("LastName")), "", objdtDebitor.Rows(0).Item("LastName")) + IIf(IsDBNull(objdtDebitor.Rows(0).Item("FirstName")), "", objdtDebitor.Rows(0).Item("FirtName")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("LastName")), "", objdtDebitor.Rows(0).Item("LastName")) + IIf(IsDBNull(objdtDebitor.Rows(0).Item("FirstName")), "", objdtDebitor.Rows(0).Item("FirstName")),
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("LastName")), "", objdtDebitor.Rows(0).Item("LastName")),
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("Street")), "", objdtDebitor.Rows(0).Item("Street")),
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("ZipCode")), "", objdtDebitor.Rows(0).Item("ZipCode")),
@@ -1681,9 +1681,9 @@ Public Class MainDebitor
                 'Auflösung
 
                 'Evtl. Aufteilen auf 2 Jahre
-                For intYearLooper As Int16 = Year(datPGVStart) - Year(datPGVStart) To Year(DateAdd(DateInterval.Month, intITotal, datPGVStart)) - Year(datPGVStart)
+                For intYearLooper As Int16 = Year(datValuta) To Year(datPGVEnd)
 
-                    If intYearLooper = 0 And intITotal > 1 Then
+                    If intYearLooper = 2021 Then
                         dblNettoBetrag = drDSubrow("dblBrutto") * -1 / intITotal * intITY
                         intHabenKonto = intAcctTY
                     Else

@@ -1093,7 +1093,7 @@ Public Class MainKreditor
                 'Evtl. Aufteilen auf 2 Jahre
                 For intYearLooper As Int16 = Year(datValuta) To Year(datPGVEnd)
 
-                    If intYearLooper = 2021 And intITotal > 1 Then
+                    If intYearLooper = 2021 Then
                         dblNettoBetrag = drKSubrow("dblBrutto") / intITotal * intITY
                         intSollKonto = intAcctTY
                     Else

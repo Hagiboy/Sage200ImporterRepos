@@ -1379,6 +1379,10 @@ ErrorHandler:
                     End If
 
                 End If
+                'PGV keine Ziffer
+                If row("booPGV") Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGV "
+                End If
 
                 'Status schreiben
                 If Val(strBitLog) = 0 Or Val(strBitLog) = 100000002 Or Val(strBitLog) = 2 Then
