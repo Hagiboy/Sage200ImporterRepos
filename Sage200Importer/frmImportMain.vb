@@ -204,6 +204,7 @@ Friend Class frmImportMain
 
             'Anzahl schreiben
             txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
+            Me.Cursor = Cursors.Default
 
             ''Ipmort Kredit hiden
             Me.butImportK.Enabled = False
@@ -1325,8 +1326,8 @@ Friend Class frmImportMain
                                                                    row("intPGVMthsAY") + row("intPGVMthsNY"),
                                                                    row("intPGVMthsAY"),
                                                                    row("intPGVMthsNY"),
-                                                                   2311,
-                                                                   2312,
+                                                                   1311,
+                                                                   1312,
                                                                    cmbPerioden.SelectedItem,
                                                                    objdbConn,
                                                                    objdbMSSQLConn,
@@ -1335,7 +1336,8 @@ Friend Class frmImportMain
                                                                    objdtInfo,
                                                                    strYear,
                                                                    intTeqNbr,
-                                                                   intTeqNbrLY)
+                                                                   intTeqNbrLY,
+                                                                   IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")))
 
                         End If
 
@@ -2080,8 +2082,8 @@ Friend Class frmImportMain
                                                                        row("intPGVMthsAY") + row("intPGVMthsNY"),
                                                                        row("intPGVMthsAY"),
                                                                        row("intPGVMthsNY"),
-                                                                       1311,
-                                                                       1312,
+                                                                       2311,
+                                                                       2312,
                                                                        cmbPerioden.SelectedItem,
                                                                        objdbConn,
                                                                        objdbMSSQLConn,
@@ -2090,32 +2092,33 @@ Friend Class frmImportMain
                                                                        objdtInfo,
                                                                        strYear,
                                                                        intTeqNbr,
-                                                                       intTeqNbrLY)
+                                                                       intTeqNbrLY,
+                                                                       row("strPGVType"))
 
                         End If
 
                         'Status Head schreiben
                         row("strKredBookStatus") = row("strKredStatusBitLog")
-                            row("booBooked") = True
-                            row("datBooked") = Now()
-                            row("lngBelegNr") = intKredBelegsNummer
+                        row("booBooked") = True
+                        row("datBooked") = Now()
+                        row("lngBelegNr") = intKredBelegsNummer
 
-                            'Status in File RG-Tabelle schreiben
-                            intReturnValue = MainKreditor.FcWriteToKrediRGTable(cmbBuha.SelectedValue,
+                        'Status in File RG-Tabelle schreiben
+                        intReturnValue = MainKreditor.FcWriteToKrediRGTable(cmbBuha.SelectedValue,
                                                                         row("lngKredID"),
                                                                         row("datBooked"),
                                                                         row("lngBelegNr"),
                                                                         objdbAccessConn,
                                                                         objOracleConn,
                                                                         objdbConn)
-                            If intReturnValue <> 0 Then
-                                'Throw an exception
-                                MessageBox.Show("Achtung, Beleg-Nummer: " + row("lngBelegNr").ToString + " konnte nicht In die RG-Tabelle geschrieben werden auf RG-ID: " + row("lngKredID").ToString + ".", "RG-Table Update nicht möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-                            End If
-
+                        If intReturnValue <> 0 Then
+                            'Throw an exception
+                            MessageBox.Show("Achtung, Beleg-Nummer: " + row("lngBelegNr").ToString + " konnte nicht In die RG-Tabelle geschrieben werden auf RG-ID: " + row("lngKredID").ToString + ".", "RG-Table Update nicht möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                         End If
 
                     End If
+
+                End If
 
             Next
 

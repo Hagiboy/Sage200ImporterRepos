@@ -1057,7 +1057,8 @@ Public Class MainKreditor
                                                 ByRef objdtInfo As DataTable,
                                                 ByRef strYear As String,
                                                 ByRef intTeqNbr As Int16,
-                                                ByRef intTeqNbrLY As Int16) As Int16
+                                                ByRef intTeqNbrLY As Int16,
+                                                ByRef strPGVType As String) As Int16
 
         Dim dblNettoBetrag As Double
         Dim intSollKonto As Int16
@@ -1078,26 +1079,43 @@ Public Class MainKreditor
         Dim strPeriodenInfo As String
         Dim intReturnValue As Int32
         Dim strActualYear As String
+        Dim datPGVEndSave As Date
+        Dim datValutaSave As Date
 
         Try
 
             'Jahr retten
             strActualYear = strYear
+            'Valuta saven
+            datValutaSave = datValuta
             'Zuerst betroffene Buchungen selektieren
             drKrediSub = tblKrediB.Select("lngKredID=" + intKRGNbr.ToString)
 
             'Durch die Buchungen steppen
             For Each drKSubrow As DataRow In drKrediSub
                 'Auflösung
+                '=========
+
+                If strPGVType = "VR" Then
+                    'Falls VR dann PGVEnd saven
+                    datPGVEndSave = datPGVEnd
+                    datPGVEnd = datValuta
+                    intINY = 1
+                    intITY = 0
+                Else
+                    'Damit die Periodenbuchung auf den ersten gebucht wird.
+                    datPGVStart = "2022-01-01"
+                    datValuta = datValutaSave
+                End If
 
                 'Evtl. Aufteilen auf 2 Jahre
                 For intYearLooper As Int16 = Year(datValuta) To Year(datPGVEnd)
 
                     If intYearLooper = 2021 Then
-                        dblNettoBetrag = drKSubrow("dblBrutto") / intITotal * intITY
+                        dblNettoBetrag = drKSubrow("dblNetto") / intITotal * intITY
                         intSollKonto = intAcctTY
                     Else
-                        dblNettoBetrag = drKSubrow("dblBrutto") / intITotal * intINY
+                        dblNettoBetrag = drKSubrow("dblNetto") / intITotal * intINY
                         intSollKonto = intAcctNY
                     End If
 
@@ -1105,17 +1123,35 @@ Public Class MainKreditor
 
                         strBelegDatum = Format(datValuta, "yyyyMMdd").ToString
 
-                        strDebiTextSoll = drKSubrow("strKredSubText") + ", PGV Neutralisierung"
+                        If intITotal = 1 Then
+                            strDebiTextSoll = drKSubrow("strKredSubText") + ", TP Auflösung"
+                        Else
+                            strDebiTextSoll = drKSubrow("strKredSubText") + ", PGV Auflösung"
+                        End If
+
                         strDebiCurrency = strCur
                         dblKursD = 1.0#
                         strSteuerFeldSoll = "STEUERFREI"
 
                         intHabenKonto = drKSubrow("lngKto")
 
-                        strDebiTextHaben = drKSubrow("strKredSubText") + ", PGV Neutralisierung"
+                        If intITotal = 1 Then
+                            strDebiTextHaben = drKSubrow("strKredSubText") + ", TP Auflösung"
+                            If strPGVType = "VR" Then
+                                'Valuta - Datum auf 01.01.22 legen, Achtung provisorisch
+                                strValutaDatum = "20220101"
+                                strBelegDatum = "20220101"
+                            Else
+                                strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
+                            End If
+                        Else
+                            strDebiTextHaben = drKSubrow("strKredSubText") + ", PGV Auflösung"
+                            strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
+                        End If
+
                         dblKursH = 1.0#
                         strSteuerFeldHaben = "STEUERFREI"
-                        strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
+
 
                         'KORE
                         If drKSubrow("lngKST") > 0 Then
@@ -1130,6 +1166,52 @@ Public Class MainKreditor
                         Else
                             strBebuEintragSoll = Nothing
                             strBebuEintragHaben = Nothing
+
+                        End If
+
+                        If Year(datValuta) = 2021 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                            'Zuerst Info-Table löschen
+                            objdtInfo.Clear()
+                            Application.DoEvents()
+                            'Im 2021 anmelden
+                            intReturnValue = Main.FcLoginSage(objdbcon,
+                                                          objsqlcon,
+                                                          objsqlcmd,
+                                                          objFinanz,
+                                                          objFBhg,
+                                                          objDbBhg,
+                                                          objPiFin,
+                                                          objBebu,
+                                                          objKrBhg,
+                                                          intAccounting,
+                                                          objdtInfo,
+                                                          "2021",
+                                                          strYear,
+                                                          intTeqNbr,
+                                                          intTeqNbrLY)
+                            Application.DoEvents()
+
+                        ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
+                            'Zuerst Info-Table löschen
+                            objdtInfo.Clear()
+                            Application.DoEvents()
+                            'Im 2022 anmelden
+                            intReturnValue = Main.FcLoginSage(objdbcon,
+                                                          objsqlcon,
+                                                          objsqlcmd,
+                                                          objFinanz,
+                                                          objFBhg,
+                                                          objDbBhg,
+                                                          objPiFin,
+                                                          objBebu,
+                                                          objKrBhg,
+                                                          intAccounting,
+                                                          objdtInfo,
+                                                          "2022",
+                                                          strYear,
+                                                          intTeqNbr,
+                                                          intTeqNbrLY)
+                            Application.DoEvents()
 
                         End If
 
@@ -1160,6 +1242,11 @@ Public Class MainKreditor
                     End If
 
                 Next
+
+                If strPGVType = "VR" Then
+                    'Falls VR dann PGVEnd zurück
+                    datPGVEnd = datPGVEndSave
+                End If
 
                 'Falls FY dann 1312 auf 1311
                 'Gab es eine Neutralisierung fürs FJ?
@@ -1238,8 +1325,13 @@ Public Class MainKreditor
                     strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                     strBelegDatum = strValutaDatum
                     intSollKonto = drKSubrow("lngKto")
-                    strDebiTextSoll = drKSubrow("strKredSubText") + ", PGV M " + (intMonthLooper + 1).ToString
-                    dblNettoBetrag = drKSubrow("dblBrutto") / intITotal
+                    If intITotal = 1 Then
+                        strDebiTextSoll = drKSubrow("strKredSubText") + ", TP"
+                    Else
+                        strDebiTextSoll = drKSubrow("strKredSubText") + ", PGV M " + (intMonthLooper + 1).ToString + "/ " + intITotal.ToString
+                    End If
+
+                    dblNettoBetrag = drKSubrow("dblNetto") / intITotal
                     If intITotal = 1 Then
                         intHabenKonto = intAcctNY
                     Else

@@ -162,6 +162,10 @@ Friend NotInheritable Class Main
         Dim booPGV As DataColumn = New DataColumn("booPGV")
         booPGV.DataType = System.Type.[GetType]("System.Boolean")
         DT.Columns.Add(booPGV)
+        Dim strPGVType As DataColumn = New DataColumn("strPGVType")
+        strPGVType.DataType = System.Type.[GetType]("System.String")
+        strPGVType.MaxLength = 2
+        DT.Columns.Add(strPGVType)
         Dim datPGVFrom As DataColumn = New DataColumn("datPGVFrom")
         datPGVFrom.DataType = System.Type.[GetType]("System.DateTime")
         DT.Columns.Add(datPGVFrom)
@@ -422,6 +426,10 @@ Friend NotInheritable Class Main
         Dim booPGV As DataColumn = New DataColumn("booPGV")
         booPGV.DataType = System.Type.[GetType]("System.Boolean")
         DT.Columns.Add(booPGV)
+        Dim strPGVType As DataColumn = New DataColumn("strPGVType")
+        strPGVType.DataType = System.Type.[GetType]("System.String")
+        strPGVType.MaxLength = 2
+        DT.Columns.Add(strPGVType)
         Dim datPGVFrom As DataColumn = New DataColumn("datPGVFrom")
         datPGVFrom.DataType = System.Type.[GetType]("System.DateTime")
         DT.Columns.Add(datPGVFrom)
@@ -880,6 +888,7 @@ ErrorHandler:
         Dim selSBrows() As DataRow
 
         Dim datValutaPGV As Date
+        Dim datValutaSave As Date
         Dim intPGVMonths As Int16
         Dim intMonthCounter As Int16
         Dim intMonthsAJ As Int16
@@ -900,6 +909,13 @@ ErrorHandler:
             For Each row As DataRow In objdtDebits.Rows
 
                 'If row("strDebRGNbr") = "71402" Then Stop
+
+                If row("strDebRGNbr") = "114717" Then
+                    row("booPGV") = True
+                    row("datPGVFrom") = "01.01.2022"
+                    row("datPGVTo") = "01.06.2022"
+                End If
+
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -1173,22 +1189,37 @@ ErrorHandler:
 
                 'PGV => Prüfung vor Valuta-Datum da Valuta-Datum verändert wird
                 'Jahresübergreifend RG- / Valuta-Datum
-                If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) Or
-                    Not IsDBNull(row("datPGVFrom")) Then
+                If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) Then
+                    'Not IsDBNull(row("datPGVFrom")) Then
                     row("booPGV") = True
                     datValutaPGV = row("datDebValDatum")
                     'Bei Valuta-Datum in einem anderen Jahr Valuta-Datum ändern
-                    If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) Then
-                        row("datDebValDatum") = row("datDebRGDatum")
+                    If Year(row("datDebRGDatum")) < Year(row("datDebValDatum")) Then
+                        row("strPGVType") = "RV"
+                    Else
+                        row("strPGVType") = "VR"
                     End If
+                    datValutaSave = row("datDebValDatum")
+
+                    If IsDBNull(row("datPGVFrom")) Then
+                        If row("strPGVType") = "VR" Then
+                            row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                            row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                            row("datDebValDatum") = "2022-01-01"
+                        Else
+                            row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                            row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                            row("datDebValDatum") = row("datDebRGDatum")
+                        End If
+                    End If
+                End If
+
+                If row("booPGV") Then
 
                     'Anzahl Monate prüfen
                     intMonthsAJ = 0
                     intMonthsNJ = 0
-                    If IsDBNull(row("datPGVFrom")) Then
-                        row("datPGVFrom") = "2022-01-01"
-                        row("datPGVTo") = "2022-01-01"
-                    End If
+
                     intPGVMonths = (DateAndTime.Year(row("datPGVTo")) * 12 + DateAndTime.Month(row("datPGVTo"))) - (DateAndTime.Year(row("datPGVFrom")) * 12 + DateAndTime.Month(row("datPGVFrom"))) + 1
                     For intMonthCounter = 0 To intPGVMonths - 1
                         If Year(DateAdd(DateInterval.Month, intMonthCounter, row("datPGVFrom"))) > Convert.ToInt32(strYear) Then
@@ -1381,7 +1412,7 @@ ErrorHandler:
                 End If
                 'PGV keine Ziffer
                 If row("booPGV") Then
-                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGV "
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGV " + row("strPGVType")
                 End If
 
                 'Status schreiben
@@ -1885,7 +1916,7 @@ ErrorHandler:
                 'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
                 If (subrow("lngKto") >= 10000 Or subrow("lngKto") < 3000) Then 'Or subrow("strMwStKey") = "ohne" Then
                     Select Case subrow("lngKto")
-                        Case 1200, 1500 To 1599, 1600 To 1699, 1700 To 1799
+                        Case 1200, 1500 To 1599, 1600 To 1699, 1700 To 1799, 2030
                             'Nur KST - Buchung resetten
                             subrow("lngKST") = 0
                         Case Else
@@ -2918,6 +2949,7 @@ ErrorHandler:
         Dim intMonthCounter As Int16
         Dim intMonthsAJ As Int16
         Dim intMonthsNJ As Int16
+        Dim datValutaSave As Date
 
         Try
 
@@ -3126,16 +3158,29 @@ ErrorHandler:
                     row("booPGV") = True
                     datValutaPGV = row("datKredValDatum")
                     'Bei Valuta-Datum in einem anderen Jahr Valuta-Datum ändern
-                    If Year(row("datKredRGDatum")) <> Year(row("datKredValDatum")) Then
-                        row("datKredValDatum") = row("datKredRGDatum")
+                    If Year(row("datKredRGDatum")) < Year(row("datKredValDatum")) Then
+                        row("strPGVType") = "RV"
+                    Else
+                        row("strPGVType") = "VR"
                     End If
+                    datValutaSave = row("datKredValDatum")
+
+                    row("datKredValDatum") = row("datKredRGDatum")
+
 
                     'Anzahl Monate prüfen
                     intMonthsAJ = 0
                     intMonthsNJ = 0
                     If IsDBNull(row("datPGVFrom")) Then
-                        row("datPGVFrom") = "2022-01-01"
-                        row("datPGVTo") = "2022-01-01"
+                        If row("strPGVType") = "VR" Then
+                            row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                            row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                            row("datKredValDatum") = "2022-01-01"
+                        Else
+                            row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                            row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                            row("datKredValDatum") = row("datKredRGDatum")
+                        End If
                     End If
                     intPGVMonths = (DateAndTime.Year(row("datPGVTo")) * 12 + DateAndTime.Month(row("datPGVTo"))) - (DateAndTime.Year(row("datPGVFrom")) * 12 + DateAndTime.Month(row("datPGVFrom"))) + 1
                     For intMonthCounter = 0 To intPGVMonths - 1
@@ -3334,7 +3379,7 @@ ErrorHandler:
                 End If
                 'PGV keine Ziffer
                 If row("booPGV") Then
-                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGV "
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGV " + row("strPGVType")
                 End If
 
                 'Status schreiben
@@ -3562,7 +3607,7 @@ ErrorHandler:
 
                 'Debitzoren Transit-Queries für Mandant einlesen
                 strSQLMan = "SELECT * FROM t_sage_buchhaltungen_sub WHERE strType='D' AND refMandant=" + intAccounting.ToString
-                objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
+                        objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
                 objlocMySQLcmd.Connection = objRGMySQLConn
                 objlocMySQLcmd.CommandText = strSQLMan
                 objRGMySQLConn.Open()

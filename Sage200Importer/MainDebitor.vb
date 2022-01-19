@@ -1647,7 +1647,8 @@ Public Class MainDebitor
                                                 ByRef objdtInfo As DataTable,
                                                 ByRef strYear As String,
                                                 ByRef intTeqNbr As Int16,
-                                                ByRef intTeqNbrLY As Int16) As Int16
+                                                ByRef intTeqNbrLY As Int16,
+                                                ByRef strPGVType As String) As Int16
 
         Dim dblNettoBetrag As Double
         Dim intSollKonto As Int16
@@ -1668,26 +1669,49 @@ Public Class MainDebitor
         Dim strPeriodenInfo As String
         Dim intReturnValue As Int32
         Dim strActualYear As String
+        Dim datPGVEndSave As Date
+        Dim datValutaSave As Date
 
         Try
 
             'Jahr retten
             strActualYear = strYear
+            'Valuta saven
+            datValutaSave = datValuta
             'Zuerst betroffene Buchungen selektieren
             drDebiSub = tblDebiB.Select("strRGNr='" + strDRGNbr + "'")
 
             'Durch die Buchungen steppen
             For Each drDSubrow As DataRow In drDebiSub
                 'Auflösung
+                '=========
+
+                If intITotal = 1 Then
+                    If strPGVType = "VR" Then
+                        'Falls VR dann PGVEnd saven
+                        datValuta = datValutaSave
+                        datPGVEndSave = datPGVEnd
+                        datPGVEnd = datValuta
+                        intINY = 1
+                        intITY = 0
+                    ElseIf strPGVType = "RV" Then
+                        'Damit die Periodenbuchung auf den ersten gebucht wird.
+                        datPGVStart = "2022-01-01"
+                        datValuta = datValutaSave
+                        intITY = 1
+                        intINY = 0
+                        intAcctTY = 1312
+                    End If
+                End If
 
                 'Evtl. Aufteilen auf 2 Jahre
                 For intYearLooper As Int16 = Year(datValuta) To Year(datPGVEnd)
 
                     If intYearLooper = 2021 Then
-                        dblNettoBetrag = drDSubrow("dblBrutto") * -1 / intITotal * intITY
+                        dblNettoBetrag = drDSubrow("dblNetto") * -1 / intITotal * intITY
                         intHabenKonto = intAcctTY
                     Else
-                        dblNettoBetrag = drDSubrow("dblBrutto") * -1 / intITotal * intINY
+                        dblNettoBetrag = drDSubrow("dblNetto") * -1 / intITotal * intINY
                         intHabenKonto = intAcctNY
                     End If
 
@@ -1695,17 +1719,41 @@ Public Class MainDebitor
 
                         strBelegDatum = Format(datValuta, "yyyyMMdd").ToString
 
-                        strDebiTextHaben = drDSubrow("strDebSubText") + ", PGV Neutralisierung"
+                        If intITotal = 1 Then
+                            If Year(datValuta) = 2021 Then
+                                strDebiTextHaben = drDSubrow("strDebSubText") + ", TA"
+                            Else
+                                strDebiTextHaben = drDSubrow("strDebSubText") + ", TA Auflösung"
+                            End If
+                        Else
+                            strDebiTextHaben = drDSubrow("strDebSubText") + ", PGV Auflösung"
+                        End If
+
                         strDebiCurrency = strCur
                         dblKursD = 1.0#
                         strSteuerFeldHaben = "STEUERFREI"
 
                         intSollKonto = drDSubrow("lngKto")
 
-                        strDebiTextSoll = drDSubrow("strDebSubText") + ", PGV Neutralisierung"
+                        If intITotal = 1 Then
+                            strDebiTextSoll = strDebiTextHaben
+                            If strPGVType = "VR" Then
+                                'Valuta - Datum auf 01.01.22 legen, Achtung provisorisch
+                                strValutaDatum = "20220101"
+                                strBelegDatum = "20220101"
+                            Else
+                                'strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
+                                strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
+                                strBelegDatum = Format(datValuta, "yyyyMMdd").ToString
+                            End If
+                        Else
+                            strDebiTextSoll = drDSubrow("strDebSubText") + ", PGV Auflösung"
+                            strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
+                        End If
+
                         dblKursH = 1.0#
                         strSteuerFeldSoll = "STEUERFREI"
-                        strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
+
 
                         'KORE
                         If drDSubrow("lngKST") > 0 Then
@@ -1722,6 +1770,55 @@ Public Class MainDebitor
                             strBebuEintragSoll = Nothing
 
                         End If
+
+                        If Year(datValuta) = 2021 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                            'Zuerst Info-Table löschen
+                            objdtInfo.Clear()
+                            Application.DoEvents()
+                            'Im 2021 anmelden
+                            intReturnValue = Main.FcLoginSage(objdbcon,
+                                                          objsqlcon,
+                                                          objsqlcmd,
+                                                          objFinanz,
+                                                          objFBhg,
+                                                          objDbBhg,
+                                                          objPiFin,
+                                                          objBebu,
+                                                          objKrBhg,
+                                                          intAccounting,
+                                                          objdtInfo,
+                                                          "2021",
+                                                          strYear,
+                                                          intTeqNbr,
+                                                          intTeqNbrLY)
+                            Application.DoEvents()
+
+                        ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
+                            'Zuerst Info-Table löschen
+                            objdtInfo.Clear()
+                            Application.DoEvents()
+                            'Im 2022 anmelden
+                            intReturnValue = Main.FcLoginSage(objdbcon,
+                                                          objsqlcon,
+                                                          objsqlcmd,
+                                                          objFinanz,
+                                                          objFBhg,
+                                                          objDbBhg,
+                                                          objPiFin,
+                                                          objBebu,
+                                                          objKrBhg,
+                                                          intAccounting,
+                                                          objdtInfo,
+                                                          "2022",
+                                                          strYear,
+                                                          intTeqNbr,
+                                                          intTeqNbrLY)
+                            Application.DoEvents()
+
+                        End If
+
+                        'doppelte Beleg-Nummern zulassen in HB
+                        objFBhg.CheckDoubleIntBelNbr = "N"
 
                         'Buchen
                         Call objFBhg.WriteBuchung(0,
@@ -1750,6 +1847,11 @@ Public Class MainDebitor
                     End If
 
                 Next
+
+                If strPGVType = "VR" Then
+                    'Falls VR dann PGVEnd zurück
+                    datPGVEnd = datPGVEndSave
+                End If
 
                 'Falls FY dann 2312 auf 2311
                 'Gab es eine Neutralisierung fürs FJ?
@@ -1788,10 +1890,18 @@ Public Class MainDebitor
                         strBelegDatum = strValutaDatum
                         intHabenKonto = intAcctTY
                         intSollKonto = intAcctNY
-                        strDebiTextHaben = drDSubrow("strDebSubText") + ", PGV AJ / FJ"
-                        strDebiTextSoll = drDSubrow("strDebSubText") + ", PGV AJ / FJ"
+                        If intITotal = 1 Then
+                            strDebiTextHaben = drDSubrow("strDebSubText") + ", TA AJ / FJ"
+                            strDebiTextSoll = drDSubrow("strDebSubText") + ", TA AJ / FJ"
+                        Else
+                            strDebiTextHaben = drDSubrow("strDebSubText") + ", PGV AJ / FJ"
+                            strDebiTextSoll = drDSubrow("strDebSubText") + ", PGV AJ / FJ"
+                        End If
                         strBebuEintragHaben = Nothing
                         strBebuEintragSoll = Nothing
+
+                        'doppelte Beleg-Nummern zulassen in HB
+                        objFBhg.CheckDoubleIntBelNbr = "N"
 
                         'Buchen
                         Call objFBhg.WriteBuchung(0,
@@ -1828,8 +1938,17 @@ Public Class MainDebitor
                     strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                     strBelegDatum = strValutaDatum
                     intHabenKonto = drDSubrow("lngKto")
-                    strDebiTextHaben = drDSubrow("strDebSubText") + ", PGV M " + (intMonthLooper + 1).ToString
-                    dblNettoBetrag = drDSubrow("dblBrutto") * -1 / intITotal
+                    If intITotal = 1 Then
+                        If Year(datValuta) = 2021 Then
+                            strDebiTextHaben = drDSubrow("strDebSubText") + ", TA"
+                        Else
+                            strDebiTextHaben = drDSubrow("strDebSubText") + ", TA Auflösung"
+                        End If
+                    Else
+                        strDebiTextHaben = drDSubrow("strDebSubText") + ", PGV M " + (intMonthLooper + 1).ToString + "/ " + intITotal.ToString
+                    End If
+
+                    dblNettoBetrag = drDSubrow("dblNetto") * -1 / intITotal
                     If intITotal = 1 Then
                         intSollKonto = intAcctNY
                     Else
@@ -1892,6 +2011,9 @@ Public Class MainDebitor
 
                     End If
 
+                    'doppelte Beleg-Nummern zulassen in HB
+                    objFBhg.CheckDoubleIntBelNbr = "N"
+
                     'Buchen
                     Call objFBhg.WriteBuchung(0,
                                intDBelegNr,
@@ -1919,6 +2041,7 @@ Public Class MainDebitor
                 Next
 
             Next
+
             'Für weitere Buchungen ins ursprüngliche Jahr anmelden 
             If strYear <> strActualYear Then
                 'Zuerst Info-Table löschen
