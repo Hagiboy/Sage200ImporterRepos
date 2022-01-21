@@ -16,538 +16,691 @@ Friend NotInheritable Class Main
     Public Shared Function tblDebitorenHead() As DataTable
         Dim DT As DataTable
         'Dim myNewRow As DataRow
-        DT = New DataTable("tblDebitorenHead")
-        Dim strDebRGNbr As DataColumn = New DataColumn("strDebRGNbr")
-        strDebRGNbr.DataType = System.Type.[GetType]("System.String")
-        strDebRGNbr.MaxLength = 50
-        DT.Columns.Add(strDebRGNbr)
-        'DT.PrimaryKey = New DataColumn() {DT.Columns("strDebRGNbr")}
-        Dim intBuchhaltung As DataColumn = New DataColumn("intBuchhaltung")
-        intBuchhaltung.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(intBuchhaltung)
-        Dim booDebBook As DataColumn = New DataColumn("booDebBook")
-        booDebBook.DataType = System.Type.[GetType]("System.Boolean")
-        DT.Columns.Add(booDebBook)
-        Dim intBuchungsart As DataColumn = New DataColumn("intBuchungsart")
-        intBuchungsart.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(intBuchungsart)
-        Dim intRGArt As DataColumn = New DataColumn("intRGArt")
-        intRGArt.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(intRGArt)
-        Dim strRGArt As DataColumn = New DataColumn("strRGArt")
-        strRGArt.DataType = System.Type.[GetType]("System.String")
-        strRGArt.MaxLength = 50
-        DT.Columns.Add(strRGArt)
-        Dim lngLinkedRG As DataColumn = New DataColumn("lngLinkedRG")
-        lngLinkedRG.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngLinkedRG)
-        Dim lngLinkedDeb As DataColumn = New DataColumn("lngLinkedDeb")
-        lngLinkedDeb.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngLinkedDeb)
-        Dim booLinked As DataColumn = New DataColumn("booLinked")
-        booLinked.DataType = System.Type.[GetType]("System.Boolean")
-        DT.Columns.Add(booLinked)
-        Dim booLinkedPayed As DataColumn = New DataColumn("booLinkedPayed")
-        booLinkedPayed.DataType = System.Type.[GetType]("System.Boolean")
-        DT.Columns.Add(booLinkedPayed)
-        Dim strRGName As DataColumn = New DataColumn("strRGName")
-        strRGName.DataType = System.Type.[GetType]("System.String")
-        strRGName.MaxLength = 70
-        DT.Columns.Add(strRGName)
-        Dim strOPNr As DataColumn = New DataColumn("strOPNr")
-        strOPNr.DataType = System.Type.[GetType]("System.String")
-        strOPNr.MaxLength = 13
-        DT.Columns.Add(strOPNr)
-        Dim lngDebNbr As DataColumn = New DataColumn("lngDebNbr")
-        lngDebNbr.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngDebNbr)
-        Dim strDebPKBez As DataColumn = New DataColumn("strDebBez")
-        strDebPKBez.DataType = System.Type.[GetType]("System.String")
-        strDebPKBez.MaxLength = 150
-        DT.Columns.Add(strDebPKBez)
-        Dim lngDebKtoNbr As DataColumn = New DataColumn("lngDebKtoNbr")
-        lngDebKtoNbr.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngDebKtoNbr)
-        Dim strDebKtoBez As DataColumn = New DataColumn("strDebKtoBez")
-        strDebKtoBez.DataType = System.Type.[GetType]("System.String")
-        strDebKtoBez.MaxLength = 150
-        DT.Columns.Add(strDebKtoBez)
-        Dim strDebCur As DataColumn = New DataColumn("strDebCur")
-        strDebCur.DataType = System.Type.[GetType]("System.String")
-        strDebCur.MaxLength = 3
-        DT.Columns.Add(strDebCur)
-        Dim dblDebNetto As DataColumn = New DataColumn("dblDebNetto")
-        dblDebNetto.DataType = System.Type.[GetType]("System.Double")
-        DT.Columns.Add(dblDebNetto)
-        Dim dblDebMwSt As DataColumn = New DataColumn("dblDebMwSt")
-        dblDebMwSt.DataType = System.Type.[GetType]("System.Double")
-        DT.Columns.Add(dblDebMwSt)
-        Dim dblDebBrutto As DataColumn = New DataColumn("dblDebBrutto")
-        dblDebBrutto.DataType = System.Type.[GetType]("System.Double")
-        DT.Columns.Add(dblDebBrutto)
-        Dim intSubBookings As DataColumn = New DataColumn("intSubBookings")
-        intSubBookings.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(intSubBookings)
-        Dim dblSumSubBookings As DataColumn = New DataColumn("dblSumSubBookings")
-        dblSumSubBookings.DataType = System.Type.[GetType]("System.Double")
-        DT.Columns.Add(dblSumSubBookings)
-        Dim lngDebIdentNbr As DataColumn = New DataColumn("lngDebIdentNbr")
-        lngDebIdentNbr.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngDebIdentNbr)
-        Dim strDebIdentNbr2 As DataColumn = New DataColumn("strDebIdentNbr2")
-        strDebIdentNbr2.DataType = System.Type.[GetType]("System.String")
-        strDebIdentNbr2.MaxLength = 60
-        DT.Columns.Add(strDebIdentNbr2)
-        Dim strDebText As DataColumn = New DataColumn("strDebText")
-        strDebText.DataType = System.Type.[GetType]("System.String")
-        strDebText.MaxLength = 255
-        DT.Columns.Add(strDebText)
-        Dim strRGBemerkung As DataColumn = New DataColumn("strRGBemerkung")
-        strRGBemerkung.DataType = System.Type.[GetType]("System.String")
-        strRGBemerkung.MaxLength = 1024
-        DT.Columns.Add(strRGBemerkung)
-        Dim strDebReferenz As DataColumn = New DataColumn("strDebReferenz")
-        strDebReferenz.DataType = System.Type.[GetType]("System.String")
-        strDebReferenz.MaxLength = 50
-        DT.Columns.Add(strDebReferenz)
-        Dim datDebRGDatum As DataColumn = New DataColumn("datDebRGDatum")
-        datDebRGDatum.DataType = System.Type.[GetType]("System.DateTime")
-        DT.Columns.Add(datDebRGDatum)
-        Dim datDebValDatum As DataColumn = New DataColumn("datDebValDatum")
-        datDebValDatum.DataType = System.Type.[GetType]("System.DateTime")
-        DT.Columns.Add(datDebValDatum)
-        Dim datDebDue As DataColumn = New DataColumn("datDebDue")
-        datDebDue.DataType = System.Type.[GetType]("System.DateTime")
-        DT.Columns.Add(datDebDue)
-        Dim strDebiBank As DataColumn = New DataColumn("strDebiBank")
-        strDebiBank.DataType = System.Type.[GetType]("System.String")
-        strDebiBank.MaxLength = 5
-        DT.Columns.Add(strDebiBank)
-        Dim strDebRef As DataColumn = New DataColumn("strDebRef")
-        strDebRef.DataType = System.Type.[GetType]("System.String")
-        strDebRef.MaxLength = 27
-        DT.Columns.Add(strDebRef)
-        Dim strZahlBed As DataColumn = New DataColumn("strZahlBed")
-        strZahlBed.DataType = System.Type.[GetType]("System.String")
-        strZahlBed.MaxLength = 5
-        DT.Columns.Add(strZahlBed)
-        Dim intintBank As DataColumn = New DataColumn("intintBank")
-        intintBank.DataType = System.Type.[GetType]("System.Int16")
-        intintBank.Caption = "IBank"
-        DT.Columns.Add(intintBank)
-        Dim strDebStatusBitLog As DataColumn = New DataColumn("strDebStatusBitLog")
-        strDebStatusBitLog.DataType = System.Type.[GetType]("System.String")
-        strDebStatusBitLog.MaxLength = 50
-        DT.Columns.Add(strDebStatusBitLog)
-        Dim strDebStatusText As DataColumn = New DataColumn("strDebStatusText")
-        strDebStatusText.DataType = System.Type.[GetType]("System.String")
-        strDebStatusText.MaxLength = 255
-        DT.Columns.Add(strDebStatusText)
-        Dim strDebBookStatus As DataColumn = New DataColumn("strDebBookStatus")
-        strDebBookStatus.DataType = System.Type.[GetType]("System.String")
-        strDebBookStatus.MaxLength = 50
-        DT.Columns.Add(strDebBookStatus)
-        Dim booBooked As DataColumn = New DataColumn("booBooked")
-        booBooked.DataType = System.Type.[GetType]("System.Boolean")
-        DT.Columns.Add(booBooked)
-        Dim datBooked As DataColumn = New DataColumn("datBooked")
-        datBooked.DataType = System.Type.[GetType]("System.DateTime")
-        DT.Columns.Add(datBooked)
-        Dim lngBelegNr As DataColumn = New DataColumn("lngBelegNr")
-        lngBelegNr.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngBelegNr)
-        Dim lngDebiKST As DataColumn = New DataColumn("lngDebiKST")
-        lngDebiKST.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngDebiKST)
-        Dim booPGV As DataColumn = New DataColumn("booPGV")
-        booPGV.DataType = System.Type.[GetType]("System.Boolean")
-        DT.Columns.Add(booPGV)
-        Dim strPGVType As DataColumn = New DataColumn("strPGVType")
-        strPGVType.DataType = System.Type.[GetType]("System.String")
-        strPGVType.MaxLength = 2
-        DT.Columns.Add(strPGVType)
-        Dim datPGVFrom As DataColumn = New DataColumn("datPGVFrom")
-        datPGVFrom.DataType = System.Type.[GetType]("System.DateTime")
-        DT.Columns.Add(datPGVFrom)
-        Dim intPGVMthsAY As DataColumn = New DataColumn("intPGVMthsAY")
-        intPGVMthsAY.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(intPGVMthsAY)
-        Dim datPGVTo As DataColumn = New DataColumn("datPGVTo")
-        datPGVTo.DataType = System.Type.[GetType]("System.DateTime")
-        DT.Columns.Add(datPGVTo)
-        Dim intPGVMthsNY As DataColumn = New DataColumn("intPGVMthsNY")
-        intPGVMthsNY.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(intPGVMthsNY)
-        Return DT
+
+        Try
+
+            DT = New DataTable("tblDebitorenHead")
+            Dim strDebRGNbr As DataColumn = New DataColumn("strDebRGNbr")
+            strDebRGNbr.DataType = System.Type.[GetType]("System.String")
+            strDebRGNbr.MaxLength = 50
+            DT.Columns.Add(strDebRGNbr)
+            'DT.PrimaryKey = New DataColumn() {DT.Columns("strDebRGNbr")}
+            Dim intBuchhaltung As DataColumn = New DataColumn("intBuchhaltung")
+            intBuchhaltung.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(intBuchhaltung)
+            Dim booDebBook As DataColumn = New DataColumn("booDebBook")
+            booDebBook.DataType = System.Type.[GetType]("System.Boolean")
+            DT.Columns.Add(booDebBook)
+            Dim intBuchungsart As DataColumn = New DataColumn("intBuchungsart")
+            intBuchungsart.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(intBuchungsart)
+            Dim intRGArt As DataColumn = New DataColumn("intRGArt")
+            intRGArt.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(intRGArt)
+            Dim strRGArt As DataColumn = New DataColumn("strRGArt")
+            strRGArt.DataType = System.Type.[GetType]("System.String")
+            strRGArt.MaxLength = 50
+            DT.Columns.Add(strRGArt)
+            Dim lngLinkedRG As DataColumn = New DataColumn("lngLinkedRG")
+            lngLinkedRG.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngLinkedRG)
+            Dim lngLinkedDeb As DataColumn = New DataColumn("lngLinkedDeb")
+            lngLinkedDeb.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngLinkedDeb)
+            Dim booLinked As DataColumn = New DataColumn("booLinked")
+            booLinked.DataType = System.Type.[GetType]("System.Boolean")
+            DT.Columns.Add(booLinked)
+            Dim booLinkedPayed As DataColumn = New DataColumn("booLinkedPayed")
+            booLinkedPayed.DataType = System.Type.[GetType]("System.Boolean")
+            DT.Columns.Add(booLinkedPayed)
+            Dim strRGName As DataColumn = New DataColumn("strRGName")
+            strRGName.DataType = System.Type.[GetType]("System.String")
+            strRGName.MaxLength = 70
+            DT.Columns.Add(strRGName)
+            Dim strOPNr As DataColumn = New DataColumn("strOPNr")
+            strOPNr.DataType = System.Type.[GetType]("System.String")
+            strOPNr.MaxLength = 13
+            DT.Columns.Add(strOPNr)
+            Dim lngDebNbr As DataColumn = New DataColumn("lngDebNbr")
+            lngDebNbr.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngDebNbr)
+            Dim strDebPKBez As DataColumn = New DataColumn("strDebBez")
+            strDebPKBez.DataType = System.Type.[GetType]("System.String")
+            strDebPKBez.MaxLength = 150
+            DT.Columns.Add(strDebPKBez)
+            Dim lngDebKtoNbr As DataColumn = New DataColumn("lngDebKtoNbr")
+            lngDebKtoNbr.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngDebKtoNbr)
+            Dim strDebKtoBez As DataColumn = New DataColumn("strDebKtoBez")
+            strDebKtoBez.DataType = System.Type.[GetType]("System.String")
+            strDebKtoBez.MaxLength = 150
+            DT.Columns.Add(strDebKtoBez)
+            Dim strDebCur As DataColumn = New DataColumn("strDebCur")
+            strDebCur.DataType = System.Type.[GetType]("System.String")
+            strDebCur.MaxLength = 3
+            DT.Columns.Add(strDebCur)
+            Dim dblDebNetto As DataColumn = New DataColumn("dblDebNetto")
+            dblDebNetto.DataType = System.Type.[GetType]("System.Double")
+            DT.Columns.Add(dblDebNetto)
+            Dim dblDebMwSt As DataColumn = New DataColumn("dblDebMwSt")
+            dblDebMwSt.DataType = System.Type.[GetType]("System.Double")
+            DT.Columns.Add(dblDebMwSt)
+            Dim dblDebBrutto As DataColumn = New DataColumn("dblDebBrutto")
+            dblDebBrutto.DataType = System.Type.[GetType]("System.Double")
+            DT.Columns.Add(dblDebBrutto)
+            Dim intSubBookings As DataColumn = New DataColumn("intSubBookings")
+            intSubBookings.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(intSubBookings)
+            Dim dblSumSubBookings As DataColumn = New DataColumn("dblSumSubBookings")
+            dblSumSubBookings.DataType = System.Type.[GetType]("System.Double")
+            DT.Columns.Add(dblSumSubBookings)
+            Dim lngDebIdentNbr As DataColumn = New DataColumn("lngDebIdentNbr")
+            lngDebIdentNbr.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngDebIdentNbr)
+            Dim strDebIdentNbr2 As DataColumn = New DataColumn("strDebIdentNbr2")
+            strDebIdentNbr2.DataType = System.Type.[GetType]("System.String")
+            strDebIdentNbr2.MaxLength = 60
+            DT.Columns.Add(strDebIdentNbr2)
+            Dim strDebText As DataColumn = New DataColumn("strDebText")
+            strDebText.DataType = System.Type.[GetType]("System.String")
+            strDebText.MaxLength = 255
+            DT.Columns.Add(strDebText)
+            Dim strRGBemerkung As DataColumn = New DataColumn("strRGBemerkung")
+            strRGBemerkung.DataType = System.Type.[GetType]("System.String")
+            strRGBemerkung.MaxLength = 1024
+            DT.Columns.Add(strRGBemerkung)
+            Dim strDebReferenz As DataColumn = New DataColumn("strDebReferenz")
+            strDebReferenz.DataType = System.Type.[GetType]("System.String")
+            strDebReferenz.MaxLength = 50
+            DT.Columns.Add(strDebReferenz)
+            Dim datDebRGDatum As DataColumn = New DataColumn("datDebRGDatum")
+            datDebRGDatum.DataType = System.Type.[GetType]("System.DateTime")
+            DT.Columns.Add(datDebRGDatum)
+            Dim datDebValDatum As DataColumn = New DataColumn("datDebValDatum")
+            datDebValDatum.DataType = System.Type.[GetType]("System.DateTime")
+            DT.Columns.Add(datDebValDatum)
+            Dim datDebDue As DataColumn = New DataColumn("datDebDue")
+            datDebDue.DataType = System.Type.[GetType]("System.DateTime")
+            DT.Columns.Add(datDebDue)
+            Dim strDebiBank As DataColumn = New DataColumn("strDebiBank")
+            strDebiBank.DataType = System.Type.[GetType]("System.String")
+            strDebiBank.MaxLength = 5
+            DT.Columns.Add(strDebiBank)
+            Dim strDebRef As DataColumn = New DataColumn("strDebRef")
+            strDebRef.DataType = System.Type.[GetType]("System.String")
+            strDebRef.MaxLength = 27
+            DT.Columns.Add(strDebRef)
+            Dim strZahlBed As DataColumn = New DataColumn("strZahlBed")
+            strZahlBed.DataType = System.Type.[GetType]("System.String")
+            strZahlBed.MaxLength = 5
+            DT.Columns.Add(strZahlBed)
+            Dim intintBank As DataColumn = New DataColumn("intintBank")
+            intintBank.DataType = System.Type.[GetType]("System.Int16")
+            intintBank.Caption = "IBank"
+            DT.Columns.Add(intintBank)
+            Dim strDebStatusBitLog As DataColumn = New DataColumn("strDebStatusBitLog")
+            strDebStatusBitLog.DataType = System.Type.[GetType]("System.String")
+            strDebStatusBitLog.MaxLength = 50
+            DT.Columns.Add(strDebStatusBitLog)
+            Dim strDebStatusText As DataColumn = New DataColumn("strDebStatusText")
+            strDebStatusText.DataType = System.Type.[GetType]("System.String")
+            strDebStatusText.MaxLength = 255
+            DT.Columns.Add(strDebStatusText)
+            Dim strDebBookStatus As DataColumn = New DataColumn("strDebBookStatus")
+            strDebBookStatus.DataType = System.Type.[GetType]("System.String")
+            strDebBookStatus.MaxLength = 50
+            DT.Columns.Add(strDebBookStatus)
+            Dim booBooked As DataColumn = New DataColumn("booBooked")
+            booBooked.DataType = System.Type.[GetType]("System.Boolean")
+            DT.Columns.Add(booBooked)
+            Dim datBooked As DataColumn = New DataColumn("datBooked")
+            datBooked.DataType = System.Type.[GetType]("System.DateTime")
+            DT.Columns.Add(datBooked)
+            Dim lngBelegNr As DataColumn = New DataColumn("lngBelegNr")
+            lngBelegNr.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngBelegNr)
+            Dim lngDebiKST As DataColumn = New DataColumn("lngDebiKST")
+            lngDebiKST.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngDebiKST)
+            Dim booPGV As DataColumn = New DataColumn("booPGV")
+            booPGV.DataType = System.Type.[GetType]("System.Boolean")
+            DT.Columns.Add(booPGV)
+            Dim strPGVType As DataColumn = New DataColumn("strPGVType")
+            strPGVType.DataType = System.Type.[GetType]("System.String")
+            strPGVType.MaxLength = 2
+            DT.Columns.Add(strPGVType)
+            Dim datPGVFrom As DataColumn = New DataColumn("datPGVFrom")
+            datPGVFrom.DataType = System.Type.[GetType]("System.DateTime")
+            DT.Columns.Add(datPGVFrom)
+            Dim intPGVMthsAY As DataColumn = New DataColumn("intPGVMthsAY")
+            intPGVMthsAY.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(intPGVMthsAY)
+            Dim datPGVTo As DataColumn = New DataColumn("datPGVTo")
+            datPGVTo.DataType = System.Type.[GetType]("System.DateTime")
+            DT.Columns.Add(datPGVTo)
+            Dim intPGVMthsNY As DataColumn = New DataColumn("intPGVMthsNY")
+            intPGVMthsNY.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(intPGVMthsNY)
+            Return DT
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message + "Debitoren-Head-Tabelle " + Err.Number.ToString)
+
+        End Try
+
 
     End Function
 
     Public Shared Function tblDebitorenSub() As DataTable
+
         Dim DT As DataTable
-        DT = New DataTable("tblDebitorenSub")
-        Dim lngID As DataColumn = New DataColumn("lngID")
-        lngID.DataType = System.Type.[GetType]("System.Int32")
-        lngID.AutoIncrement = True
-        lngID.AutoIncrementSeed = 1
-        lngID.AutoIncrementStep = 1
-        DT.Columns.Add(lngID)
-        Dim strRGNr As DataColumn = New DataColumn("strRGNr")
-        strRGNr.DataType = System.Type.[GetType]("System.String")
-        strRGNr.MaxLength = 50
-        strRGNr.Caption = "RG-Nr"
-        DT.Columns.Add(strRGNr)
-        Dim intSollHaben As DataColumn = New DataColumn("intSollHaben")
-        intSollHaben.DataType = System.Type.[GetType]("System.Int16")
-        intSollHaben.Caption = "S1/H0"
-        DT.Columns.Add(intSollHaben)
-        Dim lngKto As DataColumn = New DataColumn("lngKto")
-        lngKto.DataType = System.Type.[GetType]("System.Int32")
-        lngKto.Caption = "Konto"
-        DT.Columns.Add(lngKto)
-        Dim strKtoBez As DataColumn = New DataColumn("strKtoBez")
-        strKtoBez.DataType = System.Type.[GetType]("System.String")
-        strKtoBez.MaxLength = 150
-        strKtoBez.Caption = "Bezeichnung"
-        DT.Columns.Add(strKtoBez)
-        Dim lngKST As DataColumn = New DataColumn("lngKST")
-        lngKST.DataType = System.Type.[GetType]("System.Int32")
-        lngKST.Caption = "KST"
-        DT.Columns.Add(lngKST)
-        Dim strKstBez As DataColumn = New DataColumn("strKstBez")
-        strKstBez.DataType = System.Type.[GetType]("System.String")
-        strKstBez.MaxLength = 150
-        strKstBez.Caption = "Bez."
-        DT.Columns.Add(strKstBez)
-        Dim lngProj As DataColumn = New DataColumn("lngProj")
-        lngProj.DataType = System.Type.[GetType]("System.Int32")
-        lngProj.Caption = "Proj"
-        DT.Columns.Add(lngProj)
-        Dim strProjBez As DataColumn = New DataColumn("strProjBez")
-        strProjBez.DataType = System.Type.[GetType]("System.String")
-        strProjBez.MaxLength = 50
-        strProjBez.Caption = "Pr-Bez."
-        DT.Columns.Add(strProjBez)
-        Dim dblNetto As DataColumn = New DataColumn("dblNetto")
-        dblNetto.DataType = System.Type.[GetType]("System.Double")
-        dblNetto.Caption = "Netto"
-        DT.Columns.Add(dblNetto)
-        Dim dblMwSt As DataColumn = New DataColumn("dblMwSt")
-        dblMwSt.DataType = System.Type.[GetType]("System.Double")
-        dblMwSt.Caption = "MwSt"
-        DT.Columns.Add(dblMwSt)
-        Dim dblBrutto As DataColumn = New DataColumn("dblBrutto")
-        dblBrutto.DataType = System.Type.[GetType]("System.Double")
-        dblBrutto.Caption = "Brutto"
-        DT.Columns.Add(dblBrutto)
-        Dim dblMwStSatz As DataColumn = New DataColumn("dblMwStSatz")
-        dblMwStSatz.DataType = System.Type.[GetType]("System.Double")
-        dblMwStSatz.Caption = "MwStS"
-        DT.Columns.Add(dblMwStSatz)
-        Dim strMwStKey As DataColumn = New DataColumn("strMwStKey")
-        strMwStKey.DataType = System.Type.[GetType]("System.String")
-        strMwStKey.MaxLength = 50
-        DT.Columns.Add(strMwStKey)
-        Dim strArtikel As DataColumn = New DataColumn("strArtikel")
-        strArtikel.DataType = System.Type.[GetType]("System.String")
-        strArtikel.MaxLength = 255
-        DT.Columns.Add(strArtikel)
-        Dim strDebSubText As DataColumn = New DataColumn("strDebSubText")
-        strDebSubText.DataType = System.Type.[GetType]("System.String")
-        strDebSubText.MaxLength = 255
-        strDebSubText.Caption = "Buch-Text"
-        DT.Columns.Add(strDebSubText)
-        Dim strStatusUBBitLog As DataColumn = New DataColumn("strStatusUBBitLog")
-        strStatusUBBitLog.DataType = System.Type.[GetType]("System.String")
-        strStatusUBBitLog.MaxLength = 50
-        DT.Columns.Add(strStatusUBBitLog)
-        Dim strStatusUBText As DataColumn = New DataColumn("strStatusUBText")
-        strStatusUBText.DataType = System.Type.[GetType]("System.String")
-        strStatusUBText.MaxLength = 255
-        strStatusUBText.Caption = "Status"
-        DT.Columns.Add(strStatusUBText)
-        Dim strDebBookStatus As DataColumn = New DataColumn("strDebBookStatus")
-        strDebBookStatus.DataType = System.Type.[GetType]("System.String")
-        strDebBookStatus.MaxLength = 50
-        DT.Columns.Add(strDebBookStatus)
-        Return DT
+
+        Try
+
+            DT = New DataTable("tblDebitorenSub")
+            Dim lngID As DataColumn = New DataColumn("lngID")
+            lngID.DataType = System.Type.[GetType]("System.Int32")
+            lngID.AutoIncrement = True
+            lngID.AutoIncrementSeed = 1
+            lngID.AutoIncrementStep = 1
+            DT.Columns.Add(lngID)
+            Dim strRGNr As DataColumn = New DataColumn("strRGNr")
+            strRGNr.DataType = System.Type.[GetType]("System.String")
+            strRGNr.MaxLength = 50
+            strRGNr.Caption = "RG-Nr"
+            DT.Columns.Add(strRGNr)
+            Dim intSollHaben As DataColumn = New DataColumn("intSollHaben")
+            intSollHaben.DataType = System.Type.[GetType]("System.Int16")
+            intSollHaben.Caption = "S1/H0"
+            DT.Columns.Add(intSollHaben)
+            Dim lngKto As DataColumn = New DataColumn("lngKto")
+            lngKto.DataType = System.Type.[GetType]("System.Int32")
+            lngKto.Caption = "Konto"
+            DT.Columns.Add(lngKto)
+            Dim strKtoBez As DataColumn = New DataColumn("strKtoBez")
+            strKtoBez.DataType = System.Type.[GetType]("System.String")
+            strKtoBez.MaxLength = 150
+            strKtoBez.Caption = "Bezeichnung"
+            DT.Columns.Add(strKtoBez)
+            Dim lngKST As DataColumn = New DataColumn("lngKST")
+            lngKST.DataType = System.Type.[GetType]("System.Int32")
+            lngKST.Caption = "KST"
+            DT.Columns.Add(lngKST)
+            Dim strKstBez As DataColumn = New DataColumn("strKstBez")
+            strKstBez.DataType = System.Type.[GetType]("System.String")
+            strKstBez.MaxLength = 150
+            strKstBez.Caption = "Bez."
+            DT.Columns.Add(strKstBez)
+            Dim lngProj As DataColumn = New DataColumn("lngProj")
+            lngProj.DataType = System.Type.[GetType]("System.Int32")
+            lngProj.Caption = "Proj"
+            DT.Columns.Add(lngProj)
+            Dim strProjBez As DataColumn = New DataColumn("strProjBez")
+            strProjBez.DataType = System.Type.[GetType]("System.String")
+            strProjBez.MaxLength = 50
+            strProjBez.Caption = "Pr-Bez."
+            DT.Columns.Add(strProjBez)
+            Dim dblNetto As DataColumn = New DataColumn("dblNetto")
+            dblNetto.DataType = System.Type.[GetType]("System.Double")
+            dblNetto.Caption = "Netto"
+            DT.Columns.Add(dblNetto)
+            Dim dblMwSt As DataColumn = New DataColumn("dblMwSt")
+            dblMwSt.DataType = System.Type.[GetType]("System.Double")
+            dblMwSt.Caption = "MwSt"
+            DT.Columns.Add(dblMwSt)
+            Dim dblBrutto As DataColumn = New DataColumn("dblBrutto")
+            dblBrutto.DataType = System.Type.[GetType]("System.Double")
+            dblBrutto.Caption = "Brutto"
+            DT.Columns.Add(dblBrutto)
+            Dim dblMwStSatz As DataColumn = New DataColumn("dblMwStSatz")
+            dblMwStSatz.DataType = System.Type.[GetType]("System.Double")
+            dblMwStSatz.Caption = "MwStS"
+            DT.Columns.Add(dblMwStSatz)
+            Dim strMwStKey As DataColumn = New DataColumn("strMwStKey")
+            strMwStKey.DataType = System.Type.[GetType]("System.String")
+            strMwStKey.MaxLength = 50
+            DT.Columns.Add(strMwStKey)
+            Dim strArtikel As DataColumn = New DataColumn("strArtikel")
+            strArtikel.DataType = System.Type.[GetType]("System.String")
+            strArtikel.MaxLength = 255
+            DT.Columns.Add(strArtikel)
+            Dim strDebSubText As DataColumn = New DataColumn("strDebSubText")
+            strDebSubText.DataType = System.Type.[GetType]("System.String")
+            strDebSubText.MaxLength = 255
+            strDebSubText.Caption = "Buch-Text"
+            DT.Columns.Add(strDebSubText)
+            Dim strStatusUBBitLog As DataColumn = New DataColumn("strStatusUBBitLog")
+            strStatusUBBitLog.DataType = System.Type.[GetType]("System.String")
+            strStatusUBBitLog.MaxLength = 50
+            DT.Columns.Add(strStatusUBBitLog)
+            Dim strStatusUBText As DataColumn = New DataColumn("strStatusUBText")
+            strStatusUBText.DataType = System.Type.[GetType]("System.String")
+            strStatusUBText.MaxLength = 255
+            strStatusUBText.Caption = "Status"
+            DT.Columns.Add(strStatusUBText)
+            Dim strDebBookStatus As DataColumn = New DataColumn("strDebBookStatus")
+            strDebBookStatus.DataType = System.Type.[GetType]("System.String")
+            strDebBookStatus.MaxLength = 50
+            DT.Columns.Add(strDebBookStatus)
+            Return DT
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message + "Debitoren-Sub-Tabelle " + Err.Number.ToString)
+        End Try
+
     End Function
 
     Public Shared Function tblKreditorenHead() As DataTable
+
         Dim DT As DataTable
-        'Dim myNewRow As DataRow
-        DT = New DataTable("tblKreditorenHead")
-        Dim lngKredID As DataColumn = New DataColumn("lngKredID")
-        lngKredID.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngKredID)
-        'DT.PrimaryKey = New DataColumn() {DT.Columns("lngKredID")}
-        Dim strKredRGNbr As DataColumn = New DataColumn("strKredRGNbr")
-        strKredRGNbr.DataType = System.Type.[GetType]("System.String")
-        strKredRGNbr.MaxLength = 50
-        DT.Columns.Add(strKredRGNbr)
-        'DT.PrimaryKey = New DataColumn() {DT.Columns("strKredRGNbr")}
-        Dim intBuchhaltung As DataColumn = New DataColumn("intBuchhaltung")
-        intBuchhaltung.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(intBuchhaltung)
-        Dim booDebBook As DataColumn = New DataColumn("booKredBook")
-        booDebBook.DataType = System.Type.[GetType]("System.Boolean")
-        DT.Columns.Add(booDebBook)
-        Dim intBuchungsart As DataColumn = New DataColumn("intBuchungsart")
-        intBuchungsart.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(intBuchungsart)
-        'Dim intRGArt As DataColumn = New DataColumn("intRGArt")
-        'intRGArt.DataType = System.Type.[GetType]("System.Int32")
-        'DT.Columns.Add(intRGArt)
-        'Dim strRGArt As DataColumn = New DataColumn("strRGArt")
-        'strRGArt.DataType = System.Type.[GetType]("System.String")
-        'strRGArt.MaxLength = 50
-        'DT.Columns.Add(strRGArt)
-        'Dim lngLinkedRG As DataColumn = New DataColumn("lngLinkedRG")
-        'lngLinkedRG.DataType = System.Type.[GetType]("System.Int32")
-        'DT.Columns.Add(lngLinkedRG)
-        'Dim booLinked As DataColumn = New DataColumn("booLinked")
-        'booLinked.DataType = System.Type.[GetType]("System.Boolean")
-        'DT.Columns.Add(booLinked)
-        Dim strRGName As DataColumn = New DataColumn("strRGName")
-        strRGName.DataType = System.Type.[GetType]("System.String")
-        strRGName.MaxLength = 50
-        DT.Columns.Add(strRGName)
-        Dim strOPNr As DataColumn = New DataColumn("strOPNr")
-        strOPNr.DataType = System.Type.[GetType]("System.String")
-        strOPNr.MaxLength = 30
-        DT.Columns.Add(strOPNr)
-        Dim lngKredNbr As DataColumn = New DataColumn("lngKredNbr")
-        lngKredNbr.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngKredNbr)
-        Dim strKredPKBez As DataColumn = New DataColumn("strKredBez")
-        strKredPKBez.DataType = System.Type.[GetType]("System.String")
-        strKredPKBez.MaxLength = 50
-        DT.Columns.Add(strKredPKBez)
-        Dim lngKredKtoNbr As DataColumn = New DataColumn("lngKredKtoNbr")
-        lngKredKtoNbr.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngKredKtoNbr)
-        Dim strKredKtoBez As DataColumn = New DataColumn("strKredKtoBez")
-        strKredKtoBez.DataType = System.Type.[GetType]("System.String")
-        strKredKtoBez.MaxLength = 80
-        DT.Columns.Add(strKredKtoBez)
-        Dim strKredCur As DataColumn = New DataColumn("strKredCur")
-        strKredCur.DataType = System.Type.[GetType]("System.String")
-        strKredCur.MaxLength = 3
-        DT.Columns.Add(strKredCur)
-        Dim dblKredNetto As DataColumn = New DataColumn("dblKredNetto")
-        dblKredNetto.DataType = System.Type.[GetType]("System.Double")
-        DT.Columns.Add(dblKredNetto)
-        Dim dblKredMwSt As DataColumn = New DataColumn("dblKredMwSt")
-        dblKredMwSt.DataType = System.Type.[GetType]("System.Double")
-        DT.Columns.Add(dblKredMwSt)
-        Dim dblKredBrutto As DataColumn = New DataColumn("dblKredBrutto")
-        dblKredBrutto.DataType = System.Type.[GetType]("System.Double")
-        DT.Columns.Add(dblKredBrutto)
-        Dim intSubBookings As DataColumn = New DataColumn("intSubBookings")
-        intSubBookings.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(intSubBookings)
-        Dim dblSumSubBookings As DataColumn = New DataColumn("dblSumSubBookings")
-        dblSumSubBookings.DataType = System.Type.[GetType]("System.Double")
-        DT.Columns.Add(dblSumSubBookings)
-        Dim lngKredIdentNbr As DataColumn = New DataColumn("lngKredIdentNbr")
-        lngKredIdentNbr.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngKredIdentNbr)
-        Dim strKredIdentNbr2 As DataColumn = New DataColumn("strKredIdentNbr2")
-        strKredIdentNbr2.DataType = System.Type.[GetType]("System.String")
-        strKredIdentNbr2.MaxLength = 50
-        DT.Columns.Add(strKredIdentNbr2)
-        Dim strKredText As DataColumn = New DataColumn("strKredText")
-        strKredText.DataType = System.Type.[GetType]("System.String")
-        strKredText.MaxLength = 125
-        DT.Columns.Add(strKredText)
-        Dim strRGBemerkung As DataColumn = New DataColumn("strRGBemerkung")
-        strRGBemerkung.DataType = System.Type.[GetType]("System.String")
-        strRGBemerkung.MaxLength = 1024
-        DT.Columns.Add(strRGBemerkung)
-        Dim datKredRGDatum As DataColumn = New DataColumn("datKredRGDatum")
-        datKredRGDatum.DataType = System.Type.[GetType]("System.DateTime")
-        DT.Columns.Add(datKredRGDatum)
-        Dim datKredValDatum As DataColumn = New DataColumn("datKredValDatum")
-        datKredValDatum.DataType = System.Type.[GetType]("System.DateTime")
-        DT.Columns.Add(datKredValDatum)
-        Dim strKrediBank As DataColumn = New DataColumn("strKrediBank")
-        strKrediBank.DataType = System.Type.[GetType]("System.String")
-        strKrediBank.MaxLength = 50
-        DT.Columns.Add(strKrediBank)
-        Dim strKredRef As DataColumn = New DataColumn("strKredRef")
-        strKredRef.DataType = System.Type.[GetType]("System.String")
-        strKredRef.MaxLength = 30
-        DT.Columns.Add(strKredRef)
-        Dim strKrediBankInt As DataColumn = New DataColumn("strKrediBankInt")
-        strKrediBankInt.DataType = System.Type.[GetType]("System.String")
-        strKrediBankInt.MaxLength = 5
-        DT.Columns.Add(strKrediBankInt)
-        'Dim strZahlBed As DataColumn = New DataColumn("strZahlBed")
-        'strZahlBed.DataType = System.Type.[GetType]("System.String")
-        'strZahlBed.MaxLength = 5
-        'DT.Columns.Add(strZahlBed)
-        Dim intPayType As DataColumn = New DataColumn("intPayType")
-        intPayType.DataType = System.Type.[GetType]("System.Int16")
-        DT.Columns.Add(intPayType)
-        Dim intintBank As DataColumn = New DataColumn("intintBank")
-        intintBank.DataType = System.Type.[GetType]("System.Int16")
-        intintBank.Caption = "IBank"
-        DT.Columns.Add(intintBank)
-        Dim intEBank As DataColumn = New DataColumn("intEBank")
-        intEBank.DataType = System.Type.[GetType]("System.Int16")
-        intEBank.Caption = "EBank"
-        DT.Columns.Add(intEBank)
-        Dim strKredStatusBitLog As DataColumn = New DataColumn("strKredStatusBitLog")
-        strKredStatusBitLog.DataType = System.Type.[GetType]("System.String")
-        strKredStatusBitLog.MaxLength = 50
-        DT.Columns.Add(strKredStatusBitLog)
-        Dim strKredStatusText As DataColumn = New DataColumn("strKredStatusText")
-        strKredStatusText.DataType = System.Type.[GetType]("System.String")
-        strKredStatusText.MaxLength = 255
-        DT.Columns.Add(strKredStatusText)
-        Dim strKredBookStatus As DataColumn = New DataColumn("strKredBookStatus")
-        strKredBookStatus.DataType = System.Type.[GetType]("System.String")
-        strKredBookStatus.MaxLength = 50
-        DT.Columns.Add(strKredBookStatus)
-        Dim booBooked As DataColumn = New DataColumn("booBooked")
-        booBooked.DataType = System.Type.[GetType]("System.Boolean")
-        DT.Columns.Add(booBooked)
-        Dim datBooked As DataColumn = New DataColumn("datBooked")
-        datBooked.DataType = System.Type.[GetType]("System.DateTime")
-        DT.Columns.Add(datBooked)
-        Dim lngBelegNr As DataColumn = New DataColumn("lngBelegNr")
-        lngBelegNr.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngBelegNr)
-        Dim lngKrediKST As DataColumn = New DataColumn("lngKrediKST")
-        lngKrediKST.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(lngKrediKST)
-        Dim intZKond As DataColumn = New DataColumn("intZKond")
-        intZKond.DataType = System.Type.[GetType]("System.Int16")
-        DT.Columns.Add(intZKond)
-        Dim booPGV As DataColumn = New DataColumn("booPGV")
-        booPGV.DataType = System.Type.[GetType]("System.Boolean")
-        DT.Columns.Add(booPGV)
-        Dim strPGVType As DataColumn = New DataColumn("strPGVType")
-        strPGVType.DataType = System.Type.[GetType]("System.String")
-        strPGVType.MaxLength = 2
-        DT.Columns.Add(strPGVType)
-        Dim datPGVFrom As DataColumn = New DataColumn("datPGVFrom")
-        datPGVFrom.DataType = System.Type.[GetType]("System.DateTime")
-        DT.Columns.Add(datPGVFrom)
-        Dim intPGVMthsAY As DataColumn = New DataColumn("intPGVMthsAY")
-        intPGVMthsAY.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(intPGVMthsAY)
-        Dim datPGVTo As DataColumn = New DataColumn("datPGVTo")
-        datPGVTo.DataType = System.Type.[GetType]("System.DateTime")
-        DT.Columns.Add(datPGVTo)
-        Dim intPGVMthsNY As DataColumn = New DataColumn("intPGVMthsNY")
-        intPGVMthsNY.DataType = System.Type.[GetType]("System.Int32")
-        DT.Columns.Add(intPGVMthsNY)
-        Return DT
+
+        Try
+
+            'Dim myNewRow As DataRow
+            DT = New DataTable("tblKreditorenHead")
+            Dim lngKredID As DataColumn = New DataColumn("lngKredID")
+            lngKredID.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngKredID)
+            'DT.PrimaryKey = New DataColumn() {DT.Columns("lngKredID")}
+            Dim strKredRGNbr As DataColumn = New DataColumn("strKredRGNbr")
+            strKredRGNbr.DataType = System.Type.[GetType]("System.String")
+            strKredRGNbr.MaxLength = 50
+            DT.Columns.Add(strKredRGNbr)
+            'DT.PrimaryKey = New DataColumn() {DT.Columns("strKredRGNbr")}
+            Dim intBuchhaltung As DataColumn = New DataColumn("intBuchhaltung")
+            intBuchhaltung.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(intBuchhaltung)
+            Dim booDebBook As DataColumn = New DataColumn("booKredBook")
+            booDebBook.DataType = System.Type.[GetType]("System.Boolean")
+            DT.Columns.Add(booDebBook)
+            Dim intBuchungsart As DataColumn = New DataColumn("intBuchungsart")
+            intBuchungsart.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(intBuchungsart)
+            'Dim intRGArt As DataColumn = New DataColumn("intRGArt")
+            'intRGArt.DataType = System.Type.[GetType]("System.Int32")
+            'DT.Columns.Add(intRGArt)
+            'Dim strRGArt As DataColumn = New DataColumn("strRGArt")
+            'strRGArt.DataType = System.Type.[GetType]("System.String")
+            'strRGArt.MaxLength = 50
+            'DT.Columns.Add(strRGArt)
+            'Dim lngLinkedRG As DataColumn = New DataColumn("lngLinkedRG")
+            'lngLinkedRG.DataType = System.Type.[GetType]("System.Int32")
+            'DT.Columns.Add(lngLinkedRG)
+            'Dim booLinked As DataColumn = New DataColumn("booLinked")
+            'booLinked.DataType = System.Type.[GetType]("System.Boolean")
+            'DT.Columns.Add(booLinked)
+            Dim strRGName As DataColumn = New DataColumn("strRGName")
+            strRGName.DataType = System.Type.[GetType]("System.String")
+            strRGName.MaxLength = 50
+            DT.Columns.Add(strRGName)
+            Dim strOPNr As DataColumn = New DataColumn("strOPNr")
+            strOPNr.DataType = System.Type.[GetType]("System.String")
+            strOPNr.MaxLength = 30
+            DT.Columns.Add(strOPNr)
+            Dim lngKredNbr As DataColumn = New DataColumn("lngKredNbr")
+            lngKredNbr.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngKredNbr)
+            Dim strKredPKBez As DataColumn = New DataColumn("strKredBez")
+            strKredPKBez.DataType = System.Type.[GetType]("System.String")
+            strKredPKBez.MaxLength = 50
+            DT.Columns.Add(strKredPKBez)
+            Dim lngKredKtoNbr As DataColumn = New DataColumn("lngKredKtoNbr")
+            lngKredKtoNbr.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngKredKtoNbr)
+            Dim strKredKtoBez As DataColumn = New DataColumn("strKredKtoBez")
+            strKredKtoBez.DataType = System.Type.[GetType]("System.String")
+            strKredKtoBez.MaxLength = 80
+            DT.Columns.Add(strKredKtoBez)
+            Dim strKredCur As DataColumn = New DataColumn("strKredCur")
+            strKredCur.DataType = System.Type.[GetType]("System.String")
+            strKredCur.MaxLength = 3
+            DT.Columns.Add(strKredCur)
+            Dim dblKredNetto As DataColumn = New DataColumn("dblKredNetto")
+            dblKredNetto.DataType = System.Type.[GetType]("System.Double")
+            DT.Columns.Add(dblKredNetto)
+            Dim dblKredMwSt As DataColumn = New DataColumn("dblKredMwSt")
+            dblKredMwSt.DataType = System.Type.[GetType]("System.Double")
+            DT.Columns.Add(dblKredMwSt)
+            Dim dblKredBrutto As DataColumn = New DataColumn("dblKredBrutto")
+            dblKredBrutto.DataType = System.Type.[GetType]("System.Double")
+            DT.Columns.Add(dblKredBrutto)
+            Dim intSubBookings As DataColumn = New DataColumn("intSubBookings")
+            intSubBookings.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(intSubBookings)
+            Dim dblSumSubBookings As DataColumn = New DataColumn("dblSumSubBookings")
+            dblSumSubBookings.DataType = System.Type.[GetType]("System.Double")
+            DT.Columns.Add(dblSumSubBookings)
+            Dim lngKredIdentNbr As DataColumn = New DataColumn("lngKredIdentNbr")
+            lngKredIdentNbr.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngKredIdentNbr)
+            Dim strKredIdentNbr2 As DataColumn = New DataColumn("strKredIdentNbr2")
+            strKredIdentNbr2.DataType = System.Type.[GetType]("System.String")
+            strKredIdentNbr2.MaxLength = 50
+            DT.Columns.Add(strKredIdentNbr2)
+            Dim strKredText As DataColumn = New DataColumn("strKredText")
+            strKredText.DataType = System.Type.[GetType]("System.String")
+            strKredText.MaxLength = 125
+            DT.Columns.Add(strKredText)
+            Dim strRGBemerkung As DataColumn = New DataColumn("strRGBemerkung")
+            strRGBemerkung.DataType = System.Type.[GetType]("System.String")
+            strRGBemerkung.MaxLength = 1024
+            DT.Columns.Add(strRGBemerkung)
+            Dim datKredRGDatum As DataColumn = New DataColumn("datKredRGDatum")
+            datKredRGDatum.DataType = System.Type.[GetType]("System.DateTime")
+            DT.Columns.Add(datKredRGDatum)
+            Dim datKredValDatum As DataColumn = New DataColumn("datKredValDatum")
+            datKredValDatum.DataType = System.Type.[GetType]("System.DateTime")
+            DT.Columns.Add(datKredValDatum)
+            Dim strKrediBank As DataColumn = New DataColumn("strKrediBank")
+            strKrediBank.DataType = System.Type.[GetType]("System.String")
+            strKrediBank.MaxLength = 50
+            DT.Columns.Add(strKrediBank)
+            Dim strKredRef As DataColumn = New DataColumn("strKredRef")
+            strKredRef.DataType = System.Type.[GetType]("System.String")
+            strKredRef.MaxLength = 30
+            DT.Columns.Add(strKredRef)
+            Dim strKrediBankInt As DataColumn = New DataColumn("strKrediBankInt")
+            strKrediBankInt.DataType = System.Type.[GetType]("System.String")
+            strKrediBankInt.MaxLength = 5
+            DT.Columns.Add(strKrediBankInt)
+            'Dim strZahlBed As DataColumn = New DataColumn("strZahlBed")
+            'strZahlBed.DataType = System.Type.[GetType]("System.String")
+            'strZahlBed.MaxLength = 5
+            'DT.Columns.Add(strZahlBed)
+            Dim intPayType As DataColumn = New DataColumn("intPayType")
+            intPayType.DataType = System.Type.[GetType]("System.Int16")
+            DT.Columns.Add(intPayType)
+            Dim intintBank As DataColumn = New DataColumn("intintBank")
+            intintBank.DataType = System.Type.[GetType]("System.Int16")
+            intintBank.Caption = "IBank"
+            DT.Columns.Add(intintBank)
+            Dim intEBank As DataColumn = New DataColumn("intEBank")
+            intEBank.DataType = System.Type.[GetType]("System.Int16")
+            intEBank.Caption = "EBank"
+            DT.Columns.Add(intEBank)
+            Dim strKredStatusBitLog As DataColumn = New DataColumn("strKredStatusBitLog")
+            strKredStatusBitLog.DataType = System.Type.[GetType]("System.String")
+            strKredStatusBitLog.MaxLength = 50
+            DT.Columns.Add(strKredStatusBitLog)
+            Dim strKredStatusText As DataColumn = New DataColumn("strKredStatusText")
+            strKredStatusText.DataType = System.Type.[GetType]("System.String")
+            strKredStatusText.MaxLength = 255
+            DT.Columns.Add(strKredStatusText)
+            Dim strKredBookStatus As DataColumn = New DataColumn("strKredBookStatus")
+            strKredBookStatus.DataType = System.Type.[GetType]("System.String")
+            strKredBookStatus.MaxLength = 50
+            DT.Columns.Add(strKredBookStatus)
+            Dim booBooked As DataColumn = New DataColumn("booBooked")
+            booBooked.DataType = System.Type.[GetType]("System.Boolean")
+            DT.Columns.Add(booBooked)
+            Dim datBooked As DataColumn = New DataColumn("datBooked")
+            datBooked.DataType = System.Type.[GetType]("System.DateTime")
+            DT.Columns.Add(datBooked)
+            Dim lngBelegNr As DataColumn = New DataColumn("lngBelegNr")
+            lngBelegNr.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngBelegNr)
+            Dim lngKrediKST As DataColumn = New DataColumn("lngKrediKST")
+            lngKrediKST.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(lngKrediKST)
+            Dim intZKond As DataColumn = New DataColumn("intZKond")
+            intZKond.DataType = System.Type.[GetType]("System.Int16")
+            DT.Columns.Add(intZKond)
+            Dim booPGV As DataColumn = New DataColumn("booPGV")
+            booPGV.DataType = System.Type.[GetType]("System.Boolean")
+            DT.Columns.Add(booPGV)
+            Dim strPGVType As DataColumn = New DataColumn("strPGVType")
+            strPGVType.DataType = System.Type.[GetType]("System.String")
+            strPGVType.MaxLength = 2
+            DT.Columns.Add(strPGVType)
+            Dim datPGVFrom As DataColumn = New DataColumn("datPGVFrom")
+            datPGVFrom.DataType = System.Type.[GetType]("System.DateTime")
+            DT.Columns.Add(datPGVFrom)
+            Dim intPGVMthsAY As DataColumn = New DataColumn("intPGVMthsAY")
+            intPGVMthsAY.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(intPGVMthsAY)
+            Dim datPGVTo As DataColumn = New DataColumn("datPGVTo")
+            datPGVTo.DataType = System.Type.[GetType]("System.DateTime")
+            DT.Columns.Add(datPGVTo)
+            Dim intPGVMthsNY As DataColumn = New DataColumn("intPGVMthsNY")
+            intPGVMthsNY.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(intPGVMthsNY)
+            Return DT
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message + "Kreditoren-Head-Tabelle " + Err.Number.ToString)
+
+        End Try
+
 
     End Function
 
     Public Shared Function tblKreditorenSub() As DataTable
+
         Dim DT As DataTable
-        DT = New DataTable("tblKreditorenSub")
-        Dim lngID As DataColumn = New DataColumn("lngID")
-        lngID.DataType = System.Type.[GetType]("System.Int32")
-        lngID.AutoIncrement = True
-        lngID.AutoIncrementSeed = 1
-        lngID.AutoIncrementStep = 1
-        DT.Columns.Add(lngID)
-        Dim lngKredID As DataColumn = New DataColumn("lngKredID")
-        lngKredID.DataType = System.Type.[GetType]("System.Int32")
-        lngKredID.Caption = "Kred-ID"
-        DT.Columns.Add(lngKredID)
-        Dim strRGNr As DataColumn = New DataColumn("strRGNr")
-        strRGNr.DataType = System.Type.[GetType]("System.String")
-        strRGNr.MaxLength = 50
-        strRGNr.Caption = "RG-Nr"
-        DT.Columns.Add(strRGNr)
-        Dim intSollHaben As DataColumn = New DataColumn("intSollHaben")
-        intSollHaben.DataType = System.Type.[GetType]("System.Int16")
-        intSollHaben.Caption = "S1/H0"
-        DT.Columns.Add(intSollHaben)
-        Dim lngKto As DataColumn = New DataColumn("lngKto")
-        lngKto.DataType = System.Type.[GetType]("System.Int32")
-        lngKto.Caption = "Konto"
-        DT.Columns.Add(lngKto)
-        Dim strKtoBez As DataColumn = New DataColumn("strKtoBez")
-        strKtoBez.DataType = System.Type.[GetType]("System.String")
-        strKtoBez.MaxLength = 80
-        strKtoBez.Caption = "Bezeichnung"
-        DT.Columns.Add(strKtoBez)
-        Dim lngKST As DataColumn = New DataColumn("lngKST")
-        lngKST.DataType = System.Type.[GetType]("System.Int32")
-        lngKST.Caption = "KST"
-        DT.Columns.Add(lngKST)
-        Dim strKstBez As DataColumn = New DataColumn("strKstBez")
-        strKstBez.DataType = System.Type.[GetType]("System.String")
-        strKstBez.MaxLength = 50
-        strKstBez.Caption = "Bez."
-        DT.Columns.Add(strKstBez)
-        Dim dblNetto As DataColumn = New DataColumn("dblNetto")
-        dblNetto.DataType = System.Type.[GetType]("System.Double")
-        dblNetto.Caption = "Netto"
-        DT.Columns.Add(dblNetto)
-        Dim dblMwSt As DataColumn = New DataColumn("dblMwSt")
-        dblMwSt.DataType = System.Type.[GetType]("System.Double")
-        dblMwSt.Caption = "MwSt"
-        DT.Columns.Add(dblMwSt)
-        Dim dblBrutto As DataColumn = New DataColumn("dblBrutto")
-        dblBrutto.DataType = System.Type.[GetType]("System.Double")
-        dblBrutto.Caption = "Brutto"
-        DT.Columns.Add(dblBrutto)
-        Dim dblMwStSatz As DataColumn = New DataColumn("dblMwStSatz")
-        dblMwStSatz.DataType = System.Type.[GetType]("System.Double")
-        dblMwStSatz.Caption = "MwStS"
-        DT.Columns.Add(dblMwStSatz)
-        Dim strMwStKey As DataColumn = New DataColumn("strMwStKey")
-        strMwStKey.DataType = System.Type.[GetType]("System.String")
-        strMwStKey.MaxLength = 50
-        DT.Columns.Add(strMwStKey)
-        Dim strArtikel As DataColumn = New DataColumn("strArtikel")
-        strArtikel.DataType = System.Type.[GetType]("System.String")
-        strArtikel.MaxLength = 128
-        DT.Columns.Add(strArtikel)
-        Dim strKredSubText As DataColumn = New DataColumn("strKredSubText")
-        strKredSubText.DataType = System.Type.[GetType]("System.String")
-        strKredSubText.MaxLength = 125
-        strKredSubText.Caption = "Buch-Text"
-        DT.Columns.Add(strKredSubText)
-        Dim strStatusUBBitLog As DataColumn = New DataColumn("strStatusUBBitLog")
-        strStatusUBBitLog.DataType = System.Type.[GetType]("System.String")
-        strStatusUBBitLog.MaxLength = 50
-        DT.Columns.Add(strStatusUBBitLog)
-        Dim strStatusUBText As DataColumn = New DataColumn("strStatusUBText")
-        strStatusUBText.DataType = System.Type.[GetType]("System.String")
-        strStatusUBText.MaxLength = 255
-        strStatusUBText.Caption = "Status"
-        DT.Columns.Add(strStatusUBText)
-        Dim strKredBookStatus As DataColumn = New DataColumn("strKredBookStatus")
-        strKredBookStatus.DataType = System.Type.[GetType]("System.String")
-        strKredBookStatus.MaxLength = 50
-        DT.Columns.Add(strKredBookStatus)
-        Return DT
+
+        Try
+
+            DT = New DataTable("tblKreditorenSub")
+            Dim lngID As DataColumn = New DataColumn("lngID")
+            lngID.DataType = System.Type.[GetType]("System.Int32")
+            lngID.AutoIncrement = True
+            lngID.AutoIncrementSeed = 1
+            lngID.AutoIncrementStep = 1
+            DT.Columns.Add(lngID)
+            Dim lngKredID As DataColumn = New DataColumn("lngKredID")
+            lngKredID.DataType = System.Type.[GetType]("System.Int32")
+            lngKredID.Caption = "Kred-ID"
+            DT.Columns.Add(lngKredID)
+            Dim strRGNr As DataColumn = New DataColumn("strRGNr")
+            strRGNr.DataType = System.Type.[GetType]("System.String")
+            strRGNr.MaxLength = 50
+            strRGNr.Caption = "RG-Nr"
+            DT.Columns.Add(strRGNr)
+            Dim intSollHaben As DataColumn = New DataColumn("intSollHaben")
+            intSollHaben.DataType = System.Type.[GetType]("System.Int16")
+            intSollHaben.Caption = "S1/H0"
+            DT.Columns.Add(intSollHaben)
+            Dim lngKto As DataColumn = New DataColumn("lngKto")
+            lngKto.DataType = System.Type.[GetType]("System.Int32")
+            lngKto.Caption = "Konto"
+            DT.Columns.Add(lngKto)
+            Dim strKtoBez As DataColumn = New DataColumn("strKtoBez")
+            strKtoBez.DataType = System.Type.[GetType]("System.String")
+            strKtoBez.MaxLength = 80
+            strKtoBez.Caption = "Bezeichnung"
+            DT.Columns.Add(strKtoBez)
+            Dim lngKST As DataColumn = New DataColumn("lngKST")
+            lngKST.DataType = System.Type.[GetType]("System.Int32")
+            lngKST.Caption = "KST"
+            DT.Columns.Add(lngKST)
+            Dim strKstBez As DataColumn = New DataColumn("strKstBez")
+            strKstBez.DataType = System.Type.[GetType]("System.String")
+            strKstBez.MaxLength = 50
+            strKstBez.Caption = "Bez."
+            DT.Columns.Add(strKstBez)
+            Dim dblNetto As DataColumn = New DataColumn("dblNetto")
+            dblNetto.DataType = System.Type.[GetType]("System.Double")
+            dblNetto.Caption = "Netto"
+            DT.Columns.Add(dblNetto)
+            Dim dblMwSt As DataColumn = New DataColumn("dblMwSt")
+            dblMwSt.DataType = System.Type.[GetType]("System.Double")
+            dblMwSt.Caption = "MwSt"
+            DT.Columns.Add(dblMwSt)
+            Dim dblBrutto As DataColumn = New DataColumn("dblBrutto")
+            dblBrutto.DataType = System.Type.[GetType]("System.Double")
+            dblBrutto.Caption = "Brutto"
+            DT.Columns.Add(dblBrutto)
+            Dim dblMwStSatz As DataColumn = New DataColumn("dblMwStSatz")
+            dblMwStSatz.DataType = System.Type.[GetType]("System.Double")
+            dblMwStSatz.Caption = "MwStS"
+            DT.Columns.Add(dblMwStSatz)
+            Dim strMwStKey As DataColumn = New DataColumn("strMwStKey")
+            strMwStKey.DataType = System.Type.[GetType]("System.String")
+            strMwStKey.MaxLength = 50
+            DT.Columns.Add(strMwStKey)
+            Dim strArtikel As DataColumn = New DataColumn("strArtikel")
+            strArtikel.DataType = System.Type.[GetType]("System.String")
+            strArtikel.MaxLength = 128
+            DT.Columns.Add(strArtikel)
+            Dim strKredSubText As DataColumn = New DataColumn("strKredSubText")
+            strKredSubText.DataType = System.Type.[GetType]("System.String")
+            strKredSubText.MaxLength = 125
+            strKredSubText.Caption = "Buch-Text"
+            DT.Columns.Add(strKredSubText)
+            Dim strStatusUBBitLog As DataColumn = New DataColumn("strStatusUBBitLog")
+            strStatusUBBitLog.DataType = System.Type.[GetType]("System.String")
+            strStatusUBBitLog.MaxLength = 50
+            DT.Columns.Add(strStatusUBBitLog)
+            Dim strStatusUBText As DataColumn = New DataColumn("strStatusUBText")
+            strStatusUBText.DataType = System.Type.[GetType]("System.String")
+            strStatusUBText.MaxLength = 255
+            strStatusUBText.Caption = "Status"
+            DT.Columns.Add(strStatusUBText)
+            Dim strKredBookStatus As DataColumn = New DataColumn("strKredBookStatus")
+            strKredBookStatus.DataType = System.Type.[GetType]("System.String")
+            strKredBookStatus.MaxLength = 50
+            DT.Columns.Add(strKredBookStatus)
+            Return DT
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message + "Kreditoren-Sub-Tabelle " + Err.Number.ToString)
+
+        End Try
     End Function
 
     Public Shared Function tblInfo() As DataTable
 
-        Dim DT As DataTable
-        DT = New DataTable("tblDebitorenSub")
-        Dim strInfoT As DataColumn = New DataColumn("strInfoT")
-        strInfoT.DataType = System.Type.[GetType]("System.String")
-        strInfoT.MaxLength = 50
-        strInfoT.Caption = "Info-Titel"
-        DT.Columns.Add(strInfoT)
-        Dim strInfoV As DataColumn = New DataColumn("strInfoV")
-        strInfoV.DataType = System.Type.[GetType]("System.String")
-        strInfoV.MaxLength = 50
-        strInfoV.Caption = "Info-Wert"
-        DT.Columns.Add(strInfoV)
-        Return DT
+        Try
+
+            Dim DT As DataTable
+            DT = New DataTable("tblDebitorenSub")
+            Dim strInfoT As DataColumn = New DataColumn("strInfoT")
+            strInfoT.DataType = System.Type.[GetType]("System.String")
+            strInfoT.MaxLength = 50
+            strInfoT.Caption = "Info-Titel"
+            DT.Columns.Add(strInfoT)
+            Dim strInfoV As DataColumn = New DataColumn("strInfoV")
+            strInfoV.DataType = System.Type.[GetType]("System.String")
+            strInfoV.MaxLength = 50
+            strInfoV.Caption = "Info-Wert"
+            DT.Columns.Add(strInfoV)
+            Return DT
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message + "Info-Sub-Tabelle " + Err.Number.ToString)
+
+        End Try
+
 
     End Function
+
+    Public Shared Function FcLoginSage2(ByRef objdbconn As MySqlConnection,
+                                       ByRef objsqlConn As SqlClient.SqlConnection,
+                                       ByRef objsqlCom As SqlClient.SqlCommand,
+                                       ByRef objFinanz As SBSXASLib.AXFinanz,
+                                       ByRef objfiBuha As SBSXASLib.AXiFBhg,
+                                       ByRef objdbBuha As SBSXASLib.AXiDbBhg,
+                                       ByRef objdbPIFb As SBSXASLib.AXiPlFin,
+                                       ByRef objFiBebu As SBSXASLib.AXiBeBu,
+                                       ByRef objkrBuha As SBSXASLib.AXiKrBhg,
+                                       ByVal intAccounting As Int16,
+                                       ByRef objdtInfo As DataTable,
+                                       ByVal strPeriod As String,
+                                       ByRef strYear As String,
+                                       ByRef intTeqNbr As Int16,
+                                       ByRef intTeqNbrLY As Int16) As Int16
+
+        '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
+
+        Dim booAccOk As Boolean
+        Dim strMandant As String
+        Dim strLogonInfo() As String
+        Dim strPeriode() As String
+        Dim FcReturns As Int16
+        Dim intPeriodenNr As Int16
+        Dim strPeriodenInfo As String
+        Dim objdtPeriodeLY As New DataTable
+        Dim strPeriodeLY As String
+
+        Try
+
+            objFinanz = Nothing
+            objFinanz = New SBSXASLib.AXFinanz
+
+            Application.DoEvents()
+
+            'Login
+            Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
+
+            objdbconn.Open()
+            strMandant = FcReadFromSettings(objdbconn, "Buchh200_Name", intAccounting)
+            objdbconn.Close()
+            booAccOk = objFinanz.CheckMandant(strMandant)
+
+            'Open Mandantg
+            objFinanz.OpenMandant(strMandant, strPeriod)
+
+            'Von Login aktuelle Periode auslesen
+            strLogonInfo = Split(objFinanz.GetLogonInfo(), "{>}")
+            objdtInfo.Rows.Add("Man/Periode", strMandant + "/" + strLogonInfo(7))
+
+            'Check Periode
+            intPeriodenNr = objFinanz.ReadPeri(strMandant, strLogonInfo(7))
+            strPeriodenInfo = objFinanz.GetPeriListe(0)
+
+            strPeriode = Split(strPeriodenInfo, "{>}")
+            'Teq-Nr von Vorjar lesen um in Suche nutzen zu können
+            strPeriodeLY = (Val(Left(strPeriode(4), 4)) - 1).ToString + Right(strPeriode(4), 4)
+            objsqlCom.CommandText = "SELECT teqnbr FROM periode WHERE mandid='" + strMandant + "' AND dtebis='" + strPeriodeLY + "'"
+            objsqlCom.Connection = objsqlConn
+            objsqlConn.Open()
+            objdtPeriodeLY.Load(objsqlCom.ExecuteReader)
+            objsqlConn.Close()
+            'Variable übergeben, Achtung nicht definitiv. Situatin ist nicht klar wenn Vorjahr nicht existiert
+            intTeqNbrLY = objdtPeriodeLY.Rows(0).Item("teqnbr")
+            intTeqNbr = strPeriode(8)
+            objdtInfo.Rows.Add("GeschäftsJ", strPeriode(3) + "-" + strPeriode(4) + ", teq: " + strPeriode(8).ToString + ", " + intTeqNbrLY.ToString)
+            objdtInfo.Rows.Add("Buchungen/ Status", strPeriode(5) + "-" + strPeriode(6) + "/ " + strPeriode(2))
+            strYear = Strings.Left(strPeriode(4), 4)
+
+            FcReturns = FcReadPeriodenDef(objsqlConn,
+                                      objsqlCom,
+                                      strPeriode(8),
+                                      objdtInfo)
+
+            'Finanz Buha öffnen
+            objfiBuha = Nothing
+            objfiBuha = New SBSXASLib.AXiFBhg
+            objfiBuha = objFinanz.GetFibuObj()
+            'Debitor öffnen
+            objdbBuha = Nothing
+            objdbBuha = New SBSXASLib.AXiDbBhg
+            objdbBuha = objFinanz.GetDebiObj()
+            objdbPIFb = Nothing
+            objdbPIFb = objfiBuha.GetCheckObj()
+            objFiBebu = Nothing
+            objFiBebu = objFinanz.GetBeBuObj()
+            'Kreditor
+            objkrBuha = Nothing
+            objkrBuha = New SBSXASLib.AXiKrBhg
+            objkrBuha = objFinanz.GetKrediObj
+
+            Application.DoEvents()
+
+        Catch ex As Exception
+            MsgBox("OpenMandant:" + vbCrLf + "Error" + vbCrLf + "Error # " + Str(Err.Number) + " was generated by " + Err.Source + vbCrLf + Err.Description + " Fehlernummer" & Str(Err.Number And 65535))
+            Err.Clear()
+            End
+
+        Finally
+
+        End Try
+
+    End Function
+
 
     Public Shared Function FcLoginSage(ByRef objdbconn As MySqlConnection,
                                        ByRef objsqlConn As SqlClient.SqlConnection,
@@ -587,7 +740,7 @@ Friend NotInheritable Class Main
 
         On Error GoTo ErrorHandler
 
-        'Loign
+        'Login
         Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
@@ -703,37 +856,45 @@ ErrorHandler:
         Dim strPeriodeAr() As String
         Dim intLooper As Int16
 
-        objFinanz = Nothing
-        objFinanz = New SBSXASLib.AXFinanz
 
+        Try
 
-        'Loign
-        Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+            objFinanz = Nothing
+            objFinanz = New SBSXASLib.AXFinanz
+
+            'Login
+            Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
 
-        objdbconn.Open()
-        strMandant = FcReadFromSettings(objdbconn, "Buchh200_Name", intAccounting)
-        objdbconn.Close()
-        booAccOk = objFinanz.CheckMandant(strMandant)
+            objdbconn.Open()
+            strMandant = FcReadFromSettings(objdbconn, "Buchh200_Name", intAccounting)
+            objdbconn.Close()
+            booAccOk = objFinanz.CheckMandant(strMandant)
 
-        'Combo leeren
-        cmbPeriods.Items.Clear()
+            'Combo leeren
+            cmbPeriods.Items.Clear()
 
-        'GJ einlesen
-        intLbNbr = objFinanz.ReadPeri(strMandant, "")
-        Do Until strPeriodenListe = "EOF"
-            strPeriodenListe = objFinanz.GetPeriListe(intLooper)
-            strPeriodeAr = Split(strPeriodenListe, "{>}")
-            If strPeriodenListe <> "EOF" Then
-                cmbPeriods.Items.Add(strPeriodeAr(0))
-            End If
-            intLooper += 1
-        Loop
+            'GJ einlesen
+            intLbNbr = objFinanz.ReadPeri(strMandant, "")
+            Do Until strPeriodenListe = "EOF"
+                strPeriodenListe = objFinanz.GetPeriListe(intLooper)
+                strPeriodeAr = Split(strPeriodenListe, "{>}")
+                If strPeriodenListe <> "EOF" Then
+                    cmbPeriods.Items.Add(strPeriodeAr(0))
+                End If
+                intLooper += 1
+            Loop
 
-        'Auf aktuelles Jahr gehen
-        cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now()) - 1).ToString)
+            'Auf aktuelles Jahr gehen
+            cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now()) - 1).ToString)
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Periodendefinition lesen")
+
+        End Try
+
 
 
     End Function
@@ -887,7 +1048,7 @@ ErrorHandler:
         Dim intSBGegenKonto As Int16
         Dim selSBrows() As DataRow
 
-        Dim datValutaPGV As Date
+        'Dim datValutaPGV As Date
         Dim datValutaSave As Date
         Dim intPGVMonths As Int16
         Dim intMonthCounter As Int16
@@ -909,13 +1070,6 @@ ErrorHandler:
             For Each row As DataRow In objdtDebits.Rows
 
                 'If row("strDebRGNbr") = "71402" Then Stop
-
-                If row("strDebRGNbr") = "114717" Then
-                    row("booPGV") = True
-                    row("datPGVFrom") = "01.01.2022"
-                    row("datPGVTo") = "01.06.2022"
-                End If
-
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -1188,11 +1342,15 @@ ErrorHandler:
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'PGV => Prüfung vor Valuta-Datum da Valuta-Datum verändert wird
+                If Not IsDBNull(row("datPGVFrom")) Then
+                    row("booPGV") = True
+                End If
+
                 'Jahresübergreifend RG- / Valuta-Datum
-                If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) Then
+                If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) And Year(row("datDebValDatum")) >= 2021 Then
                     'Not IsDBNull(row("datPGVFrom")) Then
                     row("booPGV") = True
-                    datValutaPGV = row("datDebValDatum")
+                    'datValutaPGV = row("datDebValDatum")
                     'Bei Valuta-Datum in einem anderen Jahr Valuta-Datum ändern
                     If Year(row("datDebRGDatum")) < Year(row("datDebValDatum")) Then
                         row("strPGVType") = "RV"
@@ -1206,10 +1364,16 @@ ErrorHandler:
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datDebValDatum") = "2022-01-01"
-                        Else
+                        ElseIf row("strPGVType") = "RV" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datDebValDatum") = row("datDebRGDatum")
+                        End If
+                    Else
+                        If row("strPGVType") = "RV" Then
+                            row("datDebValDatum") = row("datDebRGDatum")
+                        Else
+                            row("strPGVType") = "XX"
                         End If
                     End If
                 End If
@@ -1412,7 +1576,11 @@ ErrorHandler:
                 End If
                 'PGV keine Ziffer
                 If row("booPGV") Then
-                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGV " + row("strPGVType")
+                    If row("intPGVMthsAY") + row("intPGVMthsNY") = 1 Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "TA " + row("strPGVType")
+                    Else
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGV " + row("strPGVType")
+                    End If
                 End If
 
                 'Status schreiben
@@ -1645,17 +1813,25 @@ ErrorHandler:
         Dim intÜbertrag As Integer
         Dim intIndex As Integer
 
-        intTabelle(0) = 0 : intTabelle(1) = 9
-        intTabelle(2) = 4 : intTabelle(3) = 6
-        intTabelle(4) = 8 : intTabelle(5) = 2
-        intTabelle(6) = 7 : intTabelle(7) = 1
-        intTabelle(8) = 3 : intTabelle(9) = 5
+        Try
 
-        For intIndex = 1 To Len(strNummer)
-            intÜbertrag = intTabelle((intÜbertrag + Mid(strNummer, intIndex, 1)) Mod 10)
-        Next
+            intTabelle(0) = 0 : intTabelle(1) = 9
+            intTabelle(2) = 4 : intTabelle(3) = 6
+            intTabelle(4) = 8 : intTabelle(5) = 2
+            intTabelle(6) = 7 : intTabelle(7) = 1
+            intTabelle(8) = 3 : intTabelle(9) = 5
 
-        Return (10 - intÜbertrag) Mod 10
+            For intIndex = 1 To Len(strNummer)
+                intÜbertrag = intTabelle((intÜbertrag + Mid(strNummer, intIndex, 1)) Mod 10)
+            Next
+
+            Return (10 - intÜbertrag) Mod 10
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem Modulo10")
+
+        End Try
+
 
     End Function
 
@@ -1665,14 +1841,22 @@ ErrorHandler:
         Dim intCounter As Int16
         Dim strCleanRGNr As String = ""
 
-        For intCounter = 1 To Len(strRGNrToClean)
-            If Mid(strRGNrToClean, intCounter, 1) = "0" Or Val(Mid(strRGNrToClean, intCounter, 1)) > 0 Then
-                strCleanRGNr += Mid(strRGNrToClean, intCounter, 1)
-            End If
+        Try
 
-        Next
+            For intCounter = 1 To Len(strRGNrToClean)
+                If Mid(strRGNrToClean, intCounter, 1) = "0" Or Val(Mid(strRGNrToClean, intCounter, 1)) > 0 Then
+                    strCleanRGNr += Mid(strRGNrToClean, intCounter, 1)
+                End If
 
-        Return strCleanRGNr
+            Next
+
+            Return strCleanRGNr
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem CleanString")
+
+        End Try
+
 
     End Function
 
@@ -1684,21 +1868,29 @@ ErrorHandler:
 
         'Returns 0=ok oder nicht wichtig, 1=Brutto, 2=Netto, 3=Beide, 4=Diff
 
-        If intBuchungsArt = 1 Then
-            If dblBrutto = 0 And dblNetto = 0 Then
-                Return 3
-            ElseIf dblBrutto = 0 Then
-                Return 1
-            ElseIf dblNetto = 0 Then
-                'Return 2
-            ElseIf Math.Abs(Decimal.Round(dblBrutto - dblNetto - dblMwSt - dblRDiff, 2, MidpointRounding.AwayFromZero)) > 0 Then 'Math.Round(dblBrutto - dblRDiff - dblMwSt, 2, MidpointRounding.AwayFromZero) <> Math.Round(dblNetto, 2, MidpointRounding.AwayFromZero) Then
-                Return 4
+        Try
+
+            If intBuchungsArt = 1 Then
+                If dblBrutto = 0 And dblNetto = 0 Then
+                    Return 3
+                ElseIf dblBrutto = 0 Then
+                    Return 1
+                ElseIf dblNetto = 0 Then
+                    'Return 2
+                ElseIf Math.Abs(Decimal.Round(dblBrutto - dblNetto - dblMwSt - dblRDiff, 2, MidpointRounding.AwayFromZero)) > 0 Then 'Math.Round(dblBrutto - dblRDiff - dblMwSt, 2, MidpointRounding.AwayFromZero) <> Math.Round(dblNetto, 2, MidpointRounding.AwayFromZero) Then
+                    Return 4
+                Else
+                    Return 0
+                End If
             Else
                 Return 0
             End If
-        Else
-            Return 0
-        End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem Check-Head")
+
+        End Try
 
     End Function
 
@@ -1712,28 +1904,36 @@ ErrorHandler:
         Dim booFoundProject As Boolean
         Dim strProjectAr() As String
 
-        booFoundProject = False
-        strLine = ""
+        Try
 
-        Call objFiBebu.ReadProjektTree(0)
+            booFoundProject = False
+            strLine = ""
 
-        strLine = objFiBebu.GetProjektLine()
-        Do While strLine <> "EOF"
-            strProjectAr = Split(strLine, "{>}")
-            Debug.Print("Aktuelle Line: " + strLine)
-            'Projekt gefunden?
-            If Val(strProjectAr(0)) = intProj Then
-                booFoundProject = True
-                strProjDesc = strProjectAr(1)
-            End If
+            Call objFiBebu.ReadProjektTree(0)
+
             strLine = objFiBebu.GetProjektLine()
-        Loop
+            Do While strLine <> "EOF"
+                strProjectAr = Split(strLine, "{>}")
+                Debug.Print("Aktuelle Line: " + strLine)
+                'Projekt gefunden?
+                If Val(strProjectAr(0)) = intProj Then
+                    booFoundProject = True
+                    strProjDesc = strProjectAr(1)
+                End If
+                strLine = objFiBebu.GetProjektLine()
+            Loop
 
-        If booFoundProject Then
-            Return 0
-        Else
-            Return 9
-        End If
+            If booFoundProject Then
+                Return 0
+            Else
+                Return 9
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem Check-Project")
+
+        End Try
+
 
     End Function
 
@@ -2207,7 +2407,6 @@ ErrorHandler:
 
         End Try
 
-
     End Function
 
     Public Shared Function FcCheckKrediSubBookings(ByVal lngKredID As Int32,
@@ -2254,8 +2453,9 @@ ErrorHandler:
 
         Try
 
-
             For Each subrow As DataRow In selsubrow
+
+                Application.DoEvents()
 
                 strBitLog = ""
                 'Runden
@@ -2721,28 +2921,36 @@ ErrorHandler:
         Dim strReturn As String
         Dim booFoundCurrency As Boolean
 
-        booFoundCurrency = False
-        strReturn = ""
+        Try
 
-        Call objfiBuha.ReadWhg()
+            booFoundCurrency = False
+            strReturn = ""
 
-        'If strCurrency = "EUR" Then Stop
+            Call objfiBuha.ReadWhg()
 
-        strReturn = objfiBuha.GetWhgZeile()
-        Do While strReturn <> "EOF"
-            If Left(strReturn, 3) = strCurrency Then
-                'If strCurrency = "EUR" Then Stop
-                booFoundCurrency = True
-            End If
+            'If strCurrency = "EUR" Then Stop
+
             strReturn = objfiBuha.GetWhgZeile()
-        Loop
+            Do While strReturn <> "EOF"
+                If Left(strReturn, 3) = strCurrency Then
+                    'If strCurrency = "EUR" Then Stop
+                    booFoundCurrency = True
+                End If
+                strReturn = objfiBuha.GetWhgZeile()
+                Application.DoEvents()
+            Loop
 
-        If booFoundCurrency Then
-            Return 0
-        Else
-            Return 1
-        End If
+            If booFoundCurrency Then
+                Return 0
+            Else
+                Return 1
+            End If
 
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem Currency")
+            Return 9
+
+        End Try
 
     End Function
 
@@ -2753,57 +2961,67 @@ ErrorHandler:
         Dim strReturn As String
         Dim strKontoInfo() As String
 
-        'If lngKtoNbr = 1173 Then Stop
+        Try
 
-        strReturn = objfiBuha.GetKontoInfo(lngKtoNbr.ToString)
-        If strReturn = "EOF" Then
-            Return 1
-        Else
-            'If dblMwSt = 0 Then
-            'Return 0
-            'KST?
-            strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
-            If lngKST > 0 Then
-                If CInt(Left(lngKtoNbr.ToString, 1)) >= 3 Then
-                    'strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
-                    If strKontoInfo(22) = "" Then
-                        Return 3
-                    Else
-                        If dblMwSt <> 0 Then
-                            If strKontoInfo(26) = "" Then
-                                Return 5
+            'If lngKtoNbr = 1173 Then Stop
+
+            strReturn = objfiBuha.GetKontoInfo(lngKtoNbr.ToString)
+            If strReturn = "EOF" Then
+                Return 1
+            Else
+                'If dblMwSt = 0 Then
+                'Return 0
+                'KST?
+                strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
+                If lngKST > 0 Then
+                    If CInt(Left(lngKtoNbr.ToString, 1)) >= 3 Then
+                        'strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
+                        If strKontoInfo(22) = "" Then
+                            Return 3
+                        Else
+                            If dblMwSt <> 0 Then
+                                If strKontoInfo(26) = "" Then
+                                    Return 5
+                                Else
+                                    Return 0
+                                End If
                             Else
                                 Return 0
                             End If
+
+                            'Else
+                            'Steuerpflichtig?
+                            'strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
+                            'If strKontoInfo(26) = "" Then
+                            'Return 2
+                            'Else
+                            'Return 0
+                            'End If
+                            'End If
+                        End If
+                    Else
+                        Return 4
+                    End If
+                Else
+                    If dblMwSt <> 0 Then
+                        If strKontoInfo(26) = "" Then
+                            Return 5
                         Else
                             Return 0
                         End If
-
-                        'Else
-                        'Steuerpflichtig?
-                        'strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
-                        'If strKontoInfo(26) = "" Then
-                        'Return 2
-                        'Else
-                        'Return 0
-                        'End If
-                        'End If
-                    End If
-                Else
-                    Return 4
-                End If
-            Else
-                If dblMwSt <> 0 Then
-                    If strKontoInfo(26) = "" Then
-                        Return 5
                     Else
                         Return 0
                     End If
-                Else
-                    Return 0
                 End If
             End If
-        End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem Konto")
+            Return 9
+
+        End Try
+
+
 
     End Function
 
@@ -2959,7 +3177,7 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
 
-                'If row("lngKredID") = "1643026" Then Stop
+                'If row("lngKredID") = "1644704" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -3150,13 +3368,20 @@ ErrorHandler:
                                                                    row("strKredCur"),
                                                                    strKredTyp)
                 strBitLog += Trim(intReturnValue.ToString)
+
+                Application.DoEvents()
                 'PGV => Prüfung vor Valuta-Datum da Valuta-Datum verändert wird
+                If Not IsDBNull(row("datPGVFrom")) And MainKreditor.FcIsAllKrediRebilled(objdtKreditSubs, row("lngKredID")) = 0 Then
+                    row("booPGV") = True
+                ElseIf Not IsDBNull(row("datPGVFrom")) And MainKreditor.FcIsAllKrediRebilled(objdtKreditSubs, row("lngKredID")) = 1 Then
+                    row("strPGVType") = "XX"
+                End If
+
                 'Jahresübergreifend RG- / Valuta-Datum
-                If (Year(row("datKredRGDatum")) <> Year(row("datKredValDatum")) And MainKreditor.FcIsAllKrediRebilled(objdtKreditSubs, row("lngKredID")) = 0) Or
-                    (Not IsDBNull(row("datPGVFrom")) And MainKreditor.FcIsAllKrediRebilled(objdtKreditSubs, row("lngKredID")) = 0) Then
+                If Year(row("datKredRGDatum")) <> Year(row("datKredValDatum")) And Year(row("datKredValDatum")) >= 2021 Then
 
                     row("booPGV") = True
-                    datValutaPGV = row("datKredValDatum")
+                    'datValutaPGV = row("datKredValDatum")
                     'Bei Valuta-Datum in einem anderen Jahr Valuta-Datum ändern
                     If Year(row("datKredRGDatum")) < Year(row("datKredValDatum")) Then
                         row("strPGVType") = "RV"
@@ -3165,23 +3390,31 @@ ErrorHandler:
                     End If
                     datValutaSave = row("datKredValDatum")
 
-                    row("datKredValDatum") = row("datKredRGDatum")
-
-
-                    'Anzahl Monate prüfen
-                    intMonthsAJ = 0
-                    intMonthsNJ = 0
                     If IsDBNull(row("datPGVFrom")) Then
                         If row("strPGVType") = "VR" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
-                            row("datKredValDatum") = "2022-01-01"
-                        Else
+                            row("datKredValDatum") = "2022-01-01" ' Year(row("datKredRGDatum")).ToString + "-01-01"
+                        ElseIf row("strPGVType") = "RV" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datKredValDatum") = row("datKredRGDatum")
                         End If
+                    Else
+                        If row("strPGVType") = "RV" Then
+                            row("datKredValDatum") = row("datKredRGDatum")
+                        Else
+                            row("strPGVType") = "XX"
+                        End If
                     End If
+                End If
+
+                If row("booPGV") Then
+
+                    'Anzahl Monate prüfen
+                    intMonthsAJ = 0
+                    intMonthsNJ = 0
+
                     intPGVMonths = (DateAndTime.Year(row("datPGVTo")) * 12 + DateAndTime.Month(row("datPGVTo"))) - (DateAndTime.Year(row("datPGVFrom")) * 12 + DateAndTime.Month(row("datPGVFrom"))) + 1
                     For intMonthCounter = 0 To intPGVMonths - 1
                         If Year(DateAdd(DateInterval.Month, intMonthCounter, row("datPGVFrom"))) > Convert.ToInt32(strYear) Then
@@ -3379,7 +3612,11 @@ ErrorHandler:
                 End If
                 'PGV keine Ziffer
                 If row("booPGV") Then
-                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGV " + row("strPGVType")
+                    If row("intPGVMthsAY") + row("intPGVMthsNY") = 1 Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "TP " + row("strPGVType")
+                    Else
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGV " + row("strPGVType")
+                    End If
                 End If
 
                 'Status schreiben
@@ -3431,6 +3668,8 @@ ErrorHandler:
                 dblSubNetto = 0
                 dblSubMwSt = 0
                 intKreditorNew = 0
+
+                Application.DoEvents()
 
             Next
 
