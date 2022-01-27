@@ -4006,7 +4006,6 @@ ErrorHandler:
 
     End Function
 
-
     Public Shared Function FcInitAccessConnecation(ByRef objaccesscon As OleDb.OleDbConnection, ByVal strMDBName As String) As Int16
 
         'Access - Connection soll initialisiert werden

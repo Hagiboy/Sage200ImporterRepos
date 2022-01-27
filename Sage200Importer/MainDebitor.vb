@@ -1709,7 +1709,7 @@ Public Class MainDebitor
             'Valuta saven
             datValutaSave = datValuta
             'Zuerst betroffene Buchungen selektieren
-            drDebiSub = tblDebiB.Select("strRGNr='" + strDRGNbr + "'")
+            drDebiSub = tblDebiB.Select("strRGNr='" + strDRGNbr + "' AND dblNetto<>0")
 
             'Durch die Buchungen steppen
             For Each drDSubrow As DataRow In drDebiSub
@@ -1759,8 +1759,6 @@ Public Class MainDebitor
                             strDebiTextHaben = drDSubrow("strDebSubText") + ", PGV Auflösung"
                         End If
 
-                        strDebiCurrency = strCur
-                        dblKursD = 1.0#
                         strSteuerFeldHaben = "STEUERFREI"
 
                         intSollKonto = drDSubrow("lngKto")
@@ -1781,9 +1779,17 @@ Public Class MainDebitor
                             strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                         End If
 
-                        dblKursH = 1.0#
                         strSteuerFeldSoll = "STEUERFREI"
 
+                        'Falls nicht CHF dann umrechnen und auf CHF setzen
+                        If strCur <> "CHF" Then
+                            dblKursD = Main.FcGetKurs(strCur, strValutaDatum, objFBhg)
+                            strDebiCurrency = "CHF"
+                        Else
+                            dblKursD = 1.0#
+                            strDebiCurrency = strCur
+                        End If
+                        dblKursH = dblKursD
 
                         'KORE
                         If drDSubrow("lngKST") > 0 Then
@@ -2164,7 +2170,7 @@ Public Class MainDebitor
             'Jahr retten
             strActualYear = strYear
             'Zuerst betroffene Buchungen selektieren
-            drDebiSub = tblDebiB.Select("strRGNr='" + strDRGNbr + "'")
+            drDebiSub = tblDebiB.Select("strRGNr='" + strDRGNbr + "' AND dblNetto<>0")
 
             'Durch die Buchungen steppen
             For Each drDSubrow As DataRow In drDebiSub
@@ -2192,16 +2198,25 @@ Public Class MainDebitor
                         strBelegDatum = Format(datValuta, "yyyyMMdd").ToString
 
                         strDebiTextHaben = drDSubrow("strDebSubText") + ", PGV Auflösung"
-                        strDebiCurrency = strCur
-                        dblKursD = 1.0#
+
                         strSteuerFeldHaben = "STEUERFREI"
 
                         intSollKonto = drDSubrow("lngKto")
 
                         strDebiTextSoll = drDSubrow("strDebSubText") + ", PGV Auflösung"
-                        dblKursH = 1.0#
+
                         strSteuerFeldSoll = "STEUERFREI"
                         strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
+
+                        'Falls nicht CHF dann umrechnen und auf CHF setzen
+                        If strCur <> "CHF" Then
+                            dblKursD = Main.FcGetKurs(strCur, strValutaDatum, objFBhg)
+                            strDebiCurrency = "CHF"
+                        Else
+                            dblKursD = 1.0#
+                            strDebiCurrency = strCur
+                        End If
+                        dblKursH = dblKursD
 
                         'KORE
                         If drDSubrow("lngKST") > 0 Then

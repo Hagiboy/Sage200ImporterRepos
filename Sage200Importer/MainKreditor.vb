@@ -1176,8 +1176,6 @@ Public Class MainKreditor
                             strDebiTextSoll = drKSubrow("strKredSubText") + ", PGV Auflösung"
                         End If
 
-                        strDebiCurrency = strCur
-                        dblKursD = 1.0#
                         strSteuerFeldSoll = "STEUERFREI"
 
                         intHabenKonto = drKSubrow("lngKto")
@@ -1198,9 +1196,17 @@ Public Class MainKreditor
                             strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                         End If
 
-                        dblKursH = 1.0#
                         strSteuerFeldHaben = "STEUERFREI"
 
+                        'Falls nicht CHF dann umrechnen und auf CHF setzen
+                        If strCur <> "CHF" Then
+                            dblKursD = Main.FcGetKurs(strCur, strValutaDatum, objFBhg)
+                            strDebiCurrency = "CHF"
+                        Else
+                            dblKursD = 1.0#
+                            strDebiCurrency = strCur
+                        End If
+                        dblKursH = dblKursD
 
                         'KORE
                         If drKSubrow("lngKST") > 0 Then
@@ -1610,8 +1616,6 @@ Public Class MainKreditor
                         strDebiTextSoll = drKSubrow("strKredSubText") + ", PGV Auflösung"
                         'End If
 
-                        strDebiCurrency = strCur
-                        dblKursD = 1.0#
                         strSteuerFeldSoll = "STEUERFREI"
 
                         intHabenKonto = drKSubrow("lngKto")
@@ -1630,9 +1634,17 @@ Public Class MainKreditor
                         strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                         'End If
 
-                        dblKursH = 1.0#
                         strSteuerFeldHaben = "STEUERFREI"
 
+                        'Falls nicht CHF dann umrechnen und auf CHF setzen
+                        If strCur <> "CHF" Then
+                            dblKursD = Main.FcGetKurs(strCur, strValutaDatum, objFBhg)
+                            strDebiCurrency = "CHF"
+                        Else
+                            dblKursD = 1.0#
+                            strDebiCurrency = strCur
+                        End If
+                        dblKursH = dblKursD
 
                         'KORE
                         If drKSubrow("lngKST") > 0 Then
