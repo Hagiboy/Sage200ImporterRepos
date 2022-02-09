@@ -3081,7 +3081,10 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcGetKurs(ByVal strCurrency As String, ByVal strDateValuta As String, ByRef objFBhg As SBSXASLib.AXiFBhg, ByVal Optional intKonto As Integer = 0) As Double
+    Public Shared Function FcGetKurs(ByVal strCurrency As String,
+                                     ByVal strDateValuta As String,
+                                     ByRef objFBhg As SBSXASLib.AXiFBhg,
+                                     ByVal Optional intKonto As Integer = 0) As Double
 
         'Konzept: Falls ein Konto mitgegeben wird, wird überprüft ob auf dem Konto die mitgegebene Währung Leitwärhung ist. Falls ja wird der Kurs 1 zurück gegeben
 
