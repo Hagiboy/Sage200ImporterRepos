@@ -57,6 +57,7 @@ Friend Class frmImportMain
     Public strYear As String
     Public intTeqNbr As Int16
     Public intTeqNbrLY As Int16
+    Public intTeqNbrPLY As Int16
     'Public boodgvSet As Boolean = False
 
     Public Sub InitVar()
@@ -151,7 +152,8 @@ Friend Class frmImportMain
                                   cmbPerioden.SelectedItem,
                                   strYear,
                                   intTeqNbr,
-                                  intTeqNbrLY)
+                                  intTeqNbrLY,
+                                  intTeqNbrPLY)
 
             'Transitorische Buchungen?
             'Call Main.fcCheckTransitorischeDebit(cmbBuha.SelectedValue,
@@ -198,6 +200,7 @@ Friend Class frmImportMain
                                    cmbBuha.Text,
                                    intTeqNbr,
                                    intTeqNbrLY,
+                                   intTeqNbrPLY,
                                    strYear,
                                    cmbPerioden.SelectedItem)
 
@@ -1395,6 +1398,7 @@ Friend Class frmImportMain
                                                                    strYear,
                                                                    intTeqNbr,
                                                                    intTeqNbrLY,
+                                                                   intTeqNbrPLY,
                                                                    IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")))
 
 
@@ -1427,6 +1431,7 @@ Friend Class frmImportMain
                                                                    strYear,
                                                                    intTeqNbr,
                                                                    intTeqNbrLY,
+                                                                   intTeqNbrPLY,
                                                                    IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")))
                             End If
 
@@ -1626,7 +1631,8 @@ Friend Class frmImportMain
                               cmbPerioden.SelectedItem,
                               strYear,
                               intTeqNbr,
-                              intTeqNbrLY)
+                              intTeqNbrLY,
+                              intTeqNbrPLY)
 
             'Transitorische Buchungen?
             'Call Main.fcCheckTransitorischeKredit(cmbBuha.SelectedValue,
@@ -1828,7 +1834,8 @@ Friend Class frmImportMain
                                                                                 intKredBelegsNummer,
                                                                                 "G",
                                                                                 intTeqNbr,
-                                                                                intTeqNbrLY)
+                                                                                intTeqNbrLY,
+                                                                                intTeqNbrPLY)
 
                         Else
                             strBuchType = "R"
@@ -1841,7 +1848,8 @@ Friend Class frmImportMain
                                                                                 intKredBelegsNummer,
                                                                                 "R",
                                                                                 intTeqNbr,
-                                                                                intTeqNbrLY)
+                                                                                intTeqNbrLY,
+                                                                                intTeqNbrPLY)
 
                         End If
 
@@ -2197,6 +2205,7 @@ Friend Class frmImportMain
                                                                        strYear,
                                                                        intTeqNbr,
                                                                        intTeqNbrLY,
+                                                                       intTeqNbrPLY,
                                                                        IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")))
 
                             Else
@@ -2229,6 +2238,7 @@ Friend Class frmImportMain
                                                                        strYear,
                                                                        intTeqNbr,
                                                                        intTeqNbrLY,
+                                                                       intTeqNbrPLY,
                                                                        IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")))
 
 
@@ -2597,7 +2607,8 @@ Friend Class frmImportMain
                               cmbPerioden.SelectedItem,
                               strYear,
                               intTeqNbr,
-                              intTeqNbrLY)
+                              intTeqNbrLY,
+                              intTeqNbrPLY)
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Problem " + (Err.Number.ToString))

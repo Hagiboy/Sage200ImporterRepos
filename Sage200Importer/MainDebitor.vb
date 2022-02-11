@@ -1479,7 +1479,8 @@ Public Class MainDebitor
                                                     ByVal intAccounting As Int32,
                                                     ByRef intDebiNew As Int32,
                                                     ByVal intTeqNbr As Int16,
-                                                    ByVal intTeqNbrLY As Int16) As Int16
+                                                    ByVal intTeqNbrLY As Int16,
+                                                    ByVal intTeqNbrPLY As Int16) As Int16
 
         'Return 0=ok, 1=Neue Debi genereiert und gesetzt, 2=Rep_Ref nicht definiert, 3=Nicht in Tab_Repbetriebe, 4=keine Angaben in Tab_Repbetriebe
 
@@ -1505,7 +1506,7 @@ Public Class MainDebitor
             If objdbSQLConn.State = ConnectionState.Closed Then
                 objdbSQLConn.Open()
             End If
-            objdbSQLCmd.CommandText = "SELECT * FROM debibuchung WHERE teqnbr IN (" + intTeqNbr.ToString + ", " + intTeqNbrLY.ToString + ")" +
+            objdbSQLCmd.CommandText = "SELECT * FROM debibuchung WHERE teqnbr IN (" + intTeqNbr.ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString + ")" +
                                                                  " AND belnbr=" + lngRGNbr.ToString +
                                                                  " AND typ='R'"
 
@@ -1678,6 +1679,7 @@ Public Class MainDebitor
                                                 ByRef strYear As String,
                                                 ByRef intTeqNbr As Int16,
                                                 ByRef intTeqNbrLY As Int16,
+                                                ByRef intTeqNbrPLY As Int16,
                                                 ByRef strPGVType As String) As Int16
 
         Dim dblNettoBetrag As Double
@@ -1826,7 +1828,8 @@ Public Class MainDebitor
                                                           "2021",
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
                             Application.DoEvents()
 
                         ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -1848,7 +1851,8 @@ Public Class MainDebitor
                                                           "2022",
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
                             Application.DoEvents()
 
                         End If
@@ -1916,7 +1920,8 @@ Public Class MainDebitor
                                                           Year(datPGVEnd).ToString,
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
 
                         Application.DoEvents()
 
@@ -2020,7 +2025,8 @@ Public Class MainDebitor
                                                           "2021",
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
                         Application.DoEvents()
 
                     ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -2042,7 +2048,8 @@ Public Class MainDebitor
                                                           "2022",
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
                         Application.DoEvents()
 
                     End If
@@ -2098,7 +2105,8 @@ Public Class MainDebitor
                                                   strActualYear,
                                                   strYear,
                                                   intTeqNbr,
-                                                  intTeqNbrLY)
+                                                  intTeqNbrLY,
+                                                  intTeqNbrPLY)
                 Application.DoEvents()
             End If
             Return 0
@@ -2141,6 +2149,7 @@ Public Class MainDebitor
                                                 ByRef strYear As String,
                                                 ByRef intTeqNbr As Int16,
                                                 ByRef intTeqNbrLY As Int16,
+                                                ByRef intTeqNbrPLY As Int16,
                                                 ByRef strPGVType As String) As Int16
 
         Dim dblNettoBetrag As Double
@@ -2289,7 +2298,8 @@ Public Class MainDebitor
                                                       Year(datPGVEnd).ToString,
                                                       strYear,
                                                       intTeqNbr,
-                                                      intTeqNbrLY)
+                                                      intTeqNbrLY,
+                                                      intTeqNbrPLY)
 
                         Application.DoEvents()
 
@@ -2376,7 +2386,8 @@ Public Class MainDebitor
                                                       "2021",
                                                       strYear,
                                                       intTeqNbr,
-                                                      intTeqNbrLY)
+                                                      intTeqNbrLY,
+                                                      intTeqNbrPLY)
                         Application.DoEvents()
 
                     ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -2398,7 +2409,8 @@ Public Class MainDebitor
                                                       "2022",
                                                       strYear,
                                                       intTeqNbr,
-                                                      intTeqNbrLY)
+                                                      intTeqNbrLY,
+                                                      intTeqNbrPLY)
                         Application.DoEvents()
 
                     End If
@@ -2450,7 +2462,8 @@ Public Class MainDebitor
                                               strActualYear,
                                               strYear,
                                               intTeqNbr,
-                                              intTeqNbrLY)
+                                              intTeqNbrLY,
+                                              intTeqNbrPLY)
                 Application.DoEvents()
             End If
             Return 0

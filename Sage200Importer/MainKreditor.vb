@@ -215,9 +215,32 @@ Public Class MainKreditor
             If objdbconnZHDB02.State = ConnectionState.Closed Then
                 objdbconnZHDB02.Open()
             End If
-            objsqlcommandZHDB02.CommandText = "SELECT Rep_Firma, Rep_Strasse, Rep_PLZ, Rep_Ort, Rep_KredGegenKonto, Rep_Gruppe, Rep_Vertretung, Rep_Ansprechpartner, Rep_Land, Rep_Tel1, Rep_Fax, Rep_Mail, " +
-                                                "Rep_Language, Rep_Kredi_MWSTNr, Rep_Kreditlimite, Rep_Kred_Pay_Def, Rep_Kred_Bank_Name, Rep_Kred_Bank_PLZ, Rep_Kred_Bank_Ort, Rep_Kred_IBAN, Rep_Kred_Bank_BIC, " +
-                                                "Rep_Kred_Currency, Rep_Kred_PCKto, Rep_Kred_Aufwandskonto FROM Tab_Repbetriebe WHERE PKNr=" + lngKrediNbr.ToString
+            objsqlcommandZHDB02.CommandText = "SELECT Rep_Firma, 
+                                                      Rep_Strasse, 
+                                                      Rep_PLZ, 
+                                                      Rep_Ort, 
+                                                      Rep_KredGegenKonto, 
+                                                      Rep_Gruppe, 
+                                                      Rep_Vertretung, 
+                                                      Rep_Ansprechpartner, 
+                                                      Rep_Land, 
+                                                      Rep_Tel1, 
+                                                      Rep_Fax, 
+                                                      Rep_Mail, " +
+                                                     "Rep_Language, 
+                                                      Rep_Kredi_MWSTNr, 
+                                                      Rep_Kreditlimite, 
+                                                      Rep_Kred_Pay_Def, 
+                                                      Rep_Kred_Bank_Name, 
+                                                      Rep_Kred_Bank_PLZ, 
+                                                      Rep_Kred_Bank_Ort, 
+                                                      Rep_Kred_IBAN, 
+                                                      Rep_Kred_Bank_BIC, " +
+                                                     "Rep_Kred_Currency, 
+                                                      Rep_Kred_PCKto, 
+                                                      Rep_Kred_Aufwandskonto 
+                                                FROM Tab_Repbetriebe WHERE PKNr=" + lngKrediNbr.ToString
+
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
             objdtKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
 
@@ -228,7 +251,8 @@ Public Class MainKreditor
                 'Zahlungsbedingung suchen
                 'objdtKreditor.Clear()
                 'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
-                objsqlcommandZHDB02.CommandText = "SELECT Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
+                objsqlcommandZHDB02.CommandText = "SELECT Tab_Repbetriebe.PKNr, 
+                                                          t_sage_zahlungskondition.SageID " +
                                                   "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition ON Tab_Repbetriebe.Rep_Kred_ZKonditionID = t_sage_zahlungskondition.ID " +
                                                   "WHERE Tab_Repbetriebe.PKNr=" + lngKrediNbr.ToString
                 objDAKreditor.SelectCommand = objsqlcommandZHDB02
@@ -1016,7 +1040,8 @@ Public Class MainKreditor
                                                  ByRef intBelegNbr As Int32,
                                                  ByVal strTyp As String,
                                                  ByVal intTeqNr As Int32,
-                                                 ByVal intTeqNrLY As Int32) As Int16
+                                                 ByVal intTeqNrLY As Int32,
+                                                 ByVal intTeqNrPLY As Int32) As Int16
 
         '0=ok, 1=Beleg existierte schon, 9=Problem
 
@@ -1036,7 +1061,7 @@ Public Class MainKreditor
 
             Do Until intReturnvalue = 0
 
-                objdbMSSQLCmd.CommandText = "SELECT lfnbrk FROM kredibuchung WHERE teqnbr IN(" + intTeqNr.ToString + ", " + intTeqNrLY.ToString + ")" +
+                objdbMSSQLCmd.CommandText = "SELECT lfnbrk FROM kredibuchung WHERE teqnbr IN(" + intTeqNr.ToString + ", " + intTeqNrLY.ToString + ", " + intTeqNrPLY.ToString + ")" +
                                                                         " AND typ='" + strTyp + "'" +
                                                                         " AND belnbrint=" + intBelegNbr.ToString
                 tblKrediBeleg.Rows.Clear()
@@ -1092,6 +1117,7 @@ Public Class MainKreditor
                                                 ByRef strYear As String,
                                                 ByRef intTeqNbr As Int16,
                                                 ByRef intTeqNbrLY As Int16,
+                                                ByRef intTeqNbrPLY As Int16,
                                                 ByRef strPGVType As String) As Int16
 
         Dim dblNettoBetrag As Double
@@ -1243,7 +1269,8 @@ Public Class MainKreditor
                                                           "2021",
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
                             Application.DoEvents()
 
                         ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -1265,7 +1292,8 @@ Public Class MainKreditor
                                                           "2022",
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
                             Application.DoEvents()
 
                         End If
@@ -1333,7 +1361,8 @@ Public Class MainKreditor
                                                           Year(datPGVEnd).ToString,
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
 
                         Application.DoEvents()
 
@@ -1430,7 +1459,8 @@ Public Class MainKreditor
                                                           "2021",
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
                         Application.DoEvents()
 
                     ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -1452,7 +1482,8 @@ Public Class MainKreditor
                                                           "2022",
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
                         Application.DoEvents()
 
                     End If
@@ -1507,7 +1538,8 @@ Public Class MainKreditor
                                                   strActualYear,
                                                   strYear,
                                                   intTeqNbr,
-                                                  intTeqNbrLY)
+                                                  intTeqNbrLY,
+                                                  intTeqNbrPLY)
                 Application.DoEvents()
             End If
             Return 0
@@ -1551,6 +1583,7 @@ Public Class MainKreditor
                                                 ByRef strYear As String,
                                                 ByRef intTeqNbr As Int16,
                                                 ByRef intTeqNbrLY As Int16,
+                                                ByRef intTeqNbrPLY As Int16,
                                                 ByRef strPGVType As String) As Int16
 
         Dim dblNettoBetrag As Double
@@ -1681,7 +1714,8 @@ Public Class MainKreditor
                                                           "2021",
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
                             Application.DoEvents()
 
                         ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -1703,7 +1737,8 @@ Public Class MainKreditor
                                                           "2022",
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
                             Application.DoEvents()
 
                         End If
@@ -1768,7 +1803,8 @@ Public Class MainKreditor
                                                           Year(datPGVEnd).ToString,
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
 
                         Application.DoEvents()
 
@@ -1860,7 +1896,8 @@ Public Class MainKreditor
                                                           "2021",
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
                         Application.DoEvents()
 
                     ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -1882,7 +1919,8 @@ Public Class MainKreditor
                                                           "2022",
                                                           strYear,
                                                           intTeqNbr,
-                                                          intTeqNbrLY)
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY)
                         Application.DoEvents()
 
                     End If
@@ -1934,7 +1972,8 @@ Public Class MainKreditor
                                                   strActualYear,
                                                   strYear,
                                                   intTeqNbr,
-                                                  intTeqNbrLY)
+                                                  intTeqNbrLY,
+                                                  intTeqNbrPLY)
                 Application.DoEvents()
             End If
             Return 0

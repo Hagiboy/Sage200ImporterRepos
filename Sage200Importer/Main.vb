@@ -608,7 +608,8 @@ Friend NotInheritable Class Main
                                        ByVal strPeriod As String,
                                        ByRef strYear As String,
                                        ByRef intTeqNbr As Int16,
-                                       ByRef intTeqNbrLY As Int16) As Int16
+                                       ByRef intTeqNbrLY As Int16,
+                                       ByRef intTeqNbrPLY As Int16) As Int16
 
         '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
 
@@ -621,6 +622,7 @@ Friend NotInheritable Class Main
         Dim strPeriodenInfo As String
         Dim objdtPeriodeLY As New DataTable
         Dim strPeriodeLY As String
+        Dim strPeriodePLY As String
 
         Try
 
@@ -652,17 +654,36 @@ Friend NotInheritable Class Main
             strPeriodenInfo = objFinanz.GetPeriListe(0)
 
             strPeriode = Split(strPeriodenInfo, "{>}")
+
             'Teq-Nr von Vorjar lesen um in Suche nutzen zu können
+            objdtPeriodeLY.Rows.Clear()
             strPeriodeLY = (Val(Left(strPeriode(4), 4)) - 1).ToString + Right(strPeriode(4), 4)
             objsqlCom.CommandText = "SELECT teqnbr FROM periode WHERE mandid='" + strMandant + "' AND dtebis='" + strPeriodeLY + "'"
             objsqlCom.Connection = objsqlConn
             objsqlConn.Open()
             objdtPeriodeLY.Load(objsqlCom.ExecuteReader)
             objsqlConn.Close()
-            'Variable übergeben, Achtung nicht definitiv. Situatin ist nicht klar wenn Vorjahr nicht existiert
-            intTeqNbrLY = objdtPeriodeLY.Rows(0).Item("teqnbr")
+            If objdtPeriodeLY.Rows.Count > 0 Then
+                intTeqNbrLY = objdtPeriodeLY.Rows(0).Item("teqnbr")
+            Else
+                intTeqNbrLY = 0
+            End If
+            'Teq-Nr vom Vorvorjahr
+            objdtPeriodeLY.Rows.Clear()
+            strPeriodePLY = (Val(Left(strPeriode(4), 4)) - 2).ToString + Right(strPeriode(4), 4)
+            objsqlCom.CommandText = "SELECT teqnbr FROM periode WHERE mandid='" + strMandant + "' AND dtebis='" + strPeriodePLY + "'"
+            objsqlCom.Connection = objsqlConn
+            objsqlConn.Open()
+            objdtPeriodeLY.Load(objsqlCom.ExecuteReader)
+            objsqlConn.Close()
+            If objdtPeriodeLY.Rows.Count > 0 Then
+                intTeqNbrPLY = objdtPeriodeLY.Rows(0).Item("teqnbr")
+            Else
+                intTeqNbrPLY = 0
+            End If
+
             intTeqNbr = strPeriode(8)
-            objdtInfo.Rows.Add("GeschäftsJ", strPeriode(3) + "-" + strPeriode(4) + ", teq: " + strPeriode(8).ToString + ", " + intTeqNbrLY.ToString)
+            objdtInfo.Rows.Add("GeschäftsJ", strPeriode(3) + "-" + strPeriode(4) + ", teq: " + strPeriode(8).ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString)
             objdtInfo.Rows.Add("Buchungen/ Status", strPeriode(5) + "-" + strPeriode(6) + "/ " + strPeriode(2))
             strYear = Strings.Left(strPeriode(4), 4)
 
@@ -1013,6 +1034,7 @@ ErrorHandler:
                                         ByVal strcmbBuha As String,
                                         ByVal intTeqNbr As Int16,
                                         ByVal intTeqNbrLY As Int16,
+                                        ByVal intTeqNbrPLY As Int16,
                                         ByVal strYear As String,
                                         ByVal strPeriode As String) As Integer
 
@@ -1425,7 +1447,8 @@ ErrorHandler:
                                                                          intAccounting,
                                                                          intLinkedDebitor,
                                                                          intTeqNbr,
-                                                                         intTeqNbrLY)
+                                                                         intTeqNbrLY,
+                                                                         intTeqNbrPLY)
                     row("lngLinkedDeb") = intLinkedDebitor
 
                     intReturnValue = MainDebitor.FcCheckLinkedRG(objdbBuha,
