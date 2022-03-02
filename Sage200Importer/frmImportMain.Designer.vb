@@ -40,6 +40,8 @@ Partial Class frmImportMain
         Me.butMail = New System.Windows.Forms.Button()
         Me.butDblDebis = New System.Windows.Forms.Button()
         Me.butDblKredis = New System.Windows.Forms.Button()
+        Me.chkValutaCorrect = New System.Windows.Forms.CheckBox()
+        Me.dtpValutaCorrect = New System.Windows.Forms.DateTimePicker()
         Me.GroupBox1.SuspendLayout()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -107,7 +109,7 @@ Partial Class frmImportMain
         'butImport
         '
         Me.butImport.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.butImport.Location = New System.Drawing.Point(1536, 54)
+        Me.butImport.Location = New System.Drawing.Point(1536, 105)
         Me.butImport.Name = "butImport"
         Me.butImport.Size = New System.Drawing.Size(132, 41)
         Me.butImport.TabIndex = 4
@@ -135,6 +137,7 @@ Partial Class frmImportMain
         Me.dgvInfo.DefaultCellStyle = DataGridViewCellStyle1
         Me.dgvInfo.Location = New System.Drawing.Point(1176, 19)
         Me.dgvInfo.Name = "dgvInfo"
+        Me.dgvInfo.RowTemplate.Height = 18
         Me.dgvInfo.Size = New System.Drawing.Size(354, 133)
         Me.dgvInfo.TabIndex = 7
         '
@@ -202,11 +205,33 @@ Partial Class frmImportMain
         Me.butDblKredis.UseVisualStyleBackColor = True
         Me.butDblKredis.Visible = False
         '
+        'chkValutaCorrect
+        '
+        Me.chkValutaCorrect.AutoSize = True
+        Me.chkValutaCorrect.Location = New System.Drawing.Point(1536, 58)
+        Me.chkValutaCorrect.Name = "chkValutaCorrect"
+        Me.chkValutaCorrect.Size = New System.Drawing.Size(118, 17)
+        Me.chkValutaCorrect.TabIndex = 15
+        Me.chkValutaCorrect.Text = "Valuta-Anpassung?"
+        Me.chkValutaCorrect.UseVisualStyleBackColor = True
+        '
+        'dtpValutaCorrect
+        '
+        Me.dtpValutaCorrect.Enabled = False
+        Me.dtpValutaCorrect.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.dtpValutaCorrect.Location = New System.Drawing.Point(1535, 76)
+        Me.dtpValutaCorrect.MinDate = New Date(2020, 1, 1, 0, 0, 0, 0)
+        Me.dtpValutaCorrect.Name = "dtpValutaCorrect"
+        Me.dtpValutaCorrect.Size = New System.Drawing.Size(109, 20)
+        Me.dtpValutaCorrect.TabIndex = 16
+        '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1672, 637)
+        Me.Controls.Add(Me.dtpValutaCorrect)
+        Me.Controls.Add(Me.chkValutaCorrect)
         Me.Controls.Add(Me.butDblKredis)
         Me.Controls.Add(Me.butDblDebis)
         Me.Controls.Add(Me.butMail)
@@ -249,4 +274,6 @@ Partial Class frmImportMain
     Friend WithEvents butMail As Button
     Friend WithEvents butDblDebis As Button
     Friend WithEvents butDblKredis As Button
+    Friend WithEvents chkValutaCorrect As CheckBox
+    Friend WithEvents dtpValutaCorrect As DateTimePicker
 End Class

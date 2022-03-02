@@ -530,7 +530,7 @@ Public Class MainDebitor
                                           strIBANNr,
                                           strBankBIC,
                                           strBankClearing,
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Currency")), "CHF", objdtDebitor.Rows(0).Item("Rep_Kred_Currency")),
+                                          IIf(String.IsNullOrEmpty(objdtDebitor.Rows(0).Item("Rep_Kred_Currency")), "CHF", objdtDebitor.Rows(0).Item("Rep_Kred_Currency")),
                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")), "3200", objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")),
                                           intDebZB,
                                           strSachB,
@@ -1680,7 +1680,10 @@ Public Class MainDebitor
                                                 ByRef intTeqNbr As Int16,
                                                 ByRef intTeqNbrLY As Int16,
                                                 ByRef intTeqNbrPLY As Int16,
-                                                ByRef strPGVType As String) As Int16
+                                                ByRef strPGVType As String,
+                                                ByRef datPeriodFrom As Date,
+                                                ByRef datPeriodTo As Date,
+                                                ByRef strPeriodStatus As String) As Int16
 
         Dim dblNettoBetrag As Double
         Dim intSollKonto As Int16
@@ -1829,7 +1832,10 @@ Public Class MainDebitor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
                             Application.DoEvents()
 
                         ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -1852,7 +1858,10 @@ Public Class MainDebitor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
                             Application.DoEvents()
 
                         End If
@@ -1921,7 +1930,10 @@ Public Class MainDebitor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
 
                         Application.DoEvents()
 
@@ -2026,7 +2038,10 @@ Public Class MainDebitor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
                         Application.DoEvents()
 
                     ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -2049,7 +2064,10 @@ Public Class MainDebitor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
                         Application.DoEvents()
 
                     End If
@@ -2106,7 +2124,10 @@ Public Class MainDebitor
                                                   strYear,
                                                   intTeqNbr,
                                                   intTeqNbrLY,
-                                                  intTeqNbrPLY)
+                                                  intTeqNbrPLY,
+                                                  datPeriodFrom,
+                                                  datPeriodTo,
+                                                  strPeriodStatus)
                 Application.DoEvents()
             End If
             Return 0
@@ -2150,7 +2171,10 @@ Public Class MainDebitor
                                                 ByRef intTeqNbr As Int16,
                                                 ByRef intTeqNbrLY As Int16,
                                                 ByRef intTeqNbrPLY As Int16,
-                                                ByRef strPGVType As String) As Int16
+                                                ByRef strPGVType As String,
+                                                ByRef datPeriodFrom As Date,
+                                                ByRef datPeriodTo As Date,
+                                                ByRef strPeriodStatus As String) As Int16
 
         Dim dblNettoBetrag As Double
         Dim intSollKonto As Int16
@@ -2299,7 +2323,10 @@ Public Class MainDebitor
                                                       strYear,
                                                       intTeqNbr,
                                                       intTeqNbrLY,
-                                                      intTeqNbrPLY)
+                                                      intTeqNbrPLY,
+                                                      datPeriodFrom,
+                                                      datPeriodTo,
+                                                      strPeriodStatus)
 
                         Application.DoEvents()
 
@@ -2387,7 +2414,10 @@ Public Class MainDebitor
                                                       strYear,
                                                       intTeqNbr,
                                                       intTeqNbrLY,
-                                                      intTeqNbrPLY)
+                                                      intTeqNbrPLY,
+                                                      datPeriodFrom,
+                                                      datPeriodTo,
+                                                      strPeriodStatus)
                         Application.DoEvents()
 
                     ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -2410,7 +2440,10 @@ Public Class MainDebitor
                                                       strYear,
                                                       intTeqNbr,
                                                       intTeqNbrLY,
-                                                      intTeqNbrPLY)
+                                                      intTeqNbrPLY,
+                                                      datPeriodFrom,
+                                                      datPeriodTo,
+                                                      strPeriodStatus)
                         Application.DoEvents()
 
                     End If
@@ -2463,7 +2496,10 @@ Public Class MainDebitor
                                               strYear,
                                               intTeqNbr,
                                               intTeqNbrLY,
-                                              intTeqNbrPLY)
+                                              intTeqNbrPLY,
+                                              datPeriodFrom,
+                                              datPeriodTo,
+                                              strPeriodStatus)
                 Application.DoEvents()
             End If
             Return 0

@@ -58,6 +58,9 @@ Friend Class frmImportMain
     Public intTeqNbr As Int16
     Public intTeqNbrLY As Int16
     Public intTeqNbrPLY As Int16
+    Public datPeriodFrom As Date
+    Public datPeriodTo As Date
+    Public strPeriodStatus As String
     'Public boodgvSet As Boolean = False
 
     Public Sub InitVar()
@@ -153,7 +156,10 @@ Friend Class frmImportMain
                                   strYear,
                                   intTeqNbr,
                                   intTeqNbrLY,
-                                  intTeqNbrPLY)
+                                  intTeqNbrPLY,
+                                  datPeriodFrom,
+                                  datPeriodTo,
+                                  strPeriodStatus)
 
             'Transitorische Buchungen?
             'Call Main.fcCheckTransitorischeDebit(cmbBuha.SelectedValue,
@@ -202,7 +208,12 @@ Friend Class frmImportMain
                                    intTeqNbrLY,
                                    intTeqNbrPLY,
                                    strYear,
-                                   cmbPerioden.SelectedItem)
+                                   cmbPerioden.SelectedItem,
+                                   datPeriodFrom,
+                                   datPeriodTo,
+                                   strPeriodStatus,
+                                   chkValutaCorrect.Checked,
+                                   dtpValutaCorrect.Value)
 
             'Anzahl schreiben
             txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
@@ -1399,7 +1410,10 @@ Friend Class frmImportMain
                                                                    intTeqNbr,
                                                                    intTeqNbrLY,
                                                                    intTeqNbrPLY,
-                                                                   IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")))
+                                                                   IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")),
+                                                                   datPeriodFrom,
+                                                                   datPeriodTo,
+                                                                   strPeriodStatus)
 
 
                             Else
@@ -1432,7 +1446,10 @@ Friend Class frmImportMain
                                                                    intTeqNbr,
                                                                    intTeqNbrLY,
                                                                    intTeqNbrPLY,
-                                                                   IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")))
+                                                                   IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")),
+                                                                   datPeriodFrom,
+                                                                   datPeriodTo,
+                                                                   strPeriodStatus)
                             End If
 
 
@@ -1632,7 +1649,10 @@ Friend Class frmImportMain
                               strYear,
                               intTeqNbr,
                               intTeqNbrLY,
-                              intTeqNbrPLY)
+                              intTeqNbrPLY,
+                              datPeriodFrom,
+                              datPeriodTo,
+                              strPeriodStatus)
 
             'Transitorische Buchungen?
             'Call Main.fcCheckTransitorischeKredit(cmbBuha.SelectedValue,
@@ -1673,7 +1693,10 @@ Friend Class frmImportMain
                                 objdtInfo,
                                 cmbBuha.Text,
                                 strYear,
-                                cmbPerioden.SelectedItem)
+                                cmbPerioden.SelectedItem,
+                                datPeriodFrom,
+                                datPeriodTo,
+                                strPeriodStatus)
 
             'Anzahl schreiben
             txtNumber.Text = objdtKreditorenHead.Rows.Count.ToString
@@ -2206,7 +2229,10 @@ Friend Class frmImportMain
                                                                        intTeqNbr,
                                                                        intTeqNbrLY,
                                                                        intTeqNbrPLY,
-                                                                       IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")))
+                                                                       IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")),
+                                                                       datPeriodFrom,
+                                                                       datPeriodTo,
+                                                                       strPeriodStatus)
 
                             Else
 
@@ -2239,7 +2265,10 @@ Friend Class frmImportMain
                                                                        intTeqNbr,
                                                                        intTeqNbrLY,
                                                                        intTeqNbrPLY,
-                                                                       IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")))
+                                                                       IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")),
+                                                                       datPeriodFrom,
+                                                                       datPeriodTo,
+                                                                       strPeriodStatus)
 
 
                             End If
@@ -2608,7 +2637,10 @@ Friend Class frmImportMain
                               strYear,
                               intTeqNbr,
                               intTeqNbrLY,
-                              intTeqNbrPLY)
+                              intTeqNbrPLY,
+                              datPeriodFrom,
+                              datPeriodTo,
+                              strPeriodStatus)
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Problem " + (Err.Number.ToString))
@@ -2620,4 +2652,13 @@ Friend Class frmImportMain
 
     End Sub
 
+    Private Sub chkValutaCorrect_CheckedChanged(sender As Object, e As EventArgs) Handles chkValutaCorrect.CheckedChanged
+
+        If chkValutaCorrect.Checked Then
+            dtpValutaCorrect.Enabled = True
+        Else
+            dtpValutaCorrect.Enabled = False
+        End If
+
+    End Sub
 End Class

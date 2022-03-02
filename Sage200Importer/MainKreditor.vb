@@ -1118,7 +1118,10 @@ Public Class MainKreditor
                                                 ByRef intTeqNbr As Int16,
                                                 ByRef intTeqNbrLY As Int16,
                                                 ByRef intTeqNbrPLY As Int16,
-                                                ByRef strPGVType As String) As Int16
+                                                ByRef strPGVType As String,
+                                                ByRef datPeriodFrom As Date,
+                                                ByRef datPeriodTo As Date,
+                                                ByRef strPeriodStatus As String) As Int16
 
         Dim dblNettoBetrag As Double
         Dim intSollKonto As Int16
@@ -1270,7 +1273,10 @@ Public Class MainKreditor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
                             Application.DoEvents()
 
                         ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -1293,7 +1299,10 @@ Public Class MainKreditor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
                             Application.DoEvents()
 
                         End If
@@ -1362,7 +1371,10 @@ Public Class MainKreditor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
 
                         Application.DoEvents()
 
@@ -1460,7 +1472,10 @@ Public Class MainKreditor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
                         Application.DoEvents()
 
                     ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -1483,7 +1498,10 @@ Public Class MainKreditor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
                         Application.DoEvents()
 
                     End If
@@ -1539,7 +1557,10 @@ Public Class MainKreditor
                                                   strYear,
                                                   intTeqNbr,
                                                   intTeqNbrLY,
-                                                  intTeqNbrPLY)
+                                                  intTeqNbrPLY,
+                                                  datPeriodFrom,
+                                                  datPeriodTo,
+                                                  strPeriodStatus)
                 Application.DoEvents()
             End If
             Return 0
@@ -1584,7 +1605,10 @@ Public Class MainKreditor
                                                 ByRef intTeqNbr As Int16,
                                                 ByRef intTeqNbrLY As Int16,
                                                 ByRef intTeqNbrPLY As Int16,
-                                                ByRef strPGVType As String) As Int16
+                                                ByRef strPGVType As String,
+                                                ByRef datPeriodFrom As Date,
+                                                ByRef datPeriodTo As Date,
+                                                ByRef strPeriodStatus As String) As Int16
 
         Dim dblNettoBetrag As Double
         Dim intSollKonto As Int16
@@ -1715,7 +1739,10 @@ Public Class MainKreditor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
                             Application.DoEvents()
 
                         ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -1738,7 +1765,10 @@ Public Class MainKreditor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
                             Application.DoEvents()
 
                         End If
@@ -1804,7 +1834,10 @@ Public Class MainKreditor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
 
                         Application.DoEvents()
 
@@ -1897,7 +1930,10 @@ Public Class MainKreditor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
                         Application.DoEvents()
 
                     ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
@@ -1920,7 +1956,10 @@ Public Class MainKreditor
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
-                                                          intTeqNbrPLY)
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
                         Application.DoEvents()
 
                     End If
@@ -1973,7 +2012,10 @@ Public Class MainKreditor
                                                   strYear,
                                                   intTeqNbr,
                                                   intTeqNbrLY,
-                                                  intTeqNbrPLY)
+                                                  intTeqNbrPLY,
+                                                  datPeriodFrom,
+                                                  datPeriodTo,
+                                                  strPeriodStatus)
                 Application.DoEvents()
             End If
             Return 0

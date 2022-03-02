@@ -609,7 +609,10 @@ Friend NotInheritable Class Main
                                        ByRef strYear As String,
                                        ByRef intTeqNbr As Int16,
                                        ByRef intTeqNbrLY As Int16,
-                                       ByRef intTeqNbrPLY As Int16) As Int16
+                                       ByRef intTeqNbrPLY As Int16,
+                                       ByRef datPeriodFrom As Date,
+                                       ByRef datPeriodTo As Date,
+                                       ByRef strPeriodStatus As String) As Int16
 
         '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
 
@@ -623,6 +626,8 @@ Friend NotInheritable Class Main
         Dim objdtPeriodeLY As New DataTable
         Dim strPeriodeLY As String
         Dim strPeriodePLY As String
+        Dim objdbcmd As New MySqlCommand
+        Dim dtPeriods As New DataTable
 
         Try
 
@@ -691,6 +696,24 @@ Friend NotInheritable Class Main
                                       objsqlCom,
                                       strPeriode(8),
                                       objdtInfo)
+
+            'Perioden-Definition vom Tool einlesen
+            'In einer ersten Phase nur erster DS einlesen
+            objdbcmd.Connection = objdbconn
+            objdbconn.Open()
+            objdbcmd.CommandText = "SELECT * FROM t_sage_buchhaltungen_periods WHERE year=" + strYear + " AND refMandant=" + intAccounting.ToString
+            dtPeriods.Load(objdbcmd.ExecuteReader)
+            objdbconn.Close()
+            If dtPeriods.Rows.Count > 0 Then
+                datPeriodFrom = dtPeriods.Rows(0).Item("periodFrom")
+                datPeriodTo = dtPeriods.Rows(0).Item("periodTo")
+                strPeriodStatus = dtPeriods.Rows(0).Item("status")
+            Else
+                datPeriodFrom = Convert.ToDateTime(strYear + "-01-01 00:00:01")
+                datPeriodTo = Convert.ToDateTime(strYear + "-12-31 23:59:59")
+                strPeriodStatus = "O"
+            End If
+            objdtInfo.Rows.Add("Perioden", datPeriodFrom + " - " + datPeriodTo + "/ " + strPeriodStatus)
 
             'Finanz Buha öffnen
             objfiBuha = Nothing
@@ -909,7 +932,7 @@ ErrorHandler:
             Loop
 
             'Auf aktuelles Jahr gehen
-            cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now()) - 1).ToString)
+            cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now())).ToString)
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Periodendefinition lesen")
@@ -943,13 +966,13 @@ ErrorHandler:
                 strPeriodenDef(2) = objlocdtPeriDef.Rows(0).Item(4).ToString  'Bis
                 strPeriodenDef(3) = objlocdtPeriDef.Rows(0).Item(5)  'Status
 
-                objdtInfo.Rows.Add("Perioden-Def", strPeriodenDef(0))
+                objdtInfo.Rows.Add("Perioden S200", strPeriodenDef(0))
                 objdtInfo.Rows.Add("Von - Bis/ Status", strPeriodenDef(1) + " - " + strPeriodenDef(2) + "/ " + strPeriodenDef(3))
 
                 Return 0
             Else
 
-                objdtInfo.Rows.Add("Perioden-Def", "keine")
+                objdtInfo.Rows.Add("Perioden S200", "keine")
                 objdtInfo.Rows.Add("Von - Bis/ Status", "01.01." + Year(Today()).ToString + " 00:00:00 - " + "31.12." + Year(Today()).ToString + " 23:59:59/ " + "O")
 
                 Return 1
@@ -1036,7 +1059,12 @@ ErrorHandler:
                                         ByVal intTeqNbrLY As Int16,
                                         ByVal intTeqNbrPLY As Int16,
                                         ByVal strYear As String,
-                                        ByVal strPeriode As String) As Integer
+                                        ByVal strPeriode As String,
+                                        ByVal datPeriodFrom As Date,
+                                        ByVal datPeriodTo As Date,
+                                        ByVal strPeriodStatus As String,
+                                        ByVal booValutaCorrect As Boolean,
+                                        ByVal datValutaCorrect As Date) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
         Dim strBitLog As String = ""
@@ -1420,10 +1448,38 @@ ErrorHandler:
                 End If
 
                 'Valuta - Datum 10
-                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")), objdtInfo)
+                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
+                                              objdtInfo,
+                                              datPeriodFrom,
+                                              datPeriodTo,
+                                              strPeriodStatus,
+                                              True)
+                'Falls Problem versuchen mit Valuta-Datum-Anpassung
+                If intReturnValue <> 0 And booValutaCorrect Then
+                    row("datDebValDatum") = datValutaCorrect
+                    intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
+                                              objdtInfo,
+                                              datPeriodFrom,
+                                              datPeriodTo,
+                                              strPeriodStatus,
+                                              True)
+                    If intReturnValue = 0 Then
+                        'Korrektur hat funktioniert Wert auf 2 setzen
+                        intReturnValue = 2
+                    Else
+                        intReturnValue = 3
+                    End If
+
+                End If
                 strBitLog += Trim(intReturnValue.ToString)
                 'RG - Datum 11
-                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebRGDatum")), #1789-09-17#, row("datDebRGDatum")), objdtInfo)
+                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebRGDatum")), #1789-09-17#, row("datDebRGDatum")),
+                                              objdtInfo,
+                                              datPeriodFrom,
+                                              datPeriodTo,
+                                              strPeriodStatus,
+                                              False)
+
                 strBitLog += Trim(intReturnValue.ToString)
                 'Interne Bank 12
                 intReturnValue = MainDebitor.FcCheckDebiIntBank(objdbconn,
@@ -1572,9 +1628,15 @@ ErrorHandler:
                 End If
                 'Valuta Datum 
                 If Mid(strBitLog, 10, 1) <> "0" Then
-                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValD"
-                    'Else
-                    '    row("strDebRef") = strDebiReferenz
+                    If Mid(strBitLog, 10, 1) = "1" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValD"
+                    ElseIf Mid(strBitLog, 10, 1) = "2" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "VDCor"
+                        'Korrektur hat geklappt, Wert wieder auf 0 setzen
+                        strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
+                    ElseIf Mid(strBitLog, 10, 1) = "3" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "VDCorNok"
+                    End If
                 End If
                 'RG Datum 
                 If Mid(strBitLog, 11, 1) <> "0" Then
@@ -1681,7 +1743,12 @@ ErrorHandler:
     End Function
 
 
-    Public Shared Function FcChCeckDate(ByVal datDateToCheck As Date, ByRef objdtInfo As DataTable) As Int16
+    Public Shared Function FcChCeckDate(ByVal datDateToCheck As Date,
+                                        ByRef objdtInfo As DataTable,
+                                        ByVal datPeriodFrom As Date,
+                                        ByVal datPeriodTo As Date,
+                                        ByVal strPeriodStatus As String,
+                                        ByVal booInclPeriods As Boolean) As Int16
 
         'Returns 0=ok, 1=nicht erlaubt, 9=Problem
         Dim datGJVon As Date = Convert.ToDateTime(Left(objdtInfo.Rows(2).Item(1), 4) + "-" + Mid(objdtInfo.Rows(2).Item(1), 5, 2) + "-" + Mid(objdtInfo.Rows(2).Item(1), 7, 2) + " 00:00:00")
@@ -1697,27 +1764,35 @@ ErrorHandler:
             'Ist Datum in Geschäftsjahr - Def und ist Buchen erlaubt?
             If datDateToCheck >= datGJVon And datDateToCheck <= datGJBis Then
                 If booBuhaOpen Then
-                    If objdtInfo.Rows.Count > 3 Then
-                        intActualLine = 4
-                        booPeriodeOpen = True
-                        Do While intActualLine < objdtInfo.Rows.Count
-                            'Wurden zusätzliche Perioden defniert und falls ja, ist der Status offen?
-                            datPerVon = Convert.ToDateTime(Left(objdtInfo.Rows(intActualLine).Item(1), 10) + " 00:00:01")
-                            datPerBis = Convert.ToDateTime(Mid(objdtInfo.Rows(intActualLine).Item(1), 23, 10) + " 23:59:59")
-                            booBuhaOpen = IIf(Right(objdtInfo.Rows(intActualLine).Item(1), 1) = "O", True, False)
-                            If datDateToCheck >= datPerVon And datDateToCheck <= datPerBis Then
-                                If booBuhaOpen Then
-                                    booPeriodeOpen = True
-                                Else
-                                    booPeriodeOpen = False
+                    If booInclPeriods Then
+                        If objdtInfo.Rows.Count > 3 Then
+                            intActualLine = 4
+                            booPeriodeOpen = True
+                            Do While intActualLine < objdtInfo.Rows.Count
+                                'Wurden zusätzliche Perioden defniert und falls ja, ist der Status offen?
+                                datPerVon = Convert.ToDateTime(Left(objdtInfo.Rows(intActualLine).Item(1), 10) + " 00:00:00")
+                                datPerBis = Convert.ToDateTime(Mid(objdtInfo.Rows(intActualLine).Item(1), 23, 10) + " 23:59:59")
+                                booBuhaOpen = IIf(Right(objdtInfo.Rows(intActualLine).Item(1), 1) = "O", True, False)
+                                If datDateToCheck >= datPerVon And datDateToCheck <= datPerBis Then
+                                    If booBuhaOpen And booPeriodeOpen Then
+                                        'If datDateToCheck >= datPeriodFrom And datDateToCheck <= datPeriodTo And strPeriodStatus = "O" Then
+                                        booPeriodeOpen = True
+                                        'Else
+                                        'booPeriodeOpen = False
+                                        'End If
+                                    Else
+                                        booPeriodeOpen = False
+                                    End If
                                 End If
+                                intActualLine += 1
+                            Loop
+                            If booPeriodeOpen Then
+                                Return 0
+                            Else
+                                Return 1
                             End If
-                            intActualLine += 2
-                        Loop
-                        If booPeriodeOpen Then
-                            Return 0
                         Else
-                            Return 1
+                            Return 0
                         End If
                     Else
                         Return 0
@@ -3160,7 +3235,10 @@ ErrorHandler:
                                         ByRef objdtInfo As DataTable,
                                         ByVal strcmbBuha As String,
                                         ByVal strYear As String,
-                                        ByVal strPeriode As String) As Integer
+                                        ByVal strPeriode As String,
+                                        ByVal datPeriodFrom As Date,
+                                        ByVal datPeriodTo As Date,
+                                        ByVal strPeriodStatus As String) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
         Dim strBitLog As String = ""
@@ -3458,10 +3536,20 @@ ErrorHandler:
                 If IsDBNull(row("datKredValDatum")) Then
                     row("datKredValDatum") = row("datKredRGDatum")
                 End If
-                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), row("datKredRGDatum"), row("datKredValDatum")), objdtInfo)
+                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), row("datKredRGDatum"), row("datKredValDatum")),
+                                              objdtInfo,
+                                              datPeriodFrom,
+                                              datPeriodTo,
+                                              strPeriodStatus,
+                                              True)
                 strBitLog += Trim(intReturnValue.ToString)
                 'RG - Datum 11
-                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredRGDatum")), #1789-09-17#, row("datKredRGDatum")), objdtInfo)
+                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredRGDatum")), #1789-09-17#, row("datKredRGDatum")),
+                                              objdtInfo,
+                                              datPeriodFrom,
+                                              datPeriodTo,
+                                              strPeriodStatus,
+                                              False)
                 strBitLog += Trim(intReturnValue.ToString)
                 ''Referenz 12
                 If (Not String.IsNullOrEmpty(row("strKredRef"))) And (row("intPayType") = 3 Or row("intPayType") = 10) Then
