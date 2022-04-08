@@ -732,7 +732,10 @@ Public Class MainDebitor
                                             ByVal intBelegNr As Int32,
                                             ByRef objdbAccessConn As OleDb.OleDbConnection,
                                             ByRef objOracleConn As OracleConnection,
-                                            ByRef objMySQLConn As MySqlConnection) As Int16
+                                            ByRef objMySQLConn As MySqlConnection,
+                                            ByVal booDatChanged As Boolean,
+                                            ByVal datDebRGDatum As Date,
+                                            ByVal datDebValDatum As Date) As Int16
 
         'Returns 0=ok, 1=Problem
 
@@ -749,7 +752,8 @@ Public Class MainDebitor
         Dim strMDBName As String
         Dim strBookedFieldName As String
         Dim strBookedDateFieldName As String
-
+        Dim strDebRGFieldName As String
+        Dim strDebValFieldName As String
 
         objMySQLConn.Open()
 
@@ -758,7 +762,8 @@ Public Class MainDebitor
         strNameRGTable = Main.FcReadFromSettings(objMySQLConn, "Buchh_TableDeb", intMandant)
         strBelegNrName = Main.FcReadFromSettings(objMySQLConn, "Buchh_TableRGBelegNrName", intMandant)
         strRGNbrFieldName = Main.FcReadFromSettings(objMySQLConn, "Buchh_TableRGNbrFieldName", intMandant)
-        'strSQL = "UPDATE " + strNameRGTable + " SET gebucht=true, gebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "=" + intBelegNr.ToString + " WHERE " + strRGNbrFieldName + "=" + strRGNbr
+        strDebRGFieldName = Main.FcReadFromSettings(objMySQLConn, "Buchh_DRGDateField", intMandant)
+        strDebValFieldName = Main.FcReadFromSettings(objMySQLConn, "Buchh_DValDateField", intMandant)
 
         Try
 
@@ -766,11 +771,21 @@ Public Class MainDebitor
                 'Access
                 Call Main.FcInitAccessConnecation(objdbAccessConn, strMDBName)
 
-                strSQL = "UPDATE " + strNameRGTable + " SET gebucht=true, gebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "=" + intBelegNr.ToString + " WHERE " + strRGNbrFieldName + "=" + strRGNbr
+                strSQL = "UPDATE " + strNameRGTable + " SET gebucht=true, gebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " +
+                                                            strBelegNrName + "=" + intBelegNr.ToString +
+                                                      " WHERE " + strRGNbrFieldName + "=" + strRGNbr
                 objdbAccessConn.Open()
                 objlocOLEdbcmd.CommandText = strSQL
                 objlocOLEdbcmd.Connection = objdbAccessConn
                 intAffected = objlocOLEdbcmd.ExecuteNonQuery()
+                'Falls Datum changed, dann geänderte Daten in RG - Tabelle schreiben
+                If booDatChanged Then
+                    strSQL = "UPDATE " + strNameRGTable + " SET " + strDebRGFieldName + "=#" + Format(datDebRGDatum, "yyyy-MM-dd").ToString + "#, " +
+                                                                    strDebValFieldName + "=#" + Format(datDebValDatum, "yyyy-MM-dd").ToString + "# " +
+                                                        " WHERE " + strRGNbrFieldName + "=" + strRGNbr
+                    objlocOLEdbcmd.CommandText = strSQL
+                    intAffected = objlocOLEdbcmd.ExecuteNonQuery()
+                End If
 
             ElseIf strRGTableType = "M" Then
                 'MySQL
@@ -782,13 +797,23 @@ Public Class MainDebitor
                     strBookedFieldName = "gebucht"
                     strBookedDateFieldName = "gebuchtDatum"
                 End If
-                strSQL = "UPDATE " + strNameRGTable + " SET " + strBookedFieldName + "=true, " + strBookedDateFieldName + "=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " + strBelegNrName + "=" + intBelegNr.ToString + " WHERE " + strRGNbrFieldName + "=" + strRGNbr
+                strSQL = "UPDATE " + strNameRGTable + " SET " + strBookedFieldName + "=true, " +
+                                                                strBookedDateFieldName + "=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " +
+                                                                strBelegNrName + "=" + intBelegNr.ToString +
+                                                    " WHERE " + strRGNbrFieldName + "=" + strRGNbr
                 objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                 objlocMySQLRGConn.Open()
                 objlocMySQLRGcmd.Connection = objlocMySQLRGConn
                 objlocMySQLRGcmd.CommandText = strSQL
                 intAffected = objlocMySQLRGcmd.ExecuteNonQuery()
-
+                'Falls Datum-Changed dann geänderte Daten in RG-Tabelle schreiben
+                If booDatChanged Then
+                    strSQL = "UPDATE " + strNameRGTable + " SET " + strDebRGFieldName + "=DATE('" + Format(datDebRGDatum, "yyyy-MM-dd").ToString + "'), " +
+                                                                    strDebValFieldName + "=DATE('" + Format(datDebValDatum, "yyyy-MM-dd").ToString + "')" +
+                                                        " WHERE " + strRGNbrFieldName + "=" + strRGNbr
+                    objlocMySQLRGcmd.CommandText = strSQL
+                    intAffected = objlocMySQLRGcmd.ExecuteNonQuery()
+                End If
 
             End If
 

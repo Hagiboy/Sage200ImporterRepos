@@ -271,18 +271,18 @@ Friend Class frmImportMain
             dgvBookings.Columns("dblDebNetto").HeaderText = "Netto"
             dgvBookings.Columns("dblDebNetto").Width = 80
             dgvBookings.Columns("dblDebNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookings.Columns("dblDebNetto").DefaultCellStyle.Format = "N2"
+            dgvBookings.Columns("dblDebNetto").DefaultCellStyle.Format = "N4"
             dgvBookings.Columns("dblDebNetto").ReadOnly = True
             dgvBookings.Columns("dblDebMwSt").DisplayIndex = 8
             dgvBookings.Columns("dblDebMwSt").HeaderText = "MwSt"
             dgvBookings.Columns("dblDebMwSt").Width = 70
             dgvBookings.Columns("dblDebMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookings.Columns("dblDebMwSt").DefaultCellStyle.Format = "N2"
+            dgvBookings.Columns("dblDebMwSt").DefaultCellStyle.Format = "N4"
             dgvBookings.Columns("dblDebBrutto").DisplayIndex = 9
             dgvBookings.Columns("dblDebBrutto").HeaderText = "Brutto"
             dgvBookings.Columns("dblDebBrutto").Width = 80
             dgvBookings.Columns("dblDebBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookings.Columns("dblDebBrutto").DefaultCellStyle.Format = "N2"
+            dgvBookings.Columns("dblDebBrutto").DefaultCellStyle.Format = "N4"
             dgvBookings.Columns("intSubBookings").DisplayIndex = 10
             dgvBookings.Columns("intSubBookings").HeaderText = "Sub"
             dgvBookings.Columns("intSubBookings").Width = 50
@@ -291,6 +291,7 @@ Friend Class frmImportMain
             dgvBookings.Columns("dblSumSubBookings").HeaderText = "Sub-Summe"
             dgvBookings.Columns("dblSumSubBookings").Width = 80
             dgvBookings.Columns("dblSumSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+            dgvBookings.Columns("dblSumSubBookings").DefaultCellStyle.Format = "N4"
             dgvBookings.Columns("lngDebIdentNbr").DisplayIndex = 12
             dgvBookings.Columns("lngDebIdentNbr").HeaderText = "Ident"
             dgvBookings.Columns("lngDebIdentNbr").Width = 80
@@ -362,40 +363,42 @@ Friend Class frmImportMain
 
         Try
 
+            dgvBookingSub.RowHeadersWidth = 24
+
             dgvBookingSub.ShowCellToolTips = False
             dgvBookingSub.AllowUserToAddRows = False
             dgvBookingSub.AllowUserToDeleteRows = False
             dgvBookingSub.Columns("strRGNr").DisplayIndex = 0
-            dgvBookingSub.Columns("strRGNr").Width = 55
+            dgvBookingSub.Columns("strRGNr").Width = 50
             dgvBookingSub.Columns("strRGNr").HeaderText = "RG-Nr"
             dgvBookingSub.Columns("intSollHaben").Width = 20
             dgvBookingSub.Columns("intSollHaben").HeaderText = "S/H"
-            dgvBookingSub.Columns("lngKto").Width = 50
+            dgvBookingSub.Columns("lngKto").Width = 45
             dgvBookingSub.Columns("lngKto").HeaderText = "Konto"
             dgvBookingSub.Columns("strKtoBez").HeaderText = "Bezeichnung"
-            dgvBookingSub.Columns("lngKST").Width = 40
+            dgvBookingSub.Columns("lngKST").Width = 30
             dgvBookingSub.Columns("lngKST").HeaderText = "KST"
             dgvBookingSub.Columns("strKSTBez").Width = 60
             dgvBookingSub.Columns("strKSTBez").HeaderText = "Bezeichnung"
-            dgvBookingSub.Columns("lngProj").Width = 40
+            dgvBookingSub.Columns("lngProj").Width = 30
             dgvBookingSub.Columns("lngProj").HeaderText = "Proj"
             dgvBookingSub.Columns("strProjBez").HeaderText = "Pr.-Bez."
-            dgvBookingSub.Columns("strProjBez").Width = 60
-            dgvBookingSub.Columns("dblNetto").Width = 60
+            dgvBookingSub.Columns("strProjBez").Width = 55
+            dgvBookingSub.Columns("dblNetto").Width = 65
             dgvBookingSub.Columns("dblNetto").HeaderText = "Netto"
             dgvBookingSub.Columns("dblNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookingSub.Columns("dblNetto").DefaultCellStyle.Format = "N2"
-            dgvBookingSub.Columns("dblMwSt").Width = 50
+            dgvBookingSub.Columns("dblNetto").DefaultCellStyle.Format = "N4"
+            dgvBookingSub.Columns("dblMwSt").Width = 60
             dgvBookingSub.Columns("dblMwSt").HeaderText = "MwSt"
             dgvBookingSub.Columns("dblMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookingSub.Columns("dblMwSt").DefaultCellStyle.Format = "N2"
-            dgvBookingSub.Columns("dblBrutto").Width = 60
+            dgvBookingSub.Columns("dblMwSt").DefaultCellStyle.Format = "N4"
+            dgvBookingSub.Columns("dblBrutto").Width = 65
             dgvBookingSub.Columns("dblBrutto").HeaderText = "Brutto"
             dgvBookingSub.Columns("dblBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookingSub.Columns("dblBrutto").DefaultCellStyle.Format = "N2"
-            dgvBookingSub.Columns("dblMwStSatz").Width = 40
+            dgvBookingSub.Columns("dblBrutto").DefaultCellStyle.Format = "N4"
+            dgvBookingSub.Columns("dblMwStSatz").Width = 30
             dgvBookingSub.Columns("dblMwStSatz").HeaderText = "MwStS"
-            dgvBookingSub.Columns("strMwStKey").Width = 40
+            dgvBookingSub.Columns("strMwStKey").Width = 30
             dgvBookingSub.Columns("strMwStKey").HeaderText = "MwStK"
             dgvBookingSub.Columns("strStatusUBText").HeaderText = "Status"
             dgvBookingSub.Columns("strStatusUBText").Width = 135
@@ -931,9 +934,19 @@ Friend Class frmImportMain
                             End If
                             If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then 'And SubRow("strMwStKey") <> "25" Then
                                 If strBuchType = "R" Then
-                                    strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto") * -1, SubRow("strMwStKey"), SubRow("dblMwSt") * -1)     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                                    strSteuerFeld = Main.FcGetSteuerFeld(FBhg,
+                                                                         SubRow("lngKto"),
+                                                                         SubRow("strDebSubText"),
+                                                                         SubRow("dblBrutto") * -1,
+                                                                         SubRow("strMwStKey"),
+                                                                         SubRow("dblMwSt") * -1)     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
                                 Else
-                                    strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strDebSubText"), SubRow("dblBrutto"), SubRow("strMwStKey"), SubRow("dblMwSt"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                                    strSteuerFeld = Main.FcGetSteuerFeld(FBhg,
+                                                                         SubRow("lngKto"),
+                                                                         SubRow("strDebSubText"),
+                                                                         SubRow("dblBrutto"),
+                                                                         SubRow("strMwStKey"),
+                                                                         SubRow("dblMwSt"))     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
                                 End If
                             Else
                                 strSteuerFeld = "STEUERFREI"
@@ -1469,7 +1482,10 @@ Friend Class frmImportMain
                                                                       row("lngBelegNr"),
                                                                       objdbAccessConn,
                                                                       objOracleConn,
-                                                                      objdbConn)
+                                                                      objdbConn,
+                                                                      row("booDatChanged"),
+                                                                      row("datDebRGDatum"),
+                                                                      row("datDebValDatum"))
                         If intReturnValue <> 0 Then
                             'Throw an exception
                         End If
@@ -1696,7 +1712,9 @@ Friend Class frmImportMain
                                 cmbPerioden.SelectedItem,
                                 datPeriodFrom,
                                 datPeriodTo,
-                                strPeriodStatus)
+                                strPeriodStatus,
+                                chkValutaCorrect.Checked,
+                                dtpValutaCorrect.Value)
 
             'Anzahl schreiben
             txtNumber.Text = objdtKreditorenHead.Rows.Count.ToString
@@ -2549,7 +2567,7 @@ Friend Class frmImportMain
         Dim intCheckDblKredis As Int16
         Dim tblKrediBelege As New DataTable
         Dim tblKrediSearch As New DataTable
-        Dim intteqnbr As Int32
+        'Dim intteqnbr As Int32
 
         'Überprüfung ob doppelte Kreditoren existieren
         'Gleiche exterene Beleg-Nr.
@@ -2564,33 +2582,100 @@ Friend Class frmImportMain
 
                 'durch die Debitoren - Belege steppen
                 objdbMSSQLConn.Open()
-                intteqnbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
+                'intteqnbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
 
-                'Zuerst nach Rechnungen suchen
-                objdbSQLcommand.CommandText = "SELECT * FROM kredibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='R' AND NOT belnr IS NULL ORDER BY belnr"
+                'Zuerst nach Rechnungen suchen Sortiert nach Beleg-Nr.
+                'objdbSQLcommand.CommandText = "SELECT * FROM kredibuchung WHERE teqnbr IN (" + intTeqNbr.ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString + ") AND typ='R' AND NOT belnr IS NULL ORDER BY belnr"
+                'objdbSQLcommand.Connection = objdbMSSQLConn
+                'tblKrediBelege.Load(objdbSQLcommand.ExecuteReader)
+                'For Each drKredibelege In tblKrediBelege.Rows
+                '    'Gibt es mehr als einen Beleg mit gleichem Betrag und gleicher externer Beleg-Nr.?
+                '    tblKrediSearch.Rows.Clear()
+                '    'Debug.Print("Suche " + Replace(drKredibelege.item("belnr"), "'", "''"))
+                '    objdbSQLcommand.CommandText = "SELECT COUNT(belnr) FROM kredibuchung WHERE teqnbr IN (" + intTeqNbr.ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString + ") AND typ='R' AND belnr='" + Replace(drKredibelege.item("belnr"), "'", "''") + "'" ' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
+                '    tblKrediSearch.Load(objdbSQLcommand.ExecuteReader)
+                '    If tblKrediSearch.Rows(0).Item(0) > 1 Then
+                '        MessageBox.Show("Mögliche Verdopplung gefunden 'R' belnr " + drKredibelege.item("belnr"), "Verdopplung gefunden", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                '        Debug.Print("Verdopplung " + Replace(drKredibelege.item("belnr"), "'", "''"))
+                '    End If
+                'Next
+
+                'Nach Betrag suchen
+                'Zuerst Tabelle mit den Summen bilden
+                objdbSQLcommand.CommandText = "SELECT lfnbrk, " +
+                                                    "MAX(belnbrint) AS belnbrint, " +
+                                                    "MAX(belnr) AS belnbrext, " +
+                                                    "MAX(beltext) As beltext, " +
+                                                    "SUM(buchung.betrag) AS sumBetrag, " +
+                                                    "COUNT(buchung.betrag) AS nbrSubs " +
+                                              "FROM kredibuchung " +
+                                              "INNER JOIN buchung ON kredibuchung.lfnbrk = buchung.dklfnbr " +
+                                              "WHERE kredibuchung.teqnbr IN (" + intTeqNbr.ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString + ") " +
+                                                    "And kredibuchung.typ = 'R' " +
+                                                    "AND buchung.ktotyp = 'HK' " +
+                                              "GROUP BY kredibuchung.lfnbrk"
+
                 objdbSQLcommand.Connection = objdbMSSQLConn
                 tblKrediBelege.Load(objdbSQLcommand.ExecuteReader)
+
+                'Spalte hinzufügen für Kombi-Feld Text / Betrag
+                tblKrediBelege.Columns.Add("combinedTA", GetType(String))
+                'Durch die Tabelle gehen und das Feld abfüllen
+                For Each drKBelege As DataRow In tblKrediBelege.Rows
+                    drKBelege.Item("combinedTA") = drKBelege.Item("beltext") + drKBelege.Item("sumBetrag").ToString
+                    'Debug.Print("combined: " + drKBelege.Item("combinedTA"))
+                Next
+
+                'Gruppiren nach diesem Feld
+                'Zuerst Tabelle in DB löschen
+                objdbcommandZHDB02.Connection = objdbConnZHDB02
+                objdbcommandZHDB02.CommandText = "DELETE FROM tblKrediBelegeDbl"
+                objdbConnZHDB02.Open()
+                objdbcommandZHDB02.ExecuteNonQuery()
+
+                'Tabelle erstellen und befüllen
+                'objdbcommandZHDB02.CommandText = "CREATE TABLE tblKrediBelegeDbl(lfnbrk int, " +
+                '                                                        "beltext text, " +
+                '                                                        "sumBetrag double, " +
+                '                                                        "nbrSubs int)"
+                objdbcommandZHDB02.ExecuteNonQuery()
+                For Each drkBelege In tblKrediBelege.Rows
+                    objdbcommandZHDB02.CommandText = "INSERT INTO tblKrediBelegeDbl VALUES(" + drkBelege.item("lfnbrk").ToString + ", " +
+                                                                                               drkBelege.item("belnbrint").ToString + ", '" +
+                                                                                               drkBelege.item("belnbrext") + "', '" +
+                                                                                               drkBelege.item("combinedTA") + "', " +
+                                                                                               drkBelege.item("sumBetrag").ToString + ", " +
+                                                                                               drkBelege.item("nbrSubs").ToString + ")"
+                    objdbcommandZHDB02.ExecuteNonQuery()
+                Next
+                objdbConnZHDB02.Close()
+
+
+
+
                 For Each drKredibelege In tblKrediBelege.Rows
                     'Gibt es mehr als einen Beleg mit gleichem Betrag und gleicher externer Beleg-Nr.?
+                    tblKrediSearch.Constraints.Clear()
                     tblKrediSearch.Rows.Clear()
                     'Debug.Print("Suche " + Replace(drKredibelege.item("belnr"), "'", "''"))
-                    objdbSQLcommand.CommandText = "SELECT COUNT(belnr) FROM kredibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='R' AND belnr='" + Replace(drKredibelege.item("belnr"), "'", "''") + "'" ' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
+                    objdbSQLcommand.CommandText = "SELECT COUNT(betrag) FROM kredibuchung INNER JOIN buchung ON lfnbrk=dklfnbr " +
+                                                    " WHERE kredibuchung.teqnbr IN (" + intTeqNbr.ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString + ") AND typ='R' AND NOT belnr IS NULL AND betrag=" + drKredibelege.item("betrag").ToString  ' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
                     tblKrediSearch.Load(objdbSQLcommand.ExecuteReader)
                     If tblKrediSearch.Rows(0).Item(0) > 1 Then
-                        MessageBox.Show("Mögliche Verdopplung gefunden 'R' belnr " + drKredibelege.item("belnr"), "Verdopplung gefunden", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                        MessageBox.Show("Mögliche Verdopplung gefunden 'R' betrag " + drKredibelege.Item("betrag").ToString + " auf Beleg E: " + drKredibelege.item("belnr") + ", I: " + drKredibelege.item("belnbrint").ToString + ", K: " + drKredibelege.item("kredinbr").ToString, "Verdopplung gefunden", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                         Debug.Print("Verdopplung " + Replace(drKredibelege.item("belnr"), "'", "''"))
                     End If
                 Next
 
                 'Dann nach Gutschriften
                 tblKrediBelege.Dispose()
-                objdbSQLcommand.CommandText = "SELECT * FROM kredibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='G' AND NOT belnr IS NULL ORDER BY belnr"
+                objdbSQLcommand.CommandText = "SELECT * FROM kredibuchung WHERE teqnbr IN (" + intTeqNbr.ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString + ") AND typ='G' AND NOT belnr IS NULL ORDER BY belnr"
                 objdbSQLcommand.Connection = objdbMSSQLConn
                 tblKrediBelege.Load(objdbSQLcommand.ExecuteReader)
                 For Each drKredibelege In tblKrediBelege.Rows
                     'Gibt es mehr als einen Beleg mit gleichem Betrag und gleicher externer Beleg-Nr.?
                     tblKrediSearch.Rows.Clear()
-                    objdbSQLcommand.CommandText = "SELECT COUNT(belnr) FROM kredibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='G' AND belnr='" + Replace(drKredibelege.item("belnr"), "'", "''") + "'" ' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
+                    objdbSQLcommand.CommandText = "SELECT COUNT(belnr) FROM kredibuchung WHERE teqnbr IN (" + intTeqNbr.ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString + ") AND typ='G' AND belnr='" + Replace(drKredibelege.item("belnr"), "'", "''") + "'" ' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
                     tblKrediSearch.Load(objdbSQLcommand.ExecuteReader)
                     If tblKrediSearch.Rows(0).Item(0) > 1 Then
                         MessageBox.Show("Mögliche Verdopplung gefunden 'G' belnr " + drKredibelege.item("belnr"), "Verdopplung gefunden", MessageBoxButtons.OK, MessageBoxIcon.Warning)
@@ -2661,4 +2746,5 @@ Friend Class frmImportMain
         End If
 
     End Sub
+
 End Class

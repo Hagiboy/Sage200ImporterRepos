@@ -59,7 +59,7 @@ Friend NotInheritable Class Main
             DT.Columns.Add(strRGName)
             Dim strOPNr As DataColumn = New DataColumn("strOPNr")
             strOPNr.DataType = System.Type.[GetType]("System.String")
-            strOPNr.MaxLength = 13
+            strOPNr.MaxLength = 20
             DT.Columns.Add(strOPNr)
             Dim lngDebNbr As DataColumn = New DataColumn("lngDebNbr")
             lngDebNbr.DataType = System.Type.[GetType]("System.Int32")
@@ -181,6 +181,9 @@ Friend NotInheritable Class Main
             Dim intPGVMthsNY As DataColumn = New DataColumn("intPGVMthsNY")
             intPGVMthsNY.DataType = System.Type.[GetType]("System.Int32")
             DT.Columns.Add(intPGVMthsNY)
+            Dim booDatChanged As DataColumn = New DataColumn("booDatChanged")
+            booDatChanged.DataType = System.Type.[GetType]("System.Boolean")
+            DT.Columns.Add(booDatChanged)
             Return DT
 
         Catch ex As Exception
@@ -652,7 +655,7 @@ Friend NotInheritable Class Main
 
             'Von Login aktuelle Periode auslesen
             strLogonInfo = Split(objFinanz.GetLogonInfo(), "{>}")
-            objdtInfo.Rows.Add("Man/Periode", strMandant + "/" + strLogonInfo(7))
+            objdtInfo.Rows.Add("Man/Periode", strMandant + "/" + strLogonInfo(7) + ", " + intAccounting.ToString)
 
             'Check Periode
             intPeriodenNr = objFinanz.ReadPeri(strMandant, strLogonInfo(7))
@@ -713,7 +716,7 @@ Friend NotInheritable Class Main
                 datPeriodTo = Convert.ToDateTime(strYear + "-12-31 23:59:59")
                 strPeriodStatus = "O"
             End If
-            objdtInfo.Rows.Add("Perioden", datPeriodFrom + " - " + datPeriodTo + "/ " + strPeriodStatus)
+            objdtInfo.Rows.Add("Perioden", Format(datPeriodFrom, "dd.MM.yyyy hh:mm:ss") + " - " + Format(datPeriodTo, "dd.MM.yyyy hh:mm:ss") + "/ " + strPeriodStatus)
 
             'Finanz Buha öffnen
             objfiBuha = Nothing
@@ -1104,6 +1107,7 @@ ErrorHandler:
         Dim intMonthCounter As Int16
         Dim intMonthsAJ As Int16
         Dim intMonthsNJ As Int16
+        Dim booDateChanged As Boolean
 
 
         'Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
@@ -1119,13 +1123,13 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "71402" Then Stop
+                'If row("strDebRGNbr") = "9759" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
-                row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 2, MidpointRounding.AwayFromZero)
-                row("dblDebMwSt") = Decimal.Round(row("dblDebMwst"), 2, MidpointRounding.AwayFromZero)
-                row("dblDebBrutto") = Decimal.Round(row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
+                row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 4, MidpointRounding.AwayFromZero)
+                row("dblDebMwSt") = Decimal.Round(row("dblDebMwst"), 4, MidpointRounding.AwayFromZero)
+                row("dblDebBrutto") = Decimal.Round(row("dblDebBrutto"), 4, MidpointRounding.AwayFromZero)
                 'OP - Nummer nicht numerische Zeichen entfernen
                 row("strOPNr") = Main.FcCleanRGNrStrict(row("strOPNr"))
 
@@ -1249,7 +1253,7 @@ ErrorHandler:
                             'row("dblDebMwSt") = dblSubMwSt * -1
 
 
-                            dblRDiffBrutto = Decimal.Round(dblSubBrutto + row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
+                            dblRDiffBrutto = Decimal.Round(dblSubBrutto + row("dblDebBrutto"), 4, MidpointRounding.AwayFromZero)
                             dblRDiffMwSt = 0 'row("dblDebMwSt") - Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
                             dblRDiffNetto = 0 ' row("dblDebNetto") - Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
 
@@ -1378,6 +1382,10 @@ ErrorHandler:
                 Else
                     'If row("intBuchungsart") = 1 Then
                     row("strDebBez") = MainDebitor.FcReadDebitorName(objdbBuha, intDebitorNew, row("strDebCur"))
+                    'Falls Währung auf Debitor nicht definiert, dann Currency setzen
+                    If row("strDebBez") = "EOF" And row("intBuchungsart") = 1 Then
+                        strBitLog = Left(strBitLog, 2) + "1" + Right(strBitLog, Len(strBitLog) - 3)
+                    End If
                     'Else
                     'row("strDebBez") = "Nicht relevant"
                     'End If
@@ -1396,6 +1404,7 @@ ErrorHandler:
                     row("booPGV") = True
                 End If
 
+                booDateChanged = False
                 'Jahresübergreifend RG- / Valuta-Datum
                 If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) And Year(row("datDebValDatum")) >= 2021 Then
                     'Not IsDBNull(row("datPGVFrom")) Then
@@ -1414,6 +1423,7 @@ ErrorHandler:
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datDebValDatum") = "2022-01-01"
+                            booDateChanged = True
                         ElseIf row("strPGVType") = "RV" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
@@ -1422,6 +1432,7 @@ ErrorHandler:
                     Else
                         If row("strPGVType") = "RV" Then
                             row("datDebValDatum") = row("datDebRGDatum")
+                            booDateChanged = True
                         Else
                             row("strPGVType") = "XX"
                         End If
@@ -1456,7 +1467,8 @@ ErrorHandler:
                                               True)
                 'Falls Problem versuchen mit Valuta-Datum-Anpassung
                 If intReturnValue <> 0 And booValutaCorrect Then
-                    row("datDebValDatum") = datValutaCorrect
+                    row("datDebValDatum") = Format(datValutaCorrect, "Short Date")
+                    booDateChanged = True
                     intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
                                               objdtInfo,
                                               datPeriodFrom,
@@ -1471,16 +1483,69 @@ ErrorHandler:
                     End If
 
                 End If
+                'Bei PGV checken ob PGV-Startdatum in blockierter Periode
+                If row("booPGV") And intReturnValue = 0 Then
+                    intReturnValue = FcCheckPGVDate(row("datPGVFrom"),
+                                                    intAccounting,
+                                                    objdbconnZHDB02)
+                    If intReturnValue <> 0 Then
+                        'Falls TA-Buchung in blockierter Periode probieren mit Valuta-Korrektur
+                        If intPGVMonths = 1 And booValutaCorrect Then
+                            row("datDebValDatum") = Format(datValutaCorrect, "Short Date")
+                            booDateChanged = True
+                            intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
+                                              objdtInfo,
+                                              datPeriodFrom,
+                                              datPeriodTo,
+                                              strPeriodStatus,
+                                              True)
+                            If intReturnValue = 0 Then
+                                'PGV - Flag entfernen
+                                row("booPGV") = False
+                                intReturnValue = 5
+                            Else
+                                intReturnValue = 3
+                            End If
+                        Else
+                            intReturnValue = 4
+                        End If
+                    End If
+
+                End If
                 strBitLog += Trim(intReturnValue.ToString)
+
                 'RG - Datum 11
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebRGDatum")), #1789-09-17#, row("datDebRGDatum")),
                                               objdtInfo,
                                               datPeriodFrom,
                                               datPeriodTo,
                                               strPeriodStatus,
-                                              False)
+                                              True)
 
+                'Falls Problem versuchen mit Valuta-Datum-Anpassung
+                If intReturnValue <> 0 And booValutaCorrect Then
+                    row("datDebRGDatum") = datValutaCorrect
+                    booDateChanged = True
+                    intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebRGDatum")), #1789-09-17#, row("datDebRGDatum")),
+                                              objdtInfo,
+                                              datPeriodFrom,
+                                              datPeriodTo,
+                                              strPeriodStatus,
+                                              True)
+                    If intReturnValue = 0 Then
+                        'Korrektur hat funktioniert Wert auf 2 setzen
+                        intReturnValue = 2
+                    Else
+                        intReturnValue = 3
+                    End If
+
+                End If
                 strBitLog += Trim(intReturnValue.ToString)
+                'Falls ein Datum geändert wurde dann Flag setzen
+                If booDateChanged Then
+                    row("booDatChanged") = True
+                End If
+
                 'Interne Bank 12
                 intReturnValue = MainDebitor.FcCheckDebiIntBank(objdbconn,
                                                                 intAccounting,
@@ -1636,13 +1701,27 @@ ErrorHandler:
                         strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
                     ElseIf Mid(strBitLog, 10, 1) = "3" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "VDCorNok"
+                    ElseIf Mid(strBitLog, 10, 1) = "4" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblck"
+                    ElseIf Mid(strBitLog, 10, 1) = "5" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVVDCor"
+                        'Korrektur hat geklappt, Wert wieder auf 0 setzen
+                        strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
                     End If
                 End If
                 'RG Datum 
                 If Mid(strBitLog, 11, 1) <> "0" Then
-                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgD"
-                    'Else
-                    '    row("strDebRef") = strDebiReferenz
+                    If Mid(strBitLog, 11, 1) = "1" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgD"
+                    ElseIf Mid(strBitLog, 11, 1) = "2" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDCor"
+                        'Korrektur hat geklappt, Wert wieder auf 0 setzen
+                        strBitLog = Left(strBitLog, 10) + "0" + Right(strBitLog, Len(strBitLog) - 11)
+                    ElseIf Mid(strBitLog, 11, 1) = "3" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDCorNok"
+                    ElseIf Mid(strBitLog, 11, 1) = "4" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblck"
+                    End If
                 End If
                 'interne Bank
                 If Mid(strBitLog, 12, 1) <> "0" Then
@@ -1742,6 +1821,51 @@ ErrorHandler:
 
     End Function
 
+    Public Shared Function FcCheckPGVDate(ByVal datPGVDateToCheck As Date,
+                                          ByVal intAccounting As Int16,
+                                          ByRef objdbconnZHDB02 As MySqlConnection)
+
+
+        Dim tblPeriods As New DataTable
+        Dim intYearToCheck As Int16
+        Dim objsqlcommand As New MySqlCommand
+
+        Try
+
+            'Zuerst testen ob überhaupt eine Definition fürs Jahr existiert
+            intYearToCheck = Year(datPGVDateToCheck)
+
+            objsqlcommand.CommandText = "SELECT * FROM t_sage_buchhaltungen_periods WHERE year=" + intYearToCheck.ToString + " AND refMandant=" + intAccounting.ToString
+            objsqlcommand.Connection = objdbconnZHDB02
+            objdbconnZHDB02.Open()
+            tblPeriods.Load(objsqlcommand.ExecuteReader)
+
+            If tblPeriods.Rows.Count > 0 Then
+                'Hat es eine Periode definiert?
+                For Each drPeriods As DataRow In tblPeriods.Rows
+                    If datPGVDateToCheck >= drPeriods.Item("periodFrom") And datPGVDateToCheck <= drPeriods.Item("periodTo") Then
+                        'Periodendefinition existiert, ist Periode offen?
+                        If drPeriods.Item("status") = "O" Then
+                            Return 0
+                        Else
+                            Return 1
+                        End If
+                    End If
+                Next
+            Else
+                Return 0
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "PGV-Datumscheck")
+            Return 9
+
+        Finally
+            objdbconnZHDB02.Close()
+
+        End Try
+
+    End Function
 
     Public Shared Function FcChCeckDate(ByVal datDateToCheck As Date,
                                         ByRef objdtInfo As DataTable,
@@ -2174,23 +2298,27 @@ ErrorHandler:
 
             For Each subrow As DataRow In selsubrow
 
+                'If subrow("lngKto") = 3409 Then
+                '    Stop
+                'End If
+
                 strBitLog = ""
 
                 'Runden
                 If IsDBNull(subrow("dblNetto")) Then
                     subrow("dblNetto") = 0
                 Else
-                    subrow("dblNetto") = Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero)
+                    subrow("dblNetto") = Decimal.Round(subrow("dblNetto"), 4, MidpointRounding.AwayFromZero)
                 End If
                 If IsDBNull(subrow("dblMwst")) Then
                     subrow("dblMwst") = 0
                 Else
-                    subrow("dblMwst") = Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero)
+                    subrow("dblMwst") = Decimal.Round(subrow("dblMwst"), 4, MidpointRounding.AwayFromZero)
                 End If
                 If IsDBNull(subrow("dblBrutto")) Then
                     subrow("dblBrutto") = 0
                 Else
-                    subrow("dblBrutto") = Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero)
+                    subrow("dblBrutto") = Decimal.Round(subrow("dblBrutto"), 4, MidpointRounding.AwayFromZero)
                 End If
                 If IsDBNull(subrow("dblMwStSatz")) Then
                     subrow("dblMwStSatz") = 0
@@ -2234,24 +2362,36 @@ ErrorHandler:
                     If intReturnValue = 0 Then
                         subrow("strMwStKey") = strStrStCodeSage200
                         'Check ob korrekt berechnet
-                        strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
+                        strSteuer = Split(objFiBhg.GetSteuerfeld2(subrow("lngKto").ToString,
+                                                                  "Zum Rechnen", subrow("dblBrutto").ToString,
+                                                                  strStrStCodeSage200), "{<}")
                         If Val(strSteuer(2)) <> IIf(IsDBNull(subrow("dblMwst")), 0, subrow("dblMwst")) Then
                             'Im Fall von Auto-Korrekt anpassen wenn Toleranz
                             'Stop
                             '                            If booAutoCorrect Then 'And Val(strSteuer(2)) - subrow("dblMwst") <= 1.5 Then
-                            strStatusText += "MwSt " + subrow("dblMwst").ToString
-                            subrow("dblMwst") = Val(strSteuer(2))
-                            subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
-                            'subrow("dblNetto") = Decimal.Round(subrow("dblBrutto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
-                            strStatusText += " cor -> " + subrow("dblMwst").ToString + ", "
-                            '                           Else
-                            '                          If Val(strSteuer(2)) - subrow("dblMwst") > 10 Then
-                            '                         strStatusText += " -> " + strSteuer(2).ToString + ", "
-                            '                        intReturnValue = 1
-                            '                   Else
-                            '                      strStatusText += " Tol -> " + strSteuer(2).ToString + ", "
-                            '                 End If
-                            '                End If
+                            'Falls MwSt-Betrag nur in 3 und 4 Stelle anders, dann erfassten Betrag nehmen.
+                            If Math.Abs(Val(strSteuer(2)) - IIf(IsDBNull(subrow("dblMwst")), 0, subrow("dblMwst"))) >= 0.01 Then
+                                strStatusText += "MwSt " + subrow("dblMwst").ToString
+                                subrow("dblMwst") = Val(strSteuer(2))
+                                'subrow("dblMwStSatz") = Val(strSteuer(3))
+                                'subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                                'subrow("dblNetto") = Decimal.Round(subrow("dblBrutto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                                strStatusText += " cor -> " + subrow("dblMwst").ToString + ", "
+                                '                           Else
+                                '                          If Val(strSteuer(2)) - subrow("dblMwst") > 10 Then
+                                '                         strStatusText += " -> " + strSteuer(2).ToString + ", "
+                                '                        intReturnValue = 1
+                                '                   Else
+                                '                      strStatusText += " Tol -> " + strSteuer(2).ToString + ", "
+                                '                 End If
+                                '                End If
+                            End If
+                            subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 4, MidpointRounding.AwayFromZero)
+                            If Val(strSteuer(3)) <> 0 Then 'Wurde ein anderer Steuersatz gewählt?
+                                subrow("dblMwStSatz") = Val(strSteuer(3))
+                                subrow("strMwStKey") = strSteuer(0)
+                            End If
+
                         End If
                     Else
                         subrow("strMwStKey") = "n/a"
@@ -2283,9 +2423,9 @@ ErrorHandler:
                 End If
 
                 'Runden
-                dblSubNetto = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
-                dblSubMwSt = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
-                dblSubBrutto = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
+                dblSubNetto = Decimal.Round(dblSubNetto, 4, MidpointRounding.AwayFromZero)
+                dblSubMwSt = Decimal.Round(dblSubMwSt, 4, MidpointRounding.AwayFromZero)
+                dblSubBrutto = Decimal.Round(dblSubBrutto, 4, MidpointRounding.AwayFromZero)
 
                 'Konto prüfen 02
                 If IIf(IsDBNull(subrow("lngKto")), 0, subrow("lngKto")) > 0 Then
@@ -2407,7 +2547,7 @@ ErrorHandler:
                 End If
 
                 'Brutto - MwSt <> Netto; 08
-                If Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero) <> subrow("dblBrutto") Then
+                If Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 4, MidpointRounding.AwayFromZero) <> subrow("dblBrutto") Then
                     strBitLog += "1"
 
                 Else
@@ -2423,8 +2563,10 @@ ErrorHandler:
                 End If
                 'Konto
                 If Mid(strBitLog, 2, 1) <> "0" Then
-                    If Left(strBitLog, 1) = "2" Then
+                    If Mid(strBitLog, 2, 1) = "2" Then
                         strStatusText = "Kto MwSt"
+                    ElseIf mid(strBitLog, 2, 1) = "5" Then
+                        strStatusText = "MwstK<3K"
                     Else
                         strStatusText = "Kto"
                     End If
@@ -3238,7 +3380,9 @@ ErrorHandler:
                                         ByVal strPeriode As String,
                                         ByVal datPeriodFrom As Date,
                                         ByVal datPeriodTo As Date,
-                                        ByVal strPeriodStatus As String) As Integer
+                                        ByVal strPeriodStatus As String,
+                                        ByVal booValutaCoorect As Boolean,
+                                        ByVal datValutaCorrect As Date) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
         Dim strBitLog As String = ""
@@ -3474,7 +3618,8 @@ ErrorHandler:
                 strBitLog += Trim(intReturnValue.ToString)
 
                 Application.DoEvents()
-                'PGV => Prüfung vor Valuta-Datum da Valuta-Datum verändert wird
+
+                'PGV => Prüfung vor Valuta-Datum da Valuta-Datum verändert wird. PGV soll nur möglich sein wenn rebilled
                 If Not IsDBNull(row("datPGVFrom")) And MainKreditor.FcIsAllKrediRebilled(objdtKreditSubs, row("lngKredID")) = 0 Then
                     row("booPGV") = True
                 ElseIf Not IsDBNull(row("datPGVFrom")) And MainKreditor.FcIsAllKrediRebilled(objdtKreditSubs, row("lngKredID")) = 1 Then
@@ -3533,6 +3678,7 @@ ErrorHandler:
                 End If
 
                 'Valuta - Datum 10
+                'Falls nichts ausgefüllt, dann 
                 If IsDBNull(row("datKredValDatum")) Then
                     row("datKredValDatum") = row("datKredRGDatum")
                 End If
@@ -3542,15 +3688,80 @@ ErrorHandler:
                                               datPeriodTo,
                                               strPeriodStatus,
                                               True)
+
+                'Falls Problem versuchen mit Valuta-Datum-Anpassung
+                If intReturnValue <> 0 And booValutaCoorect Then
+                    row("datKredValDatum") = Format(datValutaCorrect, "Short Date")
+                    intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), #1789-09-17#, row("datKredValDatum")),
+                                                  objdtInfo,
+                                                  datPeriodFrom,
+                                                  datPeriodTo,
+                                                  strPeriodStatus,
+                                                  True)
+                    If intReturnValue = 0 Then
+                        intReturnValue = 2
+                    Else
+                        intReturnValue = 3
+                    End If
+
+                End If
+
+                'Bei PGV checken ob PGV-Startdatum in blockierter Periode
+                If row("booPGV") And intReturnValue = 0 Then
+                    intReturnValue = FcCheckPGVDate(row("datPGVFrom"),
+                                                    intAccounting,
+                                                    objdbconnZHDB02)
+                    If intReturnValue <> 0 Then
+                        'Falls TP-Buchung in blockierter Periode dann probieren mit Valuta-Korrektur
+                        If intPGVMonths = 1 And booValutaCoorect Then
+                            row("datKredValDatum") = Format(datValutaCorrect, "Short Date")
+                            intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), #1789-09-17#, row("datKredValDatum")),
+                                                          objdtInfo,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus,
+                                                          True)
+                            If intReturnValue = 0 Then
+                                'PGV - Flag entfernen
+                                row("booPGV") = False
+                                intReturnValue = 5
+                            Else
+                                intReturnValue = 3
+                            End If
+                        Else
+                            intReturnValue = 4
+                        End If
+                    End If
+
+                End If
                 strBitLog += Trim(intReturnValue.ToString)
+
                 'RG - Datum 11
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredRGDatum")), #1789-09-17#, row("datKredRGDatum")),
                                               objdtInfo,
                                               datPeriodFrom,
                                               datPeriodTo,
                                               strPeriodStatus,
-                                              False)
+                                              True)
+
+                'Falls Problem versuchen mit Valuta-Datum-Anpassung
+                If intReturnValue <> 0 And booValutaCoorect Then
+                    row("datKredRGDatum") = Format(datValutaCorrect, "Short Date")
+                    intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredRGDatum")), #1789-09-17#, row("datKredRGDatum")),
+                                                  objdtInfo,
+                                                  datPeriodFrom,
+                                                  datPeriodTo,
+                                                  strPeriodStatus,
+                                                  True)
+                    If intReturnValue = 0 Then
+                        'Korrektur hat funktioniert, Wert auf 2 setzen
+                        intReturnValue = 2
+                    Else
+                        intReturnValue = 3
+                    End If
+                End If
                 strBitLog += Trim(intReturnValue.ToString)
+
                 ''Referenz 12
                 If (Not String.IsNullOrEmpty(row("strKredRef"))) And (row("intPayType") = 3 Or row("intPayType") = 10) Then
                     If Right(row("strKredRef"), 1) <> Main.FcModulo10(Left(row("strKredRef"), Len(row("strKredRef")) - 1)) Then
@@ -3687,15 +3898,35 @@ ErrorHandler:
                 End If
                 'Valuta Datum 10
                 If Mid(strBitLog, 10, 1) <> "0" Then
-                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValD"
-                    'Else
-                    '    row("strDebRef") = strDebiReferenz
+                    If Mid(strBitLog, 10, 1) = "1" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValD"
+                    ElseIf Mid(strBitLog, 10, 1) = "2" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "VDCor"
+                        'Korrektur hat geklappt, Wert wieder auf 0 setzen
+                        strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
+                    ElseIf Mid(strBitLog, 10, 1) = "3" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "VDCorNok"
+                    ElseIf Mid(strBitLog, 10, 1) = "4" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblck"
+                    ElseIf Mid(strBitLog, 10, 1) = "5" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVVDCor"
+                        'Korrektur hat geklappt, Wert wieder auf 0 setzen
+                        strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
+                    End If
                 End If
                 'RG Datum 11
                 If Mid(strBitLog, 11, 1) <> "0" Then
-                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgD"
-                    'Else
-                    '    row("strDebRef") = strDebiReferenz
+                    If Mid(strBitLog, 11, 1) = "1" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgD"
+                    ElseIf Mid(strBitLog, 11, 1) = "2" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDCor"
+                        'Korrektur hat geklappt, Wert wieder auf 0 setzen
+                        strBitLog = Left(strBitLog, 10) + "0" + Right(strBitLog, Len(strBitLog) - 11)
+                    ElseIf Mid(strBitLog, 11, 1) = "3" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDCorNok"
+                    ElseIf Mid(strBitLog, 11, 1) = "4" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblck"
+                    End If
                 End If
                 'Referenz 12
                 If Mid(strBitLog, 12, 1) <> "0" Then
@@ -3959,7 +4190,7 @@ ErrorHandler:
                 strMDBName = FcReadFromSettings(objdbconn, "Buchh_RGTableMDB", intAccounting)
 
                 'Debitzoren Transit-Queries für Mandant einlesen
-                strSQLMan = "SELECT * FROM t_sage_buchhaltungen_sub WHERE strType='D' AND refMandant=" + intAccounting.ToString
+                strSQLMan = "Select * FROM t_sage_buchhaltungen_sub WHERE strType='D' AND refMandant=" + intAccounting.ToString
                         objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
                 objlocMySQLcmd.Connection = objRGMySQLConn
                 objlocMySQLcmd.CommandText = strSQLMan

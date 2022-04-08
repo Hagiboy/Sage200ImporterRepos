@@ -23,11 +23,12 @@ Partial Class frmImportMain
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Dim DataGridViewCellStyle1 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle2 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmImportMain))
         Me.cmbBuha = New System.Windows.Forms.ComboBox()
-        Me.Label1 = New System.Windows.Forms.Label()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.butKreditoren = New System.Windows.Forms.Button()
+        Me.butDblKredis = New System.Windows.Forms.Button()
         Me.butDebitoren = New System.Windows.Forms.Button()
         Me.dgvBookings = New System.Windows.Forms.DataGridView()
         Me.butImport = New System.Windows.Forms.Button()
@@ -39,39 +40,31 @@ Partial Class frmImportMain
         Me.lblVersion = New System.Windows.Forms.Label()
         Me.butMail = New System.Windows.Forms.Button()
         Me.butDblDebis = New System.Windows.Forms.Button()
-        Me.butDblKredis = New System.Windows.Forms.Button()
         Me.chkValutaCorrect = New System.Windows.Forms.CheckBox()
         Me.dtpValutaCorrect = New System.Windows.Forms.DateTimePicker()
+        Me.GroupBox2 = New System.Windows.Forms.GroupBox()
         Me.GroupBox1.SuspendLayout()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.GroupBox2.SuspendLayout()
         Me.SuspendLayout()
         '
         'cmbBuha
         '
         Me.cmbBuha.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.cmbBuha.FormattingEnabled = True
-        Me.cmbBuha.Location = New System.Drawing.Point(66, 24)
+        Me.cmbBuha.Location = New System.Drawing.Point(23, 24)
         Me.cmbBuha.Name = "cmbBuha"
         Me.cmbBuha.Size = New System.Drawing.Size(270, 28)
         Me.cmbBuha.TabIndex = 0
         '
-        'Label1
-        '
-        Me.Label1.AutoSize = True
-        Me.Label1.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.Label1.Location = New System.Drawing.Point(12, 27)
-        Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(47, 20)
-        Me.Label1.TabIndex = 1
-        Me.Label1.Text = "Buha"
-        '
         'GroupBox1
         '
         Me.GroupBox1.Controls.Add(Me.butKreditoren)
+        Me.GroupBox1.Controls.Add(Me.butDblKredis)
         Me.GroupBox1.Controls.Add(Me.butDebitoren)
-        Me.GroupBox1.Location = New System.Drawing.Point(66, 85)
+        Me.GroupBox1.Location = New System.Drawing.Point(8, 85)
         Me.GroupBox1.Name = "GroupBox1"
         Me.GroupBox1.Size = New System.Drawing.Size(281, 62)
         Me.GroupBox1.TabIndex = 2
@@ -87,6 +80,16 @@ Partial Class frmImportMain
         Me.butKreditoren.TabIndex = 1
         Me.butKreditoren.Text = "&Kreditoren"
         Me.butKreditoren.UseVisualStyleBackColor = True
+        '
+        'butDblKredis
+        '
+        Me.butDblKredis.Location = New System.Drawing.Point(51, 0)
+        Me.butDblKredis.Name = "butDblKredis"
+        Me.butDblKredis.Size = New System.Drawing.Size(41, 22)
+        Me.butDblKredis.TabIndex = 14
+        Me.butDblKredis.Text = "DK"
+        Me.butDblKredis.UseVisualStyleBackColor = True
+        Me.butDblKredis.Visible = False
         '
         'butDebitoren
         '
@@ -109,9 +112,9 @@ Partial Class frmImportMain
         'butImport
         '
         Me.butImport.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.butImport.Location = New System.Drawing.Point(1536, 105)
+        Me.butImport.Location = New System.Drawing.Point(1565, 69)
         Me.butImport.Name = "butImport"
-        Me.butImport.Size = New System.Drawing.Size(132, 41)
+        Me.butImport.Size = New System.Drawing.Size(103, 41)
         Me.butImport.TabIndex = 4
         Me.butImport.Text = "&Import D"
         Me.butImport.UseVisualStyleBackColor = True
@@ -119,14 +122,6 @@ Partial Class frmImportMain
         'dgvBookingSub
         '
         Me.dgvBookingSub.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvBookingSub.Location = New System.Drawing.Point(353, 19)
-        Me.dgvBookingSub.Name = "dgvBookingSub"
-        Me.dgvBookingSub.Size = New System.Drawing.Size(817, 133)
-        Me.dgvBookingSub.TabIndex = 5
-        '
-        'dgvInfo
-        '
-        Me.dgvInfo.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         DataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
         DataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window
         DataGridViewCellStyle1.Font = New System.Drawing.Font("Microsoft Sans Serif", 7.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
@@ -134,8 +129,24 @@ Partial Class frmImportMain
         DataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight
         DataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText
         DataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
-        Me.dgvInfo.DefaultCellStyle = DataGridViewCellStyle1
-        Me.dgvInfo.Location = New System.Drawing.Point(1176, 19)
+        Me.dgvBookingSub.DefaultCellStyle = DataGridViewCellStyle1
+        Me.dgvBookingSub.Location = New System.Drawing.Point(299, 19)
+        Me.dgvBookingSub.Name = "dgvBookingSub"
+        Me.dgvBookingSub.Size = New System.Drawing.Size(754, 133)
+        Me.dgvBookingSub.TabIndex = 5
+        '
+        'dgvInfo
+        '
+        Me.dgvInfo.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        DataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window
+        DataGridViewCellStyle2.Font = New System.Drawing.Font("Microsoft Sans Serif", 7.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText
+        DataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
+        Me.dgvInfo.DefaultCellStyle = DataGridViewCellStyle2
+        Me.dgvInfo.Location = New System.Drawing.Point(1059, 19)
         Me.dgvInfo.Name = "dgvInfo"
         Me.dgvInfo.RowTemplate.Height = 18
         Me.dgvInfo.Size = New System.Drawing.Size(354, 133)
@@ -144,7 +155,7 @@ Partial Class frmImportMain
         'txtNumber
         '
         Me.txtNumber.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.txtNumber.Location = New System.Drawing.Point(1599, 19)
+        Me.txtNumber.Location = New System.Drawing.Point(1608, 21)
         Me.txtNumber.Name = "txtNumber"
         Me.txtNumber.Size = New System.Drawing.Size(60, 29)
         Me.txtNumber.TabIndex = 8
@@ -152,9 +163,9 @@ Partial Class frmImportMain
         'butImportK
         '
         Me.butImportK.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.butImportK.Location = New System.Drawing.Point(1536, 111)
+        Me.butImportK.Location = New System.Drawing.Point(1565, 111)
         Me.butImportK.Name = "butImportK"
-        Me.butImportK.Size = New System.Drawing.Size(132, 41)
+        Me.butImportK.Size = New System.Drawing.Size(103, 41)
         Me.butImportK.TabIndex = 9
         Me.butImportK.Text = "&Import K"
         Me.butImportK.UseVisualStyleBackColor = True
@@ -162,7 +173,7 @@ Partial Class frmImportMain
         'cmbPerioden
         '
         Me.cmbPerioden.FormattingEnabled = True
-        Me.cmbPerioden.Location = New System.Drawing.Point(66, 58)
+        Me.cmbPerioden.Location = New System.Drawing.Point(23, 58)
         Me.cmbPerioden.Name = "cmbPerioden"
         Me.cmbPerioden.Size = New System.Drawing.Size(92, 21)
         Me.cmbPerioden.TabIndex = 10
@@ -170,7 +181,7 @@ Partial Class frmImportMain
         'lblVersion
         '
         Me.lblVersion.AutoSize = True
-        Me.lblVersion.Location = New System.Drawing.Point(263, 63)
+        Me.lblVersion.Location = New System.Drawing.Point(220, 63)
         Me.lblVersion.Name = "lblVersion"
         Me.lblVersion.Size = New System.Drawing.Size(42, 13)
         Me.lblVersion.TabIndex = 11
@@ -178,16 +189,16 @@ Partial Class frmImportMain
         '
         'butMail
         '
-        Me.butMail.Location = New System.Drawing.Point(1535, 21)
+        Me.butMail.Location = New System.Drawing.Point(1565, 19)
         Me.butMail.Name = "butMail"
-        Me.butMail.Size = New System.Drawing.Size(58, 26)
+        Me.butMail.Size = New System.Drawing.Size(42, 26)
         Me.butMail.TabIndex = 12
         Me.butMail.Text = "&Mail"
         Me.butMail.UseVisualStyleBackColor = True
         '
         'butDblDebis
         '
-        Me.butDblDebis.Location = New System.Drawing.Point(18, 105)
+        Me.butDblDebis.Location = New System.Drawing.Point(12, 85)
         Me.butDblDebis.Name = "butDblDebis"
         Me.butDblDebis.Size = New System.Drawing.Size(41, 22)
         Me.butDblDebis.TabIndex = 13
@@ -195,20 +206,10 @@ Partial Class frmImportMain
         Me.butDblDebis.UseVisualStyleBackColor = True
         Me.butDblDebis.Visible = False
         '
-        'butDblKredis
-        '
-        Me.butDblKredis.Location = New System.Drawing.Point(17, 132)
-        Me.butDblKredis.Name = "butDblKredis"
-        Me.butDblKredis.Size = New System.Drawing.Size(41, 22)
-        Me.butDblKredis.TabIndex = 14
-        Me.butDblKredis.Text = "DK"
-        Me.butDblKredis.UseVisualStyleBackColor = True
-        Me.butDblKredis.Visible = False
-        '
         'chkValutaCorrect
         '
         Me.chkValutaCorrect.AutoSize = True
-        Me.chkValutaCorrect.Location = New System.Drawing.Point(1536, 58)
+        Me.chkValutaCorrect.Location = New System.Drawing.Point(6, 19)
         Me.chkValutaCorrect.Name = "chkValutaCorrect"
         Me.chkValutaCorrect.Size = New System.Drawing.Size(118, 17)
         Me.chkValutaCorrect.TabIndex = 15
@@ -219,20 +220,29 @@ Partial Class frmImportMain
         '
         Me.dtpValutaCorrect.Enabled = False
         Me.dtpValutaCorrect.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.dtpValutaCorrect.Location = New System.Drawing.Point(1535, 76)
+        Me.dtpValutaCorrect.Location = New System.Drawing.Point(5, 37)
         Me.dtpValutaCorrect.MinDate = New Date(2020, 1, 1, 0, 0, 0, 0)
         Me.dtpValutaCorrect.Name = "dtpValutaCorrect"
-        Me.dtpValutaCorrect.Size = New System.Drawing.Size(109, 20)
+        Me.dtpValutaCorrect.Size = New System.Drawing.Size(90, 20)
         Me.dtpValutaCorrect.TabIndex = 16
+        '
+        'GroupBox2
+        '
+        Me.GroupBox2.Controls.Add(Me.chkValutaCorrect)
+        Me.GroupBox2.Controls.Add(Me.dtpValutaCorrect)
+        Me.GroupBox2.Location = New System.Drawing.Point(1419, 18)
+        Me.GroupBox2.Name = "GroupBox2"
+        Me.GroupBox2.Size = New System.Drawing.Size(140, 133)
+        Me.GroupBox2.TabIndex = 17
+        Me.GroupBox2.TabStop = False
+        Me.GroupBox2.Text = "Optionen"
         '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1672, 637)
-        Me.Controls.Add(Me.dtpValutaCorrect)
-        Me.Controls.Add(Me.chkValutaCorrect)
-        Me.Controls.Add(Me.butDblKredis)
+        Me.Controls.Add(Me.GroupBox2)
         Me.Controls.Add(Me.butDblDebis)
         Me.Controls.Add(Me.butMail)
         Me.Controls.Add(Me.lblVersion)
@@ -244,7 +254,6 @@ Partial Class frmImportMain
         Me.Controls.Add(Me.butImport)
         Me.Controls.Add(Me.dgvBookings)
         Me.Controls.Add(Me.GroupBox1)
-        Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.cmbBuha)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmImportMain"
@@ -253,13 +262,14 @@ Partial Class frmImportMain
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.GroupBox2.ResumeLayout(False)
+        Me.GroupBox2.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
     End Sub
 
     Friend WithEvents cmbBuha As ComboBox
-    Friend WithEvents Label1 As Label
     Friend WithEvents GroupBox1 As GroupBox
     Friend WithEvents butKreditoren As Button
     Friend WithEvents butDebitoren As Button
@@ -276,4 +286,5 @@ Partial Class frmImportMain
     Friend WithEvents butDblKredis As Button
     Friend WithEvents chkValutaCorrect As CheckBox
     Friend WithEvents dtpValutaCorrect As DateTimePicker
+    Friend WithEvents GroupBox2 As GroupBox
 End Class
