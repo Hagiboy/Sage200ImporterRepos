@@ -618,7 +618,6 @@ Friend NotInheritable Class Main
                                        ByRef strPeriodStatus As String) As Int16
 
         '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
-
         Dim booAccOk As Boolean
         Dim strMandant As String
         Dim strLogonInfo() As String
@@ -632,7 +631,9 @@ Friend NotInheritable Class Main
         Dim objdbcmd As New MySqlCommand
         Dim dtPeriods As New DataTable
 
+
         Try
+
 
             objFinanz = Nothing
             objFinanz = New SBSXASLib.AXFinanz
@@ -698,7 +699,8 @@ Friend NotInheritable Class Main
             FcReturns = FcReadPeriodenDef(objsqlConn,
                                       objsqlCom,
                                       strPeriode(8),
-                                      objdtInfo)
+                                      objdtInfo,
+                                      strYear)
 
             'Perioden-Definition vom Tool einlesen
             'In einer ersten Phase nur erster DS einlesen
@@ -743,6 +745,8 @@ Friend NotInheritable Class Main
             End
 
         Finally
+            objdtPeriodeLY.Dispose()
+            dtPeriods.Dispose()
 
         End Try
 
@@ -839,7 +843,8 @@ Friend NotInheritable Class Main
         FcReturns = FcReadPeriodenDef(objsqlConn,
                                       objsqlCom,
                                       strPeriode(8),
-                                      objdtInfo)
+                                      objdtInfo,
+                                      strYear)
 
 
         If b = 0 Then GoTo isOk
@@ -896,15 +901,17 @@ ErrorHandler:
                                                     ByVal intAccounting As Int16,
                                                     ByRef cmbPeriods As ComboBox) As Int16
 
-        Dim strMandant As String
-        Dim booAccOk As Int16
-        Dim intLbNbr As Int16
-        Dim strPeriodenListe As String = ""
-        Dim strPeriodeAr() As String
-        Dim intLooper As Int16
 
 
         Try
+
+            Dim strMandant As String
+            Dim booAccOk As Int16
+            Dim intLbNbr As Int16
+            Dim strPeriodenListe As String = ""
+            Dim strPeriodeAr() As String
+            Dim intLooper As Int16
+
 
             objFinanz = Nothing
             objFinanz = New SBSXASLib.AXFinanz
@@ -949,12 +956,13 @@ ErrorHandler:
     Public Shared Function FcReadPeriodenDef(ByRef objSQLConnection As SqlClient.SqlConnection,
                                              ByRef objSQLCommand As SqlClient.SqlCommand,
                                              ByVal intPeriodenNr As Int32,
-                                             ByRef objdtInfo As DataTable) As Int16
+                                             ByRef objdtInfo As DataTable,
+                                             ByVal strYear As String) As Int16
 
         'Returns 0=definiert, 1=nicht defeniert, 9=Problem
-
         Dim objlocdtPeriDef As New DataTable
         Dim strPeriodenDef(4) As String
+
 
         Try
 
@@ -976,7 +984,7 @@ ErrorHandler:
             Else
 
                 objdtInfo.Rows.Add("Perioden S200", "keine")
-                objdtInfo.Rows.Add("Von - Bis/ Status", "01.01." + Year(Today()).ToString + " 00:00:00 - " + "31.12." + Year(Today()).ToString + " 23:59:59/ " + "O")
+                objdtInfo.Rows.Add("Von - Bis/ Status", "01.01." + strYear + " 00:00:00 - " + "31.12." + strYear + " 23:59:59/ " + "O")
 
                 Return 1
 
@@ -988,6 +996,8 @@ ErrorHandler:
 
         Finally
             objSQLConnection.Close()
+            objlocdtPeriDef.Dispose()
+            strPeriodenDef = Nothing
 
         End Try
 
@@ -999,6 +1009,8 @@ ErrorHandler:
         Dim objlocMySQLcmd As New MySqlCommand
 
         Try
+
+
             objlocMySQLcmd.CommandText = "SELECT strBLZ FROM t_sage_tblaccountingbank WHERE intAccountingID=" + intAccounting.ToString + " AND strBank='" + strBank + "'"
             objlocMySQLcmd.Connection = objdbconn
             objlocdtBank.Load(objlocMySQLcmd.ExecuteReader)
@@ -1008,6 +1020,10 @@ ErrorHandler:
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Bankleitzahl suchen.")
+
+        Finally
+            objlocdtBank.Dispose()
+            objlocMySQLcmd.Dispose()
 
         End Try
 
@@ -1027,15 +1043,19 @@ ErrorHandler:
             objlocMySQLcmd.Connection = objdbconn
             objlocdtSetting.Load(objlocMySQLcmd.ExecuteReader)
             'Debug.Print("Records" + objlocdtSetting.Rows.Count.ToString)
+            'Debug.Print("Return " + objlocdtSetting.Rows(0).Item(0).ToString)
+            Return objlocdtSetting.Rows(0).Item(0).ToString
 
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Einstellung lesen")
 
+        Finally
+            objlocdtSetting.Dispose()
+            objlocMySQLcmd.Dispose()
+
         End Try
 
-        'Debug.Print("Return " + objlocdtSetting.Rows(0).Item(0).ToString)
-        Return objlocdtSetting.Rows(0).Item(0).ToString
 
     End Function
 
@@ -1123,7 +1143,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "9759" Then Stop
+                'If row("strDebRGNbr") = "10403" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -1150,12 +1170,15 @@ ErrorHandler:
                 If intReturnValue = 1 Then 'Neue Debi wurde angelegt
                     strStatus = "NDeb "
                 End If
-                If intDebitorNew <> 0 Then
-                    intReturnValue = MainDebitor.FcCheckDebitor(intDebitorNew, row("intBuchungsart"), objdbBuha)
+                If intDebitorNew <> 0 Or intReturnValue = 4 Then
+                    intReturnValue = MainDebitor.FcCheckDebitor(intDebitorNew,
+                                                                row("intBuchungsart"),
+                                                                objdbBuha)
                 Else
                     intReturnValue = 2
                 End If
                 strBitLog = Trim(intReturnValue.ToString)
+                Application.DoEvents()
 
                 'Kto 02
                 'intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha, row("dblDebMwSt"), 0)
@@ -1165,6 +1188,7 @@ ErrorHandler:
                 'Currency 03
                 intReturnValue = FcCheckCurrency(row("strDebCur"), objfiBuha)
                 strBitLog += Trim(intReturnValue.ToString)
+                Application.DoEvents()
 
                 'Sub 04
                 booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
@@ -1209,13 +1233,13 @@ ErrorHandler:
                     decDebiDiff = 0
                     'Git es etwas zu korrigieren?
                     If IIf(IsDBNull(row("dblDebNetto")), 0, row("dblDebNetto")) <> dblSubNetto * -1 Or
-                        IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) <> dblSubMwSt * -1 Then
-                        'IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) <> dblSubBrutto * -1 Or
+                        IIf(IsDBNull(row("dblDebMwSt")), 0, row("dblDebMwSt")) <> dblSubMwSt * -1 Or
+                        IIf(IsDBNull(row("dblDebBrutto")), 0, row("dblDebBrutto")) <> dblSubBrutto * -1 Then
                         If Math.Abs(row("dblDebBrutto") + dblSubBrutto) < 1 Then
-                            decDebiDiff = Decimal.Round(Math.Abs(row("dblDebBrutto") + dblSubBrutto), 2, MidpointRounding.AwayFromZero)
-                            row("dblDebBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero) * -1
-                            row("dblDebNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero) * -1
-                            row("dblDebMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero) * -1
+                            decDebiDiff = Decimal.Round(Math.Abs(row("dblDebBrutto") + dblSubBrutto), 4, MidpointRounding.AwayFromZero)
+                            row("dblDebBrutto") = Decimal.Round(dblSubBrutto, 4, MidpointRounding.AwayFromZero) * -1
+                            row("dblDebNetto") = Decimal.Round(dblSubNetto, 4, MidpointRounding.AwayFromZero) * -1
+                            row("dblDebMwSt") = Decimal.Round(dblSubMwSt, 4, MidpointRounding.AwayFromZero) * -1
                             strBitLog += "1"
                         Else
                             strBitLog += "3"
@@ -1373,7 +1397,9 @@ ErrorHandler:
                         Else
                             strStatus += " nicht erstellt."
                         End If
-                        row("strDebBez") = MainDebitor.FcReadDebitorName(objdbBuha, intDebitorNew, row("strDebCur"))
+                        row("strDebBez") = MainDebitor.FcReadDebitorName(objdbBuha,
+                                                                         intDebitorNew,
+                                                                         row("strDebCur"))
                         row("lngDebNbr") = intDebitorNew
                     Else
                         strStatus += " keine Ref"
@@ -1381,7 +1407,9 @@ ErrorHandler:
                     End If
                 Else
                     'If row("intBuchungsart") = 1 Then
-                    row("strDebBez") = MainDebitor.FcReadDebitorName(objdbBuha, intDebitorNew, row("strDebCur"))
+                    row("strDebBez") = MainDebitor.FcReadDebitorName(objdbBuha,
+                                                                     intDebitorNew,
+                                                                     row("strDebCur"))
                     'Falls Währung auf Debitor nicht definiert, dann Currency setzen
                     If row("strDebBez") = "EOF" And row("intBuchungsart") = 1 Then
                         strBitLog = Left(strBitLog, 2) + "1" + Right(strBitLog, Len(strBitLog) - 3)
@@ -1646,7 +1674,8 @@ ErrorHandler:
                     End If
                     row("strDebKtoBez") = "n/a"
                 Else
-                    row("strDebKtoBez") = MainDebitor.FcReadDebitorKName(objfiBuha, row("lngDebKtoNbr"))
+                    row("strDebKtoBez") = MainDebitor.FcReadDebitorKName(objfiBuha,
+                                                                         row("lngDebKtoNbr"))
                 End If
                 'Währung
                 If Mid(strBitLog, 3, 1) <> "0" Then
@@ -1748,7 +1777,7 @@ ErrorHandler:
                 End If
 
                 'Status schreiben
-                If Val(strBitLog) = 0 Or Val(strBitLog) = 100000002 Or Val(strBitLog) = 2 Then
+                If Val(strBitLog) = 0 Or Val(strBitLog) = 100000002 Or Val(strBitLog) = 2 Or Val(strBitLog) = 100000000 Then
                     row("booDebBook") = True
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
                 End If
@@ -1816,6 +1845,10 @@ ErrorHandler:
             If objdbAccessConn.State = ConnectionState.Open Then
                 objdbAccessConn.Close()
             End If
+
+            selsubrow = Nothing
+            selSBrows = Nothing
+
         End Try
 
 
@@ -1932,6 +1965,9 @@ ErrorHandler:
             MessageBox.Show(ex.Message, "Datumscheck")
             Return 9
 
+        Finally
+            Application.DoEvents()
+
         End Try
 
 
@@ -1948,10 +1984,19 @@ ErrorHandler:
         Dim intBelegReturn As Int32
 
         Try
-            intBelegReturn = objdbBuha.doesBelegExist(strDebitor, strCurrency, strOPNr, "NOT_SET", strType, "")
+            intBelegReturn = objdbBuha.doesBelegExist(strDebitor,
+                                                      strCurrency,
+                                                      strOPNr,
+                                                      "NOT_SET",
+                                                      strType,
+                                                      "")
             If intBelegReturn = 0 Then
                 'Zusätzlich extern überprüfen
-                intBelegReturn = objdbBuha.doesBelegExistExtern(strDebitor, strCurrency, strOPNr, strType, "")
+                intBelegReturn = objdbBuha.doesBelegExistExtern(strDebitor,
+                                                                strCurrency,
+                                                                strOPNr,
+                                                                strType,
+                                                                "")
                 If intBelegReturn <> 0 Then
                     Return 1
                 Else
@@ -1965,6 +2010,9 @@ ErrorHandler:
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Check doppelte OP - Nr.")
             Return 9
+
+        Finally
+            Application.DoEvents()
 
         End Try
 
@@ -2313,7 +2361,7 @@ ErrorHandler:
                 If IsDBNull(subrow("dblMwst")) Then
                     subrow("dblMwst") = 0
                 Else
-                    subrow("dblMwst") = Decimal.Round(subrow("dblMwst"), 4, MidpointRounding.AwayFromZero)
+                    subrow("dblMwst") = Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero)
                 End If
                 If IsDBNull(subrow("dblBrutto")) Then
                     subrow("dblBrutto") = 0
@@ -2606,6 +2654,7 @@ ErrorHandler:
                 strStatusText = ""
 
                 strStatusOverAll = strStatusOverAll Or strBitLog
+                Application.DoEvents()
 
             Next
 
@@ -2644,6 +2693,7 @@ ErrorHandler:
             MessageBox.Show(ex.Message, "Fehler Debi-Subbuchungen", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
+            selsubrow = Nothing
 
         End Try
 
@@ -3266,7 +3316,9 @@ ErrorHandler:
     End Function
 
 
-    Public Shared Function InsertDataTableColumnName(ByRef dtSouce As DataTable, ByRef dtResult As DataTable) As Boolean
+    Public Shared Function InsertDataTableColumnName(ByRef dtSouce As DataTable,
+                                                     ByRef dtResult As DataTable) As Boolean
+
         Dim rowResult As DataRow
         Dim Result As Boolean = True
 
@@ -3286,10 +3338,15 @@ ErrorHandler:
             Next
 
             Return Result
+
         Catch ex As Exception
             MessageBox.Show(ex.Message)
             Result = False
             Return Result
+
+        Finally
+            rowResult = Nothing
+
         End Try
 
     End Function

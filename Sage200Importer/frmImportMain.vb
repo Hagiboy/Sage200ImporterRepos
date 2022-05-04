@@ -112,9 +112,18 @@ Friend Class frmImportMain
 
             intMode = 0
 
-            objdtDebitorenHead = Nothing
-            objdtDebitorenHeadRead = Nothing
-            objdtDebitorenSub = Nothing
+            'objdtDebitorenHead = Nothing
+            'objdtDebitorenHeadRead = Nothing
+            'objdtDebitorenSub = Nothing
+            objdtDebitorenHead.Clear()
+            objdtDebitorenHead.Constraints.Clear()
+            objdtDebitorenHead.Dispose()
+            objdtDebitorenHeadRead.Clear()
+            objdtDebitorenHeadRead.Constraints.Clear()
+            objdtDebitorenHeadRead.Dispose()
+            objdtDebitorenSub.Clear()
+            objdtDebitorenSub.Constraints.Clear()
+            objdtDebitorenSub.Dispose()
 
             'Tabelle Debi/ Kredi Head erstellen
             objdtDebitorenHead = Main.tblDebitorenHead()
@@ -132,6 +141,8 @@ Friend Class frmImportMain
             End If
 
             'DGV Debitoren
+            dgvBookings.DataSource = Nothing
+            dgvBookingSub.DataSource = Nothing
             dgvBookings.DataSource = objdtDebitorenHead
             dgvBookingSub.DataSource = objdtDebitorenSub
             objdbConn.Open()
@@ -177,13 +188,14 @@ Friend Class frmImportMain
                                          objOracleConn,
                                          objOracleCmd)
 
-            Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead, objdtDebitorenHead)
+            Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead,
+                                                objdtDebitorenHead)
 
             'Grid neu aufbauen
             Application.DoEvents()
-            dgvBookingSub.Update()
-            dgvBookings.Update()
-            dgvBookings.Refresh()
+            'dgvBookingSub.Update()
+            'dgvBookings.Update()
+            'dgvBookings.Refresh()
 
             Call Main.FcCheckDebit(cmbBuha.SelectedValue,
                                    objdtDebitorenHead,
@@ -932,7 +944,9 @@ Friend Class frmImportMain
                                 'strBeBuEintrag = "999999" + "{<}" + SubRow("strDebSubText") + "{<}" + "CALCULATE" + "{>}"
                                 strBeBuEintrag = Nothing
                             End If
-                            If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then 'And SubRow("strMwStKey") <> "25" Then
+                            If Not IsDBNull(SubRow("strMwStKey")) And
+                                    SubRow("strMwStKey") <> "null" And
+                                    SubRow("lngKto") <> 6906 Then 'And SubRow("strMwStKey") <> "25" Then
                                 If strBuchType = "R" Then
                                     strSteuerFeld = Main.FcGetSteuerFeld(FBhg,
                                                                          SubRow("lngKto"),
@@ -1688,9 +1702,10 @@ Friend Class frmImportMain
             Call Main.InsertDataTableColumnName(objdtKreditorenHeadRead, objdtKreditorenHead)
 
             'Grid neu aufbauen
-            dgvBookingSub.Update()
-            dgvBookings.Update()
-            dgvBookings.Refresh()
+            'dgvBookingSub.Update()
+            'dgvBookings.Update()
+            'dgvBookings.Refresh()
+            Application.DoEvents()
 
             Call Main.FcCheckKredit(cmbBuha.SelectedValue,
                                 objdtKreditorenHead,

@@ -26,26 +26,41 @@ Public Class MainDebitor
         Dim objlocMySQLcmd As New MySqlCommand
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
 
-        Dim objDTDebiHead As New DataTable
+        'Dim objDTDebiHead As New DataTable
         'Dim objdrSub As DataRow
         'Dim intFcReturns As Int16
         Dim strMDBName As String
 
-        objdbconn.Open()
-
-        strMDBName = Main.FcReadFromSettings(objdbconn, "Buchh_RGTableMDB", intAccounting)
-
-        'Head Debitoren löschen
-        objdtHead.Clear()
-        strSQL = Main.FcReadFromSettings(objdbconn, "Buchh_SQLHead", intAccounting)
-        strRGTableType = Main.FcReadFromSettings(objdbconn, "Buchh_RGTableType", intAccounting)
 
         Try
+
+            objdbconn.Open()
+
+            strMDBName = Main.FcReadFromSettings(objdbconn,
+                                                 "Buchh_RGTableMDB",
+                                                 intAccounting)
+
+            'Head Debitoren löschen
+            objdtHead.Clear()
+            objdtHead.Constraints.Clear()
+            objdtHead.Dispose()
+
+            objdtSub.Clear()
+            objdtSub.Constraints.Clear()
+            objdtSub.Dispose()
+
+            strSQL = Main.FcReadFromSettings(objdbconn,
+                                             "Buchh_SQLHead",
+                                             intAccounting)
+            strRGTableType = Main.FcReadFromSettings(objdbconn,
+                                                     "Buchh_RGTableType",
+                                                     intAccounting)
 
             'objlocMySQLcmd.CommandText = strSQL
             If strRGTableType = "A" Then
                 'Access
-                Call Main.FcInitAccessConnecation(objdbAccessConn, strMDBName)
+                Call Main.FcInitAccessConnecation(objdbAccessConn,
+                                                  strMDBName)
 
                 objlocOLEdbcmd.CommandText = strSQL
                 objdbAccessConn.Open()
@@ -90,6 +105,9 @@ Public Class MainDebitor
                     objlocMySQLcmd.CommandText = strSQLSub
                     objdtSub.Load(objlocMySQLcmd.ExecuteReader)
                 End If
+
+                Application.DoEvents()
+
             Next
             'Tabellen runden
             'intFcReturns = FcRoundInTable(objdtHead, "dblDebNetto", 2)
@@ -112,11 +130,16 @@ Public Class MainDebitor
             End If
             objdbconn.Close()
 
+            objRGMySQLConn.Dispose()
+            objlocMySQLcmd.Dispose()
+            objlocOLEdbcmd.Dispose()
+
         End Try
 
     End Function
 
-    Public Shared Function FcReadDebitorKName(ByRef objfiBuha As SBSXASLib.AXiFBhg, ByVal lngDebKtoNbr As Long) As String
+    Public Shared Function FcReadDebitorKName(ByRef objfiBuha As SBSXASLib.AXiFBhg,
+                                              ByVal lngDebKtoNbr As Long) As String
 
         Dim strDebitorKName As String
         Dim strDebitorKAr() As String
@@ -137,11 +160,16 @@ Public Class MainDebitor
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Debitoren-Daten-Lesen Problem", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
+        Finally
+            Application.DoEvents()
+
         End Try
 
     End Function
 
-    Public Shared Function FcReadDebitorName(ByRef objDbBhg As SBSXASLib.AXiDbBhg, ByVal intDebiNbr As Int32, ByVal strCurrency As String) As String
+    Public Shared Function FcReadDebitorName(ByRef objDbBhg As SBSXASLib.AXiDbBhg,
+                                             ByVal intDebiNbr As Int32,
+                                             ByVal strCurrency As String) As String
 
         Dim strDebitorName As String
         Dim strDebitorAr() As String
@@ -164,6 +192,9 @@ Public Class MainDebitor
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Debitoren-Daten-Lesen Problem", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+
+        Finally
+            Application.DoEvents()
 
         End Try
 
@@ -191,23 +222,47 @@ Public Class MainDebitor
         Dim objsqlCommDeb As New MySqlCommand
 
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
-        Dim strMDBName As String = Main.FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting)
+        Dim strMDBName As String = Main.FcReadFromSettings(objdbconn,
+                                                           "Buchh_PKTableConnection",
+                                                           intAccounting)
         Dim strSQL As String
         Dim intFunctionReturns As Int16
 
         Try
 
-            strTableName = Main.FcReadFromSettings(objdbconn, "Buchh_PKTable", intAccounting)
-            strTableType = Main.FcReadFromSettings(objdbconn, "Buchh_PKTableType", intAccounting)
-            strDebFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKField", intAccounting)
-            strDebNewField = Main.FcReadFromSettings(objdbconn, "Buchh_PKNewField", intAccounting)
-            strDebNewFieldType = Main.FcReadFromSettings(objdbconn, "Buchh_PKNewFType", intAccounting)
-            strCompFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKCompany", intAccounting)
-            strStreetFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKStreet", intAccounting)
-            strZIPFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKZIP", intAccounting)
-            strTownFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKTown", intAccounting)
-            strSageName = Main.FcReadFromSettings(objdbconn, "Buchh_PKSageName", intAccounting)
-            strDebiAccField = Main.FcReadFromSettings(objdbconn, "Buchh_DPKAccount", intAccounting)
+            strTableName = Main.FcReadFromSettings(objdbconn,
+                                                   "Buchh_PKTable",
+                                                   intAccounting)
+            strTableType = Main.FcReadFromSettings(objdbconn,
+                                                   "Buchh_PKTableType",
+                                                   intAccounting)
+            strDebFieldName = Main.FcReadFromSettings(objdbconn,
+                                                      "Buchh_PKField",
+                                                      intAccounting)
+            strDebNewField = Main.FcReadFromSettings(objdbconn,
+                                                     "Buchh_PKNewField",
+                                                     intAccounting)
+            strDebNewFieldType = Main.FcReadFromSettings(objdbconn,
+                                                         "Buchh_PKNewFType",
+                                                         intAccounting)
+            strCompFieldName = Main.FcReadFromSettings(objdbconn,
+                                                       "Buchh_PKCompany",
+                                                       intAccounting)
+            strStreetFieldName = Main.FcReadFromSettings(objdbconn,
+                                                         "Buchh_PKStreet",
+                                                         intAccounting)
+            strZIPFieldName = Main.FcReadFromSettings(objdbconn,
+                                                      "Buchh_PKZIP",
+                                                      intAccounting)
+            strTownFieldName = Main.FcReadFromSettings(objdbconn,
+                                                       "Buchh_PKTown",
+                                                       intAccounting)
+            strSageName = Main.FcReadFromSettings(objdbconn,
+                                                  "Buchh_PKSageName",
+                                                  intAccounting)
+            strDebiAccField = Main.FcReadFromSettings(objdbconn,
+                                                      "Buchh_DPKAccount",
+                                                      intAccounting)
 
             strSQL = "SELECT * " + 'strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
                  " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
@@ -307,8 +362,11 @@ Public Class MainDebitor
                         End If
                         Return 0
                     End If
+                Else
+                    intDebiNew = 0
+                    Return 4
                 End If
-                'Else
+            Else
                 'intDebiNew = 0
                 'Return 4
             End If
@@ -323,6 +381,8 @@ Public Class MainDebitor
 
         Finally
             'objdbconnZHDB02.Close()
+            objdtDebitor.Dispose()
+            Application.DoEvents()
 
         End Try
 
@@ -564,6 +624,11 @@ Public Class MainDebitor
 
         Finally
             objdbconnZHDB02.Close()
+            objdtDebitor.Dispose()
+            objdtSachB.Dispose()
+            objdsDebitor.Dispose()
+            objDADebitor.Dispose()
+            Application.DoEvents()
 
         End Try
 
@@ -974,7 +1039,10 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcCheckDebiIntBank(ByRef objdbconn As MySqlConnection, ByVal intAccounting As Integer, ByVal striBankS50 As String, ByRef intIBankS200 As String) As Int16
+    Public Shared Function FcCheckDebiIntBank(ByRef objdbconn As MySqlConnection,
+                                              ByVal intAccounting As Integer,
+                                              ByVal striBankS50 As String,
+                                              ByRef intIBankS200 As String) As Int16
 
         '0=ok, 1=Sage50 iBank nicht gefunden, 2=Kein Standard gesetzt, 3=Nichts angegeben, auf Standard gesetzt, 9=Problem
 
@@ -1024,6 +1092,8 @@ Public Class MainDebitor
             If objdbconn.State = ConnectionState.Open Then
                 'objdbconn.Close()
             End If
+            objdtiBank.Dispose()
+            Application.DoEvents()
 
         End Try
 
@@ -1105,6 +1175,10 @@ Public Class MainDebitor
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Parsing " + Err.Number.ToString)
+
+        Finally
+            RowBooking = Nothing
+            Application.DoEvents()
 
         End Try
 
