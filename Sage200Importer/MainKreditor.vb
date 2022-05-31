@@ -329,6 +329,7 @@ Public Class MainKreditor
                     strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
                 End If
 
+                'QR-IBAN
                 If intPayType = 10 And Len(strKrediBank) >= 21 Then
                     strIBANNr = strKrediBank
                     intReturnValue = Main.FcGetIBANDetails(objdbconn,

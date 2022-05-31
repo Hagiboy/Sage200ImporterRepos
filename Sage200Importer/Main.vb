@@ -122,9 +122,12 @@ Friend NotInheritable Class Main
             Dim datDebDue As DataColumn = New DataColumn("datDebDue")
             datDebDue.DataType = System.Type.[GetType]("System.DateTime")
             DT.Columns.Add(datDebDue)
+            Dim intPayTYpe As DataColumn = New DataColumn("intPayType")
+            intPayTYpe.DataType = System.Type.GetType("System.Int16")
+            DT.Columns.Add(intPayTYpe)
             Dim strDebiBank As DataColumn = New DataColumn("strDebiBank")
             strDebiBank.DataType = System.Type.[GetType]("System.String")
-            strDebiBank.MaxLength = 5
+            strDebiBank.MaxLength = 27
             DT.Columns.Add(strDebiBank)
             Dim strDebRef As DataColumn = New DataColumn("strDebRef")
             strDebRef.DataType = System.Type.[GetType]("System.String")
@@ -647,7 +650,9 @@ Friend NotInheritable Class Main
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
 
             objdbconn.Open()
-            strMandant = FcReadFromSettings(objdbconn, "Buchh200_Name", intAccounting)
+            strMandant = FcReadFromSettings(objdbconn,
+                                            "Buchh200_Name",
+                                            intAccounting)
             objdbconn.Close()
             booAccOk = objFinanz.CheckMandant(strMandant)
 
@@ -903,15 +908,15 @@ ErrorHandler:
 
 
 
+        Dim strMandant As String
+        Dim booAccOk As Int16
+        Dim intLbNbr As Int16
+        Dim strPeriodenListe As String = ""
+        Dim strPeriodeAr() As String
+        Dim intLooper As Int16
+
+
         Try
-
-            Dim strMandant As String
-            Dim booAccOk As Int16
-            Dim intLbNbr As Int16
-            Dim strPeriodenListe As String = ""
-            Dim strPeriodeAr() As String
-            Dim intLooper As Int16
-
 
             objFinanz = Nothing
             objFinanz = New SBSXASLib.AXFinanz
@@ -948,7 +953,6 @@ ErrorHandler:
             MessageBox.Show(ex.Message, "Periodendefinition lesen")
 
         End Try
-
 
 
     End Function
@@ -996,6 +1000,8 @@ ErrorHandler:
 
         Finally
             objSQLConnection.Close()
+            objlocdtPeriDef.Constraints.Clear()
+            objlocdtPeriDef.Clear()
             objlocdtPeriDef.Dispose()
             strPeriodenDef = Nothing
 
@@ -1003,7 +1009,9 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcReadBankSettings(ByVal intAccounting As Int16, ByVal strBank As String, ByRef objdbconn As MySqlConnection) As String
+    Public Shared Function FcReadBankSettings(ByVal intAccounting As Int16,
+                                              ByVal strBank As String,
+                                              ByRef objdbconn As MySqlConnection) As String
 
         Dim objlocdtBank As New DataTable("tbllocBank")
         Dim objlocMySQLcmd As New MySqlCommand
@@ -1031,7 +1039,9 @@ ErrorHandler:
     End Function
 
 
-    Public Shared Function FcReadFromSettings(ByRef objdbconn As MySqlConnection, ByVal strField As String, ByVal intMandant As Int16) As String
+    Public Shared Function FcReadFromSettings(ByRef objdbconn As MySqlConnection,
+                                              ByVal strField As String,
+                                              ByVal intMandant As Int16) As String
 
         Dim objlocdtSetting As New DataTable("tbllocSettings")
         Dim objlocMySQLcmd As New MySqlCommand
@@ -1575,11 +1585,19 @@ ErrorHandler:
                 End If
 
                 'Interne Bank 12
+                'If row.Table.Columns("intPayType") Is Nothing Then
+                '    row("intPayType") = 3
+                'End If
+                If IsDBNull(row("intPayType")) Then
+                    row("intPayType") = 3
+                End If
                 intReturnValue = MainDebitor.FcCheckDebiIntBank(objdbconn,
                                                                 intAccounting,
                                                                 IIf(IsDBNull(row("strDebiBank")), "", row("strDebiBank")),
+                                                                row("intPayType"),
                                                                 intiBankSage200)
                 strBitLog += Trim(intReturnValue.ToString)
+
                 'Bei SplittBill: Existiert verlinkter Beleg?
                 If row("booLinked") Then
                     'Zuerst Debitor von erstem Beleg suchen
@@ -4757,7 +4775,10 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcCheckDebiIntBank(ByRef objdbconn As MySqlConnection, ByVal intAccounting As Integer, ByVal striBankS50 As String, ByRef intIBankS200 As String) As Int16
+    Public Shared Function FcCheckDebiIntBank(ByRef objdbconn As MySqlConnection,
+                                              ByVal intAccounting As Integer,
+                                              ByVal striBankS50 As String,
+                                              ByRef intIBankS200 As String) As Int16
 
         '0=ok, 1=Sage50 iBank nicht gefunden, 2=Kein Standard gesetzt, 3=Nichts angegeben, auf Standard gesetzt, 9=Problem
 
@@ -4809,6 +4830,9 @@ ErrorHandler:
             If objdbconn.State = ConnectionState.Open Then
                 'objdbconn.Close()
             End If
+            objdtiBank.Constraints.Clear()
+            objdtiBank.Clear()
+            objdtiBank.Dispose()
 
         End Try
 

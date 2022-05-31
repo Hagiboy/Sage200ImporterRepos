@@ -810,7 +810,7 @@ Friend Class frmImportMain
 
                         Else
 
-                            If IIf(IsDBNull(row("strOPNr")), "", row("strOPNr")) = "" Then
+                            If String.IsNullOrEmpty(row("strOPNr")) Then
                                 'strExtBelegNbr = row("strOPNr")
 
                                 'Zuerst Beleg-Nummerieungung aktivieren

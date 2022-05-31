@@ -1042,6 +1042,7 @@ Public Class MainDebitor
     Public Shared Function FcCheckDebiIntBank(ByRef objdbconn As MySqlConnection,
                                               ByVal intAccounting As Integer,
                                               ByVal striBankS50 As String,
+                                              ByVal intPayType As Int16,
                                               ByRef intIBankS200 As String) As Int16
 
         '0=ok, 1=Sage50 iBank nicht gefunden, 2=Kein Standard gesetzt, 3=Nichts angegeben, auf Standard gesetzt, 9=Problem
@@ -1057,11 +1058,25 @@ Public Class MainDebitor
                 If objdbconn.State = ConnectionState.Closed Then
                     objdbconn.Open()
                 End If
-                objdbcommand.CommandText = "SELECT intSage200 FROM t_sage_tblaccountingbank WHERE strBank='" + striBankS50 + "' AND intAccountingID=" + intAccounting.ToString
+                If intPayType = 10 Then 'QR - Fall
+                    objdbcommand.CommandText = "SELECT intSage200QR FROM t_sage_tblaccountingbank WHERE QRTNNR='" + striBankS50 + "' AND intAccountingID=" + intAccounting.ToString
+                Else
+                    objdbcommand.CommandText = "SELECT intSage200 FROM t_sage_tblaccountingbank WHERE strBank='" + striBankS50 + "' AND intAccountingID=" + intAccounting.ToString
+                End If
                 objdtiBank.Load(objdbcommand.ExecuteReader)
                 'wurde DS gefunden?
                 If objdtiBank.Rows.Count > 0 Then
-                    intIBankS200 = objdtiBank.Rows(0).Item("intSage200")
+                    If intPayType = 10 Then 'QR - Fall
+                        'Wurde auch wirklich eine ZV definiert (= intSage200QR > 0)?
+                        If objdtiBank.Rows(0).Item("intSage200QR") > 0 Then
+                            intIBankS200 = objdtiBank.Rows(0).Item("intSage200QR")
+                        Else
+                            intIBankS200 = 0
+                            Return 1
+                        End If
+                    Else
+                        intIBankS200 = objdtiBank.Rows(0).Item("intSage200")
+                    End If
                     Return 0
                 Else
                     intIBankS200 = 0
@@ -1071,7 +1086,7 @@ Public Class MainDebitor
                 'Standard nehmen
                 objdbcommand.Connection = objdbconn
                 'objdbconn.Open()
-                objdbcommand.CommandText = "SELECT intSage200 FROM tblaccoutningbank WHERE booStandard=true AND intAccountingID=" + intAccounting.ToString
+                objdbcommand.CommandText = "SELECT intSage200 FROM t_sage_tblaccountingbank WHERE booStandard=true AND intAccountingID=" + intAccounting.ToString
                 objdtiBank.Load(objdbcommand.ExecuteReader)
                 'wurde ein Standard definieren
                 If objdtiBank.Rows.Count > 0 Then
@@ -1092,6 +1107,8 @@ Public Class MainDebitor
             If objdbconn.State = ConnectionState.Open Then
                 'objdbconn.Close()
             End If
+            objdtiBank.Constraints.Clear()
+            objdtiBank.Clear()
             objdtiBank.Dispose()
             Application.DoEvents()
 
