@@ -119,6 +119,9 @@ Friend NotInheritable Class Main
             Dim datDebValDatum As DataColumn = New DataColumn("datDebValDatum")
             datDebValDatum.DataType = System.Type.[GetType]("System.DateTime")
             DT.Columns.Add(datDebValDatum)
+            Dim datRGCreate As DataColumn = New DataColumn("datRGCreate")
+            datRGCreate.DataType = System.Type.[GetType]("System.DateTime")
+            DT.Columns.Add(datRGCreate)
             Dim datDebDue As DataColumn = New DataColumn("datDebDue")
             datDebDue.DataType = System.Type.[GetType]("System.DateTime")
             DT.Columns.Add(datDebDue)
@@ -1153,15 +1156,19 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "10403" Then Stop
+                'If row("strDebRGNbr") = "91306" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
                 row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 4, MidpointRounding.AwayFromZero)
-                row("dblDebMwSt") = Decimal.Round(row("dblDebMwst"), 4, MidpointRounding.AwayFromZero)
+                row("dblDebMwSt") = Decimal.Round(row("dblDebMwst"), 2, MidpointRounding.AwayFromZero)
                 row("dblDebBrutto") = Decimal.Round(row("dblDebBrutto"), 4, MidpointRounding.AwayFromZero)
                 'OP - Nummer nicht numerische Zeichen entfernen
                 row("strOPNr") = Main.FcCleanRGNrStrict(row("strOPNr"))
+                'RG-Create - Datum auf RG-Datum setzen falls nicht vorhanden
+                If IsDBNull(row("datRGCreate")) Then
+                    row("datRGCreate") = row("datDebRGDatum")
+                End If
 
                 'Status-String erstellen
                 'Debitor 01
@@ -1307,8 +1314,8 @@ ErrorHandler:
                             objdrDebiSub("strArtikel") = "Rundungsdifferenz"
                             objdrDebiSub("strDebSubText") = "Eingefügt"
                             objdrDebiSub("strStatusUBBitLog") = "00000000"
-                            If Math.Abs(dblRDiffBrutto) > 4 Then
-                                objdrDebiSub("strStatusUBText") = "Rund > 4"
+                            If Math.Abs(dblRDiffBrutto) > 5 Then
+                                objdrDebiSub("strStatusUBText") = "Rund > 5"
                             Else
                                 objdrDebiSub("strStatusUBText") = "ok"
                             End If
@@ -1317,7 +1324,7 @@ ErrorHandler:
                             dblSubBrutto = Decimal.Round(dblSubBrutto - dblRDiffBrutto, 2, MidpointRounding.AwayFromZero)
                             'dblSubMwSt = Decimal.Round(dblSubMwSt - dblRDiffMwSt, 2, MidpointRounding.AwayFromZero)
                             'dblSubNetto = Decimal.Round(dblSubNetto - dblRDiffNetto, 2, MidpointRounding.AwayFromZero)
-                            If Math.Abs(dblRDiffBrutto) > 4 Then
+                            If Math.Abs(dblRDiffBrutto) > 5 Then
                                 strBitLog += "3"
                             Else
                                 strBitLog += "0"
@@ -1715,7 +1722,7 @@ ErrorHandler:
                         'Wieder auf 1 setzen damit Beleg gebucht werden kann
                         Mid(strBitLog, 5, 1) = "1"
                     ElseIf Mid(strBitLog, 5, 1) = "3" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Rnd>1"
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Rnd>5"
                     End If
                 End If
                 'Diff zu Subbuchungen
@@ -1749,7 +1756,7 @@ ErrorHandler:
                     ElseIf Mid(strBitLog, 10, 1) = "3" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "VDCorNok"
                     ElseIf Mid(strBitLog, 10, 1) = "4" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblck"
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblckVD"
                     ElseIf Mid(strBitLog, 10, 1) = "5" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVVDCor"
                         'Korrektur hat geklappt, Wert wieder auf 0 setzen
@@ -1767,7 +1774,7 @@ ErrorHandler:
                     ElseIf Mid(strBitLog, 11, 1) = "3" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDCorNok"
                     ElseIf Mid(strBitLog, 11, 1) = "4" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblck"
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblckRD"
                     End If
                 End If
                 'interne Bank
@@ -2500,7 +2507,10 @@ ErrorHandler:
                         subrow("lngKST") = 0
                         subrow("strKtoBez") = "K<3KST ->"
                     End If
-                    intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
+                    intReturnValue = FcCheckKonto(subrow("lngKto"),
+                                                  objFiBhg,
+                                                  IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")),
+                                                  IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
                     If intReturnValue = 0 Then
                         subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto"))
                     ElseIf intReturnValue = 2 Then
@@ -2527,7 +2537,11 @@ ErrorHandler:
 
                 'Kst/Ktr prüfen 03
                 If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
-                    intReturnValue = FcCheckKstKtr(IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")), objFiBhg, objFiPI, subrow("lngKto"), strKstKtrSage200)
+                    intReturnValue = FcCheckKstKtr(IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")),
+                                                   objFiBhg,
+                                                   objFiPI,
+                                                   subrow("lngKto"),
+                                                   strKstKtrSage200)
                     If intReturnValue = 0 Then
                         subrow("strKstBez") = strKstKtrSage200
                     ElseIf intReturnValue = 1 Then
@@ -3262,7 +3276,10 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcCheckKonto(ByVal lngKtoNbr As Long, ByRef objfiBuha As SBSXASLib.AXiFBhg, ByVal dblMwSt As Double, ByVal lngKST As Int32) As Integer
+    Public Shared Function FcCheckKonto(ByVal lngKtoNbr As Long,
+                                        ByRef objfiBuha As SBSXASLib.AXiFBhg,
+                                        ByVal dblMwSt As Double,
+                                        ByVal lngKST As Int32) As Integer
 
         'Returns 0=ok, 1=existiert nicht, 2=existiert aber keine KST erlaubt, 3=KST nicht auf Konto definiert, 4=KST auf Konto > 3
 
@@ -3626,6 +3643,7 @@ ErrorHandler:
                             objdrKrediSub("strMwStKey") = "null"
                             objdrKrediSub("strArtikel") = "Rundungsdifferenz"
                             objdrKrediSub("strKredSubText") = "Rundung"
+                            objdrKrediSub("booRebilling") = True
                             objdrKrediSub("strStatusUBBitLog") = "00000000"
                             If Math.Abs(dblRDiffBrutto) > 1 Then
                                 objdrKrediSub("strStatusUBText") = "Rund > 1"
