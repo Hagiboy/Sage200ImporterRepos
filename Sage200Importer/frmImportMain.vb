@@ -783,24 +783,34 @@ Friend Class frmImportMain
 
                         If row("dblDebBrutto") < 0 Then
                             'Gutschrift
-                            'Zuerst Beleg-Nummerieungung aktivieren
-                            DbBhg.IncrBelNbr = "J"
-                            'Belegsnummer abholen
-                            intDebBelegsNummer = DbBhg.GetNextBelNbr("G")
-                            'Prüfen ob wirklich frei und falls nicht hochzählen
-                            intReturnValue = 10
-                            Do Until intReturnValue = 0
-                                intReturnValue = DbBhg.doesBelegExist(row("lngDebNbr").ToString,
+                            'Falls booGSToInv (Gutschrift zu Rechnung) dann OP-Nummer vorgeben, sonst hochzählen lassen
+                            If row("booCrToInv") Then
+                                'Beleg-Nummerierung desaktivieren
+                                DbBhg.IncrBelNbr = "N"
+                                'Eingelesene OP-Nummer (=Verknüpfte OP-Nr.) = interne Beleg-Nummer
+                                intDebBelegsNummer = row("strOPNr")
+                                strExtBelegNbr = row("strDebRGNbr")
+                            Else
+                                'Zuerst Beleg-Nummerieungung aktivieren
+                                DbBhg.IncrBelNbr = "J"
+                                'Belegsnummer abholen
+                                intDebBelegsNummer = DbBhg.GetNextBelNbr("G")
+                                'Prüfen ob wirklich frei und falls nicht hochzählen
+                                intReturnValue = 10
+                                Do Until intReturnValue = 0
+                                    intReturnValue = DbBhg.doesBelegExist(row("lngDebNbr").ToString,
                                                                       row("strDebCur"),
                                                                       intDebBelegsNummer.ToString,
                                                                       "NOT_SET",
                                                                       "G",
                                                                       "NOT_SET")
-                                If intReturnValue <> 0 Then
-                                    intDebBelegsNummer += 1
-                                End If
-                            Loop
-                            strExtBelegNbr = row("strOPNr")
+                                    If intReturnValue <> 0 Then
+                                        intDebBelegsNummer += 1
+                                    End If
+                                Loop
+                                strExtBelegNbr = row("strOPNr")
+                            End If
+
                             'Beträge drehen
                             row("dblDebBrutto") = row("dblDebBrutto") * -1
                             row("dblDebMwSt") = row("dblDebMwSt") * -1

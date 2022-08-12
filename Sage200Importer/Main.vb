@@ -168,6 +168,9 @@ Friend NotInheritable Class Main
             Dim lngDebiKST As DataColumn = New DataColumn("lngDebiKST")
             lngDebiKST.DataType = System.Type.[GetType]("System.Int32")
             DT.Columns.Add(lngDebiKST)
+            Dim booCrToInv As DataColumn = New DataColumn("booCrToInv")
+            booCrToInv.DataType = System.Type.[GetType]("System.Boolean")
+            DT.Columns.Add(booCrToInv)
             Dim booPGV As DataColumn = New DataColumn("booPGV")
             booPGV.DataType = System.Type.[GetType]("System.Boolean")
             DT.Columns.Add(booPGV)
@@ -1168,6 +1171,10 @@ ErrorHandler:
                 'RG-Create - Datum auf RG-Datum setzen falls nicht vorhanden
                 If IsDBNull(row("datRGCreate")) Then
                     row("datRGCreate") = row("datDebRGDatum")
+                End If
+                'Credit To Debit (Gutschrift zu Rechnung) - Option auf false setzen falls nicht vorhanden
+                If IsDBNull(row("booCrToInv")) Then
+                    row("booCrToInv") = False
                 End If
 
                 'Status-String erstellen
