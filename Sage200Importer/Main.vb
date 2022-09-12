@@ -1016,6 +1016,7 @@ ErrorHandler:
     End Function
 
     Public Shared Function FcReadBankSettings(ByVal intAccounting As Int16,
+                                              ByVal intPayType As Int16,
                                               ByVal strBank As String,
                                               ByRef objdbconn As MySqlConnection) As String
 
@@ -1025,7 +1026,12 @@ ErrorHandler:
         Try
 
 
-            objlocMySQLcmd.CommandText = "SELECT strBLZ FROM t_sage_tblaccountingbank WHERE intAccountingID=" + intAccounting.ToString + " AND strBank='" + strBank + "'"
+            If intPayType = 10 Then
+                objlocMySQLcmd.CommandText = "SELECT strBLZ FROM t_sage_tblaccountingbank WHERE intAccountingID=" + intAccounting.ToString + " AND QRTNNR='" + strBank + "'"
+            Else
+                objlocMySQLcmd.CommandText = "SELECT strBLZ FROM t_sage_tblaccountingbank WHERE intAccountingID=" + intAccounting.ToString + " AND strBank='" + strBank + "'"
+            End If
+
             objlocMySQLcmd.Connection = objdbconn
             objlocdtBank.Load(objlocMySQLcmd.ExecuteReader)
 
@@ -1381,7 +1387,8 @@ ErrorHandler:
                                                     row("strDebRGNbr"),
                                                     row("strOPNr"),
                                                     row("intBuchungsart"),
-                                                    strDebiReferenz)
+                                                    strDebiReferenz,
+                                                    row("intPayType"))
                     If Len(strDebiReferenz) > 0 Then
                         row("strDebReferenz") = strDebiReferenz
                     Else
@@ -2057,7 +2064,8 @@ ErrorHandler:
                                           ByVal strRGNr As String,
                                           ByRef strOPNr As String,
                                           ByVal intBuchungsArt As Integer,
-                                          ByRef strReferenz As String) As Integer
+                                          ByRef strReferenz As String,
+                                          ByVal intPayType As Integer) As Integer
 
         'Return 0=ok oder nicht nötig, 1=keine Angaben hinterlegt, 2=Berechnung hat nicht geklappt
 
@@ -2085,6 +2093,7 @@ ErrorHandler:
                 End Select
 
                 strTLNNr = FcReadBankSettings(intAccounting,
+                                              intPayType,
                                               strBank,
                                               objdbconn)
 

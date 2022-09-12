@@ -798,6 +798,7 @@ Friend Class frmImportMain
                                 'Prüfen ob wirklich frei und falls nicht hochzählen
                                 intReturnValue = 10
                                 Do Until intReturnValue = 0
+
                                     intReturnValue = DbBhg.doesBelegExist(row("lngDebNbr").ToString,
                                                                       row("strDebCur"),
                                                                       intDebBelegsNummer.ToString,
