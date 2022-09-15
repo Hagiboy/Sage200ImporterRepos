@@ -1327,7 +1327,7 @@ ErrorHandler:
                             objdrDebiSub("strArtikel") = "Rundungsdifferenz"
                             objdrDebiSub("strDebSubText") = "Eingefügt"
                             objdrDebiSub("strStatusUBBitLog") = "00000000"
-                            If Math.Abs(dblRDiffBrutto) > 5 Then
+                            If Math.Abs(dblRDiffBrutto) > 6 Then
                                 objdrDebiSub("strStatusUBText") = "Rund > 5"
                             Else
                                 objdrDebiSub("strStatusUBText") = "ok"
@@ -1337,7 +1337,7 @@ ErrorHandler:
                             dblSubBrutto = Decimal.Round(dblSubBrutto - dblRDiffBrutto, 2, MidpointRounding.AwayFromZero)
                             'dblSubMwSt = Decimal.Round(dblSubMwSt - dblRDiffMwSt, 2, MidpointRounding.AwayFromZero)
                             'dblSubNetto = Decimal.Round(dblSubNetto - dblRDiffNetto, 2, MidpointRounding.AwayFromZero)
-                            If Math.Abs(dblRDiffBrutto) > 5 Then
+                            If Math.Abs(dblRDiffBrutto) > 6 Then
                                 strBitLog += "3"
                             Else
                                 strBitLog += "0"
