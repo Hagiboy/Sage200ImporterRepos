@@ -389,6 +389,270 @@ Public Class MainDebitor
 
     End Function
 
+    Public Shared Function FcGetDZkondFromCust(ByRef objdbconn As MySqlConnection,
+                                              ByRef objdbconnZHDB02 As MySqlConnection,
+                                              ByRef objsqlcommandZHDB02 As MySqlCommand,
+                                              ByVal lngDebiNbr As Long,
+                                              ByRef intDZkond As Int16,
+                                              ByVal intAccounting As Int16) As Int16
+
+        'Returns 0=ok, 1=Repbetrieb nicht gefunden, 9=Problem; intDZKond wird abgefüllt
+
+        Dim intDZKondDefault As Int16
+
+        Dim objdsDebitor As New DataSet
+        Dim objDADebitor As New MySqlDataAdapter
+        Dim objdtDZKond As New DataTable("tbllocDZKond")
+
+        Try
+
+            If objdbconnZHDB02.State = ConnectionState.Closed Then
+                objdbconnZHDB02.Open()
+            End If
+            objsqlcommandZHDB02.Connection = objdbconnZHDB02
+
+            'Standard suchen auf Mandant
+            objsqlcommandZHDB02.CommandText = "SELECT * " +
+                                              "FROM t_payterms_client " +
+                                              "INNER JOIN t_sage_zahlungskondition ON t_payterms_client.ZlgkID=t_sage_zahlungskondition.ID " +
+                                              "WHERE t_payterms_client.MandantID = " + intAccounting.ToString + " " +
+                                              "AND t_payterms_client.K_NR IS NULL " +
+                                              "AND t_payterms_client.RepID IS NULL " +
+                                              "AND t_payterms_client.CustomerID IS NULL " +
+                                              "AND t_payterms_client.IsStandard = true " +
+                                              "AND t_sage_zahlungskondition.IsKredi = false"
+
+            objdtDZKond.Load(objsqlcommandZHDB02.ExecuteReader)
+            If objdtDZKond.Rows.Count > 0 Then
+                intDZKondDefault = objdtDZKond.Rows(0).Item("SageID")
+            Else
+                'Default MSS lesen
+                'Es wird davon ausgegangen, dass der MSS - Standard auf jeden Fall existiert
+                objsqlcommandZHDB02.CommandText = "SELECT * " +
+                                              "FROM t_payterms_client " +
+                                              "INNER JOIN t_sage_zahlungskondition ON t_payterms_client.ZlgkID=t_sage_zahlungskondition.ID " +
+                                              "WHERE t_payterms_client.MandantID IS NULL " +
+                                              "AND t_payterms_client.K_NR IS NULL " +
+                                              "AND t_payterms_client.RepID IS NULL " +
+                                              "AND t_payterms_client.CustomerID IS NULL " +
+                                              "AND t_payterms_client.IsStandard = true " +
+                                              "AND t_sage_zahlungskondition.IsKredi = false"
+                objdtDZKond.Load(objsqlcommandZHDB02.ExecuteReader)
+                intDZKondDefault = objdtDZKond.Rows(0).Item("SageID")
+
+            End If
+
+            'Zahlungsbedingung suchen
+            'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
+            objsqlcommandZHDB02.CommandText = "Select t_customer.PKNr, t_sage_zahlungskondition.SageID " +
+                                                  "FROM t_customer INNER JOIN t_sage_zahlungskondition On t_customer.DebiZKonditionID = t_sage_zahlungskondition.ID " +
+                                                  "WHERE t_customer.PKNr=" + lngDebiNbr.ToString
+            objDADebitor.SelectCommand = objsqlcommandZHDB02
+            objdsDebitor.EnforceConstraints = False
+            objDADebitor.Fill(objdsDebitor)
+
+            If objdsDebitor.Tables(0).Rows.Count > 0 Then
+
+                'Rep-Betrieb existiert
+                If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
+                    intDZkond = objdsDebitor.Tables(0).Rows(0).Item("SageID")
+                Else
+                    intDZkond = intDZKondDefault
+                End If
+                Return 0
+
+            Else
+
+                'Kunde existiert nicht
+                intDZkond = intDZKondDefault
+                Return 1
+
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Debitor - Z-Bedingung - von Cust lesen", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            intDZkond = intDZKondDefault
+            Return 9
+
+        Finally
+            objdbconnZHDB02.Close()
+            objdsDebitor.Dispose()
+            objDADebitor.Dispose()
+            Application.DoEvents()
+
+        End Try
+
+
+    End Function
+
+    Public Shared Function FcGetDZkondFromRep(ByRef objdbconn As MySqlConnection,
+                                              ByRef objdbconnZHDB02 As MySqlConnection,
+                                              ByRef objsqlcommandZHDB02 As MySqlCommand,
+                                              ByVal lngDebiNbr As Long,
+                                              ByRef intDZkond As Int16,
+                                              ByVal intAccounting As Int16) As Int16
+
+        'Returns 0=ok, 1=Repbetrieb nicht gefunden, 9=Problem; intDZKond wird abgefüllt
+
+        Dim intDZKondDefault As Int16
+
+        Dim objdsDebitor As New DataSet
+        Dim objDADebitor As New MySqlDataAdapter
+        Dim objdtDZKond As New DataTable("tbllocDZKond")
+
+        Try
+
+            If objdbconnZHDB02.State = ConnectionState.Closed Then
+                objdbconnZHDB02.Open()
+            End If
+            objsqlcommandZHDB02.Connection = objdbconnZHDB02
+
+            'Standard suchen auf Mandant
+            objsqlcommandZHDB02.CommandText = "SELECT * " +
+                                              "FROM t_payterms_client " +
+                                              "INNER JOIN t_sage_zahlungskondition ON t_payterms_client.ZlgkID=t_sage_zahlungskondition.ID " +
+                                              "WHERE t_payterms_client.MandantID = " + intAccounting.ToString + " " +
+                                              "AND t_payterms_client.K_NR IS NULL " +
+                                              "AND t_payterms_client.RepID IS NULL " +
+                                              "AND t_payterms_client.CustomerID IS NULL " +
+                                              "AND t_payterms_client.IsStandard = true " +
+                                              "AND t_sage_zahlungskondition.IsKredi = false"
+
+            objdtDZKond.Load(objsqlcommandZHDB02.ExecuteReader)
+            If objdtDZKond.Rows.Count > 0 Then
+                intDZKondDefault = objdtDZKond.Rows(0).Item("SageID")
+            Else
+                'Default MSS lesen
+                'Es wird davon ausgegangen, dass der MSS - Standard auf jeden Fall existiert
+                objsqlcommandZHDB02.CommandText = "SELECT * " +
+                                              "FROM t_payterms_client " +
+                                              "INNER JOIN t_sage_zahlungskondition ON t_payterms_client.ZlgkID=t_sage_zahlungskondition.ID " +
+                                              "WHERE t_payterms_client.MandantID IS NULL " +
+                                              "AND t_payterms_client.K_NR IS NULL " +
+                                              "AND t_payterms_client.RepID IS NULL " +
+                                              "AND t_payterms_client.CustomerID IS NULL " +
+                                              "AND t_payterms_client.IsStandard = true " +
+                                              "AND t_sage_zahlungskondition.IsKredi = false"
+                objdtDZKond.Load(objsqlcommandZHDB02.ExecuteReader)
+                intDZKondDefault = objdtDZKond.Rows(0).Item("SageID")
+
+            End If
+
+            'Zahlungsbedingung suchen
+            'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
+            objsqlcommandZHDB02.CommandText = "Select Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
+                                                  "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition On Tab_Repbetriebe.Rep_DebiZKonditionID = t_sage_zahlungskondition.ID " +
+                                                  "WHERE Tab_Repbetriebe.PKNr=" + lngDebiNbr.ToString
+            objDADebitor.SelectCommand = objsqlcommandZHDB02
+            objdsDebitor.EnforceConstraints = False
+            objDADebitor.Fill(objdsDebitor)
+
+            If objdsDebitor.Tables(0).Rows.Count > 0 Then
+
+                'Rep-Betrieb existiert
+                If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
+                    intDZkond = objdsDebitor.Tables(0).Rows(0).Item("SageID")
+                Else
+                    'Es ist keine Definition vorgenommen worden
+                    intDZkond = intDZKondDefault
+                End If
+                Return 0
+
+            Else
+
+                'Rep-Betrieb existiert nicht
+                intDZkond = intDZKondDefault
+                Return 1
+
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Debitor - Z-Bedingung - von Rep lesen", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            intDZkond = intDZKondDefault
+            Return 9
+
+        Finally
+            objdbconnZHDB02.Close()
+            objdsDebitor.Dispose()
+            objDADebitor.Dispose()
+            objdtDZKond.Clear()
+            objdtDZKond.Dispose()
+            Application.DoEvents()
+
+        End Try
+
+
+    End Function
+
+    Public Shared Function FcGetDZKondSageID(ByRef objdbconn As MySqlConnection,
+                                              ByRef objdbconnZHDB02 As MySqlConnection,
+                                              ByRef objsqlcommandZHDB02 As MySqlCommand,
+                                              ByVal intDZkond As Int16,
+                                              ByRef intDZKondS200 As Int16) As Int16
+
+        'Returns 0=ok, 1=ZK nicht gefunden, 9=Problem; intDZKond wird mit Sage 200 ZK abgefüllt
+
+        Dim objdsDebitor As New DataSet
+        Dim objDADebitor As New MySqlDataAdapter
+        Dim objdtDZKond As New DataTable("tbllocDZKond")
+
+        Try
+
+            If objdbconnZHDB02.State = ConnectionState.Closed Then
+                objdbconnZHDB02.Open()
+            End If
+            objsqlcommandZHDB02.Connection = objdbconnZHDB02
+
+            'Zahlungsbedingung suchen
+            'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
+            objsqlcommandZHDB02.CommandText = "Select t_sage_zahlungskondition.SageID " +
+                                                  "FROM t_sage_zahlungskondition " +
+                                                  "WHERE t_sage_zahlungskondition.ID=" + intDZkond.ToString
+            objDADebitor.SelectCommand = objsqlcommandZHDB02
+            objdsDebitor.EnforceConstraints = False
+            objDADebitor.Fill(objdsDebitor)
+
+            If objdsDebitor.Tables(0).Rows.Count > 0 Then
+
+                'ZK existiert
+                If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
+                    intDZKondS200 = objdsDebitor.Tables(0).Rows(0).Item("SageID")
+                Else
+                    'ZK existiert, aber Sage ID nicht definiert
+                    intDZKondS200 = 0
+                End If
+                Return 0
+
+            Else
+
+                'ZK existiert nicht
+                intDZKondS200 = 0
+                Return 1
+
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Debitor - Z-Bedingung - von ZK-Tabelle lesen", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            intDZkond = 0
+            Return 9
+
+        Finally
+            objdbconnZHDB02.Close()
+            objdsDebitor.Dispose()
+            objDADebitor.Dispose()
+            objdtDZKond.Clear()
+            objdtDZKond.Dispose()
+            Application.DoEvents()
+
+        End Try
+
+
+    End Function
+
+
     Public Shared Function FcIsDebitorCreatable(ByRef objdbconn As MySqlConnection,
                                                 ByRef objdbconnZHDB02 As MySqlConnection,
                                                 ByRef objsqlcommandZHDB02 As MySqlCommand,
@@ -431,7 +695,7 @@ Public Class MainDebitor
                 objdbconnZHDB02.Open()
             End If
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
-            objsqlcommandZHDB02.CommandText = "SELECT Rep_Nr, " +
+            objsqlcommandZHDB02.CommandText = "Select Rep_Nr, " +
                                                       "Rep_Suchtext, " +
                                                       "Rep_Firma, " +
                                                       "Rep_Strasse, " +
@@ -490,22 +754,30 @@ Public Class MainDebitor
                                                          intintBank)
 
                 'Zahlungsbedingung suchen
-                'objdtKreditor.Clear()
-                'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
-                objsqlcommandZHDB02.CommandText = "Select Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
-                                                  "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition On Tab_Repbetriebe.Rep_DebiZKonditionID = t_sage_zahlungskondition.ID " +
-                                                  "WHERE Tab_Repbetriebe.PKNr=" + lngDebiNbr.ToString
-                objDADebitor.SelectCommand = objsqlcommandZHDB02
-                objdsDebitor.EnforceConstraints = False
-                objDADebitor.Fill(objdsDebitor)
+                intReturnValue = FcGetDZkondFromRep(objdbconn,
+                                                    objdbconnZHDB02,
+                                                    objsqlcommandZHDB02,
+                                                    lngDebiNbr,
+                                                    intDebZB,
+                                                    intAccounting)
 
-                'objdsKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
-                'objdtKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
-                If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
-                    intDebZB = objdsDebitor.Tables(0).Rows(0).Item("SageID")
-                Else
-                    intDebZB = 1
-                End If
+
+                ''objdtKreditor.Clear()
+                ''Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
+                'objsqlcommandZHDB02.CommandText = "Select Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
+                '                                  "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition On Tab_Repbetriebe.Rep_DebiZKonditionID = t_sage_zahlungskondition.ID " +
+                '                                  "WHERE Tab_Repbetriebe.PKNr=" + lngDebiNbr.ToString
+                'objDADebitor.SelectCommand = objsqlcommandZHDB02
+                'objdsDebitor.EnforceConstraints = False
+                'objDADebitor.Fill(objdsDebitor)
+
+                ''objdsKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
+                ''objdtKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
+                'If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
+                '    intDebZB = objdsDebitor.Tables(0).Rows(0).Item("SageID")
+                'Else
+                '    intDebZB = 1
+                'End If
 
                 'Land von Text auf Auto-Kennzeichen ändern
                 Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Land")), "Schweiz", objdtDebitor.Rows(0).Item("Rep_Land"))
@@ -791,6 +1063,61 @@ Public Class MainDebitor
 
     End Function
 
+    Public Shared Function FcCheckDZKond(ByRef objSQLConnection As SqlClient.SqlConnection,
+                                         ByRef objSQLCommand As SqlClient.SqlCommand,
+                                         ByVal strMandant As String,
+                                         ByVal intDZKond As Int16) As Int16
+
+        'Return 0=definiert, 1=nicht definiert, 9=Problem
+
+        Dim objdtDZKond As New DataTable
+
+        Try
+
+            objSQLConnection.Open()
+            objSQLCommand.CommandText = "SELECT kondition.mandid, " +
+                                               "kondition.kondnbr, " +
+                                               "bezeichnung.langtext, " +
+                                               "fi_kond_grp.status, " +
+                                               "fi_kond_grp.valutatage, " +
+                                               "fi_kond_grp.isdebi, " +
+                                               "fi_kond_grp.iskredi, " +
+                                               "kondition.verftage, " +
+                                               "kondition.satz, " +
+                                               "kondition.tolnbr, " +
+                                               "kondition.akzttage " +
+                                        "FROM   kondition INNER JOIN " +
+                                               "fi_kond_grp ON kondition.mandid = fi_kond_grp.mandid AND kondition.kondnbr = fi_kond_grp.kondnbr INNER JOIN " +
+                                               "bezeichnung ON kondition.mandid = bezeichnung.mandid AND kondition.beschrnr = bezeichnung.beschreibungnr " +
+                                        "WHERE kondition.mandid='" + strMandant + "' AND " +
+                                               "fi_kond_grp.isdebi='J' AND " +
+                                               "status=1 AND " +
+                                               "kondition.kondnbr=" + intDZKond.ToString
+
+            objSQLCommand.Connection = objSQLConnection
+            objdtDZKond.Load(objSQLCommand.ExecuteReader)
+
+            If objdtDZKond.Rows.Count = 1 Then 'Debitoren - Zahlungskondition gefunden
+                Return 0
+            Else
+                Return 1
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Debitor - ZKondition lesen")
+            Return 9
+
+        Finally
+            objSQLConnection.Close()
+            objdtDZKond.Constraints.Clear()
+            objdtDZKond.Clear()
+            objdtDZKond.Dispose()
+
+        End Try
+
+
+    End Function
+
     Public Shared Function FcWriteToRGTable(ByVal intMandant As Int32,
                                             ByVal strRGNbr As String,
                                             ByVal datDate As Date,
@@ -836,7 +1163,7 @@ Public Class MainDebitor
                 'Access
                 Call Main.FcInitAccessConnecation(objdbAccessConn, strMDBName)
 
-                strSQL = "UPDATE " + strNameRGTable + " SET gebucht=true, gebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " +
+                strSQL = "UPDATE " + strNameRGTable + " Set gebucht=True, gebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " +
                                                             strBelegNrName + "=" + intBelegNr.ToString +
                                                       " WHERE " + strRGNbrFieldName + "=" + strRGNbr
                 objdbAccessConn.Open()
@@ -845,7 +1172,7 @@ Public Class MainDebitor
                 intAffected = objlocOLEdbcmd.ExecuteNonQuery()
                 'Falls Datum changed, dann geänderte Daten in RG - Tabelle schreiben
                 If booDatChanged Then
-                    strSQL = "UPDATE " + strNameRGTable + " SET " + strDebRGFieldName + "=#" + Format(datDebRGDatum, "yyyy-MM-dd").ToString + "#, " +
+                    strSQL = "UPDATE " + strNameRGTable + " Set " + strDebRGFieldName + "=#" + Format(datDebRGDatum, "yyyy-MM-dd").ToString + "#, " +
                                                                     strDebValFieldName + "=#" + Format(datDebValDatum, "yyyy-MM-dd").ToString + "# " +
                                                         " WHERE " + strRGNbrFieldName + "=" + strRGNbr
                     objlocOLEdbcmd.CommandText = strSQL
@@ -862,8 +1189,8 @@ Public Class MainDebitor
                     strBookedFieldName = "gebucht"
                     strBookedDateFieldName = "gebuchtDatum"
                 End If
-                strSQL = "UPDATE " + strNameRGTable + " SET " + strBookedFieldName + "=true, " +
-                                                                strBookedDateFieldName + "=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " +
+                strSQL = "UPDATE " + strNameRGTable + " Set " + strBookedFieldName + "=True, " +
+                                                                strBookedDateFieldName + "=Date('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " +
                                                                 strBelegNrName + "=" + intBelegNr.ToString +
                                                     " WHERE " + strRGNbrFieldName + "=" + strRGNbr
                 objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
@@ -1313,6 +1640,13 @@ Public Class MainDebitor
 
 
                 'Zahlungsbedingung suchen
+                intReturnValue = FcGetDZkondFromCust(objdbconn,
+                                                     objdbconnZHDB02,
+                                                     objsqlcommandZHDB02,
+                                                     lngDebiNbr,
+                                                     intDebZB,
+                                                     intAccounting)
+
                 'objdtKreditor.Clear()
                 'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
                 'objsqlcommandZHDB02.CommandText = "Select Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
@@ -1325,11 +1659,11 @@ Public Class MainDebitor
                 ''objdsKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
                 ''objdtKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
                 'If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
-                If IIf(IsDBNull(objdtDebitor.Rows(0).Item("DebiZKonditionID")), 0, objdtDebitor.Rows(0).Item("DebiZKonditionID")) <> 0 Then
-                    intDebZB = objdtDebitor.Rows(0).Item("DebiZKonditionID")
-                Else
-                    intDebZB = 1
-                End If
+                'If IIf(IsDBNull(objdtDebitor.Rows(0).Item("DebiZKonditionID")), 0, objdtDebitor.Rows(0).Item("DebiZKonditionID")) <> 0 Then
+                '    intDebZB = objdtDebitor.Rows(0).Item("DebiZKonditionID")
+                'Else
+                '    intDebZB = 1
+                'End If
 
                 ''Land von Text auf Auto-Kennzeichen ändern
                 'Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Land")), "Schweiz", objdtDebitor.Rows(0).Item("Rep_Land"))

@@ -879,6 +879,8 @@ Friend Class frmImportMain
                             dblKurs = 1.0#
                         End If
                         intEigeneBank = row("strDebiBank")
+                        'Zahl-Kondition
+                        intKondition = IIf(IsDBNull(row("intZKond")), 1, row("intZKond"))
 
                         Try
                             booBooingok = True

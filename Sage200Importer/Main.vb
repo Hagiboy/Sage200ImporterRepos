@@ -193,6 +193,12 @@ Friend NotInheritable Class Main
             Dim booDatChanged As DataColumn = New DataColumn("booDatChanged")
             booDatChanged.DataType = System.Type.[GetType]("System.Boolean")
             DT.Columns.Add(booDatChanged)
+            Dim intZKond As DataColumn = New DataColumn("intZKond")
+            intZKond.DataType = System.Type.[GetType]("System.Int16")
+            DT.Columns.Add(intZKond)
+            Dim intZKondT As DataColumn = New DataColumn("intZKondT")
+            intZKondT.DataType = System.Type.[GetType]("System.Int16")
+            DT.Columns.Add(intZKondT)
             Return DT
 
         Catch ex As Exception
@@ -1134,6 +1140,8 @@ ErrorHandler:
         Dim dblRDiffMwSt As Double
         Dim dblRDiffBrutto As Double
         Dim decDebiDiff As Decimal
+        Dim intDZKond As Int16
+        Dim intDZKondS200 As Int16
 
         Dim booPKPrivate As Boolean
         Dim booCashSollCorrect As Boolean
@@ -1150,6 +1158,7 @@ ErrorHandler:
         Dim intMonthsAJ As Int16
         Dim intMonthsNJ As Int16
         Dim booDateChanged As Boolean
+        Dim strMandant As String
 
 
         'Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
@@ -1328,7 +1337,7 @@ ErrorHandler:
                             objdrDebiSub("strDebSubText") = "Eingefügt"
                             objdrDebiSub("strStatusUBBitLog") = "00000000"
                             If Math.Abs(dblRDiffBrutto) > 6 Then
-                                objdrDebiSub("strStatusUBText") = "Rund > 5"
+                                objdrDebiSub("strStatusUBText") = "Rund > 6"
                             Else
                                 objdrDebiSub("strStatusUBText") = "ok"
                             End If
@@ -1610,7 +1619,7 @@ ErrorHandler:
                 '    row("intPayType") = 3
                 'End If
                 If IsDBNull(row("intPayType")) Then
-                    row("intPayType") = 3
+                    row("intPayType") = 9
                 End If
                 intReturnValue = MainDebitor.FcCheckDebiIntBank(objdbconn,
                                                                 intAccounting,
@@ -1619,7 +1628,7 @@ ErrorHandler:
                                                                 intiBankSage200)
                 strBitLog += Trim(intReturnValue.ToString)
 
-                'Bei SplittBill: Existiert verlinkter Beleg?
+                'Bei SplittBill: Existiert verlinkter Beleg? 13
                 If row("booLinked") Then
                     'Zuerst Debitor von erstem Beleg suchen
                     intDebitorNew = MainDebitor.FcGetDebitorFromLinkedRG(objdbconn,
@@ -1682,6 +1691,56 @@ ErrorHandler:
                     intReturnValue = 0
                 End If
                 strBitLog += Trim(intReturnValue.ToString)
+
+                'Zahlungs-Kondition 14
+                'Falls Zahlungskondition vorhanden von RG holen, sonst von Tab_Repbetrieben
+                'intZKondT=1 = von Rep_Betrieben, 0=von t_payment...
+                If IsDBNull(row("intZKondT")) Then
+                    row("intZKondT") = 1
+                End If
+                If IsDBNull(row("intZKond")) Then
+                    row("intZKond") = 0
+                    intDZKond = 0
+                Else
+                    'ID in effektive Sage 200 umwandeln (=von Tabelle lesen)
+                    intReturnValue = MainDebitor.FcGetDZKondSageID(objdbconn,
+                                                                   objdbconnZHDB02,
+                                                                   objsqlcommandZHDB02,
+                                                                   row("intZKond"),
+                                                                   intDZKondS200)
+                    row("intZKond") = intDZKondS200
+                End If
+                If row("intZKondT") = 1 And row("intZKond") = 0 Then
+                    'Fall kein Privatekunde
+                    If booPKPrivate = False Then
+                        'Daten aus den Tab_Repbetriebe holen
+                        intReturnValue = MainDebitor.FcGetDZkondFromRep(objdbconn,
+                                                                    objdbconnZHDB02,
+                                                                    objsqlcommandZHDB02,
+                                                                    row("lngDebNbr"),
+                                                                    intDZKond,
+                                                                    intAccounting)
+                    Else
+                        'Daten aus der t_customer holen
+                        intReturnValue = MainDebitor.FcGetDZkondFromCust(objdbconn,
+                                                                         objdbconnZHDB02,
+                                                                         objsqlcommandZHDB02,
+                                                                         row("lngDebNbr"),
+                                                                         intDZKond,
+                                                                         intAccounting)
+                    End If
+                    row("intZKond") = intDZKond
+                End If
+                'Prüfem ob Zahlungs-Kondition - ID existiert in Sage 200 bei Mandant
+                strMandant = FcReadFromSettings(objdbconn,
+                                                "Buchh200_Name",
+                                                intAccounting)
+                intReturnValue = MainDebitor.FcCheckDZKond(objdbSQLConn,
+                                                           objdbSQLCmd,
+                                                           strMandant,
+                                                           row("intZKond"))
+                strBitLog += Trim(intReturnValue.ToString)
+
 
                 'Status-String auswerten
                 ''Debitor
@@ -1806,6 +1865,11 @@ ErrorHandler:
                     End If
 
                 End If
+                'Zahlungs-Kondition
+                If Mid(strBitLog, 14, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ZKond"
+                End If
+
                 'PGV keine Ziffer
                 If row("booPGV") Then
                     If row("intPGVMthsAY") + row("intPGVMthsNY") = 1 Then
@@ -1816,7 +1880,8 @@ ErrorHandler:
                 End If
 
                 'Status schreiben
-                If Val(strBitLog) = 0 Or Val(strBitLog) = 100000002 Or Val(strBitLog) = 2 Or Val(strBitLog) = 100000000 Then
+                '5 Autokorrektur trotzdem ok, 10 Valuta 2 trotzdem ok, 11 RG 2 trotdem ok
+                If Val(strBitLog) = 0 Or Val(strBitLog) = 1000002200 Or Val(strBitLog) = 2200 Or Val(strBitLog) = 1000000000 Then
                     row("booDebBook") = True
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
                 End If
@@ -1866,6 +1931,8 @@ ErrorHandler:
                 dblSubBrutto = 0
                 dblSubNetto = 0
                 dblSubMwSt = 0
+                intDZKond = 0
+
                 Application.DoEvents()
 
             Next
@@ -4460,7 +4527,8 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcInitAccessConnecation(ByRef objaccesscon As OleDb.OleDbConnection, ByVal strMDBName As String) As Int16
+    Public Shared Function FcInitAccessConnecation(ByRef objaccesscon As OleDb.OleDbConnection,
+                                                   ByVal strMDBName As String) As Int16
 
         'Access - Connection soll initialisiert werden
         '0 = ok, 1 = nicht ok
@@ -4484,7 +4552,9 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcNextPKNr(ByRef objdbconnZHDB02 As MySqlConnection, ByVal intRepNr As Int32, ByRef intNewPKNr As Int32) As Int16
+    Public Shared Function FcNextPKNr(ByRef objdbconnZHDB02 As MySqlConnection,
+                                      ByVal intRepNr As Int32,
+                                      ByRef intNewPKNr As Int32) As Int16
 
         '0=ok, 1=Rep - Nr. existiert nicht, 2=Bereich voll, 3=keine Bereichdefinition 9=Problem
 
@@ -4772,7 +4842,9 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcWriteNewDebToRepbetrieb(ByRef objdbconnZHDB02 As MySqlConnection, ByVal intRepNr As Int32, intNewDebNr As Int32) As Int16
+    Public Shared Function FcWriteNewDebToRepbetrieb(ByRef objdbconnZHDB02 As MySqlConnection,
+                                                     ByVal intRepNr As Int32,
+                                                     intNewDebNr As Int32) As Int16
 
         '0=Update ok, 1=Update hat nicht geklappt, 9=Error
 
@@ -4872,7 +4944,9 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcNextPrivatePKNr(ByRef objdbconnZHDB02 As MySqlConnection, ByVal intPersNr As Int32, ByRef intNewPKNr As Int32) As Int16
+    Public Shared Function FcNextPrivatePKNr(ByRef objdbconnZHDB02 As MySqlConnection,
+                                             ByVal intPersNr As Int32,
+                                             ByRef intNewPKNr As Int32) As Int16
 
         '0=ok, 1=Rep - Nr. existiert nicht, 2=Bereich voll, 3=keine Bereichdefinition 9=Problem
 
@@ -4967,7 +5041,9 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcWriteNewPrivateDebToRepbetrieb(ByRef objdbconnZHDB02 As MySqlConnection, ByVal intPersNr As Int32, intNewDebNr As Int32) As Int16
+    Public Shared Function FcWriteNewPrivateDebToRepbetrieb(ByRef objdbconnZHDB02 As MySqlConnection,
+                                                            ByVal intPersNr As Int32,
+                                                            intNewDebNr As Int32) As Int16
 
         '0=Update ok, 1=Update hat nicht geklappt, 9=Error
 
