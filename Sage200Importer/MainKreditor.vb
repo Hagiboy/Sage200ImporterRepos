@@ -1172,7 +1172,7 @@ Public Class MainKreditor
                         intITY = 0
                     ElseIf strPGVType = "RV" Then
                         'Damit die Periodenbuchung auf den ersten gebucht wird.
-                        datPGVStart = "2022-01-01"
+                        datPGVStart = "2023-01-01"
                         datValuta = datValutaSave
                         intITY = 1
                         intINY = 0
@@ -1184,7 +1184,7 @@ Public Class MainKreditor
                 'Evtl. Aufteilen auf 2 Jahre
                 For intYearLooper As Int16 = Year(datValuta) To Year(datPGVEnd)
 
-                    If intYearLooper = 2021 Then
+                    If intYearLooper = 2022 Then
                         dblNettoBetrag = drKSubrow("dblNetto") / intITotal * intITY
                         intSollKonto = intAcctTY
                     Else
@@ -1197,7 +1197,7 @@ Public Class MainKreditor
                         strBelegDatum = Format(datValuta, "yyyyMMdd").ToString
 
                         If intITotal = 1 Then
-                            If Year(datValuta) = 2021 Then
+                            If Year(datValuta) = 2022 Then
                                 strDebiTextSoll = drKSubrow("strKredSubText") + ", TP"
                             Else
                                 strDebiTextSoll = drKSubrow("strKredSubText") + ", TP Auflösung"
@@ -1214,8 +1214,8 @@ Public Class MainKreditor
                             strDebiTextHaben = strDebiTextSoll
                             If strPGVType = "VR" Then
                                 'Valuta - Datum auf 01.01.22 legen, Achtung provisorisch
-                                strValutaDatum = "20220101"
-                                strBelegDatum = "20220101"
+                                strValutaDatum = "20230101"
+                                strBelegDatum = "20230101"
                             Else
                                 'strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                                 strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
@@ -1254,7 +1254,7 @@ Public Class MainKreditor
 
                         End If
 
-                        If Year(datValuta) = 2021 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                        If Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
                             'Zuerst Info-Table löschen
                             objdtInfo.Clear()
                             Application.DoEvents()
@@ -1270,7 +1270,7 @@ Public Class MainKreditor
                                                           objKrBhg,
                                                           intAccounting,
                                                           objdtInfo,
-                                                          "2021",
+                                                          "2022",
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
@@ -1280,7 +1280,7 @@ Public Class MainKreditor
                                                           strPeriodStatus)
                             Application.DoEvents()
 
-                        ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
+                        ElseIf Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then
                             'Zuerst Info-Table löschen
                             objdtInfo.Clear()
                             Application.DoEvents()
@@ -1296,7 +1296,7 @@ Public Class MainKreditor
                                                           objKrBhg,
                                                           intAccounting,
                                                           objdtInfo,
-                                                          "2022",
+                                                          "2023",
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
@@ -1380,7 +1380,7 @@ Public Class MainKreditor
                         Application.DoEvents()
 
                         '2311 -> 2312
-                        datValuta = "2022-01-01" 'Achtung provisorisch
+                        datValuta = "2023-01-01" 'Achtung provisorisch
                         strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                         strBelegDatum = strValutaDatum
                         intSollKonto = intAcctTY
@@ -1426,7 +1426,7 @@ Public Class MainKreditor
                     strBelegDatum = strValutaDatum
                     intSollKonto = drKSubrow("lngKto")
                     If intITotal = 1 Then
-                        If Year(datValuta) = 2021 Then
+                        If Year(datValuta) = 2022 Then
                             strDebiTextSoll = drKSubrow("strKredSubText") + ", TP"
                         Else
                             strDebiTextSoll = drKSubrow("strKredSubText") + ", TP Auflösung"
@@ -1453,7 +1453,7 @@ Public Class MainKreditor
                         strBebuEintragHaben = Nothing
                     End If
 
-                    If Year(datValuta) = 2021 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                    If Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
                         'Zuerst Info-Table löschen
                         objdtInfo.Clear()
                         Application.DoEvents()
@@ -1469,7 +1469,7 @@ Public Class MainKreditor
                                                           objKrBhg,
                                                           intAccounting,
                                                           objdtInfo,
-                                                          "2021",
+                                                          "2022",
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
@@ -1479,7 +1479,7 @@ Public Class MainKreditor
                                                           strPeriodStatus)
                         Application.DoEvents()
 
-                    ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
+                    ElseIf Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then
                         'Zuerst Info-Table löschen
                         objdtInfo.Clear()
                         Application.DoEvents()
@@ -1495,7 +1495,7 @@ Public Class MainKreditor
                                                           objKrBhg,
                                                           intAccounting,
                                                           objdtInfo,
-                                                          "2022",
+                                                          "2023",
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
@@ -1720,7 +1720,7 @@ Public Class MainKreditor
 
                         End If
 
-                        If Year(datValuta) = 2021 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                        If Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
                             'Zuerst Info-Table löschen
                             objdtInfo.Clear()
                             Application.DoEvents()
@@ -1736,7 +1736,7 @@ Public Class MainKreditor
                                                           objKrBhg,
                                                           intAccounting,
                                                           objdtInfo,
-                                                          "2021",
+                                                          "2022",
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
@@ -1746,7 +1746,7 @@ Public Class MainKreditor
                                                           strPeriodStatus)
                             Application.DoEvents()
 
-                        ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
+                        ElseIf Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then
                             'Zuerst Info-Table löschen
                             objdtInfo.Clear()
                             Application.DoEvents()
@@ -1762,7 +1762,7 @@ Public Class MainKreditor
                                                           objKrBhg,
                                                           intAccounting,
                                                           objdtInfo,
-                                                          "2022",
+                                                          "2023",
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
@@ -1843,7 +1843,7 @@ Public Class MainKreditor
                         Application.DoEvents()
 
                         '2311 -> 2312
-                        datValuta = "2022-01-01" 'Achtung provisorisch
+                        datValuta = "2023-01-01" 'Achtung provisorisch
                         strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                         strBelegDatum = strValutaDatum
                         intSollKonto = intAcctTY
@@ -1911,7 +1911,7 @@ Public Class MainKreditor
                         strBebuEintragHaben = Nothing
                     End If
 
-                    If Year(datValuta) = 2021 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                    If Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
                         'Zuerst Info-Table löschen
                         objdtInfo.Clear()
                         Application.DoEvents()
@@ -1927,7 +1927,7 @@ Public Class MainKreditor
                                                           objKrBhg,
                                                           intAccounting,
                                                           objdtInfo,
-                                                          "2021",
+                                                          "2022",
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,
@@ -1937,7 +1937,7 @@ Public Class MainKreditor
                                                           strPeriodStatus)
                         Application.DoEvents()
 
-                    ElseIf Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then
+                    ElseIf Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then
                         'Zuerst Info-Table löschen
                         objdtInfo.Clear()
                         Application.DoEvents()
@@ -1953,7 +1953,7 @@ Public Class MainKreditor
                                                           objKrBhg,
                                                           intAccounting,
                                                           objdtInfo,
-                                                          "2022",
+                                                          "2023",
                                                           strYear,
                                                           intTeqNbr,
                                                           intTeqNbrLY,

@@ -738,19 +738,31 @@ Friend NotInheritable Class Main
             objdtInfo.Rows.Add("Perioden", Format(datPeriodFrom, "dd.MM.yyyy hh:mm:ss") + " - " + Format(datPeriodTo, "dd.MM.yyyy hh:mm:ss") + "/ " + strPeriodStatus)
 
             'Finanz Buha öffnen
-            objfiBuha = Nothing
+            If Not IsNothing(objfiBuha) Then
+                objfiBuha = Nothing
+            End If
             objfiBuha = New SBSXASLib.AXiFBhg
             objfiBuha = objFinanz.GetFibuObj()
             'Debitor öffnen
-            objdbBuha = Nothing
+            If Not IsNothing(objdbBuha) Then
+                objdbBuha = Nothing
+            End If
             objdbBuha = New SBSXASLib.AXiDbBhg
             objdbBuha = objFinanz.GetDebiObj()
-            objdbPIFb = Nothing
+            If Not IsNothing(objdbPIFb) Then
+                objdbPIFb = Nothing
+            End If
+            objdbPIFb = New SBSXASLib.AXiPlFin
             objdbPIFb = objfiBuha.GetCheckObj()
-            objFiBebu = Nothing
+            If Not IsNothing(objFiBebu) Then
+                objFiBebu = Nothing
+            End If
+            objFiBebu = New SBSXASLib.AXiBeBu
             objFiBebu = objFinanz.GetBeBuObj()
             'Kreditor
-            objkrBuha = Nothing
+            If Not IsNothing(objkrBuha) Then
+                objkrBuha = Nothing
+            End If
             objkrBuha = New SBSXASLib.AXiKrBhg
             objkrBuha = objFinanz.GetKrediObj
 
@@ -1474,7 +1486,7 @@ ErrorHandler:
 
                 booDateChanged = False
                 'Jahresübergreifend RG- / Valuta-Datum
-                If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) And Year(row("datDebValDatum")) >= 2021 Then
+                If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) And Year(row("datDebValDatum")) >= 2022 Then
                     'Not IsDBNull(row("datPGVFrom")) Then
                     row("booPGV") = True
                     'datValutaPGV = row("datDebValDatum")
@@ -1490,7 +1502,7 @@ ErrorHandler:
                         If row("strPGVType") = "VR" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
-                            row("datDebValDatum") = "2022-01-01"
+                            row("datDebValDatum") = "2023-01-01"
                             booDateChanged = True
                         ElseIf row("strPGVType") = "RV" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
@@ -3803,7 +3815,7 @@ ErrorHandler:
                 End If
 
                 'Jahresübergreifend RG- / Valuta-Datum
-                If Year(row("datKredRGDatum")) <> Year(row("datKredValDatum")) And Year(row("datKredValDatum")) >= 2021 Then
+                If Year(row("datKredRGDatum")) <> Year(row("datKredValDatum")) And Year(row("datKredValDatum")) >= 2022 Then
 
                     row("booPGV") = True
                     'datValutaPGV = row("datKredValDatum")
@@ -3819,7 +3831,7 @@ ErrorHandler:
                         If row("strPGVType") = "VR" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
-                            row("datKredValDatum") = "2022-01-01" ' Year(row("datKredRGDatum")).ToString + "-01-01"
+                            row("datKredValDatum") = "2023-01-01" ' Year(row("datKredRGDatum")).ToString + "-01-01"
                         ElseIf row("strPGVType") = "RV" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
