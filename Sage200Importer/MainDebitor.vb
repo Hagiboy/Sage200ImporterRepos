@@ -1097,7 +1097,7 @@ Public Class MainDebitor
             objSQLCommand.Connection = objSQLConnection
             objdtDZKond.Load(objSQLCommand.ExecuteReader)
 
-            If objdtDZKond.Rows.Count = 1 Then 'Debitoren - Zahlungskondition gefunden
+            If objdtDZKond.Rows.Count >= 1 Then 'Debitoren - Zahlungskondition gefunden
                 Return 0
             Else
                 Return 1

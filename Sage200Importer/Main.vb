@@ -2500,7 +2500,8 @@ ErrorHandler:
                 End If
 
                 'Zuerst key auf 'ohne' setzen wenn MwSt-Satz = 0 und Mwst-Betrag = 0
-                If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "ohne" And IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "null" Then
+                If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "ohne" And
+                    IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "null" Then
                     'Stop
                     If IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "AUSL0" Then
                         subrow("strMwStKey") = "ohne"
@@ -3612,7 +3613,7 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
 
-                'If row("lngKredID") = "1644704" Then Stop
+                'If row("lngKredID") = "1651411" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -4265,16 +4266,16 @@ ErrorHandler:
                         If Main.FcAreFirst2Chars(IIf(strKrediBank = "", "00", strKrediBank)) = 0 Then 'IBAN als Bank
                             'QR-IBAN?
                             If Mid(strKrediBank, 5, 1) = "3" Then
-                                    intPayType = 10
-                                    Return 2
-                                Else
-                                    'keine QR-IBAN-ESR-Ref
-                                    'intPayType = 3
-                                    Return 5
-                                End If
+                                intPayType = 10
+                                Return 2
                             Else
+                                'keine QR-IBAN-ESR-Ref
+                                'intPayType = 3
+                                Return 5
+                            End If
+                        Else
 
-                                If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
+                            If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
                                 'ESR, falsch deklariert
                                 If intPayType <> 3 Then
                                     intPayType = 3
@@ -4283,27 +4284,32 @@ ErrorHandler:
                             Else
                                 'Debug.Print("Checksum " + Strings.Left(strKrediBank, 8) + " " + Strings.Right(strKrediBank, 1) + ", " + Main.FcModulo10(Strings.Left(strKrediBank, 8)).ToString)
                                 If Main.FcModulo10(Strings.Left(strKrediBank, 8)).ToString <> Strings.Right(strKrediBank, 1) Then
-                                        Return 6
-                                    Else
-                                        Return 0 'Bank ok
-                                    End If
-
+                                    Return 6
+                                Else
+                                    Return 0 'Bank ok
                                 End If
+
                             End If
                         End If
                     End If
-                    'If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
-                    '    Return 3
-                    'Else
-                    '    Return 0 'Bank ok
-                    'End If
+                ElseIf intPayType = 0 Then
+                    Return 9
+                End If
+                'If Len(strKrediBank) <> 9 Then 'ESR aber keine gültige Bank
+                '    Return 3
+                'Else
+                '    Return 0 'Bank ok
+                'End If
 
-                    'Else
-                Else
+                'Else
+            Else
                 If intPayType = 9 And Len(strReferenz) = 0 Then
                     intPayType = 3 'Nicht IBAN
+                    Return 4
+                    'ElseIf intPayType = 0 Then
+                    '    Return 9
                 End If
-                Return 4
+
             End If
 
 
