@@ -743,6 +743,7 @@ Friend Class frmImportMain
         Dim strErfassungsDatum As String
         Dim strRGNbr As String
         Dim booBooingok As Boolean
+        Dim booErfOPExt As Boolean
 
         Dim intLaufNbr As Int32
         Dim strBeleg As String
@@ -762,6 +763,11 @@ Friend Class frmImportMain
                                                           cmbBuha.SelectedValue,
                                                           1,
                                                           objdtDebitorenHead.Rows.Count)
+
+            'Setting soll erfasste OP als externe Beleg-Nr. genommen werden und lngDebIdentNbr als Beleg-Nr.
+            objdbConn.Open()
+            booErfOPExt = Convert.ToBoolean(Convert.ToInt16(Main.FcReadFromSettings(objdbConn, "Buchh_ErfOPExt", cmbBuha.SelectedValue)))
+            objdbConn.Close()
 
             'Kopfbuchung
             For Each row In objdtDebitorenHead.Rows
@@ -838,8 +844,15 @@ Friend Class frmImportMain
                                 Else
                                     'Beleg-Nummerierung abschalten
                                     DbBhg.IncrBelNbr = "N"
-                                    intDebBelegsNummer = Main.FcCleanRGNrStrict(row("strOPNr"))
-                                    strExtBelegNbr = row("strOPNr")
+                                    'Gemäss Setting Erfasste OP-Nr. Nummern vergeben
+                                    If Not booErfOPExt Then
+                                        intDebBelegsNummer = Main.FcCleanRGNrStrict(row("strOPNr"))
+                                        strExtBelegNbr = row("strOPNr")
+                                    Else
+                                        intDebBelegsNummer = row("lngDebIdentNbr")
+                                        strExtBelegNbr = row("strOPNr")
+                                    End If
+
                                 End If
 
                             End If
