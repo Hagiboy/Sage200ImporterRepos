@@ -655,6 +655,7 @@ Public Class MainDebitor
 
     Public Shared Function FcIsDebitorCreatable(ByRef objdbconn As MySqlConnection,
                                                 ByRef objdbconnZHDB02 As MySqlConnection,
+                                                ByRef objsqlcommand As MySqlCommand,
                                                 ByRef objsqlcommandZHDB02 As MySqlCommand,
                                                 ByVal lngDebiNbr As Long,
                                                 ByRef objDbBhg As SBSXASLib.AXiDbBhg,
@@ -687,15 +688,21 @@ Public Class MainDebitor
         Dim strSachB As String
         Dim intPayType As Int16
         Dim intintBank As Int16
+        Dim objdbConnDeb As New MySqlConnection
+        Dim objsqlConnDeb As New MySqlCommand
 
         Try
 
             'Angaben einlesen
+            objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting))
+            If objdbConnDeb.State = ConnectionState.Closed Then
+                objdbConnDeb.Open()
+            End If
             If objdbconnZHDB02.State = ConnectionState.Closed Then
                 objdbconnZHDB02.Open()
             End If
-            objsqlcommandZHDB02.Connection = objdbconnZHDB02
-            objsqlcommandZHDB02.CommandText = "Select Rep_Nr, " +
+            objsqlConnDeb.Connection = objdbConnDeb
+            objsqlConnDeb.CommandText = "Select Rep_Nr, " +
                                                       "Rep_Suchtext, " +
                                                       "Rep_Firma, " +
                                                       "Rep_Strasse, " +
@@ -723,11 +730,11 @@ Public Class MainDebitor
                                                       "Rep_DebiErloesKonto, " +
                                                       "Rep_Kred_BankIntern " +
                                                       "FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
-            objdtDebitor.Load(objsqlcommandZHDB02.ExecuteReader)
+            objdtDebitor.Load(objsqlConnDeb.ExecuteReader)
 
             'Gefunden?
             If objdtDebitor.Rows.Count > 0 Then
-                'Debug.Print("Gefunden, kann erstellt werden")
+                'Debug.Print("Gefunden, kann e/rstellt werden")
 
                 'Sachbearbeiter suchen
                 'Ist Ausnahme definiert?
@@ -895,7 +902,9 @@ Public Class MainDebitor
             Return 9
 
         Finally
+            objdbconn.Close()
             objdbconnZHDB02.Close()
+            objdbConnDeb.Close()
             objdtDebitor.Dispose()
             objdtSachB.Dispose()
             objdsDebitor.Dispose()

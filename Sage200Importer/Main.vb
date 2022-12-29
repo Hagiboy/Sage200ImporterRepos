@@ -1186,7 +1186,7 @@ ErrorHandler:
 
             For Each row As DataRow In objdtDebits.Rows
 
-                'If row("strDebRGNbr") = "91306" Then Stop
+                'If row("strDebRGNbr") = "101261" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -1438,6 +1438,7 @@ ErrorHandler:
                         Else
                             intReturnValue = MainDebitor.FcIsDebitorCreatable(objdbconn,
                                                                               objdbconnZHDB02,
+                                                                              objsqlcommand,
                                                                               objsqlcommandZHDB02,
                                                                               intDebitorNew,
                                                                               objdbBuha,
@@ -2511,7 +2512,7 @@ ErrorHandler:
                 'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
                 If (subrow("lngKto") >= 10000 Or subrow("lngKto") < 3000) Then 'Or subrow("strMwStKey") = "ohne" Then
                     Select Case subrow("lngKto")
-                        Case 1200, 1500 To 1599, 1600 To 1699, 1700 To 1799, 2030
+                        Case 1120, 1121, 1200, 1500 To 1599, 1600 To 1699, 1700 To 1799, 2030
                             'Nur KST - Buchung resetten
                             subrow("lngKST") = 0
                         Case Else
@@ -2911,7 +2912,7 @@ ErrorHandler:
 
                 'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
                 If subrow("lngKto") < 3000 Then
-                    If subrow("lngKto") <> 1120 Then 'Ausnahme AW24
+                    If (subrow("lngKto") <> 1120) And (subrow("lngKto") <> 1121) Then 'Ausnahme AW24
                         subrow("strMwStKey") = Nothing
                     End If
                     subrow("lngKST") = 0
