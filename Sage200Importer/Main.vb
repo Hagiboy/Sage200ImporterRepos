@@ -971,7 +971,9 @@ ErrorHandler:
             Loop
 
             'Auf aktuelles Jahr gehen
-            cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now())).ToString)
+            'Bei Jahresanfang
+            cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year("2022-12-31")).ToString)
+            'cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now())).ToString)
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Periodendefinition lesen")

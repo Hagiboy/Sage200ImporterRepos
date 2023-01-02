@@ -1649,14 +1649,14 @@ Public Class MainKreditor
 
                 'If strPGVType = "RV" Then
                 '    'Damit die Periodenbuchung auf den ersten gebucht wird.
-                '    datPGVStart = "2022-01-01"
+                '    datPGVStart = "2023-01-01"
                 'End If
                 datValuta = datValutaSave
 
                 'Evtl. Aufteilen auf 2 Jahre
-                For intYearLooper As Int16 = 0 To Year(DateAdd(DateInterval.Month, intITotal, datPGVStart)) - Year(datPGVStart)
+                For intYearLooper As Int16 = 0 To Year(DateAdd(DateInterval.Month, intITotal - 1, datPGVStart)) - Year(datValuta)
 
-                    If intYearLooper = 0 And intITotal > 1 Then '2021 Then
+                    If intYearLooper = 0 And intITotal > 1 Then '2022 Then
                         dblNettoBetrag = drKSubrow("dblNetto") / intITotal * intITY
                         intSollKonto = intAcctTY
                     Else
