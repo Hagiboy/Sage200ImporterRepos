@@ -1991,7 +1991,9 @@ ErrorHandler:
 
             objsqlcommand.CommandText = "SELECT * FROM t_sage_buchhaltungen_periods WHERE year=" + intYearToCheck.ToString + " AND refMandant=" + intAccounting.ToString
             objsqlcommand.Connection = objdbconnZHDB02
-            objdbconnZHDB02.Open()
+            If objdbconnZHDB02.State = ConnectionState.Closed Then
+                objdbconnZHDB02.Open()
+            End If
             tblPeriods.Load(objsqlcommand.ExecuteReader)
 
             If tblPeriods.Rows.Count > 0 Then
@@ -2922,13 +2924,21 @@ ErrorHandler:
 
                 'MwSt prüfen 01
                 If Not IsDBNull(subrow("strMwStKey")) Then
-                    If subrow("dblMwStSatz") > 0 And subrow("dblMwSt") = 0 Then Stop
+                    'If subrow("dblMwStSatz") > 0 And subrow("dblMwSt") = 0 Then Stop
                     If subrow("dblMwStSatz") > 0 And subrow("dblMwSt") > 0 And subrow("strMwStKey") = "ohne" Then Stop
                     If subrow("dblMwStSatz") = 0 And subrow("dblMwSt") = 0 And subrow("strMwStKey") <> "ohne" Then
                         subrow("strMwStKey") = "ohne"
                     End If
-                    intReturnValue = FcCheckMwStToCorrect(objdbconn, subrow("strMwStKey"), subrow("dblMwStSatz"), subrow("dblMwSt"))
-                    intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("dblMwStSatz"), strStrStCodeSage200, subrow("lngKto"))
+                    intReturnValue = FcCheckMwStToCorrect(objdbconn,
+                                                          subrow("strMwStKey"),
+                                                          subrow("dblMwStSatz"),
+                                                          subrow("dblMwSt"))
+                    intReturnValue = FcCheckMwSt(objdbconn,
+                                                 objFiBhg,
+                                                 subrow("strMwStKey"),
+                                                 subrow("dblMwStSatz"),
+                                                 strStrStCodeSage200,
+                                                 subrow("lngKto"))
                     If intReturnValue = 0 Then
                         subrow("strMwStKey") = strStrStCodeSage200
                         'Check of korrekt berechnet
@@ -3956,10 +3966,16 @@ ErrorHandler:
 
                 ''Referenz 12
                 If (Not String.IsNullOrEmpty(row("strKredRef"))) And (row("intPayType") = 3 Or row("intPayType") = 10) Then
-                    If Right(row("strKredRef"), 1) <> Main.FcModulo10(Left(row("strKredRef"), Len(row("strKredRef")) - 1)) Then
-                        strBitLog += "1"
+                    If Val(Left(row("strKredRef"), Len(row("strKredRef")) - 1)) > 0 Then
+
+                        If Right(row("strKredRef"), 1) <> Main.FcModulo10(Left(row("strKredRef"), Len(row("strKredRef")) - 1)) Then
+                            strBitLog += "1"
+                        Else
+                            strBitLog += "0"
+                        End If
+
                     Else
-                        strBitLog += "0"
+                        strBitLog += "1"
                     End If
                 Else
                     strBitLog += "0"
