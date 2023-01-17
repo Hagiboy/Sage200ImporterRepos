@@ -183,7 +183,8 @@ Public Class MainKreditor
                                                 ByRef intPayType As Int16,
                                                 ByVal strIBANFromInv As String,
                                                 ByVal intintBank As Int16,
-                                                ByVal strKrediBank As String) As Int16
+                                                ByVal strKrediBank As String,
+                                                ByVal intAccounting As Int16) As Int16
 
         'Return: 0=creatable und erstellt, 3=Kreditor konnte nicht erstellt werden, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
 
@@ -208,14 +209,21 @@ Public Class MainKreditor
         Dim intKredZB As Int16
         Dim objdsKreditor As New DataSet
         Dim objDAKreditor As New MySqlDataAdapter
+        Dim objdbconnKred As New MySqlConnection
+        Dim objsqlConnKred As New MySqlCommand
 
         Try
 
             'Angaben einlesen
+            objdbconnKred.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediTableConnection", intAccounting))
+            If objdbconnKred.State = ConnectionState.Closed Then
+                objdbconnKred.Open()
+            End If
             If objdbconnZHDB02.State = ConnectionState.Closed Then
                 objdbconnZHDB02.Open()
             End If
-            objsqlcommandZHDB02.CommandText = "SELECT Rep_Firma, 
+            objsqlConnKred.Connection = objdbconnKred
+            objsqlConnKred.CommandText = "SELECT Rep_Firma, 
                                                       Rep_Strasse, 
                                                       Rep_PLZ, 
                                                       Rep_Ort, 
@@ -241,8 +249,8 @@ Public Class MainKreditor
                                                       Rep_Kred_Aufwandskonto 
                                                 FROM Tab_Repbetriebe WHERE PKNr=" + lngKrediNbr.ToString
 
-            objsqlcommandZHDB02.Connection = objdbconnZHDB02
-            objdtKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
+            'objsqlcommandZHDB02.Connection = objdbconnZHDB02
+            objdtKreditor.Load(objsqlConnKred.ExecuteReader)
 
             'Gefunden?
             If objdtKreditor.Rows.Count > 0 Then
@@ -375,27 +383,27 @@ Public Class MainKreditor
                                           intKredZB,
                                           intintBank)
 
-                    If intCreatable = 0 Then
-                        'MySQL
-                        'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
-                        '                                     lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
-                        '                                     "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Kreditor " +
-                        '                                     lngKrediNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
-                        ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
-                        'objlocMySQLRGConn.Open()
-                        'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
-                        'objsqlcommandZHDB02.CommandText = strSQL
-                        'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
+                If intCreatable = 0 Then
+                    'MySQL
+                    'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
+                    '                                     lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
+                    '                                     "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Kreditor " +
+                    '                                     lngKrediNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
+                    ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                    'objlocMySQLRGConn.Open()
+                    'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                    'objsqlcommandZHDB02.CommandText = strSQL
+                    'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
 
 
 
-                        Return 0
-                    Else
-                        Return 3
-
-                    End If
+                    Return 0
                 Else
-                    Return 4
+                    Return 3
+
+                End If
+            Else
+                Return 4
             End If
 
         Catch ex As Exception

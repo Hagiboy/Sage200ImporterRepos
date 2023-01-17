@@ -4022,7 +4022,8 @@ ErrorHandler:
                                                                             IIf(IsDBNull(row("intPayType")), 3, row("intPayType")),
                                                                             IIf(IsDBNull(row("strKredRef")), "", row("strKredRef")),
                                                                             intintBank,
-                                                                            IIf(IsDBNull(row("strKrediBank")), "", row("strKrediBank")))
+                                                                            IIf(IsDBNull(row("strKrediBank")), "", row("strKrediBank")),
+                                                                            intAccounting)
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
                             row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
