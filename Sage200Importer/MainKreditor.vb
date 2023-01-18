@@ -125,12 +125,21 @@ Public Class MainKreditor
 
                         If strTableName <> "Tab_Repbetriebe" Then
                             'intPKNewField = objdtKreditor.Rows(0).Item(strKredNewField)
-                            intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02, objsqlcommandZHDB02, objdtKreditor.Rows(0).Item(strKredNewField), "R") 'Rep_Nr
+                            intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02,
+                                                                   objsqlcommandZHDB02,
+                                                                   objdtKreditor.Rows(0).Item(strKredNewField),
+                                                                   "R") 'Rep_Nr
                             If intPKNewField = 0 Then
                                 'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
-                                intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtKreditor.Rows(0).Item(strKredNewField), intKrediNew)
+                                intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02,
+                                                                    objdtKreditor.Rows(0).Item(strKredNewField),
+                                                                    intKrediNew,
+                                                                    intAccounting)
                                 If intFunctinReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
-                                    intFunctinReturns = Main.FcWriteNewDebToRepbetrieb(objdbconn, objdtKreditor.Rows(0).Item("Rep_Nr"), intKrediNew)
+                                    intFunctinReturns = Main.FcWriteNewDebToRepbetrieb(objdbconn,
+                                                                                       objdtKreditor.Rows(0).Item("Rep_Nr"),
+                                                                                       intKrediNew,
+                                                                                       intAccounting)
                                     If intFunctinReturns = 0 Then 'Schreiben hat geklappt
                                         Return 1
                                     End If
@@ -146,9 +155,15 @@ Public Class MainKreditor
                             If Not IsDBNull(objdtKreditor.Rows(0).Item(strKredNewField)) Then
                                 intKrediNew = objdtKreditor.Rows(0).Item(strKredNewField)
                             Else
-                                intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtKreditor.Rows(0).Item("Rep_Nr"), intKrediNew)
+                                intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02,
+                                                                    objdtKreditor.Rows(0).Item("Rep_Nr"),
+                                                                    intKrediNew,
+                                                                    intAccounting)
                                 If intFunctinReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
-                                    intFunctinReturns = Main.FcWriteNewDebToRepbetrieb(objdbconn, objdtKreditor.Rows(0).Item("Rep_Nr"), intKrediNew)
+                                    intFunctinReturns = Main.FcWriteNewDebToRepbetrieb(objdbconn,
+                                                                                       objdtKreditor.Rows(0).Item("Rep_Nr"),
+                                                                                       intKrediNew,
+                                                                                       intAccounting)
                                     If intFunctinReturns = 0 Then 'Schreiben hat geklappt
                                         Return 1
                                     End If
@@ -259,11 +274,11 @@ Public Class MainKreditor
                 'Zahlungsbedingung suchen
                 'objdtKreditor.Clear()
                 'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
-                objsqlcommandZHDB02.CommandText = "SELECT Tab_Repbetriebe.PKNr, 
+                objsqlConnKred.CommandText = "SELECT Tab_Repbetriebe.PKNr, 
                                                           t_sage_zahlungskondition.SageID " +
                                                   "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition ON Tab_Repbetriebe.Rep_Kred_ZKonditionID = t_sage_zahlungskondition.ID " +
                                                   "WHERE Tab_Repbetriebe.PKNr=" + lngKrediNbr.ToString
-                objDAKreditor.SelectCommand = objsqlcommandZHDB02
+                objDAKreditor.SelectCommand = objsqlConnKred
                 objdsKreditor.EnforceConstraints = False
                 objDAKreditor.Fill(objdsKreditor)
 

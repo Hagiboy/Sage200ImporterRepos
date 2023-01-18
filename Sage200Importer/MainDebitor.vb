@@ -325,17 +325,27 @@ Public Class MainDebitor
                         If intPKNewField = 0 Then
                             'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
                             If strTableName = "t_customer" Then
-                                intFunctionReturns = Main.FcNextPrivatePKNr(objdbconn, objdtDebitor.Rows(0).Item("ID"), intDebiNew)
+                                intFunctionReturns = Main.FcNextPrivatePKNr(objdbconn,
+                                                                            objdtDebitor.Rows(0).Item("ID"),
+                                                                            intDebiNew)
                                 If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
-                                    intFunctionReturns = Main.FcWriteNewPrivateDebToRepbetrieb(objdbconn, objdtDebitor.Rows(0).Item("ID"), intDebiNew)
+                                    intFunctionReturns = Main.FcWriteNewPrivateDebToRepbetrieb(objdbconn,
+                                                                                               objdtDebitor.Rows(0).Item("ID"),
+                                                                                               intDebiNew)
                                     If intFunctionReturns = 0 Then 'Schreiben hat geklappt
                                         Return 1
                                     End If
                                 End If
                             Else
-                                intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02, objdtDebitor.Rows(0).Item(strDebNewField), intDebiNew)
+                                intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02,
+                                                                     objdtDebitor.Rows(0).Item(strDebNewField),
+                                                                     intDebiNew,
+                                                                     intAccounting)
                                 If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
-                                    intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02, objdtDebitor.Rows(0).Item(strDebNewField), intDebiNew)
+                                    intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02,
+                                                                                        objdtDebitor.Rows(0).Item(strDebNewField),
+                                                                                        intDebiNew,
+                                                                                        intAccounting)
                                     If intFunctionReturns = 0 Then 'Schreiben hat geklappt
                                         Return 1
                                     End If
@@ -352,9 +362,15 @@ Public Class MainDebitor
                         If Not IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
                             intDebiNew = objdtDebitor.Rows(0).Item(strDebNewField)
                         Else
-                            intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02, lngDebiNbr, intDebiNew)
+                            intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02,
+                                                                 lngDebiNbr,
+                                                                 intDebiNew,
+                                                                 intAccounting)
                             If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
-                                intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02, lngDebiNbr, intDebiNew)
+                                intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02,
+                                                                                    lngDebiNbr,
+                                                                                    intDebiNew,
+                                                                                    intAccounting)
                                 If intFunctionReturns = 0 Then 'Schreiben hat geklappt
                                     Return 1
                                 End If

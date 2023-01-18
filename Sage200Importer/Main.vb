@@ -3648,7 +3648,9 @@ ErrorHandler:
 
                 strBitLog += Trim(intReturnValue.ToString)
                 If intKreditorNew <> 0 Then
-                    intReturnValue = MainKreditor.FcCheckKreditor(intKreditorNew, row("intBuchungsart"), objKrBuha)
+                    intReturnValue = MainKreditor.FcCheckKreditor(intKreditorNew,
+                                                                  row("intBuchungsart"),
+                                                                  objKrBuha)
                     'intReturnValue = FcCheckKreditBank(objKrBuha, intKreditorNew, row("intPayType"), row("strKredRef"), row("strKrediBank"), objdbconnZHDB02)
                     'intReturnValue = 3
                 Else
@@ -4592,7 +4594,8 @@ ErrorHandler:
 
     Public Shared Function FcNextPKNr(ByRef objdbconnZHDB02 As MySqlConnection,
                                       ByVal intRepNr As Int32,
-                                      ByRef intNewPKNr As Int32) As Int16
+                                      ByRef intNewPKNr As Int32,
+                                      ByVal intAccounting As Int16) As Int16
 
         '0=ok, 1=Rep - Nr. existiert nicht, 2=Bereich voll, 3=keine Bereichdefinition 9=Problem
 
@@ -4604,19 +4607,25 @@ ErrorHandler:
         Dim intRangeStart, intRangeEnd, i, intRecordCounter As Int32
         Dim objdsPKNbrs As New DataSet
         Dim objDAPKNbrs As New MySqlDataAdapter
+        Dim objdbconn As New MySqlConnection
 
 
         Try
 
+            'Wo ist die RepBetriebe?
             If objdbconnZHDB02.State = ConnectionState.Closed Then
                 objdbconnZHDB02.Open()
             End If
-            objsqlcommand.Connection = objdbconnZHDB02
+            objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buchh_PKTableConnection", intAccounting))
+            If objdbconn.State = ConnectionState.Closed Then
+                objdbconn.Open()
+            End If
+            objsqlcommand.Connection = objdbconn
             objsqlcommand.CommandText = "SELECT PKNrGruppeID FROM tab_repbetriebe WHERE Rep_Nr=" + intRepNr.ToString
             objdtPKNr.Load(objsqlcommand.ExecuteReader)
 
             If objdtPKNr.Rows.Count > 0 Then 'Rep_Betrieb gefunden
-                intPKNrGuppenID = objdtPKNr.Rows(0).Item("PKNrGruppeID")
+                intPKNrGuppenID = IIf(IsDBNull(objdtPKNr.Rows(0).Item("PKNrGruppeID")), 2, objdtPKNr.Rows(0).Item("PKNrGruppeID"))
                 'Start und End des Bereichs setzen
                 objdtPKNr.Clear()
                 objsqlcommand.CommandText = "SELECT RangeStart, RangeEnd " +
@@ -4882,21 +4891,28 @@ ErrorHandler:
 
     Public Shared Function FcWriteNewDebToRepbetrieb(ByRef objdbconnZHDB02 As MySqlConnection,
                                                      ByVal intRepNr As Int32,
-                                                     intNewDebNr As Int32) As Int16
+                                                     intNewDebNr As Int32,
+                                                     intAccounting As Int16) As Int16
 
         '0=Update ok, 1=Update hat nicht geklappt, 9=Error
 
         Dim strSQL As String
         Dim objmysqlcmd As New MySqlCommand
+        Dim objdbconn As New MySqlConnection
         Dim intAffected As Int16
 
         Try
 
-            strSQL = "UPDATE tab_repbetriebe SET PKNr=" + intNewDebNr.ToString + " WHERE Rep_Nr=" + intRepNr.ToString
+            'Wo ist die Rep_Betriebe?
             If objdbconnZHDB02.State = ConnectionState.Closed Then
                 objdbconnZHDB02.Open()
             End If
-            objmysqlcmd.Connection = objdbconnZHDB02
+            objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buchh_PKTableConnection", intAccounting))
+            If objdbconn.State = ConnectionState.Closed Then
+                objdbconn.Open()
+            End If
+            strSQL = "UPDATE tab_repbetriebe SET PKNr=" + intNewDebNr.ToString + " WHERE Rep_Nr=" + intRepNr.ToString
+            objmysqlcmd.Connection = objdbconn
             objmysqlcmd.CommandText = strSQL
             intAffected = objmysqlcmd.ExecuteNonQuery()
             If intAffected <> 1 Then
@@ -4914,6 +4930,10 @@ ErrorHandler:
             If objdbconnZHDB02.State = ConnectionState.Open Then
                 'objdbconnZHDB02.Close()
             End If
+            If objdbconn.State = ConnectionState.Open Then
+                objdbconn.Close()
+            End If
+            objdbconn.Dispose()
 
         End Try
 
