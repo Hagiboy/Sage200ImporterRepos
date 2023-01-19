@@ -794,7 +794,7 @@ Friend Class frmImportMain
                                 'Beleg-Nummerierung desaktivieren
                                 DbBhg.IncrBelNbr = "N"
                                 'Eingelesene OP-Nummer (=Verknüpfte OP-Nr.) = interne Beleg-Nummer
-                                intDebBelegsNummer = row("strOPNr")
+                                intDebBelegsNummer = Main.FcCleanRGNrStrict(row("strOPNr"))
                                 strExtBelegNbr = row("strDebRGNbr")
                             Else
                                 'Zuerst Beleg-Nummerieungung aktivieren
@@ -835,7 +835,7 @@ Friend Class frmImportMain
                                 'Belegsnummer abholen
                                 intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
                             Else
-                                If Strings.Len(row("strOPNr")) > 9 Then
+                                If Strings.Len(Main.FcCleanRGNrStrict(row("strOPNr"))) > 9 Then
                                     'Zahl zu gross
                                     DbBhg.IncrBelNbr = "J"
                                     'Belegsnummer abholen

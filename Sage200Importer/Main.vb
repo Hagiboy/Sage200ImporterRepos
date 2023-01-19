@@ -1196,7 +1196,7 @@ ErrorHandler:
                 row("dblDebMwSt") = Decimal.Round(row("dblDebMwst"), 2, MidpointRounding.AwayFromZero)
                 row("dblDebBrutto") = Decimal.Round(row("dblDebBrutto"), 4, MidpointRounding.AwayFromZero)
                 'OP - Nummer nicht numerische Zeichen entfernen
-                row("strOPNr") = Main.FcCleanRGNrStrict(row("strOPNr"))
+                'row("strOPNr") = Main.FcCleanRGNrStrict(row("strOPNr"))
                 'RG-Create - Datum auf RG-Datum setzen falls nicht vorhanden
                 If IsDBNull(row("datRGCreate")) Then
                     row("datRGCreate") = row("datDebRGDatum")
