@@ -307,12 +307,12 @@ Public Class MainKreditor
                 End Select
 
                 'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
-                Select Case IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Language")), "D", objdtKreditor.Rows(0).Item("Rep_Language"))
-                    Case "D", ""
+                Select Case IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Language")), "D", Strings.UCase(objdtKreditor.Rows(0).Item("Rep_Language")))
+                    Case "D", "DE", ""
                         intLangauage = 2055
-                    Case "F"
+                    Case "F", "FR"
                         intLangauage = 4108
-                    Case "I"
+                    Case "I", "IT"
                         intLangauage = 2064
                     Case Else
                         intLangauage = 2057 'Englisch
@@ -528,7 +528,10 @@ Public Class MainKreditor
 
             If intPayDefault = 9 Then 'IBAN
                 If Len(strZVIBAN) > 15 Then
-                    Call objKrBhg.SetZahlungsverbindung("B",
+
+                    If Strings.Mid(strZVIBAN, 5, 1) <> "3" Then
+
+                        Call objKrBhg.SetZahlungsverbindung("B",
                                                         strZVIBAN,
                                                         strZVBankName,
                                                         "",
@@ -544,6 +547,27 @@ Public Class MainKreditor
                                                         "",
                                                         strZVIBAN,
                                                         "")
+                    Else
+                        'Typ ist 10 (=QR)
+                        Call objKrBhg.SetZahlungsverbindung("Q",
+                                                    strZVIBAN,
+                                                    strZVBankName,
+                                                    "",
+                                                    "",
+                                                    strZVBankPLZ.ToString,
+                                                    strZVBankOrt,
+                                                    Left(strZVIBAN, 2),
+                                                    strZVClearing,
+                                                    "J",
+                                                    strZVBIC,
+                                                    "",
+                                                    "",
+                                                    "",
+                                                    strZVIBAN,
+                                                    "")
+
+
+                    End If
                 End If
             End If
 
@@ -902,7 +926,9 @@ Public Class MainKreditor
                         strBankPLZ = Left(strBankAddress2, InStr(strBankAddress2, " "))
                         strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
 
-                        If intPayType = 9 Then
+                        'Evtl Typ falsch gesetzt?
+                        If Strings.Mid(strIBAN, 5, 1) <> "3" Then
+                            'IBAN
                             Call objKrBhg.WriteBank2(intKreditor,
                                                  strKredCur,
                                                  "B",
@@ -920,7 +946,6 @@ Public Class MainKreditor
                                                  "0",
                                                  "",
                                                  strIBAN)
-
                         Else
 
                             Stop
@@ -942,9 +967,9 @@ Public Class MainKreditor
                                                      "",
                                                      strIBAN)
 
-
                         End If
                         Return 0
+
                     End If
 
                 End If
