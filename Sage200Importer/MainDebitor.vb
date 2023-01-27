@@ -821,12 +821,12 @@ Public Class MainDebitor
                 End Select
 
                 'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
-                Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Language")), "D", objdtDebitor.Rows(0).Item("Rep_Language"))
-                    Case "D", ""
+                Select Case Strings.UCase(IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Language")), "D", objdtDebitor.Rows(0).Item("Rep_Language")))
+                    Case "D", "DE", ""
                         intLangauage = 2055
-                    Case "F"
+                    Case "F", "FR"
                         intLangauage = 4108
-                    Case "I"
+                    Case "I", "IT"
                         intLangauage = 2064
                     Case Else
                         intLangauage = 2057 'Englisch

@@ -307,7 +307,7 @@ Public Class MainKreditor
                 End Select
 
                 'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
-                Select Case IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Language")), "D", Strings.UCase(objdtKreditor.Rows(0).Item("Rep_Language")))
+                Select Case Strings.UCase(IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Language")), "D", objdtKreditor.Rows(0).Item("Rep_Language")))
                     Case "D", "DE", ""
                         intLangauage = 2055
                     Case "F", "FR"
