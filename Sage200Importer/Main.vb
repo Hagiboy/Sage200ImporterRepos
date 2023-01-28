@@ -3830,6 +3830,18 @@ ErrorHandler:
                     row("strPGVType") = "XX"
                 End If
 
+                'Bei Datum-Korrekur vorgängig Datum ersetzen um PGV-Buchung zu verhindern
+                If booValutaCoorect Then
+                    If row("datKredRGDatum") < datValutaCorrect Then
+                        row("datKredRGDatum") = datValutaCorrect.ToShortDateString
+                        strStatus = "RgDCor"
+                    End If
+                    If row("datKredValDatum") < datValutaCorrect Then
+                        row("datKredValDatum") = datValutaCorrect.ToShortDateString
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValDCor"
+                    End If
+                End If
+
                 'Jahresübergreifend RG- / Valuta-Datum
                 If Year(row("datKredRGDatum")) <> Year(row("datKredValDatum")) And Year(row("datKredValDatum")) >= 2022 Then
 
@@ -4013,7 +4025,7 @@ ErrorHandler:
                 'Status-String auswerten
                 'Kreditor 1
                 If Left(strBitLog, 1) <> "0" Then
-                    strStatus = "Kred"
+                    strStatus += "Kred"
                     If Left(strBitLog, 1) <> "2" Then
                         intReturnValue = MainKreditor.FcIsKreditorCreatable(objdbconn,
                                                                             objdbconnZHDB02,

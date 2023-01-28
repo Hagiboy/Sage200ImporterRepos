@@ -1110,9 +1110,14 @@ Public Class MainKreditor
 
             Do Until intReturnvalue = 0
 
-                objdbMSSQLCmd.CommandText = "SELECT lfnbrk FROM kredibuchung WHERE teqnbr IN(" + intTeqNr.ToString + ", " + intTeqNrLY.ToString + ", " + intTeqNrPLY.ToString + ")" +
+                'objdbMSSQLCmd.CommandText = "SELECT lfnbrk FROM kredibuchung WHERE teqnbr IN(" + intTeqNr.ToString + ", " + intTeqNrLY.ToString + ", " + intTeqNrPLY.ToString + ")" +
+                '                                                        " AND typ='" + strTyp + "'" +
+                '                                                        " AND belnbrint=" + intBelegNbr.ToString
+                'Probehalber nur im aktuellen Jahr prüfen
+                objdbMSSQLCmd.CommandText = "SELECT lfnbrk FROM kredibuchung WHERE teqnbr IN(" + intTeqNr.ToString + ")" +
                                                                         " AND typ='" + strTyp + "'" +
                                                                         " AND belnbrint=" + intBelegNbr.ToString
+
                 tblKrediBeleg.Rows.Clear()
                 tblKrediBeleg.Load(objdbMSSQLCmd.ExecuteReader)
                 If tblKrediBeleg.Rows.Count > 0 Then
