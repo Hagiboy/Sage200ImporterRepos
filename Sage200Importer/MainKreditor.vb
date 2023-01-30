@@ -1295,8 +1295,8 @@ Public Class MainKreditor
                         If drKSubrow("lngKST") > 0 Then
 
                             If drKSubrow("intSollHaben") = 1 Then 'Haben
-                                strBebuEintragSoll = drKSubrow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
-                                strBebuEintragHaben = Nothing
+                                strBebuEintragSoll = Nothing
+                                strBebuEintragHaben = drKSubrow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
                             Else
                                 strBebuEintragSoll = Nothing
                                 strBebuEintragHaben = drKSubrow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
@@ -1499,8 +1499,8 @@ Public Class MainKreditor
                     strDebiTextHaben = strDebiTextSoll
 
                     If drKSubrow("intSollHaben") = 1 Then 'Haben
-                        strBebuEintragSoll = Nothing
-                        strBebuEintragHaben = drKSubrow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                        strBebuEintragSoll = drKSubrow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                        strBebuEintragHaben = Nothing
                     Else
                         strBebuEintragSoll = drKSubrow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
                         strBebuEintragHaben = Nothing

@@ -242,27 +242,27 @@ Public Class MainDebitor
             strDebNewField = Main.FcReadFromSettings(objdbconn,
                                                      "Buchh_PKNewField",
                                                      intAccounting)
-            strDebNewFieldType = Main.FcReadFromSettings(objdbconn,
-                                                         "Buchh_PKNewFType",
-                                                         intAccounting)
-            strCompFieldName = Main.FcReadFromSettings(objdbconn,
-                                                       "Buchh_PKCompany",
-                                                       intAccounting)
-            strStreetFieldName = Main.FcReadFromSettings(objdbconn,
-                                                         "Buchh_PKStreet",
-                                                         intAccounting)
-            strZIPFieldName = Main.FcReadFromSettings(objdbconn,
-                                                      "Buchh_PKZIP",
-                                                      intAccounting)
-            strTownFieldName = Main.FcReadFromSettings(objdbconn,
-                                                       "Buchh_PKTown",
-                                                       intAccounting)
-            strSageName = Main.FcReadFromSettings(objdbconn,
-                                                  "Buchh_PKSageName",
-                                                  intAccounting)
-            strDebiAccField = Main.FcReadFromSettings(objdbconn,
-                                                      "Buchh_DPKAccount",
-                                                      intAccounting)
+            'strDebNewFieldType = Main.FcReadFromSettings(objdbconn,
+            '                                             "Buchh_PKNewFType",
+            '                                             intAccounting)
+            'strCompFieldName = Main.FcReadFromSettings(objdbconn,
+            '                                           "Buchh_PKCompany",
+            '                                           intAccounting)
+            'strStreetFieldName = Main.FcReadFromSettings(objdbconn,
+            '                                             "Buchh_PKStreet",
+            '                                             intAccounting)
+            'strZIPFieldName = Main.FcReadFromSettings(objdbconn,
+            '                                          "Buchh_PKZIP",
+            '                                          intAccounting)
+            'strTownFieldName = Main.FcReadFromSettings(objdbconn,
+            '                                           "Buchh_PKTown",
+            '                                           intAccounting)
+            'strSageName = Main.FcReadFromSettings(objdbconn,
+            '                                      "Buchh_PKSageName",
+            '                                      intAccounting)
+            'strDebiAccField = Main.FcReadFromSettings(objdbconn,
+            '                                          "Buchh_DPKAccount",
+            '                                          intAccounting)
 
             strSQL = "SELECT * " + 'strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
                  " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
@@ -710,7 +710,7 @@ Public Class MainDebitor
         Try
 
             'Angaben einlesen
-            objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting))
+            objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buch_TabRepConnection", intAccounting))
             If objdbConnDeb.State = ConnectionState.Closed Then
                 objdbConnDeb.Open()
             End If
