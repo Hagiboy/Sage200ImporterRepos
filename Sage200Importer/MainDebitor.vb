@@ -340,12 +340,14 @@ Public Class MainDebitor
                                 intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02,
                                                                      objdtDebitor.Rows(0).Item(strDebNewField),
                                                                      intDebiNew,
-                                                                     intAccounting)
+                                                                     intAccounting,
+                                                                     "D")
                                 If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
                                     intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02,
                                                                                         objdtDebitor.Rows(0).Item(strDebNewField),
                                                                                         intDebiNew,
-                                                                                        intAccounting)
+                                                                                        intAccounting,
+                                                                                        "D")
                                     If intFunctionReturns = 0 Then 'Schreiben hat geklappt
                                         Return 1
                                     End If
@@ -365,12 +367,14 @@ Public Class MainDebitor
                             intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02,
                                                                  lngDebiNbr,
                                                                  intDebiNew,
-                                                                 intAccounting)
+                                                                 intAccounting,
+                                                                 "D")
                             If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
                                 intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02,
                                                                                     lngDebiNbr,
                                                                                     intDebiNew,
-                                                                                    intAccounting)
+                                                                                    intAccounting,
+                                                                                    "D")
                                 If intFunctionReturns = 0 Then 'Schreiben hat geklappt
                                     Return 1
                                 End If
@@ -688,14 +692,14 @@ Public Class MainDebitor
         Dim strSQL As String
         Dim intAffected As Int16
         Dim strIBANNr As String
-        Dim strBankName As String = ""
-        Dim strBankAddress1 As String = ""
-        Dim strBankAddress2 As String = ""
-        Dim strBankPLZ As String = ""
-        Dim strBankOrt As String = ""
-        Dim strBankBIC As String = ""
-        Dim strBankCountry As String = ""
-        Dim strBankClearing As String = ""
+        Dim strBankName As String = String.Empty
+        Dim strBankAddress1 As String = String.Empty
+        Dim strBankAddress2 As String = String.Empty
+        Dim strBankPLZ As String = String.Empty
+        Dim strBankOrt As String = String.Empty
+        Dim strBankBIC As String = String.Empty
+        Dim strBankCountry As String = String.Empty
+        Dim strBankClearing As String = String.Empty
         Dim intReturnValue As Int16
         Dim intDebZB As Int16
         Dim objdsDebitor As New DataSet
@@ -765,7 +769,7 @@ Public Class MainDebitor
                     If objdtSachB.Rows.Count > 0 Then 'Default ist definiert
                         strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
                     Else
-                        strSachB = ""
+                        strSachB = String.Empty
                         MessageBox.Show("Kein Sachbearbeiter - Default gesetzt für Buha " + strcmbBuha, "Debitorenerstellung")
                     End If
                 End If
@@ -835,7 +839,7 @@ Public Class MainDebitor
                 'Variablen zuweisen für die Erstellung des Debitors
                 strIBANNr = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_IBAN")), "", objdtDebitor.Rows(0).Item("Rep_Kred_IBAN"))
                 strBankName = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Name")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Name"))
-                strBankAddress1 = ""
+                strBankAddress1 = String.Empty
                 strBankPLZ = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_PLZ")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_PLZ"))
                 strBankOrt = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Ort")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Ort"))
                 strBankAddress2 = strBankPLZ + " " + strBankOrt
@@ -972,7 +976,7 @@ Public Class MainDebitor
         Dim intDebToleranzNbr As Integer = 1
         Dim intDebMahnGroup As Integer = 1
         Dim strDebWerbung As String = "N"
-        Dim strText As String = ""
+        Dim strText As String = String.Empty
         Dim strTelefon1 As String
         Dim strTelefax As String
 
@@ -1594,14 +1598,14 @@ Public Class MainDebitor
         Dim strSQL As String
         Dim intAffected As Int16
         Dim strIBANNr As String
-        Dim strBankName As String = ""
-        Dim strBankAddress1 As String = ""
-        Dim strBankAddress2 As String = ""
-        Dim strBankPLZ As String = ""
-        Dim strBankOrt As String = ""
-        Dim strBankBIC As String = ""
-        Dim strBankCountry As String = ""
-        Dim strBankClearing As String = ""
+        Dim strBankName As String = String.Empty
+        Dim strBankAddress1 As String = String.Empty
+        Dim strBankAddress2 As String = String.Empty
+        Dim strBankPLZ As String = String.Empty
+        Dim strBankOrt As String = String.Empty
+        Dim strBankBIC As String = String.Empty
+        Dim strBankCountry As String = String.Empty
+        Dim strBankClearing As String = String.Empty
         Dim intReturnValue As Int16
         Dim intDebZB As Int16
         Dim objdsDebitor As New DataSet
@@ -1653,7 +1657,7 @@ Public Class MainDebitor
                 If objdtSachB.Rows.Count > 0 Then 'Default ist definiert
                     strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
                 Else
-                    strSachB = ""
+                    strSachB = String.Empty
                     MessageBox.Show("Kein Sachbearbeiter - Default gesetzt für Buha " + strcmbBuha, "Debitorenerstellung")
                 End If
 
@@ -1721,12 +1725,12 @@ Public Class MainDebitor
                 'Variablen zuweisen für die Erstellung des Debitors
                 strIBANNr = IIf(IsDBNull(objdtDebitor.Rows(0).Item("IBAN")), "", objdtDebitor.Rows(0).Item("IBAN"))
                 strBankName = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankName")), "", objdtDebitor.Rows(0).Item("BankName"))
-                strBankAddress1 = ""
+                strBankAddress1 = String.Empty
                 strBankPLZ = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankZipCode")), "", objdtDebitor.Rows(0).Item("BankZipCode"))
-                strBankOrt = ""
+                strBankOrt = String.Empty
                 strBankAddress2 = strBankPLZ + " " + strBankOrt
                 strBankBIC = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankBIC")), "", objdtDebitor.Rows(0).Item("BankBIC"))
-                strBankClearing = ""
+                strBankClearing = String.Empty
 
                 If Len(strIBANNr) >= 21 Then 'IBAN
                     'If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
@@ -2988,5 +2992,65 @@ Public Class MainDebitor
         End Try
 
     End Function
+
+    Public Shared Function FcCheckDebiExistance(ByRef objdbMSSQLConn As SqlConnection,
+                                                 ByRef objdbMSSQLCmd As SqlCommand,
+                                                 ByRef intBelegNbr As Int32,
+                                                 ByVal strTyp As String,
+                                                 ByVal intTeqNr As Int32,
+                                                 ByVal intTeqNrLY As Int32,
+                                                 ByVal intTeqNrPLY As Int32) As Int16
+
+        '0=ok, 1=Beleg existierte schon, 9=Problem
+
+        'Prinzip: in Tabelle kredibuchung suchen da API - Funktion nur in spezifischen Kreditor sucht
+
+        Dim intReturnvalue As Int32
+        Dim intStatus As Int16
+        Dim tblKrediBeleg As New DataTable
+
+        Try
+
+            'Prüfung
+            intReturnvalue = 10
+            intStatus = 0
+
+            objdbMSSQLConn.Open()
+
+            Do Until intReturnvalue = 0
+
+                'objdbMSSQLCmd.CommandText = "SELECT lfnbrk FROM kredibuchung WHERE teqnbr IN(" + intTeqNr.ToString + ", " + intTeqNrLY.ToString + ", " + intTeqNrPLY.ToString + ")" +
+                '                                                        " AND typ='" + strTyp + "'" +
+                '                                                        " AND belnbrint=" + intBelegNbr.ToString
+                'Probehalber nur im aktuellen Jahr prüfen
+                objdbMSSQLCmd.CommandText = "SELECT lfnbrd FROM debibuchung WHERE teqnbr IN(" + intTeqNr.ToString + ")" +
+                                                                        " AND typ='" + strTyp + "'" +
+                                                                        " AND belnbr=" + intBelegNbr.ToString
+
+                tblKrediBeleg.Rows.Clear()
+                tblKrediBeleg.Load(objdbMSSQLCmd.ExecuteReader)
+                If tblKrediBeleg.Rows.Count > 0 Then
+                    intReturnvalue = tblKrediBeleg.Rows(0).Item("lfnbrk")
+                    intBelegNbr += 1
+                Else
+                    intReturnvalue = 0
+                End If
+            Loop
+
+            Return intStatus
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Debitor - BelegExistenzprüfung Problem " + intBelegNbr.ToString)
+            Return 9
+
+        Finally
+            objdbMSSQLConn.Close()
+
+        End Try
+
+
+    End Function
+
 
 End Class

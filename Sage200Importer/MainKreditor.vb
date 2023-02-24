@@ -75,12 +75,12 @@ Public Class MainKreditor
             strKredFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediField", intAccounting)
             strKredNewField = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediNewField", intAccounting)
             strKredNewFieldType = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediNewFType", intAccounting)
-            strCompFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediCompany", intAccounting)
-            strStreetFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediStreet", intAccounting)
-            strZIPFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediZIP", intAccounting)
-            strTownFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediTown", intAccounting)
-            strSageName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediSageName", intAccounting)
-            strKredAccField = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediAccount", intAccounting)
+            'strCompFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediCompany", intAccounting)
+            'strStreetFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediStreet", intAccounting)
+            'strZIPFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediZIP", intAccounting)
+            'strTownFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediTown", intAccounting)
+            'strSageName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediSageName", intAccounting)
+            'strKredAccField = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediAccount", intAccounting)
 
             strSQL = "SELECT * " + 'strKredFieldName + ", " + strKredNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strKredAccField +
                  " FROM " + strTableName + " WHERE " + strKredFieldName + "=" + lngKrediNbr.ToString
@@ -134,12 +134,14 @@ Public Class MainKreditor
                                 intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02,
                                                                     objdtKreditor.Rows(0).Item(strKredNewField),
                                                                     intKrediNew,
-                                                                    intAccounting)
+                                                                    intAccounting,
+                                                                    "C")
                                 If intFunctinReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
                                     intFunctinReturns = Main.FcWriteNewDebToRepbetrieb(objdbconn,
                                                                                        objdtKreditor.Rows(0).Item("Rep_Nr"),
                                                                                        intKrediNew,
-                                                                                       intAccounting)
+                                                                                       intAccounting,
+                                                                                       "C")
                                     If intFunctinReturns = 0 Then 'Schreiben hat geklappt
                                         Return 1
                                     End If
@@ -158,12 +160,14 @@ Public Class MainKreditor
                                 intFunctinReturns = Main.FcNextPKNr(objdbconnZHDB02,
                                                                     objdtKreditor.Rows(0).Item("Rep_Nr"),
                                                                     intKrediNew,
-                                                                    intAccounting)
+                                                                    intAccounting,
+                                                                    "C")
                                 If intFunctinReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
                                     intFunctinReturns = Main.FcWriteNewDebToRepbetrieb(objdbconn,
                                                                                        objdtKreditor.Rows(0).Item("Rep_Nr"),
                                                                                        intKrediNew,
-                                                                                       intAccounting)
+                                                                                       intAccounting,
+                                                                                       "C")
                                     If intFunctinReturns = 0 Then 'Schreiben hat geklappt
                                         Return 1
                                     End If
@@ -212,14 +216,14 @@ Public Class MainKreditor
         Dim strSQL As String
         Dim intAffected As Int16
         Dim strIBANNr As String
-        Dim strBankName As String = ""
-        Dim strBankAddress1 As String = ""
-        Dim strBankAddress2 As String = ""
-        Dim strBankPLZ As String = ""
-        Dim strBankOrt As String = ""
-        Dim strBankBIC As String = ""
-        Dim strBankCountry As String = ""
-        Dim strBankClearing As String = ""
+        Dim strBankName As String = String.Empty
+        Dim strBankAddress1 As String = String.Empty
+        Dim strBankAddress2 As String = String.Empty
+        Dim strBankPLZ As String = String.Empty
+        Dim strBankOrt As String = String.Empty
+        Dim strBankBIC As String = String.Empty
+        Dim strBankCountry As String = String.Empty
+        Dim strBankClearing As String = String.Empty
         Dim intReturnValue As Int16
         Dim intKredZB As Int16
         Dim objdsKreditor As New DataSet
@@ -472,7 +476,7 @@ Public Class MainKreditor
         Dim intKredToleranzNbr As Integer = 1
         Dim intKredMahnGroup As Integer = 1
         Dim strKredWerbung As String = "N"
-        Dim strText As String = ""
+        Dim strText As String = String.Empty
         Dim strTelefon1 As String
         Dim strTelefax As String
 
@@ -872,18 +876,18 @@ Public Class MainKreditor
 
         'Falls Typetype 9 (IBAN) ist, dann Zahlungsverbindungen prüfen
 
-        Dim strZahlVerbindungLine As String = ""
+        Dim strZahlVerbindungLine As String = String.Empty
         Dim strZahlVerbindung() As String
         Dim booBankExists As Boolean = False
         Dim intReturnValue As Int16
-        Dim strBankName As String = ""
-        Dim strBankAddress1 As String = ""
-        Dim strBankAddress2 As String = ""
-        Dim strBankCountry As String = ""
-        Dim strBankBIC As String = ""
-        Dim strBankClearing As String = ""
-        Dim strBankOrt As String = ""
-        Dim strBankPLZ As String = ""
+        Dim strBankName As String = String.Empty
+        Dim strBankAddress1 As String = String.Empty
+        Dim strBankAddress2 As String = String.Empty
+        Dim strBankCountry As String = String.Empty
+        Dim strBankBIC As String = String.Empty
+        Dim strBankClearing As String = String.Empty
+        Dim strBankOrt As String = String.Empty
+        Dim strBankPLZ As String = String.Empty
 
         Try
 

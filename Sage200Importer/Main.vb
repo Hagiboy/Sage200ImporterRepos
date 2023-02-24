@@ -935,7 +935,7 @@ ErrorHandler:
         Dim strMandant As String
         Dim booAccOk As Int16
         Dim intLbNbr As Int16
-        Dim strPeriodenListe As String = ""
+        Dim strPeriodenListe As String = String.Empty
         Dim strPeriodeAr() As String
         Dim intLooper As Int16
 
@@ -972,8 +972,8 @@ ErrorHandler:
 
             'Auf aktuelles Jahr gehen
             'Bei Jahresanfang
-            cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year("2022-12-31")).ToString)
-            'cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now())).ToString)
+            'cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year("2022-12-31")).ToString)
+            cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now())).ToString)
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Periodendefinition lesen")
@@ -1132,9 +1132,9 @@ ErrorHandler:
                                         ByVal datValutaCorrect As Date) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
-        Dim strBitLog As String = ""
+        Dim strBitLog As String = String.Empty
         Dim intReturnValue As Integer
-        Dim strStatus As String = ""
+        Dim strStatus As String = String.Empty
         Dim intSubNumber As Int16
         Dim dblSubNetto As Double
         Dim dblSubMwSt As Double
@@ -1143,7 +1143,7 @@ ErrorHandler:
         Dim booSplittBill As Boolean
         Dim booCpyKSTToSub As Boolean
         Dim selsubrow() As DataRow
-        Dim strDebiReferenz As String = ""
+        Dim strDebiReferenz As String = String.Empty
         Dim booDiffHeadText As Boolean
         Dim strDebiHeadText As String
         Dim booDiffSubText As Boolean
@@ -1485,6 +1485,18 @@ ErrorHandler:
                 'PGV => Prüfung vor Valuta-Datum da Valuta-Datum verändert wird
                 If Not IsDBNull(row("datPGVFrom")) Then
                     row("booPGV") = True
+                End If
+
+                'Bei Datum-Korrektur vorgängig Datum ersetzen um PGV-Buchungen zu verhindern
+                If booValutaCorrect Then
+                    If row("datDebRGDatum") < datValutaCorrect Then
+                        row("datDebRGDatum") = datValutaCorrect.ToShortDateString
+                        strStatus = "RgDCor"
+                    End If
+                    If row("datDebValDatum") < datValutaCorrect Then
+                        row("datDebValDatum") = datValutaCorrect.ToShortDateString
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValDCor"
+                    End If
                 End If
 
                 booDateChanged = False
@@ -1940,8 +1952,8 @@ ErrorHandler:
                 End If
 
                 'Init
-                strBitLog = ""
-                strStatus = ""
+                strBitLog = String.Empty
+                strStatus = String.Empty
                 intSubNumber = 0
                 dblSubBrutto = 0
                 dblSubNetto = 0
@@ -2154,8 +2166,9 @@ ErrorHandler:
         'Return 0=ok oder nicht nötig, 1=keine Angaben hinterlegt, 2=Berechnung hat nicht geklappt
 
         Dim strTLNNr As String
-        Dim strCleanedNr As String = ""
+        Dim strCleanedNr As String = String.Empty
         Dim strRefFrom As String
+        Dim intLengthWTlNr As Int16
 
         Try
 
@@ -2181,9 +2194,16 @@ ErrorHandler:
                                               strBank,
                                               objdbconn)
 
+                'Bei HW Mandant an TLNr anhängen
+                If intAccounting = 29 Then
+                    strTLNNr += Strings.Left(strCleanedNr, 3)
+                End If
+
                 strCleanedNr = FcCleanRGNrStrict(strCleanedNr)
 
-                strReferenz = strTLNNr + StrDup(20 - Len(strCleanedNr), "0") + strCleanedNr + Trim(CStr(FcModulo10(strTLNNr + StrDup(20 - Len(strCleanedNr), "0") + strCleanedNr)))
+                intLengthWTlNr = 26 - Len(strTLNNr)
+
+                strReferenz = strTLNNr + StrDup(intLengthWTlNr - Len(strCleanedNr), "0") + strCleanedNr + Trim(CStr(FcModulo10(strTLNNr + StrDup(intLengthWTlNr - Len(strCleanedNr), "0") + strCleanedNr)))
 
                 Return 0
 
@@ -2234,7 +2254,7 @@ ErrorHandler:
     Public Shared Function FcCleanRGNrStrict(ByVal strRGNrToClean As String) As String
 
         Dim intCounter As Int16
-        Dim strCleanRGNr As String = ""
+        Dim strCleanRGNr As String = String.Empty
 
         Try
 
@@ -2302,7 +2322,7 @@ ErrorHandler:
         Try
 
             booFoundProject = False
-            strLine = ""
+            strLine = String.Empty
 
             Call objFiBebu.ReadProjektTree(0)
 
@@ -2344,7 +2364,7 @@ ErrorHandler:
 
         Dim objlocdtMwSt As New DataTable("tbllocMwSt")
         Dim objlocMySQLcmd As New MySqlCommand
-        Dim strSteuerRec As String = ""
+        Dim strSteuerRec As String = String.Empty
         'Dim strSteuerRecAr() As String
         Dim intLooper As Int16 = 0
 
@@ -2451,8 +2471,8 @@ ErrorHandler:
         Dim intReturnValue As Int32
         Dim strBitLog As String
         Dim strStatusText As String
-        Dim strStrStCodeSage200 As String = ""
-        Dim strKstKtrSage200 As String = ""
+        Dim strStrStCodeSage200 As String = String.Empty
+        Dim strKstKtrSage200 As String = String.Empty
         Dim selsubrow() As DataRow
         Dim strStatusOverAll As String = "0000000"
         Dim strSteuer() As String
@@ -2475,7 +2495,7 @@ ErrorHandler:
                 '    Stop
                 'End If
 
-                strBitLog = ""
+                strBitLog = String.Empty
 
                 'Runden
                 If IsDBNull(subrow("dblNetto")) Then
@@ -2508,7 +2528,7 @@ ErrorHandler:
                 If subrow("dblMwStSatz") = 0 And subrow("dblMwst") = 0 And IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "ohne" And
                     IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "null" Then
                     'Stop
-                    If IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "AUSL0" Then
+                    If IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "AUSL0" And IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "frei" Then
                         subrow("strMwStKey") = "ohne"
                     End If
                 End If
@@ -2784,7 +2804,7 @@ ErrorHandler:
                 'BitLog und Text schreiben
                 subrow("strStatusUBBitLog") = strBitLog
                 subrow("strStatusUBText") = strStatusText
-                strStatusText = ""
+                strStatusText = String.Empty
 
                 strStatusOverAll = strStatusOverAll Or strBitLog
                 Application.DoEvents()
@@ -2860,8 +2880,8 @@ ErrorHandler:
         Dim intReturnValue As Int32
         Dim strBitLog As String
         Dim strStatusText As String
-        Dim strStrStCodeSage200 As String = ""
-        Dim strKstKtrSage200 As String = ""
+        Dim strStrStCodeSage200 As String = String.Empty
+        Dim strKstKtrSage200 As String = String.Empty
         Dim selsubrow() As DataRow
         Dim strStatusOverAll As String = "0000000"
         Dim strSteuer() As String
@@ -2880,7 +2900,7 @@ ErrorHandler:
 
                 Application.DoEvents()
 
-                strBitLog = ""
+                strBitLog = String.Empty
                 'Runden
                 'subrow("dblNetto") = IIf(IsDBNull(subrow("dblNetto")), 0, Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero))
                 'subrow("dblMwSt") = IIf(IsDBNull(subrow("dblMwst")), 0, Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero))
@@ -3140,7 +3160,7 @@ ErrorHandler:
                 subrow("strStatusUBText") = strStatusText
 
                 strStatusOverAll = strStatusOverAll Or strBitLog
-                strStatusText = ""
+                strStatusText = String.Empty
                 Application.DoEvents()
 
             Next
@@ -3186,7 +3206,7 @@ ErrorHandler:
 
         Dim objlocdtMwSt As New DataTable("tbllocMwSt")
         Dim objlocMySQLcmd As New MySqlCommand
-        Dim strSteuerRec As String = ""
+        Dim strSteuerRec As String = String.Empty
 
         Try
 
@@ -3355,7 +3375,7 @@ ErrorHandler:
         Try
 
             booFoundCurrency = False
-            strReturn = ""
+            strReturn = String.Empty
 
             Call objfiBuha.ReadWhg()
 
@@ -3499,7 +3519,7 @@ ErrorHandler:
 
     Public Shared Function FcGetSteuerFeld(ByRef objFBhg As SBSXASLib.AXiFBhg, ByVal lngKto As Long, ByVal strDebiSubText As String, ByVal dblBrutto As Double, ByVal strMwStKey As String, ByVal dblMwSt As Double) As String
 
-        Dim strSteuerFeld As String = ""
+        Dim strSteuerFeld As String = String.Empty
 
         Try
 
@@ -3529,7 +3549,7 @@ ErrorHandler:
 
         'Konzept: Falls ein Konto mitgegeben wird, wird überprüft ob auf dem Konto die mitgegebene Währung Leitwärhung ist. Falls ja wird der Kurs 1 zurück gegeben
 
-        Dim strKursZeile As String = ""
+        Dim strKursZeile As String = String.Empty
         Dim strKursZeileAr() As String
         Dim strKontoInfo() As String
 
@@ -3586,9 +3606,9 @@ ErrorHandler:
                                         ByVal datValutaCorrect As Date) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
-        Dim strBitLog As String = ""
+        Dim strBitLog As String = String.Empty
         Dim intReturnValue As Integer
-        Dim strStatus As String = ""
+        Dim strStatus As String = String.Empty
         Dim intSubNumber As Int16
         Dim dblSubNetto As Double
         Dim dblSubMwSt As Double
@@ -3626,7 +3646,7 @@ ErrorHandler:
             For Each row As DataRow In objdtKredits.Rows
 
 
-                'If row("lngKredID") = "1651411" Then Stop
+                'If row("lngKredID") = "6978" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -4229,8 +4249,8 @@ ErrorHandler:
                 Next
 
                 'Init
-                strBitLog = ""
-                strStatus = ""
+                strBitLog = String.Empty
+                strStatus = String.Empty
                 intSubNumber = 0
                 dblSubBrutto = 0
                 dblSubNetto = 0
@@ -4607,7 +4627,8 @@ ErrorHandler:
     Public Shared Function FcNextPKNr(ByRef objdbconnZHDB02 As MySqlConnection,
                                       ByVal intRepNr As Int32,
                                       ByRef intNewPKNr As Int32,
-                                      ByVal intAccounting As Int16) As Int16
+                                      ByVal intAccounting As Int16,
+                                      ByVal strMode As String) As Int16
 
         '0=ok, 1=Rep - Nr. existiert nicht, 2=Bereich voll, 3=keine Bereichdefinition 9=Problem
 
@@ -4628,7 +4649,12 @@ ErrorHandler:
             If objdbconnZHDB02.State = ConnectionState.Closed Then
                 objdbconnZHDB02.Open()
             End If
-            objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buchh_PKTableConnection", intAccounting))
+            If strMode = "D" Then
+                objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buchh_PKTableConnection", intAccounting))
+            Else
+                objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buchh_PKKrediTableConnection", intAccounting))
+            End If
+
             If objdbconn.State = ConnectionState.Closed Then
                 objdbconn.Open()
             End If
@@ -4904,7 +4930,8 @@ ErrorHandler:
     Public Shared Function FcWriteNewDebToRepbetrieb(ByRef objdbconnZHDB02 As MySqlConnection,
                                                      ByVal intRepNr As Int32,
                                                      intNewDebNr As Int32,
-                                                     intAccounting As Int16) As Int16
+                                                     intAccounting As Int16,
+                                                     strMode As String) As Int16
 
         '0=Update ok, 1=Update hat nicht geklappt, 9=Error
 
@@ -4919,7 +4946,12 @@ ErrorHandler:
             If objdbconnZHDB02.State = ConnectionState.Closed Then
                 objdbconnZHDB02.Open()
             End If
-            objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buchh_PKTableConnection", intAccounting))
+            If strMode = "D" Then
+                objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buchh_PKTableConnection", intAccounting))
+            Else
+                objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buchh_PKKrediTableConnection", intAccounting))
+            End If
+
             If objdbconn.State = ConnectionState.Closed Then
                 objdbconn.Open()
             End If

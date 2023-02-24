@@ -103,7 +103,7 @@ Friend Class frmImportMain
 
     Private Sub butDebitoren_Click(sender As Object, e As EventArgs) Handles butDebitoren.Click
 
-        Dim strIncrBelNbr As String = ""
+        Dim strIncrBelNbr As String = String.Empty
 
 
         Try
@@ -697,14 +697,14 @@ Friend Class frmImportMain
         Dim strVerfallDatum As String
         Dim strReferenz As String
         Dim intKondition As Int32
-        Dim strSachBID As String = ""
-        Dim strVerkID As String = ""
+        Dim strSachBID As String = String.Empty
+        Dim strVerkID As String = String.Empty
         Dim strMahnerlaubnis As String
         Dim sngAktuelleMahnstufe As Single
         Dim dblBetrag As Double
         Dim dblKurs As Double
-        Dim strExtBelegNbr As String = ""
-        Dim strSkonto As String = ""
+        Dim strExtBelegNbr As String = String.Empty
+        Dim strSkonto As String = String.Empty
         Dim strCurrency As String
         Dim strDebiText As String
 
@@ -712,19 +712,19 @@ Friend Class frmImportMain
         Dim strFibuText As String
         Dim dblNettoBetrag As Double
         Dim dblBebuBetrag As Double
-        Dim strBeBuEintrag As String = ""
+        Dim strBeBuEintrag As String = String.Empty
         Dim strSteuerFeld As String
 
         Dim intSollKonto As Int32
         Dim intHabenKonto As Int32
         Dim dblSollBetrag As Double
         Dim dblHabenBetrag As Double
-        Dim strSteuerFeldSoll As String = ""
-        Dim strSteuerFeldHaben As String = ""
-        Dim strBeBuEintragSoll As String = ""
-        Dim strBeBuEintragHaben As String = ""
-        Dim strDebiTextSoll As String = ""
-        Dim strDebiTextHaben As String = ""
+        Dim strSteuerFeldSoll As String = String.Empty
+        Dim strSteuerFeldHaben As String = String.Empty
+        Dim strBeBuEintragSoll As String = String.Empty
+        Dim strBeBuEintragHaben As String = String.Empty
+        Dim strDebiTextSoll As String = String.Empty
+        Dim strDebiTextHaben As String = String.Empty
         Dim dblKursSoll As Double = 0
         Dim dblKursHaben As Double = 0
         Dim intEigeneBank As Int16
@@ -802,19 +802,28 @@ Friend Class frmImportMain
                                 'Belegsnummer abholen
                                 intDebBelegsNummer = DbBhg.GetNextBelNbr("G")
                                 'Prüfen ob wirklich frei und falls nicht hochzählen
-                                intReturnValue = 10
-                                Do Until intReturnValue = 0
+                                intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
+                                                                                  objdbSQLcommand,
+                                                                                  intDebBelegsNummer,
+                                                                                  "G",
+                                                                                  intTeqNbr,
+                                                                                  intTeqNbrLY,
+                                                                                  intTeqNbrPLY)
 
-                                    intReturnValue = DbBhg.doesBelegExist(row("lngDebNbr").ToString,
-                                                                      row("strDebCur"),
-                                                                      intDebBelegsNummer.ToString,
-                                                                      "NOT_SET",
-                                                                      "G",
-                                                                      "NOT_SET")
-                                    If intReturnValue <> 0 Then
-                                        intDebBelegsNummer += 1
-                                    End If
-                                Loop
+
+                                'intReturnValue = 10
+                                'Do Until intReturnValue = 0
+
+                                '    intReturnValue = DbBhg.doesBelegExist(row("lngDebNbr").ToString,
+                                '                                      row("strDebCur"),
+                                '                                      intDebBelegsNummer.ToString,
+                                '                                      "NOT_SET",
+                                '                                      "G",
+                                '                                      "NOT_SET")
+                                '    If intReturnValue <> 0 Then
+                                '        intDebBelegsNummer += 1
+                                '    End If
+                                'Loop
                                 strExtBelegNbr = row("strOPNr")
                             End If
 
@@ -834,12 +843,26 @@ Friend Class frmImportMain
                                 DbBhg.IncrBelNbr = "J"
                                 'Belegsnummer abholen
                                 intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                                intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
+                                                                                  objdbSQLcommand,
+                                                                                  intDebBelegsNummer,
+                                                                                  "R",
+                                                                                  intTeqNbr,
+                                                                                  intTeqNbrLY,
+                                                                                  intTeqNbrPLY)
                             Else
                                 If Strings.Len(Main.FcCleanRGNrStrict(row("strOPNr"))) > 9 Then
                                     'Zahl zu gross
                                     DbBhg.IncrBelNbr = "J"
                                     'Belegsnummer abholen
                                     intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                                    intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
+                                                                                      objdbSQLcommand,
+                                                                                      intDebBelegsNummer,
+                                                                                      "R",
+                                                                                      intTeqNbr,
+                                                                                      intTeqNbrLY,
+                                                                                      intTeqNbrPLY)
                                     strExtBelegNbr = row("strOPNr")
                                 Else
                                     'Beleg-Nummerierung abschalten
@@ -871,12 +894,12 @@ Friend Class frmImportMain
                         strValutaDatum = Format(row("datDebValDatum"), "yyyyMMdd").ToString
                         strBelegDatum = Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         If IsDBNull(row("datDebDue")) Then
-                            strVerfallDatum = ""
+                            strVerfallDatum = String.Empty
                         Else
                             strVerfallDatum = Format(row("datDebDue"), "yyyyMMdd").ToString
                         End If
                         strReferenz = row("strDebReferenz")
-                        strMahnerlaubnis = "" 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
+                        strMahnerlaubnis = String.Empty 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         dblBetrag = row("dblDebBrutto")
                         'Bei SplittBill 2ter Rechnung Text anfügen
                         If row("booLinked") Then
@@ -1148,12 +1171,12 @@ Friend Class frmImportMain
                             dblNettoBetrag = 0
                             dblSollBetrag = 0
                             dblHabenBetrag = 0
-                            strBeBuEintrag = ""
-                            strBeBuEintragSoll = ""
-                            strBeBuEintragHaben = ""
-                            strSteuerFeld = ""
-                            strSteuerFeldHaben = ""
-                            strSteuerFeldSoll = ""
+                            strBeBuEintrag = String.Empty
+                            strBeBuEintragSoll = String.Empty
+                            strBeBuEintragHaben = String.Empty
+                            strSteuerFeld = String.Empty
+                            strSteuerFeldHaben = String.Empty
+                            strSteuerFeldSoll = String.Empty
 
                             For Each SubRow As DataRow In selDebiSub
 
@@ -1294,21 +1317,21 @@ Friend Class frmImportMain
                                 If SubRow("lngKto") <> intCommonKonto Then
 
                                     intSollKonto = 0
-                                    strDebiTextSoll = ""
-                                    strDebiCurrency = ""
+                                    strDebiTextSoll = String.Empty
+                                    strDebiCurrency = String.Empty
                                     dblKursSoll = 0
                                     dblSollBetrag = 0
-                                    strSteuerFeldSoll = ""
+                                    strSteuerFeldSoll = String.Empty
                                     intHabenKonto = 0
-                                    strDebiTextHaben = ""
-                                    strKrediCurrency = ""
+                                    strDebiTextHaben = String.Empty
+                                    strKrediCurrency = String.Empty
                                     dblKursHaben = 0
                                     dblHabenBetrag = 0
-                                    strSteuerFeldHaben = ""
+                                    strSteuerFeldHaben = String.Empty
                                     dblBuchBetrag = 0
                                     dblBasisBetrag = 0
-                                    strBeBuEintragSoll = ""
-                                    strBeBuEintragHaben = ""
+                                    strBeBuEintragSoll = String.Empty
+                                    strBeBuEintragHaben = String.Empty
                                     strErfassungsDatum = Format(Date.Today(), "yyyyMMdd").ToString
 
                                     If SubRow("intSollHaben") = 0 And SubRow("lngKto") <> intCommonKonto Then 'Soll
@@ -1792,14 +1815,14 @@ Friend Class frmImportMain
         Dim strReferenz As String
         Dim intKondition As Int32
         Dim intKonditionLN As Int16
-        Dim strSachBID As String = ""
-        Dim strVerkID As String = ""
+        Dim strSachBID As String = String.Empty
+        Dim strVerkID As String = String.Empty
         Dim strMahnerlaubnis As String
         Dim sngAktuelleMahnstufe As Single
         Dim dblBetrag As Double
         Dim dblKurs As Double
-        Dim strExtBelegNbr As String = ""
-        Dim strSkonto As String = ""
+        Dim strExtBelegNbr As String = String.Empty
+        Dim strSkonto As String = String.Empty
         Dim strCurrency As String
         Dim strKrediText As String
         Dim intBankNbr As Int16
@@ -1823,12 +1846,12 @@ Friend Class frmImportMain
         Dim intHabenKonto As Int32
         Dim dblSollBetrag As Double
         Dim dblHabenBetrag As Double
-        Dim strSteuerFeldSoll As String = ""
-        Dim strSteuerFeldHaben As String = ""
-        Dim strBeBuEintragSoll As String = ""
-        Dim strBeBuEintragHaben As String = ""
-        Dim strKrediTextSoll As String = ""
-        Dim strKrediTextHaben As String = ""
+        Dim strSteuerFeldSoll As String = String.Empty
+        Dim strSteuerFeldHaben As String = String.Empty
+        Dim strBeBuEintragSoll As String = String.Empty
+        Dim strBeBuEintragHaben As String = String.Empty
+        Dim strKrediTextSoll As String = String.Empty
+        Dim strKrediTextHaben As String = String.Empty
         Dim dblKursSoll As Double = 0
         Dim dblKursHaben As Double = 0
 
@@ -1909,8 +1932,9 @@ Friend Class frmImportMain
                             'strZahlSperren = "J"
                             row("dblKredBrutto") = row("dblKredBrutto") * -1
                             'Belegsnummer abholen
+                            KrBhg.IncrBelNbr = "J"
                             intKredBelegsNummer = KrBhg.GetNextBelNbr("G")
-                            KrBhg.IncrBelNbr = "N"
+
                             intReturnValue = MainKreditor.FcCheckKrediExistance(objdbMSSQLConn,
                                                                                 objdbSQLcommand,
                                                                                 intKredBelegsNummer,
@@ -1923,8 +1947,9 @@ Friend Class frmImportMain
                             strBuchType = "R"
                             'strZahlSperren = "N"
                             'Belegsnummer abholen
+                            KrBhg.IncrBelNbr = "J"
                             intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
-                            KrBhg.IncrBelNbr = "N"
+
                             intReturnValue = MainKreditor.FcCheckKrediExistance(objdbMSSQLConn,
                                                                                 objdbSQLcommand,
                                                                                 intKredBelegsNummer,
@@ -1937,7 +1962,7 @@ Friend Class frmImportMain
 
                         strValutaDatum = Format(row("datKredValDatum"), "yyyyMMdd").ToString
                         strBelegDatum = Format(row("datKredRGDatum"), "yyyyMMdd").ToString
-                        strVerfallDatum = ""
+                        strVerfallDatum = String.Empty
                         'strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
                         'If IsDBNull(row("strKrediBank")) Then
                         'intTeilnehmer = 0
@@ -1956,10 +1981,10 @@ Friend Class frmImportMain
                             'IBAN
                             strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
                             intBankNbr = IIf(IsDBNull(row("intEBank")), 0, row("intEBank"))
-                            strTeilnehmer = ""
+                            strTeilnehmer = String.Empty
                         End If
                         'End If
-                        strMahnerlaubnis = "" 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
+                        strMahnerlaubnis = String.Empty 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         'Sachbearbeiter aus Debitor auslesen
                         strDebiLine = KrBhg.ReadKreditor3(row("lngKredNbr") * -1, "")
                         strDebitor = Split(strDebiLine, "{>}")
@@ -2091,8 +2116,8 @@ Friend Class frmImportMain
                             End Try
 
 
-                            strSteuerFeld = ""
-                            strBeBuEintrag = ""
+                            strSteuerFeld = String.Empty
+                            strBeBuEintrag = String.Empty
 
                             'Status Sub schreiben
                             Application.DoEvents()
@@ -2117,8 +2142,8 @@ Friend Class frmImportMain
 
                         Application.DoEvents()
 
-                        strBeBuEintrag = ""
-                        strSteuerFeld = ""
+                        strBeBuEintrag = String.Empty
+                        strSteuerFeld = String.Empty
                         dblNettoBetrag = 0
                         dblMwStBetrag = 0
                         dblBruttoBetrag = 0
