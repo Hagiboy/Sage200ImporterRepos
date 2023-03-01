@@ -95,8 +95,6 @@ Public Class MainDebitor
                                                                            intAccounting),
                                                    row("strDebRGNbr"),
                                                    objdtHead,
-                                                   objOracleCon,
-                                                   objOracleCmd,
                                                    "D")
                 If strRGTableType = "A" Then
                     objlocOLEdbcmd.CommandText = strSQLSub
@@ -1261,7 +1259,8 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcExecuteBeforeDebit(ByVal intMandant As Integer, ByRef objMySQLConn As MySqlConnection) As Int16
+    Public Shared Function FcExecuteBeforeDebit(ByVal intMandant As Integer,
+                                                ByRef objMySQLConn As MySqlConnection) As Int16
 
         Dim strSQL As String
         Dim strBeforeDebiRunType As String
@@ -1328,7 +1327,8 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcExecuteAfterDebit(ByVal intMandant As Integer, ByRef objMySQLConn As MySqlConnection) As Int16
+    Public Shared Function FcExecuteAfterDebit(ByVal intMandant As Integer,
+                                               ByRef objMySQLConn As MySqlConnection) As Int16
 
         Dim strSQL As String
         Dim strAfterDebiRunType As String
@@ -1475,8 +1475,6 @@ Public Class MainDebitor
     Public Shared Function FcSQLParse(ByVal strSQLToParse As String,
                                       ByVal strRGNbr As String,
                                       ByVal objdtBookings As DataTable,
-                                      ByRef objOracleConn As OracleClient.OracleConnection,
-                                      ByRef objOracleCommand As OracleClient.OracleCommand,
                                       ByVal strDebiCredit As String) As String
 
         'Funktion setzt in eingelesenem SQL wieder Variablen ein
@@ -1531,7 +1529,7 @@ Public Class MainDebitor
                         Case "rsDebiTemp.Fields([strDebText])"
                             strField = RowBooking(0).Item("strDebText")
                         Case "KUNDENZEICHEN"
-                            strField = FcGetKundenzeichen(RowBooking(0).Item("lngDebIdentNbr"), objOracleConn, objOracleCommand)
+                            strField = FcGetKundenzeichen(RowBooking(0).Item("lngDebIdentNbr"))
                         Case Else
                             strField = "unknown field"
                     End Select
@@ -1558,23 +1556,48 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcGetKundenzeichen(ByVal lngJournalNr As Int32, ByRef objOracleCon As OracleConnection, ByRef objOracleCmd As OracleCommand) As String
+    Public Shared Function FcGetKundenzeichen(ByVal lngJournalNr As Int32) As String
+        'ByRef objOracleCon As OracleConnection,
+        'ByRef objOracleCmd As OracleCommand) As String
 
+        Dim objdbConnCIS As New MySqlConnection
+        Dim objdbCmdCIS As New MySqlCommand
         Dim objdtJournalKZ As New DataTable
 
         Try
+            'Angaben einlesen
+            objdbConnCIS.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringCIS")
+            objdbConnCIS.Open()
+            objdbCmdCIS.Connection = objdbConnCIS
+            objdbCmdCIS.CommandText = "SELECT KUNDENZEICHEN FROM TAB_JOURNALSTAMM WHERE JORNALNR=" + lngJournalNr.ToString
+            objdtJournalKZ.Load(objdbCmdCIS.ExecuteReader)
 
-            objOracleCmd.CommandText = "SELECT KUNDENZEICHEN FROM TAB_JOURNALSTAMM WHERE JORNALNR=" + lngJournalNr.ToString
-            objdtJournalKZ.Load(objOracleCmd.ExecuteReader)
-
-            If Not IsDBNull(objdtJournalKZ.Rows(0).Item(0)) Then
-                Return objdtJournalKZ.Rows(0).Item(0)
+            If objdtJournalKZ.Rows.Count > 0 Then
+                If Not IsDBNull(objdtJournalKZ.Rows(0).Item(0)) Then
+                    Return objdtJournalKZ.Rows(0).Item(0)
+                Else
+                    Return "n/a"
+                End If
             Else
-                Return "n/a"
+                Return "new"
             End If
+
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Kundenzeichen holen " + Err.Number.ToString, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+
+        Finally
+            objdtJournalKZ.Clear()
+            objdtJournalKZ.Dispose()
+            objdtJournalKZ = Nothing
+
+            objdbConnCIS.Close()
+            objdbConnCIS.Dispose()
+            objdbConnCIS = Nothing
+
+            objdbCmdCIS.Dispose()
+            objdbCmdCIS = Nothing
+
 
         End Try
 
@@ -2081,7 +2104,9 @@ Public Class MainDebitor
             Return 9
 
         Finally
-            objdbSQLConn.Close()
+            If objdbSQLConn.State = ConnectionState.Open Then
+                objdbSQLConn.Close()
+            End If
 
         End Try
 

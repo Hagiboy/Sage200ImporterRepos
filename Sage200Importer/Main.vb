@@ -1183,7 +1183,7 @@ ErrorHandler:
             'intTeqNbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
 
             objdbconn.Open()
-            objOrdbconn.Open()
+            'objOrdbconn.Open()
             'objdbAccessConn.Open()
 
             For Each row As DataRow In objdtDebits.Rows
@@ -1923,8 +1923,6 @@ ErrorHandler:
                                                                                 intAccounting),
                                                              row("strDebRGNbr"),
                                                              objdtDebits,
-                                                             objOrdbconn,
-                                                             objOrcommand,
                                                              "D")
                     row("strDebText") = strDebiHeadText
                 End If
@@ -1937,8 +1935,6 @@ ErrorHandler:
                                                                                intAccounting),
                                                             row("strDebRGNbr"),
                                                             objdtDebits,
-                                                            objOrdbconn,
-                                                            objOrcommand,
                                                             "D")
                 Else
                     strDebiSubText = row("strDebText")
@@ -3641,7 +3637,7 @@ ErrorHandler:
         Try
 
             objdbconn.Open()
-            objOrdbconn.Open()
+            'objOrdbconn.Open()
 
             For Each row As DataRow In objdtKredits.Rows
 
@@ -4223,8 +4219,6 @@ ErrorHandler:
                                                                                 intAccounting),
                                                                                 row("strKredRGNbr"),
                                                                             objdtKredits,
-                                                                            objOrdbconn,
-                                                                            objOrcommand,
                                                                             "C")
                     row("strKredText") = strKrediHeadText
                 End If
@@ -4237,8 +4231,6 @@ ErrorHandler:
                                                                                 intAccounting),
                                                                                 row("strKredRGNbr"),
                                                                            objdtKredits,
-                                                                           objOrdbconn,
-                                                                           objOrcommand,
                                                                            "C")
                 Else
                     strKrediSubText = row("strKredText")
