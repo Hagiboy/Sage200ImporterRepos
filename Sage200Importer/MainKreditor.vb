@@ -7,6 +7,7 @@ Imports System.Data.SqlClient
 Imports System.Net
 Imports System.IO
 Imports System.Xml
+Imports Org.BouncyCastle.Crypto.Prng
 
 Public Class MainKreditor
 
@@ -1094,7 +1095,8 @@ Public Class MainKreditor
                                                  ByVal strTyp As String,
                                                  ByVal intTeqNr As Int32,
                                                  ByVal intTeqNrLY As Int32,
-                                                 ByVal intTeqNrPLY As Int32) As Int16
+                                                 ByVal intTeqNrPLY As Int32,
+                                                 ByRef objKrBhg As SBSXASLib.AXiKrBhg) As Int16
 
         '0=ok, 1=Beleg existierte schon, 9=Problem
 
@@ -1103,6 +1105,7 @@ Public Class MainKreditor
         Dim intReturnvalue As Int32
         Dim intStatus As Int16
         Dim tblKrediBeleg As New DataTable
+        Dim intEntryBelNbr As Int32 = intBelegNbr
 
         Try
 
@@ -1126,7 +1129,12 @@ Public Class MainKreditor
                 tblKrediBeleg.Load(objdbMSSQLCmd.ExecuteReader)
                 If tblKrediBeleg.Rows.Count > 0 Then
                     intReturnvalue = tblKrediBeleg.Rows(0).Item("lfnbrk")
-                    intBelegNbr += 1
+                    objKrBhg.IncrBelNbr = "J"
+                    intBelegNbr = objKrBhg.GetNextBelNbr(strTyp)
+                    'Hat Hochzählen geklappt
+                    If intBelegNbr <= intEntryBelNbr Then
+                        intBelegNbr += intBelegNbr
+                    End If
                 Else
                     intReturnvalue = 0
                 End If

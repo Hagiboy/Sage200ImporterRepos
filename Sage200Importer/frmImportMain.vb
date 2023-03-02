@@ -1905,7 +1905,7 @@ Friend Class frmImportMain
                         KrBhg.EnableAutoESRZlgVerb = "J"
 
                         'Eindeutigkeit der internen Beleg-Nummer setzen
-                        KrBhg.CheckDoubleIntBelNbr = "J"
+                        KrBhg.CheckDoubleIntBelNbr = "N"
 
                         'Eindeutigkeit externer Beleg-Nummer setzen
                         KrBhg.CheckDoubleExtBelNbr = "J"
@@ -1941,7 +1941,8 @@ Friend Class frmImportMain
                                                                                 "G",
                                                                                 intTeqNbr,
                                                                                 intTeqNbrLY,
-                                                                                intTeqNbrPLY)
+                                                                                intTeqNbrPLY,
+                                                                                KrBhg)
 
                         Else
                             strBuchType = "R"
@@ -1956,7 +1957,8 @@ Friend Class frmImportMain
                                                                                 "R",
                                                                                 intTeqNbr,
                                                                                 intTeqNbrLY,
-                                                                                intTeqNbrPLY)
+                                                                                intTeqNbrPLY,
+                                                                                KrBhg)
 
                         End If
 
