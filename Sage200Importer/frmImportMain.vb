@@ -136,13 +136,18 @@ Friend Class frmImportMain
             objdtInfo.Clear()
 
             'dgvBookings.Rows.Clear()
-            If dgvBookings.Columns.Contains("intBuchungsart") Then
-                dgvBookings.Columns.Remove("intBuchungsart")
-            End If
+            'If dgvBookings.Columns.Contains("intBuchungsart") Then
+            '    dgvBookings.Columns.Remove("intBuchungsart")
+            'End If
 
             'DGV Debitoren
             dgvBookings.DataSource = Nothing
+            dgvBookings.Rows.Clear()
+            dgvBookings.Columns.Clear()
             dgvBookingSub.DataSource = Nothing
+            dgvBookingSub.Rows.Clear()
+            dgvBookingSub.Columns.Clear()
+
             dgvBookings.DataSource = objdtDebitorenHead
             dgvBookingSub.DataSource = objdtDebitorenSub
             objdbConn.Open()
@@ -307,28 +312,28 @@ Friend Class frmImportMain
             dgvBookings.Columns("lngDebIdentNbr").DisplayIndex = 12
             dgvBookings.Columns("lngDebIdentNbr").HeaderText = "Ident"
             dgvBookings.Columns("lngDebIdentNbr").Width = 80
-            'If Not boodgvSet Then
-            Dim cmbBuchungsart As New DataGridViewComboBoxColumn()
-            Dim objdtBA As New DataTable("objidtBA")
-            Dim objlocMySQLcmd As New MySqlCommand
-            objlocMySQLcmd.CommandText = "SELECT * FROM t_sage_tblbuchungsarten"
-            objlocMySQLcmd.Connection = objdbConn
-            objdtBA.Load(objlocMySQLcmd.ExecuteReader)
-            cmbBuchungsart.DataSource = objdtBA
-            cmbBuchungsart.DisplayMember = "strBuchungsart"
-            cmbBuchungsart.ValueMember = "idBuchungsart"
-            cmbBuchungsart.HeaderText = "BA"
-            cmbBuchungsart.Name = "intBuchungsart"
-            cmbBuchungsart.DataPropertyName = "intBuchungsart"
-            cmbBuchungsart.DisplayIndex = 13
-            cmbBuchungsart.Width = 70
-            dgvBookings.Columns.Add(cmbBuchungsart)
-            'boodgvSet = True
-            'End If
-            'dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
-            'dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
-            'dgvDebitoren.Columns("intBuchungsart").HeaderText = "BA"
-            'dgvDebitoren.Columns("intBuchungsart").Width = 40
+            ''If Not boodgvSet Then
+            'Dim cmbBuchungsart As New DataGridViewComboBoxColumn()
+            'Dim objdtBA As New DataTable("objidtBA")
+            'Dim objlocMySQLcmd As New MySqlCommand
+            'objlocMySQLcmd.CommandText = "SELECT * FROM t_sage_tblbuchungsarten"
+            'objlocMySQLcmd.Connection = objdbConn
+            'objdtBA.Load(objlocMySQLcmd.ExecuteReader)
+            'cmbBuchungsart.DataSource = objdtBA
+            'cmbBuchungsart.DisplayMember = "strBuchungsart"
+            'cmbBuchungsart.ValueMember = "idBuchungsart"
+            'cmbBuchungsart.HeaderText = "BA"
+            'cmbBuchungsart.Name = "intBuchungsart"
+            'cmbBuchungsart.DataPropertyName = "intBuchungsart"
+            'cmbBuchungsart.DisplayIndex = 13
+            'cmbBuchungsart.Width = 70
+            'dgvBookings.Columns.Add(cmbBuchungsart)
+            ''boodgvSet = True
+            ''End If
+            dgvBookings.Columns("intBuchungsart").DisplayIndex = 13
+            dgvBookings.Columns("intBuchungsart").DisplayIndex = 13
+            dgvBookings.Columns("intBuchungsart").HeaderText = "BA"
+            dgvBookings.Columns("intBuchungsart").Width = 40
             dgvBookings.Columns("strOPNr").DisplayIndex = 14
             dgvBookings.Columns("strOPNr").HeaderText = "OP-Nr"
             dgvBookings.Columns("strOPNr").Width = 80
@@ -345,7 +350,7 @@ Friend Class frmImportMain
             dgvBookings.Columns("strDebStatusText").HeaderText = "Status"
             dgvBookings.Columns("strDebStatusText").Width = 200
             dgvBookings.Columns("intBuchhaltung").Visible = False
-            dgvBookings.Columns("intBuchungsart").Visible = False
+            'dgvBookings.Columns("intBuchungsart").Visible = False
             'dgvBookings.Columns("intRGArt").Visible = False
             dgvBookings.Columns("strRGArt").Visible = False
             'dgvBookings.Columns("lngLinkedRG").Visible = False
@@ -493,27 +498,27 @@ Friend Class frmImportMain
             dgvBookings.Columns("lngKredIdentNbr").DisplayIndex = 12
             dgvBookings.Columns("lngKredIdentNbr").HeaderText = "Ident"
             dgvBookings.Columns("lngKredIdentNbr").Width = 80
-            Dim cmbBuchungsart As New DataGridViewComboBoxColumn()
-            Dim objdtBA As New DataTable("objidtBA")
-            Dim objlocMySQLcmd As New MySqlCommand
-            'objdbConn.Open()
-            objlocMySQLcmd.CommandText = "SELECT * FROM t_sage_tblbuchungsarten"
-            objlocMySQLcmd.Connection = objdbConn
-            objdtBA.Load(objlocMySQLcmd.ExecuteReader)
-            cmbBuchungsart.DataSource = objdtBA
-            'objdbConn.Close()
-            cmbBuchungsart.DisplayMember = "strBuchungsart"
-            cmbBuchungsart.ValueMember = "idBuchungsart"
-            cmbBuchungsart.HeaderText = "BA"
-            cmbBuchungsart.Name = "intBuchungsart"
-            cmbBuchungsart.DataPropertyName = "intBuchungsart"
-            cmbBuchungsart.DisplayIndex = 13
-            cmbBuchungsart.Width = 70
-            dgvBookings.Columns.Add(cmbBuchungsart)
-            ''dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
-            ''dgvDebitoren.Columns("intBuchungsart").DisplayIndex = 13
-            ''dgvDebitoren.Columns("intBuchungsart").HeaderText = "BA"
-            ''dgvDebitoren.Columns("intBuchungsart").Width = 40
+            'Dim cmbBuchungsart As New DataGridViewComboBoxColumn()
+            'Dim objdtBA As New DataTable("objidtBA")
+            'Dim objlocMySQLcmd As New MySqlCommand
+            ''objdbConn.Open()
+            'objlocMySQLcmd.CommandText = "SELECT * FROM t_sage_tblbuchungsarten"
+            'objlocMySQLcmd.Connection = objdbConn
+            'objdtBA.Load(objlocMySQLcmd.ExecuteReader)
+            'cmbBuchungsart.DataSource = objdtBA
+            ''objdbConn.Close()
+            'cmbBuchungsart.DisplayMember = "strBuchungsart"
+            'cmbBuchungsart.ValueMember = "idBuchungsart"
+            'cmbBuchungsart.HeaderText = "BA"
+            'cmbBuchungsart.Name = "intBuchungsart"
+            'cmbBuchungsart.DataPropertyName = "intBuchungsart"
+            'cmbBuchungsart.DisplayIndex = 13
+            'cmbBuchungsart.Width = 70
+            'dgvBookings.Columns.Add(cmbBuchungsart)
+            dgvBookings.Columns("intBuchungsart").DisplayIndex = 13
+            dgvBookings.Columns("intBuchungsart").DisplayIndex = 13
+            dgvBookings.Columns("intBuchungsart").HeaderText = "BA"
+            dgvBookings.Columns("intBuchungsart").Width = 40
             dgvBookings.Columns("strKredRGNbr").DisplayIndex = 14
             dgvBookings.Columns("strKredRGNbr").HeaderText = "RG-Nr"
             dgvBookings.Columns("strKredRGNbr").Width = 100
@@ -1699,12 +1704,18 @@ Friend Class frmImportMain
             'objdtKreditorenHeadRead.Clear()
             objdtInfo.Clear()
 
-            If dgvBookings.Columns.Contains("intBuchungsart") Then
-                dgvBookings.Columns.Remove("intBuchungsart")
-            End If
+            'If dgvBookings.Columns.Contains("intBuchungsart") Then
+            '    dgvBookings.Columns.Remove("intBuchungsart")
+            'End If
 
             'DGV Kreditoren
+            dgvBookings.DataSource = Nothing
+            dgvBookings.Rows.Clear()
+            dgvBookings.Columns.Clear()
             dgvBookings.DataSource = objdtKreditorenHead
+            dgvBookingSub.DataSource = Nothing
+            dgvBookingSub.Rows.Clear()
+            dgvBookingSub.Columns.Clear()
             dgvBookingSub.DataSource = objdtKreditorenSub
             objdbConn.Open()
             Call InitdgvKreditoren()
@@ -1914,7 +1925,7 @@ Friend Class frmImportMain
                         'strExtBelegNbr = row("strOPNr")
 
                         'Zuerst Beleg-Nummerieungung aktivieren
-                        KrBhg.IncrBelNbr = "J"
+                        'KrBhg.IncrBelNbr = "N"
                         'Belegsnummer abholen
                         'intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
                         'Else
@@ -1934,6 +1945,7 @@ Friend Class frmImportMain
                             'Belegsnummer abholen
                             KrBhg.IncrBelNbr = "J"
                             intKredBelegsNummer = KrBhg.GetNextBelNbr("G")
+                            KrBhg.IncrBelNbr = "N"
 
                             intReturnValue = MainKreditor.FcCheckKrediExistance(objdbMSSQLConn,
                                                                                 objdbSQLcommand,
@@ -1950,6 +1962,7 @@ Friend Class frmImportMain
                             'Belegsnummer abholen
                             KrBhg.IncrBelNbr = "J"
                             intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
+                            KrBhg.IncrBelNbr = "N"
 
                             intReturnValue = MainKreditor.FcCheckKrediExistance(objdbMSSQLConn,
                                                                                 objdbSQLcommand,

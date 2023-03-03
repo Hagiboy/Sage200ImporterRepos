@@ -1129,12 +1129,12 @@ Public Class MainKreditor
                 tblKrediBeleg.Load(objdbMSSQLCmd.ExecuteReader)
                 If tblKrediBeleg.Rows.Count > 0 Then
                     intReturnvalue = tblKrediBeleg.Rows(0).Item("lfnbrk")
-                    objKrBhg.IncrBelNbr = "J"
-                    intBelegNbr = objKrBhg.GetNextBelNbr(strTyp)
+                    'objKrBhg.IncrBelNbr = "J"
+                    'intBelegNbr = objKrBhg.GetNextBelNbr(strTyp)
                     'Hat Hochzählen geklappt
-                    If intBelegNbr <= intEntryBelNbr Then
-                        intBelegNbr += intBelegNbr
-                    End If
+                    'If intBelegNbr <= intEntryBelNbr Then
+                    intBelegNbr += 1
+                    'End If
                 Else
                     intReturnvalue = 0
                 End If
@@ -1149,6 +1149,9 @@ Public Class MainKreditor
 
         Finally
             objdbMSSQLConn.Close()
+            tblKrediBeleg.Constraints.Clear()
+            tblKrediBeleg.Dispose()
+            tblKrediBeleg = Nothing
 
         End Try
 
@@ -1947,6 +1950,16 @@ Public Class MainKreditor
 
                 End If
 
+                'Falls nicht CHF dann umrechnen und auf CHF setzen
+                If strCur <> "CHF" Then
+                    dblKursD = Main.FcGetKurs(strCur, strValutaDatum, objFBhg)
+                    strDebiCurrency = "CHF"
+                Else
+                    dblKursD = 1.0#
+                    strDebiCurrency = strCur
+                End If
+                dblKursH = dblKursD
+
                 'Einzelene Monate buchen
                 For intMonthLooper As Int16 = 0 To intITotal - 1
                     datValuta = DateAdd(DateInterval.Month, intMonthLooper, datPGVStart)
@@ -1971,8 +1984,10 @@ Public Class MainKreditor
                     If drKSubrow("intSollHaben") = 1 Then 'Haben
                         strBebuEintragSoll = Nothing
                         strBebuEintragHaben = drKSubrow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                        strSteuerFeldHaben = "STEUERFREI"
                     Else
                         strBebuEintragSoll = drKSubrow("lngKST").ToString + "{<}" + strDebiTextSoll + "{<}" + "CALCULATE" + "{>}"
+                        strSteuerFeldSoll = "STEUERFREI"
                         strBebuEintragHaben = Nothing
                     End If
 
