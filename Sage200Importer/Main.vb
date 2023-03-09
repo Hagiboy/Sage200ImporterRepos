@@ -171,6 +171,9 @@ Friend NotInheritable Class Main
             Dim booCrToInv As DataColumn = New DataColumn("booCrToInv")
             booCrToInv.DataType = System.Type.[GetType]("System.Boolean")
             DT.Columns.Add(booCrToInv)
+            Dim intKtoPayed As DataColumn = New DataColumn("intKtoPayed")
+            intKtoPayed.DataType = System.Type.[GetType]("System.Int32")
+            DT.Columns.Add(intKtoPayed)
             Dim booPGV As DataColumn = New DataColumn("booPGV")
             booPGV.DataType = System.Type.[GetType]("System.Boolean")
             DT.Columns.Add(booPGV)
@@ -1142,6 +1145,7 @@ ErrorHandler:
         Dim booAutoCorrect As Boolean
         Dim booSplittBill As Boolean
         Dim booCpyKSTToSub As Boolean
+        Dim booGeneratePymentBooking As Boolean
         Dim selsubrow() As DataRow
         Dim strDebiReferenz As String = String.Empty
         Dim booDiffHeadText As Boolean
@@ -1204,6 +1208,10 @@ ErrorHandler:
                 'Credit To Debit (Gutschrift zu Rechnung) - Option auf false setzen falls nicht vorhanden
                 If IsDBNull(row("booCrToInv")) Then
                     row("booCrToInv") = False
+                End If
+                'CreatePaymentBooking auf 0 setzen falls nicht vorhanden
+                If IsDBNull(row("intKtoPayed")) Then
+                    row("intKtoPayed") = 0
                 End If
 
                 'Status-String erstellen
@@ -1273,6 +1281,34 @@ ErrorHandler:
                                                     booSplittBill)
 
                 strBitLog += Trim(intReturnValue.ToString)
+
+                'Gibt es eine Bezahlbuchung zu erstellen? 
+                booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_GeneratePaymentBooking", intAccounting)))
+                If booGeneratePymentBooking And row("intBuchungsart") <> 1 And row("intKtoPayed") > 0 Then
+                    'Bedingungen erfüllt
+                    Dim drPaymentBuchung As DataRow = objdtDebitSubs.NewRow
+                    'Felder zuweisen
+                    drPaymentBuchung("strRGNr") = row("strDebRGNbr")
+                    drPaymentBuchung("intSollHaben") = 0
+                    drPaymentBuchung("lngKto") = row("intKtoPayed")
+                    drPaymentBuchung("strKtoBez") = "Bezahlung"
+                    drPaymentBuchung("lngKST") = 0
+                    drPaymentBuchung("strKstBez") = "keine"
+                    drPaymentBuchung("lngProj") = 0
+                    drPaymentBuchung("strProjBez") = "null"
+                    drPaymentBuchung("dblNetto") = row("dblDebBrutto")
+                    drPaymentBuchung("dblMwSt") = 0
+                    drPaymentBuchung("dblBrutto") = row("dblDebBrutto")
+                    drPaymentBuchung("dblMwStSatz") = 0
+                    drPaymentBuchung("strMwStKey") = "null"
+                    drPaymentBuchung("strArtikel") = "Bezahlvorgang"
+                    drPaymentBuchung("strDebSubText") = "Bezahlvorgang"
+                    objdtDebitSubs.Rows.Add(drPaymentBuchung)
+                    drPaymentBuchung = Nothing
+                    'Summe der Sub-Buchungen anpassen
+                    dblSubBrutto = Decimal.Round(dblSubBrutto + row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
+
+                End If
 
                 'Autokorrektur 05
                 'Bei SplitBill - erste Rechnung evtl. Rückzahlung im Total nicht beachten
@@ -1356,6 +1392,7 @@ ErrorHandler:
                                 objdrDebiSub("strStatusUBText") = "ok"
                             End If
                             objdtDebitSubs.Rows.Add(objdrDebiSub)
+                            objdrDebiSub = Nothing
                             'Summe der Sub-Buchungen anpassen
                             dblSubBrutto = Decimal.Round(dblSubBrutto - dblRDiffBrutto, 2, MidpointRounding.AwayFromZero)
                             'dblSubMwSt = Decimal.Round(dblSubMwSt - dblRDiffMwSt, 2, MidpointRounding.AwayFromZero)
@@ -1713,6 +1750,7 @@ ErrorHandler:
                     drSBBuchung("strArtikel") = "SB - Buchung"
                     drSBBuchung("strDebSubText") = row("lngDebIdentNbr").ToString + ", FRG, " + row("lngLinkedRG").ToString
                     objdtDebitSubs.Rows.Add(drSBBuchung)
+                    drSBBuchung = Nothing
 
                 Else
                     intReturnValue = 0

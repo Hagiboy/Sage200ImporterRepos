@@ -400,6 +400,7 @@ Public Class MainDebitor
         Finally
             'objdbconnZHDB02.Close()
             objdtDebitor.Dispose()
+            objOrdbconn.Close()
             Application.DoEvents()
 
         End Try
