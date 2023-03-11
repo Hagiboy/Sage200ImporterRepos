@@ -681,7 +681,7 @@ Public Class MainDebitor
                                                 ByVal strcmbBuha As String,
                                                 ByVal intAccounting As Int16) As Int16
 
-        'Return: 0=creatable und erstellt, 3=Sage - Suchtext nicht erfasst, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
+        'Return: 0=creatable und erstellt, 3=Sage - Suchtext nicht erfasst, 4=Betrieb nicht gefunden, 5=PK nicht geprüft, 9=Nicht hinterlegt
 
         Dim intCreatable As Int16
         Dim objdtDebitor As New DataTable
@@ -747,7 +747,8 @@ Public Class MainDebitor
                                                       "IF(Rep_Kred_Currency Is NULL, 'CHF', Rep_Kred_Currency) AS Rep_Kred_Currency, " +
                                                       "Rep_Kred_PCKto, " +
                                                       "Rep_DebiErloesKonto, " +
-                                                      "Rep_Kred_BankIntern " +
+                                                      "Rep_Kred_BankIntern, " +
+                                                      "ReviewedOn " +
                                                       "FROM Tab_Repbetriebe WHERE PKNr=" + lngDebiNbr.ToString
             objdtDebitor.Load(objsqlConnDeb.ExecuteReader)
 
@@ -755,163 +756,172 @@ Public Class MainDebitor
             If objdtDebitor.Rows.Count > 0 Then
                 'Debug.Print("Gefunden, kann e/rstellt werden")
 
-                'Sachbearbeiter suchen
-                'Ist Ausnahme definiert?
-                objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=" + objdtDebitor.Rows(0).Item("Rep_Nr").ToString + " And Buchh_Nr=" + intAccounting.ToString
-                objdtSachB.Load(objsqlcommandZHDB02.ExecuteReader)
-                If objdtSachB.Rows.Count > 0 Then 'Ausnahme definiert auf Rep-Betrieb
-                    strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
+                If IsDBNull(objdtDebitor.Rows(0).Item("ReviewedOn")) Then
+                    'PK wurde nicht geprüft
+                    Return 5
+
                 Else
-                    'Default setzen
-                    objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=2535 And Buchh_Nr=" + intAccounting.ToString
+
+                    'Sachbearbeiter suchen
+                    'Ist Ausnahme definiert?
+                    objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=" + objdtDebitor.Rows(0).Item("Rep_Nr").ToString + " And Buchh_Nr=" + intAccounting.ToString
                     objdtSachB.Load(objsqlcommandZHDB02.ExecuteReader)
-                    If objdtSachB.Rows.Count > 0 Then 'Default ist definiert
+                    If objdtSachB.Rows.Count > 0 Then 'Ausnahme definiert auf Rep-Betrieb
                         strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
                     Else
-                        strSachB = String.Empty
-                        MessageBox.Show("Kein Sachbearbeiter - Default gesetzt für Buha " + strcmbBuha, "Debitorenerstellung")
+                        'Default setzen
+                        objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=2535 And Buchh_Nr=" + intAccounting.ToString
+                        objdtSachB.Load(objsqlcommandZHDB02.ExecuteReader)
+                        If objdtSachB.Rows.Count > 0 Then 'Default ist definiert
+                            strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
+                        Else
+                            strSachB = String.Empty
+                            MessageBox.Show("Kein Sachbearbeiter - Default gesetzt für Buha " + strcmbBuha, "Debitorenerstellung")
+                        End If
                     End If
-                End If
 
-                'interne Bank
-                intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
-                                                         intAccounting,
-                                                         objdtDebitor.Rows(0).Item("Rep_Kred_BankIntern"),
-                                                         intintBank)
+                    'interne Bank
+                    intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
+                                                             intAccounting,
+                                                             objdtDebitor.Rows(0).Item("Rep_Kred_BankIntern"),
+                                                             intintBank)
 
-                'Zahlungsbedingung suchen
-                intReturnValue = FcGetDZkondFromRep(objdbconn,
-                                                    objdbconnZHDB02,
-                                                    objsqlcommandZHDB02,
-                                                    lngDebiNbr,
-                                                    intDebZB,
-                                                    intAccounting)
+                    'Zahlungsbedingung suchen
+                    intReturnValue = FcGetDZkondFromRep(objdbconn,
+                                                        objdbconnZHDB02,
+                                                        objsqlcommandZHDB02,
+                                                        lngDebiNbr,
+                                                        intDebZB,
+                                                        intAccounting)
 
 
-                ''objdtKreditor.Clear()
-                ''Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
-                'objsqlcommandZHDB02.CommandText = "Select Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
-                '                                  "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition On Tab_Repbetriebe.Rep_DebiZKonditionID = t_sage_zahlungskondition.ID " +
-                '                                  "WHERE Tab_Repbetriebe.PKNr=" + lngDebiNbr.ToString
-                'objDADebitor.SelectCommand = objsqlcommandZHDB02
-                'objdsDebitor.EnforceConstraints = False
-                'objDADebitor.Fill(objdsDebitor)
+                    ''objdtKreditor.Clear()
+                    ''Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
+                    'objsqlcommandZHDB02.CommandText = "Select Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
+                    '                                  "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition On Tab_Repbetriebe.Rep_DebiZKonditionID = t_sage_zahlungskondition.ID " +
+                    '                                  "WHERE Tab_Repbetriebe.PKNr=" + lngDebiNbr.ToString
+                    'objDADebitor.SelectCommand = objsqlcommandZHDB02
+                    'objdsDebitor.EnforceConstraints = False
+                    'objDADebitor.Fill(objdsDebitor)
 
-                ''objdsKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
-                ''objdtKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
-                'If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
-                '    intDebZB = objdsDebitor.Tables(0).Rows(0).Item("SageID")
-                'Else
-                '    intDebZB = 1
-                'End If
-
-                'Land von Text auf Auto-Kennzeichen ändern
-                Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Land")), "Schweiz", objdtDebitor.Rows(0).Item("Rep_Land"))
-                    Case "Schweiz"
-                        strLand = "CH"
-                    Case "Deutschland"
-                        strLand = "DE"
-                    Case "Frankreich"
-                        strLand = "FR"
-                    Case "Italien"
-                        strLand = "IT"
-                    Case "Österreich"
-                        strLand = "AT"
-                    Case "USA"
-                        strLand = "US"
-                    Case Else
-                        strLand = "CH"
-                End Select
-
-                'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
-                Select Case Strings.UCase(IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Language")), "D", objdtDebitor.Rows(0).Item("Rep_Language")))
-                    Case "D", "DE", ""
-                        intLangauage = 2055
-                    Case "F", "FR"
-                        intLangauage = 4108
-                    Case "I", "IT"
-                        intLangauage = 2064
-                    Case Else
-                        intLangauage = 2057 'Englisch
-                End Select
-
-                'Variablen zuweisen für die Erstellung des Debitors
-                strIBANNr = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_IBAN")), "", objdtDebitor.Rows(0).Item("Rep_Kred_IBAN"))
-                strBankName = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Name")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Name"))
-                strBankAddress1 = String.Empty
-                strBankPLZ = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_PLZ")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_PLZ"))
-                strBankOrt = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Ort")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Ort"))
-                strBankAddress2 = strBankPLZ + " " + strBankOrt
-                strBankBIC = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_BIC")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_BIC"))
-                strBankClearing = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_PCKto")), "", objdtDebitor.Rows(0).Item("Rep_Kred_PCKto"))
-
-                If Len(strIBANNr) = 21 Then 'IBAN
-                    'If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
-                    intPayType = 9
+                    ''objdsKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
+                    ''objdtKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
+                    'If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
+                    '    intDebZB = objdsDebitor.Tables(0).Rows(0).Item("SageID")
+                    'Else
+                    '    intDebZB = 1
                     'End If
-                    intReturnValue = Main.FcGetIBANDetails(objdbconn,
-                                                      strIBANNr,
-                                                      strBankName,
-                                                      strBankAddress1,
-                                                      strBankAddress2,
-                                                      strBankBIC,
-                                                      strBankCountry,
-                                                      strBankClearing)
 
-                    'Kombinierte PLZ / Ort Feld trennen
-                    strBankPLZ = Left(strBankAddress2, InStr(strBankAddress2, " "))
-                    strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
+                    'Land von Text auf Auto-Kennzeichen ändern
+                    Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Land")), "Schweiz", objdtDebitor.Rows(0).Item("Rep_Land"))
+                        Case "Schweiz"
+                            strLand = "CH"
+                        Case "Deutschland"
+                            strLand = "DE"
+                        Case "Frankreich"
+                            strLand = "FR"
+                        Case "Italien"
+                            strLand = "IT"
+                        Case "Österreich"
+                            strLand = "AT"
+                        Case "USA"
+                            strLand = "US"
+                        Case Else
+                            strLand = "CH"
+                    End Select
+
+                    'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
+                    Select Case Strings.UCase(IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Language")), "D", objdtDebitor.Rows(0).Item("Rep_Language")))
+                        Case "D", "DE", ""
+                            intLangauage = 2055
+                        Case "F", "FR"
+                            intLangauage = 4108
+                        Case "I", "IT"
+                            intLangauage = 2064
+                        Case Else
+                            intLangauage = 2057 'Englisch
+                    End Select
+
+                    'Variablen zuweisen für die Erstellung des Debitors
+                    strIBANNr = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_IBAN")), "", objdtDebitor.Rows(0).Item("Rep_Kred_IBAN"))
+                    strBankName = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Name")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Name"))
+                    strBankAddress1 = String.Empty
+                    strBankPLZ = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_PLZ")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_PLZ"))
+                    strBankOrt = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Ort")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_Ort"))
+                    strBankAddress2 = strBankPLZ + " " + strBankOrt
+                    strBankBIC = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_Bank_BIC")), "", objdtDebitor.Rows(0).Item("Rep_Kred_Bank_BIC"))
+                    strBankClearing = IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kred_PCKto")), "", objdtDebitor.Rows(0).Item("Rep_Kred_PCKto"))
+
+                    If Len(strIBANNr) = 21 Then 'IBAN
+                        'If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
+                        intPayType = 9
+                        'End If
+                        intReturnValue = Main.FcGetIBANDetails(objdbconn,
+                                                          strIBANNr,
+                                                          strBankName,
+                                                          strBankAddress1,
+                                                          strBankAddress2,
+                                                          strBankBIC,
+                                                          strBankCountry,
+                                                          strBankClearing)
+
+                        'Kombinierte PLZ / Ort Feld trennen
+                        strBankPLZ = Left(strBankAddress2, InStr(strBankAddress2, " "))
+                        strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
+                    End If
+
+                    intCreatable = FcCreateDebitor(objDbBhg,
+                                              lngDebiNbr,
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Suchtext")), "", objdtDebitor.Rows(0).Item("Rep_Suchtext")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Firma")), "", objdtDebitor.Rows(0).Item("Rep_Firma")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Strasse")), "", objdtDebitor.Rows(0).Item("Rep_Strasse")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_PLZ")), "", objdtDebitor.Rows(0).Item("Rep_PLZ")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Ort")), "", objdtDebitor.Rows(0).Item("Rep_Ort")),
+                                              objdtDebitor.Rows(0).Item("Rep_DebiKonto"),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Gruppe")), "", objdtDebitor.Rows(0).Item("Rep_Gruppe")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Vertretung")), "", objdtDebitor.Rows(0).Item("Rep_Vertretung")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Ansprechpartner")), "", objdtDebitor.Rows(0).Item("Rep_Ansprechpartner")),
+                                              strLand,
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Tel1")), "", objdtDebitor.Rows(0).Item("Rep_Tel1")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Fax")), "", objdtDebitor.Rows(0).Item("Rep_Fax")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Mail")), "", objdtDebitor.Rows(0).Item("Rep_Mail")),
+                                              intLangauage,
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kredi_MWStNr")), "", objdtDebitor.Rows(0).Item("Rep_Kredi_MWStNr")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kreditlimite")), "", objdtDebitor.Rows(0).Item("Rep_Kreditlimite")),
+                                              intPayType,
+                                              strBankName,
+                                              strBankPLZ,
+                                              strBankOrt,
+                                              strIBANNr,
+                                              strBankBIC,
+                                              strBankClearing,
+                                              IIf(String.IsNullOrEmpty(objdtDebitor.Rows(0).Item("Rep_Kred_Currency")), "CHF", objdtDebitor.Rows(0).Item("Rep_Kred_Currency")),
+                                              IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")), "3200", objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")),
+                                              intDebZB,
+                                              strSachB,
+                                              intintBank,
+                                              "")
+
+                    If intCreatable = 0 Then
+                        'MySQL
+                        'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
+                        ' intAccounting.ToString + lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
+                        '                                     "'finance@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
+                        'lngDebiNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
+                        ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                        'objlocMySQLRGConn.Open()
+                        'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                        'objsqlcommandZHDB02.CommandText = strSQL
+                        'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
+
+                    End If
+
+
+                    Return 0
                 End If
 
-                intCreatable = FcCreateDebitor(objDbBhg,
-                                          lngDebiNbr,
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Suchtext")), "", objdtDebitor.Rows(0).Item("Rep_Suchtext")),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Firma")), "", objdtDebitor.Rows(0).Item("Rep_Firma")),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Strasse")), "", objdtDebitor.Rows(0).Item("Rep_Strasse")),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_PLZ")), "", objdtDebitor.Rows(0).Item("Rep_PLZ")),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Ort")), "", objdtDebitor.Rows(0).Item("Rep_Ort")),
-                                          objdtDebitor.Rows(0).Item("Rep_DebiKonto"),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Gruppe")), "", objdtDebitor.Rows(0).Item("Rep_Gruppe")),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Vertretung")), "", objdtDebitor.Rows(0).Item("Rep_Vertretung")),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Ansprechpartner")), "", objdtDebitor.Rows(0).Item("Rep_Ansprechpartner")),
-                                          strLand,
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Tel1")), "", objdtDebitor.Rows(0).Item("Rep_Tel1")),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Fax")), "", objdtDebitor.Rows(0).Item("Rep_Fax")),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Mail")), "", objdtDebitor.Rows(0).Item("Rep_Mail")),
-                                          intLangauage,
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kredi_MWStNr")), "", objdtDebitor.Rows(0).Item("Rep_Kredi_MWStNr")),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Kreditlimite")), "", objdtDebitor.Rows(0).Item("Rep_Kreditlimite")),
-                                          intPayType,
-                                          strBankName,
-                                          strBankPLZ,
-                                          strBankOrt,
-                                          strIBANNr,
-                                          strBankBIC,
-                                          strBankClearing,
-                                          IIf(String.IsNullOrEmpty(objdtDebitor.Rows(0).Item("Rep_Kred_Currency")), "CHF", objdtDebitor.Rows(0).Item("Rep_Kred_Currency")),
-                                          IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")), "3200", objdtDebitor.Rows(0).Item("Rep_DebiErloesKonto")),
-                                          intDebZB,
-                                          strSachB,
-                                          intintBank,
-                                          "")
-
-                If intCreatable = 0 Then
-                    'MySQL
-                    'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
-                    ' intAccounting.ToString + lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
-                    '                                     "'finance@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
-                    'lngDebiNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
-                    ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
-                    'objlocMySQLRGConn.Open()
-                    'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
-                    'objsqlcommandZHDB02.CommandText = strSQL
-                    'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
-
-                End If
-
-
-                Return 0
             Else
+
                 Return 4
 
             End If
@@ -1667,6 +1677,7 @@ Public Class MainDebitor
                                               "DebiErloesKonto AS ErloesKonto, " +
                                               "BankIntern, " +
                                               "DebiZKonditionID " +
+                                              "ReviewedOn" +
                                               "FROM t_customer WHERE PKNr=" + lngDebiNbr.ToString
             objdtDebitor.Load(objsqlcommandZHDB02.ExecuteReader)
 
@@ -1674,93 +1685,100 @@ Public Class MainDebitor
             If objdtDebitor.Rows.Count > 0 Then
                 'Debug.Print("Gefunden, kann erstellt werden")
 
-                'Sachbearbeiter suchen
-                'Default setzen
-                objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=2535 And Buchh_Nr=" + intAccounting.ToString
-                objdtSachB.Load(objsqlcommandZHDB02.ExecuteReader)
-                If objdtSachB.Rows.Count > 0 Then 'Default ist definiert
-                    strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
-                Else
-                    strSachB = String.Empty
-                    MessageBox.Show("Kein Sachbearbeiter - Default gesetzt für Buha " + strcmbBuha, "Debitorenerstellung")
-                End If
+                If IsDBNull(objdtDebitor.Rows(0).Item("ReviewedOn")) Then
+                    'PK wurde nicht geprüft
 
-                'interne Bank
-                intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
+                    Return 5
+
+                Else
+
+                    'Sachbearbeiter suchen
+                    'Default setzen
+                    objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=2535 And Buchh_Nr=" + intAccounting.ToString
+                    objdtSachB.Load(objsqlcommandZHDB02.ExecuteReader)
+                    If objdtSachB.Rows.Count > 0 Then 'Default ist definiert
+                        strSachB = Trim(objdtSachB.Rows(0).Item("CustomerID").ToString)
+                    Else
+                        strSachB = String.Empty
+                        MessageBox.Show("Kein Sachbearbeiter - Default gesetzt für Buha " + strcmbBuha, "Debitorenerstellung")
+                    End If
+
+                    'interne Bank
+                    intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
                                                          intAccounting,
                                                          objdtDebitor.Rows(0).Item("BankIntern"),
                                                          intintBank)
 
 
-                'Zahlungsbedingung suchen
-                intReturnValue = FcGetDZkondFromCust(objdbconn,
+                    'Zahlungsbedingung suchen
+                    intReturnValue = FcGetDZkondFromCust(objdbconn,
                                                      objdbconnZHDB02,
                                                      objsqlcommandZHDB02,
                                                      lngDebiNbr,
                                                      intDebZB,
                                                      intAccounting)
 
-                'objdtKreditor.Clear()
-                'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
-                'objsqlcommandZHDB02.CommandText = "Select Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
-                '                                  "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition On Tab_Repbetriebe.Rep_DebiZKonditionID = t_sage_zahlungskondition.ID " +
-                '                                  "WHERE Tab_Repbetriebe.PKNr=" + lngDebiNbr.ToString
-                'objDADebitor.SelectCommand = objsqlcommandZHDB02
-                'objdsDebitor.EnforceConstraints = False
-                'objDADebitor.Fill(objdsDebitor)
+                    'objdtKreditor.Clear()
+                    'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
+                    'objsqlcommandZHDB02.CommandText = "Select Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
+                    '                                  "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition On Tab_Repbetriebe.Rep_DebiZKonditionID = t_sage_zahlungskondition.ID " +
+                    '                                  "WHERE Tab_Repbetriebe.PKNr=" + lngDebiNbr.ToString
+                    'objDADebitor.SelectCommand = objsqlcommandZHDB02
+                    'objdsDebitor.EnforceConstraints = False
+                    'objDADebitor.Fill(objdsDebitor)
 
-                ''objdsKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
-                ''objdtKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
-                'If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
-                'If IIf(IsDBNull(objdtDebitor.Rows(0).Item("DebiZKonditionID")), 0, objdtDebitor.Rows(0).Item("DebiZKonditionID")) <> 0 Then
-                '    intDebZB = objdtDebitor.Rows(0).Item("DebiZKonditionID")
-                'Else
-                '    intDebZB = 1
-                'End If
-
-                ''Land von Text auf Auto-Kennzeichen ändern
-                'Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Land")), "Schweiz", objdtDebitor.Rows(0).Item("Rep_Land"))
-                '    Case "Schweiz"
-                strLand = objdtDebitor.Rows(0).Item("country")
-                '    Case "Deutschland"
-                '        strLand = "DE"
-                '    Case "Frankreich"
-                '        strLand = "FR"
-                '    Case "Italien"
-                '        strLand = "IT"
-                '    Case "Österreich"
-                '        strLand = "AT"
-                '    Case Else
-                '        strLand = "CH"
-                'End Select
-
-                'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
-                Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Language")), "DE", objdtDebitor.Rows(0).Item("Language").ToUpper())
-                    Case "DE", ""
-                        intLangauage = 2055
-                    Case "FR"
-                        intLangauage = 4108
-                    Case "IT"
-                        intLangauage = 2064
-                    Case Else
-                        intLangauage = 2057 'Englisch
-                End Select
-
-                'Variablen zuweisen für die Erstellung des Debitors
-                strIBANNr = IIf(IsDBNull(objdtDebitor.Rows(0).Item("IBAN")), "", objdtDebitor.Rows(0).Item("IBAN"))
-                strBankName = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankName")), "", objdtDebitor.Rows(0).Item("BankName"))
-                strBankAddress1 = String.Empty
-                strBankPLZ = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankZipCode")), "", objdtDebitor.Rows(0).Item("BankZipCode"))
-                strBankOrt = String.Empty
-                strBankAddress2 = strBankPLZ + " " + strBankOrt
-                strBankBIC = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankBIC")), "", objdtDebitor.Rows(0).Item("BankBIC"))
-                strBankClearing = String.Empty
-
-                If Len(strIBANNr) >= 21 Then 'IBAN
-                    'If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
-                    intPayType = 9
+                    ''objdsKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
+                    ''objdtKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
+                    'If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
+                    'If IIf(IsDBNull(objdtDebitor.Rows(0).Item("DebiZKonditionID")), 0, objdtDebitor.Rows(0).Item("DebiZKonditionID")) <> 0 Then
+                    '    intDebZB = objdtDebitor.Rows(0).Item("DebiZKonditionID")
+                    'Else
+                    '    intDebZB = 1
                     'End If
-                    intReturnValue = Main.FcGetIBANDetails(objdbconn,
+
+                    ''Land von Text auf Auto-Kennzeichen ändern
+                    'Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Land")), "Schweiz", objdtDebitor.Rows(0).Item("Rep_Land"))
+                    '    Case "Schweiz"
+                    strLand = objdtDebitor.Rows(0).Item("country")
+                    '    Case "Deutschland"
+                    '        strLand = "DE"
+                    '    Case "Frankreich"
+                    '        strLand = "FR"
+                    '    Case "Italien"
+                    '        strLand = "IT"
+                    '    Case "Österreich"
+                    '        strLand = "AT"
+                    '    Case Else
+                    '        strLand = "CH"
+                    'End Select
+
+                    'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
+                    Select Case IIf(IsDBNull(objdtDebitor.Rows(0).Item("Language")), "DE", objdtDebitor.Rows(0).Item("Language").ToUpper())
+                        Case "DE", ""
+                            intLangauage = 2055
+                        Case "FR"
+                            intLangauage = 4108
+                        Case "IT"
+                            intLangauage = 2064
+                        Case Else
+                            intLangauage = 2057 'Englisch
+                    End Select
+
+                    'Variablen zuweisen für die Erstellung des Debitors
+                    strIBANNr = IIf(IsDBNull(objdtDebitor.Rows(0).Item("IBAN")), "", objdtDebitor.Rows(0).Item("IBAN"))
+                    strBankName = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankName")), "", objdtDebitor.Rows(0).Item("BankName"))
+                    strBankAddress1 = String.Empty
+                    strBankPLZ = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankZipCode")), "", objdtDebitor.Rows(0).Item("BankZipCode"))
+                    strBankOrt = String.Empty
+                    strBankAddress2 = strBankPLZ + " " + strBankOrt
+                    strBankBIC = IIf(IsDBNull(objdtDebitor.Rows(0).Item("BankBIC")), "", objdtDebitor.Rows(0).Item("BankBIC"))
+                    strBankClearing = String.Empty
+
+                    If Len(strIBANNr) >= 21 Then 'IBAN
+                        'If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
+                        intPayType = 9
+                        'End If
+                        intReturnValue = Main.FcGetIBANDetails(objdbconn,
                                                       strIBANNr,
                                                       strBankName,
                                                       strBankAddress1,
@@ -1769,19 +1787,19 @@ Public Class MainDebitor
                                                       strBankCountry,
                                                       strBankClearing)
 
-                    'Kombinierte PLZ / Ort Feld trennen
-                    strBankPLZ = Left(strBankAddress2, InStr(strBankAddress2, " "))
-                    strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
-                End If
+                        'Kombinierte PLZ / Ort Feld trennen
+                        strBankPLZ = Left(strBankAddress2, InStr(strBankAddress2, " "))
+                        strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
+                    End If
 
-                'Currency - Check
-                If objdtDebitor.Rows(0).Item("DebiGegenKonto") = 1105 And lngDebiNbr >= 40000 Then
-                    strCurrency = "EUR"
-                Else
-                    strCurrency = "CHF"
-                End If
+                    'Currency - Check
+                    If objdtDebitor.Rows(0).Item("DebiGegenKonto") = 1105 And lngDebiNbr >= 40000 Then
+                        strCurrency = "EUR"
+                    Else
+                        strCurrency = "CHF"
+                    End If
 
-                intCreatable = FcCreateDebitor(objDbBhg,
+                    intCreatable = FcCreateDebitor(objDbBhg,
                                               lngDebiNbr,
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("LastName")), "", objdtDebitor.Rows(0).Item("LastName")) + IIf(IsDBNull(objdtDebitor.Rows(0).Item("FirstName")), "", objdtDebitor.Rows(0).Item("FirstName")),
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("LastName")), "", objdtDebitor.Rows(0).Item("LastName")),
@@ -1813,29 +1831,32 @@ Public Class MainDebitor
                                               intintBank,
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("Firstname")), "", objdtDebitor.Rows(0).Item("Firstname")))
 
-                If intCreatable = 0 Then
-                    'MySQL
-                    'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
-                    '                                     intAccounting.ToString + lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
-                    '                                     "'finance@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
-                    '                                     lngDebiNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
-                    '' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
-                    ''objlocMySQLRGConn.Open()
-                    ''objlocMySQLRGcmd.Connection = objlocMySQLRGConn
-                    'objsqlcommandZHDB02.CommandText = strSQL
-                    'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
+                    If intCreatable = 0 Then
+                        'MySQL
+                        'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
+                        '                                     intAccounting.ToString + lngDebiNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
+                        '                                     "'finance@mssag.ch', 'Sage200@mssag.ch', 'Debitor " +
+                        '                                     lngDebiNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
+                        '' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                        ''objlocMySQLRGConn.Open()
+                        ''objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                        'objsqlcommandZHDB02.CommandText = strSQL
+                        'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
 
-                    intCreatable = MainDebitor.FcWriteDatetoPrivate(objdbconn,
+                        intCreatable = MainDebitor.FcWriteDatetoPrivate(objdbconn,
                                                              lngDebiNbr,
                                                              intAccounting,
                                                              0)
 
 
+                    End If
+
+                    Return 0
+
                 End If
 
-
-                Return 0
             Else
+
                 Return 4
 
             End If

@@ -1486,12 +1486,17 @@ ErrorHandler:
                         End If
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
-                        Else
-                            strStatus += " nicht erstellt."
-                        End If
-                        row("strDebBez") = MainDebitor.FcReadDebitorName(objdbBuha,
+                            row("strDebBez") = MainDebitor.FcReadDebitorName(objdbBuha,
                                                                          intDebitorNew,
                                                                          row("strDebCur"))
+
+                        ElseIf intReturnValue = 5 Then
+                            strStatus += " not approved "
+                            row("strDebBez") = "nap"
+                        Else
+                            strStatus += " nicht erstellt."
+                            row("strDebBez") = "n/a"
+                        End If
                         row("lngDebNbr") = intDebitorNew
                     Else
                         strStatus += " keine Ref"
@@ -3700,7 +3705,7 @@ ErrorHandler:
                                                  intAccounting,
                                                  intKreditorNew)
 
-                strBitLog += Trim(intReturnValue.ToString)
+                'strBitLog += Trim(intReturnValue.ToString)
                 If intKreditorNew <> 0 Then
                     intReturnValue = MainKreditor.FcCheckKreditor(intKreditorNew,
                                                                   row("intBuchungsart"),
@@ -4096,6 +4101,9 @@ ErrorHandler:
                             strStatus += " erstellt"
                             row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
 
+                        ElseIf intReturnValue = 5 Then
+                            strStatus += " not approved"
+                            row("strKredBez") = "nap"
                         Else
                             strStatus += " nicht erstellt."
                             row("strKredBez") = "n/a"

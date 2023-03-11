@@ -55,7 +55,7 @@ Public Class MainKreditor
                                           ByVal intAccounting As Int32,
                                           ByRef intKrediNew As Int32) As Int16
 
-        'Return 0=ok, 1=noch nicht implementiert, 2=Rep_Ref nicht definiert, 3=Nicht in Tab_Repbetriebe, 4=keine Angaben in Tab_Repbetriebe
+        'Return 0=ok, 1=noch nicht implementiert, 2=Rep_Ref nicht definiert, 3=Nicht in Tab_Repbetriebe, 4=keine Angaben in Tab_Repbetriebe, 9=Problem
 
         Dim strTableName, strTableType, strKredFieldName, strKredNewField, strKredNewFieldType, strCompFieldName, strStreetFieldName, strZIPFieldName, strTownFieldName, strSageName, strKredAccField As String
         'Dim intCreatable As Int16
@@ -189,6 +189,13 @@ Public Class MainKreditor
         Catch ex As Exception
             MessageBox.Show(ex.Message, "kreditor-Ref " + Err.Number.ToString)
 
+        Finally
+            objdtKreditor.Constraints.Clear()
+            objdtKreditor.Rows.Clear()
+            objdtKreditor.Columns.Clear()
+            objdtKreditor.Dispose()
+            objdtKreditor = Nothing
+
         End Try
 
 
@@ -206,7 +213,7 @@ Public Class MainKreditor
                                                 ByVal strKrediBank As String,
                                                 ByVal intAccounting As Int16) As Int16
 
-        'Return: 0=creatable und erstellt, 3=Kreditor konnte nicht erstellt werden, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
+        'Return: 0=creatable und erstellt, 3=Kreditor konnte nicht erstellt werden, 4=Betrieb nicht gefunden, 5=Nicht geprüft, 9=Nicht hinterlegt
 
         Dim intCreatable As Int16
         Dim objdtKreditor As New DataTable
@@ -266,7 +273,8 @@ Public Class MainKreditor
                                                       Rep_Kred_Bank_BIC, " +
                                                      "Rep_Kred_Currency, 
                                                       Rep_Kred_PCKto, 
-                                                      Rep_Kred_Aufwandskonto 
+                                                      Rep_Kred_Aufwandskonto,
+                                                      ReviewedOn 
                                                 FROM Tab_Repbetriebe WHERE PKNr=" + lngKrediNbr.ToString
 
             'objsqlcommandZHDB02.Connection = objdbconnZHDB02
@@ -276,74 +284,81 @@ Public Class MainKreditor
             If objdtKreditor.Rows.Count > 0 Then
                 'Debug.Print("Gefunden, kann erstellt werden")
 
-                'Zahlungsbedingung suchen
-                'objdtKreditor.Clear()
-                'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
-                objsqlConnKred.CommandText = "SELECT Tab_Repbetriebe.PKNr, 
+                If IsDBNull(objdtKreditor.Rows(0).Item("ReviewedOn")) Then
+                    'PK wurde nicht geprüft
+
+                    Return 5
+
+                Else
+
+                    'Zahlungsbedingung suchen
+                    'objdtKreditor.Clear()
+                    'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
+                    objsqlConnKred.CommandText = "SELECT Tab_Repbetriebe.PKNr, 
                                                           t_sage_zahlungskondition.SageID " +
                                                   "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition ON Tab_Repbetriebe.Rep_Kred_ZKonditionID = t_sage_zahlungskondition.ID " +
                                                   "WHERE Tab_Repbetriebe.PKNr=" + lngKrediNbr.ToString
-                objDAKreditor.SelectCommand = objsqlConnKred
-                objdsKreditor.EnforceConstraints = False
-                objDAKreditor.Fill(objdsKreditor)
+                    objDAKreditor.SelectCommand = objsqlConnKred
+                    objdsKreditor.EnforceConstraints = False
+                    objDAKreditor.Fill(objdsKreditor)
 
-                'objdsKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
-                'objdtKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
-                If Not IsDBNull(objdsKreditor.Tables(0).Rows(0).Item("SageID")) Then
-                    intKredZB = objdsKreditor.Tables(0).Rows(0).Item("SageID")
-                Else
-                    intKredZB = 1
-                End If
-
-                'Land von Text auf Auto-Kennzeichen ändern
-                Select Case IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Land")), "Schweiz", objdtKreditor.Rows(0).Item("Rep_Land"))
-                    Case "Schweiz"
-                        strLand = "CH"
-                    Case "Deutschland"
-                        strLand = "DE"
-                    Case "Frankreich"
-                        strLand = "FR"
-                    Case "Italien"
-                        strLand = "IT"
-                    Case "Österreich"
-                        strLand = "AT"
-                    Case Else
-                        strLand = "CH"
-                End Select
-
-                'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
-                Select Case Strings.UCase(IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Language")), "D", objdtKreditor.Rows(0).Item("Rep_Language")))
-                    Case "D", "DE", ""
-                        intLangauage = 2055
-                    Case "F", "FR"
-                        intLangauage = 4108
-                    Case "I", "IT"
-                        intLangauage = 2064
-                    Case Else
-                        intLangauage = 2057 'Englisch
-                End Select
-
-                'Variablen zuweisen für die Erstellung des Kreditors
-                'IBAN von RG übernehmen sonst von Default holen
-                If strIBANFromInv = "" Then
-                    strIBANNr = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_IBAN")), "", objdtKreditor.Rows(0).Item("Rep_Kred_IBAN"))
-                Else
-                    strIBANNr = strIBANFromInv
-                End If
-                strBankName = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Bank_Name")), "", objdtKreditor.Rows(0).Item("Rep_Kred_Bank_Name"))
-                strBankAddress1 = ""
-                strBankPLZ = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Bank_PLZ")), "", objdtKreditor.Rows(0).Item("Rep_Kred_Bank_PLZ"))
-                strBankOrt = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Bank_Ort")), "", objdtKreditor.Rows(0).Item("Rep_Kred_Bank_Ort"))
-                strBankAddress2 = strBankPLZ + " " + strBankOrt
-                strBankBIC = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Bank_BIC")), "", objdtKreditor.Rows(0).Item("Rep_Kred_Bank_BIC"))
-                strBankClearing = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_PCKto")), "", objdtKreditor.Rows(0).Item("Rep_Kred_PCKto"))
-
-                If intPayType = 9 Or Len(strIBANNr) = 21 Then 'IBAN
-
-                    If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
-                        intPayType = 9
+                    'objdsKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
+                    'objdtKreditor.Load(objsqlcommandZHDB02.ExecuteReader)
+                    If Not IsDBNull(objdsKreditor.Tables(0).Rows(0).Item("SageID")) Then
+                        intKredZB = objdsKreditor.Tables(0).Rows(0).Item("SageID")
+                    Else
+                        intKredZB = 1
                     End If
-                    intReturnValue = Main.FcGetIBANDetails(objdbconn,
+
+                    'Land von Text auf Auto-Kennzeichen ändern
+                    Select Case IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Land")), "Schweiz", objdtKreditor.Rows(0).Item("Rep_Land"))
+                        Case "Schweiz"
+                            strLand = "CH"
+                        Case "Deutschland"
+                            strLand = "DE"
+                        Case "Frankreich"
+                            strLand = "FR"
+                        Case "Italien"
+                            strLand = "IT"
+                        Case "Österreich"
+                            strLand = "AT"
+                        Case Else
+                            strLand = "CH"
+                    End Select
+
+                    'Sprache zuweisen von 1-Stelligem String nach Sage 200 Regionen
+                    Select Case Strings.UCase(IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Language")), "D", objdtKreditor.Rows(0).Item("Rep_Language")))
+                        Case "D", "DE", ""
+                            intLangauage = 2055
+                        Case "F", "FR"
+                            intLangauage = 4108
+                        Case "I", "IT"
+                            intLangauage = 2064
+                        Case Else
+                            intLangauage = 2057 'Englisch
+                    End Select
+
+                    'Variablen zuweisen für die Erstellung des Kreditors
+                    'IBAN von RG übernehmen sonst von Default holen
+                    If strIBANFromInv = "" Then
+                        strIBANNr = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_IBAN")), "", objdtKreditor.Rows(0).Item("Rep_Kred_IBAN"))
+                    Else
+                        strIBANNr = strIBANFromInv
+                    End If
+                    strBankName = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Bank_Name")), "", objdtKreditor.Rows(0).Item("Rep_Kred_Bank_Name"))
+                    strBankAddress1 = ""
+                    strBankPLZ = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Bank_PLZ")), "", objdtKreditor.Rows(0).Item("Rep_Kred_Bank_PLZ"))
+                    strBankOrt = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Bank_Ort")), "", objdtKreditor.Rows(0).Item("Rep_Kred_Bank_Ort"))
+                    strBankAddress2 = strBankPLZ + " " + strBankOrt
+                    strBankBIC = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Bank_BIC")), "", objdtKreditor.Rows(0).Item("Rep_Kred_Bank_BIC"))
+                    strBankClearing = IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_PCKto")), "", objdtKreditor.Rows(0).Item("Rep_Kred_PCKto"))
+
+                    If intPayType = 9 Or Len(strIBANNr) = 21 Then 'IBAN
+
+                        If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
+                            intPayType = 9
+                        End If
+                        intReturnValue = Main.FcGetIBANDetails(objdbconn,
                                                       strIBANNr,
                                                       strBankName,
                                                       strBankAddress1,
@@ -352,15 +367,15 @@ Public Class MainKreditor
                                                       strBankCountry,
                                                       strBankClearing)
 
-                    'Kombinierte PLZ / Ort Feld trennen
-                    strBankPLZ = Left(strBankAddress2, InStr(strBankAddress2, " "))
-                    strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
-                End If
+                        'Kombinierte PLZ / Ort Feld trennen
+                        strBankPLZ = Left(strBankAddress2, InStr(strBankAddress2, " "))
+                        strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
+                    End If
 
-                'QR-IBAN
-                If intPayType = 10 And Len(strKrediBank) >= 21 Then
-                    strIBANNr = strKrediBank
-                    intReturnValue = Main.FcGetIBANDetails(objdbconn,
+                    'QR-IBAN
+                    If intPayType = 10 And Len(strKrediBank) >= 21 Then
+                        strIBANNr = strKrediBank
+                        intReturnValue = Main.FcGetIBANDetails(objdbconn,
                                                       strIBANNr,
                                                       strBankName,
                                                       strBankAddress1,
@@ -369,12 +384,12 @@ Public Class MainKreditor
                                                       strBankCountry,
                                                       strBankClearing)
 
-                    'Kombinierte PLZ / Ort Feld trennen
-                    strBankPLZ = Left(strBankAddress2, InStr(strBankAddress2, " "))
-                    strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
-                End If
+                        'Kombinierte PLZ / Ort Feld trennen
+                        strBankPLZ = Left(strBankAddress2, InStr(strBankAddress2, " "))
+                        strBankOrt = Trim(Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
+                    End If
 
-                intCreatable = FcCreateKreditor(objKrBhg,
+                    intCreatable = FcCreateKreditor(objKrBhg,
                                           lngKrediNbr,
                                           IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Firma")), "", objdtKreditor.Rows(0).Item("Rep_Firma")),
                                           IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Strasse")), "", objdtKreditor.Rows(0).Item("Rep_Strasse")),
@@ -403,25 +418,28 @@ Public Class MainKreditor
                                           intKredZB,
                                           intintBank)
 
-                If intCreatable = 0 Then
-                    'MySQL
-                    'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
-                    '                                     lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
-                    '                                     "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Kreditor " +
-                    '                                     lngKrediNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
-                    ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
-                    'objlocMySQLRGConn.Open()
-                    'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
-                    'objsqlcommandZHDB02.CommandText = strSQL
-                    'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
+                    If intCreatable = 0 Then
+                        'MySQL
+                        'strSQL = "INSERT INTO Tbl_RTFAutomail (RGNbr, MailCreateDate, MailCreateWho, MailTo, MailSender, MailTitle, MAilMsg, MailSent) VALUES (" +
+                        '                                     lngKrediNbr.ToString + ", Date('" + Format(Today(), "yyyy-MM-dd").ToString + "'), 'Sage200Imp', " +
+                        '                                     "'rene.hager@mssag.ch', 'Sage200@mssag.ch', 'Kreditor " +
+                        '                                     lngKrediNbr.ToString + " wurde erstell im Mandant " + strcmbBuha + "', 'Bitte kontrollieren und Daten erg&auml;nzen.', false)"
+                        ' objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                        'objlocMySQLRGConn.Open()
+                        'objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                        'objsqlcommandZHDB02.CommandText = strSQL
+                        'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
 
 
 
-                    Return 0
-                Else
-                    Return 3
+                        Return 0
+                    Else
+                        Return 3
+
+                    End If
 
                 End If
+
             Else
                 Return 4
             End If
