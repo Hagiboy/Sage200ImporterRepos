@@ -652,7 +652,6 @@ Friend NotInheritable Class Main
 
         Try
 
-
             objFinanz = Nothing
             objFinanz = New SBSXASLib.AXFinanz
 

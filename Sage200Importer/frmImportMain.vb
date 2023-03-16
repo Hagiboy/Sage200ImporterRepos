@@ -65,6 +65,7 @@ Friend Class frmImportMain
 
     Public Sub InitVar()
 
+
         PIFin = Nothing
         KrBhg = Nothing
         FBhg = Nothing
@@ -877,6 +878,7 @@ Friend Class frmImportMain
                                         intDebBelegsNummer = Main.FcCleanRGNrStrict(row("strOPNr"))
                                         strExtBelegNbr = row("strOPNr")
                                     Else
+                                        'bei t_debi: IdentNbr wird genommen da dort die RG-Nr. drin ist. RgNr = ID
                                         intDebBelegsNummer = row("lngDebIdentNbr")
                                         strExtBelegNbr = row("strOPNr")
                                     End If
