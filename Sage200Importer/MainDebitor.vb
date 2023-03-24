@@ -1676,8 +1676,8 @@ Public Class MainDebitor
                                               "DebiGegenKonto AS SammelKonto, " +
                                               "DebiErloesKonto AS ErloesKonto, " +
                                               "BankIntern, " +
-                                              "DebiZKonditionID " +
-                                              "ReviewedOn" +
+                                              "DebiZKonditionID, " +
+                                              "ReviewedOn " +
                                               "FROM t_customer WHERE PKNr=" + lngDebiNbr.ToString
             objdtDebitor.Load(objsqlcommandZHDB02.ExecuteReader)
 
