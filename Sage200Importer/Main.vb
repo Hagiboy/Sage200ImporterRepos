@@ -1227,7 +1227,7 @@ ErrorHandler:
                                                 intDebitorNew)
 
                 'strBitLog += Trim(intReturnValue.ToString)
-                If intReturnValue = 1 Then 'Neue Debi wurde angelegt
+                If intReturnValue = 1 Then 'Neue Debi-Nr wurde angelegt
                     strStatus = "NDeb "
                 End If
                 If intDebitorNew <> 0 Or intReturnValue = 4 Then
