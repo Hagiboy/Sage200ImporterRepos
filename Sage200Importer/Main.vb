@@ -2669,7 +2669,8 @@ ErrorHandler:
                     intReturnValue = FcCheckKonto(subrow("lngKto"),
                                                   objFiBhg,
                                                   IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")),
-                                                  IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
+                                                  IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")),
+                                                  False)
                     If intReturnValue = 0 Then
                         subrow("strKtoBez") += MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto"))
                     ElseIf intReturnValue = 2 Then
@@ -3054,7 +3055,11 @@ ErrorHandler:
 
                 'Konto prüfen 02
                 If IIf(IsDBNull(subrow("lngKto")), 0, subrow("lngKTo")) > 0 Then
-                    intReturnValue = FcCheckKonto(subrow("lngKto"), objFiBhg, IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")))
+                    intReturnValue = FcCheckKonto(subrow("lngKto"),
+                                                  objFiBhg,
+                                                  IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")),
+                                                  IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")),
+                                                  False)
                     If intReturnValue = 0 Then
                         subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto"))
                     ElseIf intReturnValue = 2 Then
@@ -3446,7 +3451,8 @@ ErrorHandler:
     Public Shared Function FcCheckKonto(ByVal lngKtoNbr As Long,
                                         ByRef objfiBuha As SBSXASLib.AXiFBhg,
                                         ByVal dblMwSt As Double,
-                                        ByVal lngKST As Int32) As Integer
+                                        ByVal lngKST As Int32,
+                                        ByVal booExistanceOnly As Boolean) As Integer
 
         'Returns 0=ok, 1=existiert nicht, 2=existiert aber keine KST erlaubt, 3=KST nicht auf Konto definiert, 4=KST auf Konto > 3
 
@@ -3463,6 +3469,9 @@ ErrorHandler:
             Else
                 'If dblMwSt = 0 Then
                 'Return 0
+                If booExistanceOnly Then
+                    Return 0
+                End If
                 'KST?
                 strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
                 If lngKST > 0 Then
@@ -4090,6 +4099,7 @@ ErrorHandler:
                                                                             objsqlcommandZHDB02,
                                                                             intKreditorNew,
                                                                             objKrBuha,
+                                                                            objfiBuha,
                                                                             strcmbBuha,
                                                                             IIf(IsDBNull(row("intPayType")), 3, row("intPayType")),
                                                                             IIf(IsDBNull(row("strKredRef")), "", row("strKredRef")),
@@ -4103,6 +4113,9 @@ ErrorHandler:
                         ElseIf intReturnValue = 5 Then
                             strStatus += " not approved"
                             row("strKredBez") = "nap"
+                        ElseIf intReturnValue = 6 Then
+                            strStatus += " AufwKto n/a"
+                            row("strKredBez") = "Aufwandskonto n/a"
                         Else
                             strStatus += " nicht erstellt."
                             row("strKredBez") = "n/a"

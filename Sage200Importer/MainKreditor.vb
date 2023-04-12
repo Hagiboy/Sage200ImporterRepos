@@ -206,6 +206,7 @@ Public Class MainKreditor
                                                 ByRef objsqlcommandZHDB02 As MySqlCommand,
                                                 ByVal lngKrediNbr As Long,
                                                 ByRef objKrBhg As SBSXASLib.AXiKrBhg,
+                                                ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                                 ByVal strcmbBuha As String,
                                                 ByRef intPayType As Int16,
                                                 ByVal strIBANFromInv As String,
@@ -213,7 +214,7 @@ Public Class MainKreditor
                                                 ByVal strKrediBank As String,
                                                 ByVal intAccounting As Int16) As Int16
 
-        'Return: 0=creatable und erstellt, 3=Kreditor konnte nicht erstellt werden, 4=Betrieb nicht gefunden, 5=Nicht geprüft, 9=Nicht hinterlegt
+        'Return: 0=creatable und erstellt, 3=Kreditor konnte nicht erstellt werden, 4=Betrieb nicht gefunden, 5=Nicht geprüft, 6=Aufwandskonto nicht existent, 9=Nicht hinterlegt
 
         Dim intCreatable As Int16
         Dim objdtKreditor As New DataTable
@@ -238,6 +239,8 @@ Public Class MainKreditor
         Dim objDAKreditor As New MySqlDataAdapter
         Dim objdbconnKred As New MySqlConnection
         Dim objsqlConnKred As New MySqlCommand
+        Dim intAufwandsKonto As Int32
+        Dim booReadAufwandsKono As Boolean
 
         Try
 
@@ -290,6 +293,35 @@ Public Class MainKreditor
                     Return 5
 
                 Else
+
+                    'Prüfen, ob Aufwandskonto definiert ist
+                    intReturnValue = Main.FcCheckKonto(objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto"),
+                                                       objFiBhg,
+                                                       0,
+                                                       0,
+                                                       True)
+                    If intReturnValue <> 0 Then
+                        booReadAufwandsKono = Convert.ToBoolean(Convert.ToInt16(Main.FcReadFromSettings(objdbconn, "Buchh_KrediTakeAufwKto", intAccounting)))
+                        If booReadAufwandsKono Then
+                            'Zu nehmendes Aufwandskonto einlesen
+                            intAufwandsKonto = Main.FcReadFromSettings(objdbconn, "Buchh_KrediAufwKto", intAccounting)
+                            objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto") = intAufwandsKonto
+                            'Prüfen ob dieses Konto existiert
+                            intReturnValue = Main.FcCheckKonto(objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto"),
+                                                       objFiBhg,
+                                                       0,
+                                                       0,
+                                                       True)
+                            If intReturnValue <> 0 Then
+                                Return 6
+                                'Sonst weiter 
+                            End If
+
+                        Else
+                            Return 6
+                        End If
+
+                    End If
 
                     'Zahlungsbedingung suchen
                     'objdtKreditor.Clear()
