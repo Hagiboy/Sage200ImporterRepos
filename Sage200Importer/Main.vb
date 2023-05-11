@@ -1518,7 +1518,8 @@ ErrorHandler:
 
                 'OP - Verdopplung 09
                 intReturnValue = FcCheckOPDouble(objdbBuha,
-                                                 IIf(IsDBNull(row("strOPNr")), "", row("lngDebNbr")), row("strOPNr"),
+                                                 row("lngDebNbr"),
+                                                 row("strOPNr"),
                                                  IIf(row("dblDebBrutto") > 0, "R", "G"),
                                                  row("strDebCur"))
                 strBitLog += Trim(intReturnValue.ToString)
@@ -2159,7 +2160,7 @@ ErrorHandler:
         Try
             intBelegReturn = objdbBuha.doesBelegExist(strDebitor,
                                                       strCurrency,
-                                                      strOPNr,
+                                                      Main.FcCleanRGNrStrict(strOPNr),
                                                       "NOT_SET",
                                                       strType,
                                                       "")
@@ -2807,6 +2808,8 @@ ErrorHandler:
                         strStatusText = "Kto MwSt"
                     ElseIf mid(strBitLog, 2, 1) = "5" Then
                         strStatusText = "MwstK<3K"
+                    ElseIf Mid(strBitLog, 2, 1) = "3" Then
+                        strStatusText = "NoKST"
                     Else
                         strStatusText = "Kto"
                     End If
@@ -3469,11 +3472,12 @@ ErrorHandler:
             Else
                 'If dblMwSt = 0 Then
                 'Return 0
+                strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
                 If booExistanceOnly Then
                     Return 0
                 End If
                 'KST?
-                strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
+                'strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
                 If lngKST > 0 Then
                     If CInt(Left(lngKtoNbr.ToString, 1)) >= 3 Then
                         'strKontoInfo = Split(objfiBuha.GetKontoInfo(lngKtoNbr.ToString), "{>}")
@@ -3504,6 +3508,10 @@ ErrorHandler:
                         Return 4
                     End If
                 Else
+                    'Ist keine KST erlaubt?
+                    If strKontoInfo(22) <> "" Then
+                        Return 3
+                    End If
                     If dblMwSt <> 0 Then
                         If strKontoInfo(26) = "" Then
                             Return 5

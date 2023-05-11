@@ -755,6 +755,7 @@ Friend Class frmImportMain
         Dim strBeleg As String
         Dim strBelegArr() As String
         Dim dblSplitPayed As Double
+        Dim strErrMessage As String
 
 
         Try
@@ -951,7 +952,11 @@ Friend Class frmImportMain
                             Application.DoEvents()
 
                         Catch ex As Exception
-                            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegkopf " + intDebBelegsNummer.ToString + ", RG " + strRGNbr + ", Debitor " + intDebitorNbr.ToString, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                            strErrMessage = "Problem " + (Err.Number And 65535).ToString + " Belegkopf zu" + intDebBelegsNummer.ToString + vbCrLf
+                            strErrMessage += "RG " + strRGNbr + vbCrLf
+                            strErrMessage += "Debitor " + intDebitorNbr.ToString
+
+                            MessageBox.Show(ex.Message + vbCrLf + strErrMessage, "Problem " + (Err.Number And 65535).ToString, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                             If (Err.Number And 65535) < 10000 Then
                                 booBooingok = False
                             Else
@@ -1036,7 +1041,15 @@ Friend Class frmImportMain
                                 Application.DoEvents()
 
                             Catch ex As Exception
-                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Verteilung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr + ", Konto " + SubRow("lngKto").ToString, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                                strErrMessage = "Problem " + (Err.Number And 65535).ToString + " Verteilung " + intDebBelegsNummer.ToString + vbCrLf
+                                strErrMessage += "RG " + strRGNbr + vbCrLf
+                                strErrMessage += "Konto " + SubRow("lngKto").ToString + vbCrLf
+                                strErrMessage += "Gegenkonto " + intGegenKonto.ToString + vbCrLf
+                                strErrMessage += "Betrag " + dblNettoBetrag.ToString + vbCrLf
+                                strErrMessage += "Steuer " + strSteuerFeld + vbCrLf
+                                strErrMessage += "Bebu " + strBeBuEintrag
+
+                                MessageBox.Show(ex.Message + vbCrLf + strErrMessage, "Problem " + (Err.Number And 65535).ToString, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                                 If (Err.Number And 65535) < 10000 Then
                                     booBooingok = False
                                 Else
@@ -1104,8 +1117,8 @@ Friend Class frmImportMain
                                                                  ,
                                                                  "NOT_SET",
                                                                  "NOT_SET",
-                                                                 "DEFAULT",
-                                                                 "DEFAULT")
+                                                                 "Default",
+                                                                 "Default")
                                         Application.DoEvents()
 
                                     End If
@@ -1117,10 +1130,12 @@ Friend Class frmImportMain
                         Catch ex As Exception
                             'MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr)
                             If (Err.Number And 65535) < 10000 Then
-                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung nicht möglich " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                                strErrMessage = "Belegerstellung RG " + strRGNbr + " Beleg " + intDebBelegsNummer.ToString + " NICHT möglich!"
+                                MessageBox.Show(ex.Message + vbCrLf + strErrMessage, "Problem " + (Err.Number And 65535).ToString, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                                 booBooingok = False
                             Else
-                                MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                                strErrMessage = "Belegerstellung RG " + strRGNbr + " Beleg " + intDebBelegsNummer.ToString + " möglich mit Warnung"
+                                MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString, MessageBoxButtons.OK, MessageBoxIcon.Warning)
                                 booBooingok = True
                             End If
 
@@ -1150,7 +1165,7 @@ Friend Class frmImportMain
                                     intDebBelegsNummer += 1
                                 End If
                             Loop
-                            'Debug.Print("Belegnummer taken: " + intDebBelegsNummer.ToString)
+                            'Debug.Print("Belegnummer taken:  " + intDebBelegsNummer.ToString)
                         Else
                             If IIf(IsDBNull(row("strOPNr")), "", row("strOPNr")) <> "" Then
                                 intDebBelegsNummer = Convert.ToInt32(row("strOPNr"))
@@ -1445,6 +1460,7 @@ Friend Class frmImportMain
                                 Call FBhg.WriteSammelBhgT()
 
                             Catch ex As Exception
+
                                 MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                                 If (Err.Number And 65535) < 10000 Then
                                     booBooingok = False
