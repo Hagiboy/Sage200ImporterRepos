@@ -1003,7 +1003,8 @@ ErrorHandler:
             objSQLCommand.Connection = objSQLConnection
             objlocdtPeriDef.Load(objSQLCommand.ExecuteReader)
 
-            If objlocdtPeriDef.Rows.Count = 1 Then 'Perioden-Definition vorhanden
+            If objlocdtPeriDef.Rows.Count > 0 Then 'Perioden-Definition vorhanden
+
                 strPeriodenDef(0) = objlocdtPeriDef.Rows(0).Item(2) 'Bezeichnung
                 strPeriodenDef(1) = objlocdtPeriDef.Rows(0).Item(3).ToString  'Von
                 strPeriodenDef(2) = objlocdtPeriDef.Rows(0).Item(4).ToString  'Bis
