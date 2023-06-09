@@ -1146,6 +1146,7 @@ ErrorHandler:
         Dim booSplittBill As Boolean
         Dim booCpyKSTToSub As Boolean
         Dim booGeneratePymentBooking As Boolean
+
         Dim selsubrow() As DataRow
         Dim strDebiReferenz As String = String.Empty
         Dim booDiffHeadText As Boolean
@@ -1177,7 +1178,7 @@ ErrorHandler:
         Dim intMonthsNJ As Int16
         Dim booDateChanged As Boolean
         Dim strMandant As String
-
+        Dim objDebitsCopy As New DataTable
 
         'Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
 
@@ -1190,6 +1191,125 @@ ErrorHandler:
             'objOrdbconn.Open()
             'objdbAccessConn.Open()
 
+            'Tabelle objdtDebits kopieren da evtl. Zeilen hinzugefügt werden
+            objDebitsCopy.Clear()
+            objDebitsCopy = objdtDebits.Clone()
+
+            'TA-/ PGV-Prüfung muss vorgeschaltet werden da DS erzeugt werden.
+            For Each row As DataRow In objdtDebits.Rows
+
+                booDateChanged = False
+                'Jahresübergreifend RG- / Valuta-Datum
+                If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) Then
+                    'Not IsDBNull(row("datPGVFrom")) Then
+                    row("booPGV") = True
+                    'datValutaPGV = row("datDebValDatum")
+                    'Bei Valuta-Datum in einem anderen Jahr Valuta-Datum ändern
+                    If Year(row("datDebRGDatum")) < Year(row("datDebValDatum")) Then
+                        row("strPGVType") = "RV"
+                    Else
+                        row("strPGVType") = "VR"
+                    End If
+                    datValutaSave = row("datDebValDatum")
+
+                    If IsDBNull(row("datPGVFrom")) Then
+                        If row("strPGVType") = "VR" Then
+                            row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                            row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                            row("datDebValDatum") = Year(row("datDebRGDatum")).ToString + "-01-01"
+                            booDateChanged = True
+                        ElseIf row("strPGVType") = "RV" Then
+                            row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                            row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                            row("datDebValDatum") = row("datDebRGDatum")
+                        End If
+                    Else
+                        If row("strPGVType") = "RV" Then
+                            row("datDebValDatum") = row("datDebRGDatum")
+                            booDateChanged = True
+                        Else
+                            row("strPGVType") = "XX"
+                        End If
+                    End If
+                End If
+
+                If row("booPGV") Then
+
+                    'Anzahl Monate prüfen
+                    intMonthsAJ = 0
+                    intMonthsNJ = 0
+
+                    intPGVMonths = (DateAndTime.Year(row("datPGVTo")) * 12 + DateAndTime.Month(row("datPGVTo"))) - (DateAndTime.Year(row("datPGVFrom")) * 12 + DateAndTime.Month(row("datPGVFrom"))) + 1
+                    For intMonthCounter = 0 To intPGVMonths - 1
+                        If Year(DateAdd(DateInterval.Month, intMonthCounter, row("datPGVFrom"))) > Convert.ToInt32(strYear) Then
+                            intMonthsNJ += 1
+                        Else
+                            intMonthsAJ += 1
+                        End If
+                    Next
+                    row("intPGVMthsAY") = intMonthsAJ
+                    row("intPGVMthsNY") = intMonthsNJ
+
+                End If
+
+                If row("booPGV") Then
+                    If row("intPGVMthsAY") + row("intPGVMthsNY") = 1 Then
+                        'TA Auflösung
+                        'Zu Had-Table hinzifügen
+                        Dim objdrDebiHead As DataRow = objDebitsCopy.NewRow
+                        objdrDebiHead("strDebRGNbr") = row("strDebRGNbr") + "TAU"
+                        objdrDebiHead("intBuchhaltung") = row("intBuchhaltung")
+                        objdrDebiHead("lngDebIdentNbr") = row("lngDebIdentNbr")
+                        objdrDebiHead("booDebBook") = False
+                        objdrDebiHead("intBuchungsart") = 4
+                        objdrDebiHead("intRGArt") = row("intRGArt")
+                        objdrDebiHead("strOPNr") = row("strOPNr")
+                        objdrDebiHead("lngDebNbr") = row("lngDebNbr")
+                        objdrDebiHead("lngDebKtoNbr") = 1312 'row("lngDebKtoNbr")
+                        objdrDebiHead("strDebCur") = row("strDebCur")
+                        objdrDebiHead("dblDebNetto") = row("dblDebNetto")
+                        objdrDebiHead("dblDebMwSt") = 0
+                        objdrDebiHead("dblDebBrutto") = row("dblDebNetto")
+                        objdrDebiHead("strDebText") = row("strDebText") + ", TA Auflösung"
+                        objdrDebiHead("datDebRGDatum") = row("datDebValDatum")
+                        objdrDebiHead("datDebValDatum") = row("datDebValDatum")
+                        objdrDebiHead("lngDebiKST") = row("lngDebiKST")
+                        objDebitsCopy.Rows.Add(objdrDebiHead)
+                        objdrDebiHead = Nothing
+                        'TA Akt
+                        objdrDebiHead = objDebitsCopy.NewRow
+                        objdrDebiHead("strDebRGNbr") = row("strDebRGNbr") + "TAK"
+                        objdrDebiHead("intBuchhaltung") = row("intBuchhaltung")
+                        objdrDebiHead("lngDebIdentNbr") = row("lngDebIdentNbr")
+                        objdrDebiHead("booDebBook") = False
+                        objdrDebiHead("intBuchungsart") = 4
+                        objdrDebiHead("intRGArt") = row("intRGArt")
+                        objdrDebiHead("strOPNr") = row("strOPNr")
+                        objdrDebiHead("lngDebNbr") = row("lngDebNbr")
+                        objdrDebiHead("lngDebKtoNbr") = 1312 'row("lngDebKtoNbr")
+                        objdrDebiHead("strDebCur") = row("strDebCur")
+                        objdrDebiHead("dblDebNetto") = row("dblDebNetto")
+                        objdrDebiHead("dblDebMwSt") = 0
+                        objdrDebiHead("dblDebBrutto") = row("dblDebNetto")
+                        objdrDebiHead("strDebText") = row("strDebText") + ", TA Aktivierung"
+                        objdrDebiHead("datDebRGDatum") = datValutaSave
+                        objdrDebiHead("datDebValDatum") = datValutaSave
+                        objdrDebiHead("lngDebiKST") = row("lngDebiKST")
+                        objDebitsCopy.Rows.Add(objdrDebiHead)
+                        objdrDebiHead = Nothing
+                    Else
+                        'PGB
+                    End If
+                End If
+
+            Next
+
+            'DS aus DebitsCopy der objdtDebis hinzufügen
+            For Each rowinCopy As DataRow In objDebitsCopy.Rows
+                objdtDebits.ImportRow(rowinCopy)
+            Next
+
+            'Kontrolle der DS
             For Each row As DataRow In objdtDebits.Rows
 
                 'If row("strDebRGNbr") = "101261" Then Stop
@@ -1542,59 +1662,59 @@ ErrorHandler:
                     End If
                 End If
 
-                booDateChanged = False
-                'Jahresübergreifend RG- / Valuta-Datum
-                If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) And Year(row("datDebValDatum")) >= 2022 Then
-                    'Not IsDBNull(row("datPGVFrom")) Then
-                    row("booPGV") = True
-                    'datValutaPGV = row("datDebValDatum")
-                    'Bei Valuta-Datum in einem anderen Jahr Valuta-Datum ändern
-                    If Year(row("datDebRGDatum")) < Year(row("datDebValDatum")) Then
-                        row("strPGVType") = "RV"
-                    Else
-                        row("strPGVType") = "VR"
-                    End If
-                    datValutaSave = row("datDebValDatum")
+                'booDateChanged = False
+                ''Jahresübergreifend RG- / Valuta-Datum
+                'If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) And Year(row("datDebValDatum")) >= 2022 Then
+                '    'Not IsDBNull(row("datPGVFrom")) Then
+                '    row("booPGV") = True
+                '    'datValutaPGV = row("datDebValDatum")
+                '    'Bei Valuta-Datum in einem anderen Jahr Valuta-Datum ändern
+                '    If Year(row("datDebRGDatum")) < Year(row("datDebValDatum")) Then
+                '        row("strPGVType") = "RV"
+                '    Else
+                '        row("strPGVType") = "VR"
+                '    End If
+                '    datValutaSave = row("datDebValDatum")
 
-                    If IsDBNull(row("datPGVFrom")) Then
-                        If row("strPGVType") = "VR" Then
-                            row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
-                            row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
-                            row("datDebValDatum") = "2023-01-01"
-                            booDateChanged = True
-                        ElseIf row("strPGVType") = "RV" Then
-                            row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
-                            row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
-                            row("datDebValDatum") = row("datDebRGDatum")
-                        End If
-                    Else
-                        If row("strPGVType") = "RV" Then
-                            row("datDebValDatum") = row("datDebRGDatum")
-                            booDateChanged = True
-                        Else
-                            row("strPGVType") = "XX"
-                        End If
-                    End If
-                End If
+                '    If IsDBNull(row("datPGVFrom")) Then
+                '        If row("strPGVType") = "VR" Then
+                '            row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                '            row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                '            row("datDebValDatum") = "2023-01-01"
+                '            booDateChanged = True
+                '        ElseIf row("strPGVType") = "RV" Then
+                '            row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                '            row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + Day(datValutaSave).ToString
+                '            row("datDebValDatum") = row("datDebRGDatum")
+                '        End If
+                '    Else
+                '        If row("strPGVType") = "RV" Then
+                '            row("datDebValDatum") = row("datDebRGDatum")
+                '            booDateChanged = True
+                '        Else
+                '            row("strPGVType") = "XX"
+                '        End If
+                '    End If
+                'End If
 
-                If row("booPGV") Then
+                'If row("booPGV") Then
 
-                    'Anzahl Monate prüfen
-                    intMonthsAJ = 0
-                    intMonthsNJ = 0
+                '    'Anzahl Monate prüfen
+                '    intMonthsAJ = 0
+                '    intMonthsNJ = 0
 
-                    intPGVMonths = (DateAndTime.Year(row("datPGVTo")) * 12 + DateAndTime.Month(row("datPGVTo"))) - (DateAndTime.Year(row("datPGVFrom")) * 12 + DateAndTime.Month(row("datPGVFrom"))) + 1
-                    For intMonthCounter = 0 To intPGVMonths - 1
-                        If Year(DateAdd(DateInterval.Month, intMonthCounter, row("datPGVFrom"))) > Convert.ToInt32(strYear) Then
-                            intMonthsNJ += 1
-                        Else
-                            intMonthsAJ += 1
-                        End If
-                    Next
-                    row("intPGVMthsAY") = intMonthsAJ
-                    row("intPGVMthsNY") = intMonthsNJ
+                '    intPGVMonths = (DateAndTime.Year(row("datPGVTo")) * 12 + DateAndTime.Month(row("datPGVTo"))) - (DateAndTime.Year(row("datPGVFrom")) * 12 + DateAndTime.Month(row("datPGVFrom"))) + 1
+                '    For intMonthCounter = 0 To intPGVMonths - 1
+                '        If Year(DateAdd(DateInterval.Month, intMonthCounter, row("datPGVFrom"))) > Convert.ToInt32(strYear) Then
+                '            intMonthsNJ += 1
+                '        Else
+                '            intMonthsAJ += 1
+                '        End If
+                '    Next
+                '    row("intPGVMthsAY") = intMonthsAJ
+                '    row("intPGVMthsNY") = intMonthsNJ
 
-                End If
+                'End If
 
                 'Valuta - Datum 10
                 intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
@@ -2907,7 +3027,8 @@ ErrorHandler:
                                               ByVal intBuchungsArt As Int32,
                                               ByVal booAutoCorrect As Boolean,
                                               ByVal booCpyKSTToSub As Boolean,
-                                              ByVal lngKrediKST As Int32) As Int16
+                                              ByVal lngKrediKST As Int32,
+                                              ByVal strCurrency As String) As Int16
 
         'Functin Returns 0=ok, 1=Problem sub, 2=OP Diff zu Kopf, 3=OP nicht 0, 9=keine Subs
 
@@ -2990,6 +3111,11 @@ ErrorHandler:
                     'If subrow("dblMwStSatz") > 0 And subrow("dblMwSt") = 0 Then Stop
                     If subrow("dblMwStSatz") > 0 And subrow("dblMwSt") > 0 And subrow("strMwStKey") = "ohne" Then Stop
                     If subrow("dblMwStSatz") = 0 And subrow("dblMwSt") = 0 And subrow("strMwStKey") <> "ohne" Then
+                        subrow("strMwStKey") = "ohne"
+                    End If
+                    'EUR auf ohne setzen
+                    If subrow("dblMwSt") = 0 And subrow("dblMwStSatz") <> 0 And strCurrency <> "CHF" Then
+                        subrow("dblMwStSatz") = 0
                         subrow("strMwStKey") = "ohne"
                     End If
                     intReturnValue = FcCheckMwStToCorrect(objdbconn,
@@ -3759,7 +3885,8 @@ ErrorHandler:
                                                          row("intBuchungsart"),
                                                          booAutoCorrect,
                                                          booCpyKSTToSub,
-                                                         row("lngKrediKST"))
+                                                         row("lngKrediKST"),
+                                                         row("strKredCur"))
 
                 strBitLog += Trim(intReturnValue.ToString)
 
