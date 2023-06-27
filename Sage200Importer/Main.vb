@@ -1179,6 +1179,8 @@ ErrorHandler:
         Dim booDateChanged As Boolean
         Dim strMandant As String
         Dim objDebitsCopy As New DataTable
+        Dim selTAsubRow() As DataRow
+
 
         'Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
 
@@ -1262,6 +1264,9 @@ ErrorHandler:
                         objdrDebiHead("lngDebIdentNbr") = row("lngDebIdentNbr")
                         objdrDebiHead("booDebBook") = False
                         objdrDebiHead("intBuchungsart") = 4
+                        objdrDebiHead("intRGArt") = 1
+                        objdrDebiHead("strRGArt") = "TA"
+                        objdrDebiHead("booPGV") = False
                         objdrDebiHead("intRGArt") = row("intRGArt")
                         objdrDebiHead("strOPNr") = row("strOPNr")
                         objdrDebiHead("lngDebNbr") = row("lngDebNbr")
@@ -1276,6 +1281,45 @@ ErrorHandler:
                         objdrDebiHead("lngDebiKST") = row("lngDebiKST")
                         objDebitsCopy.Rows.Add(objdrDebiHead)
                         objdrDebiHead = Nothing
+                        'SB - Definieren
+                        selTAsubRow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "' AND dblNetto<>0")
+                        For Each subTARow As DataRow In selTAsubRow
+                            'Gleiches Konto aber andere Seite
+                            Dim objdtDebitSubRow As DataRow = objdtDebitSubs.NewRow
+                            objdtDebitSubRow("strRGNr") = row("strDebRGNbr") + "TAU"
+                            If subTARow("intSollHaben") = 0 Then
+                                objdtDebitSubRow("intSollHaben") = 1
+                            Else
+                                objdtDebitSubRow("intSollHaben") = 0
+                            End If
+                            objdtDebitSubRow("lngKto") = subTARow("lngKto")
+                            objdtDebitSubRow("lngKST") = subTARow("lngKST")
+                            objdtDebitSubRow("dblNetto") = subTARow("dblNetto")
+                            objdtDebitSubRow("dblMwSt") = 0
+                            objdtDebitSubRow("dblBrutto") = subTARow("dblNetto")
+                            objdtDebitSubRow("dblMwStsatz") = 0
+                            objdtDebitSubRow("strMwStKey") = "ohne"
+                            objdtDebitSubRow("strDebSubText") = "TA"
+                            objdtDebitSubRow("strDebSubText") = row("strDebRGNbr") + ", TA Auflösung"
+                            objdtDebitSubs.Rows.Add(objdtDebitSubRow)
+                            objdtDebitSubRow = Nothing
+                            '1312
+                            objdtDebitSubRow = objdtDebitSubs.NewRow
+                            objdtDebitSubRow("strRGNr") = row("strDebRGNbr") + "TAU"
+                            'Muss dynamisch werden, prov.
+                            objdtDebitSubRow("intSollHaben") = 1
+                            objdtDebitSubRow("lngKto") = 1312
+                            objdtDebitSubRow("lngKST") = 0
+                            objdtDebitSubRow("dblNetto") = subTARow("dblNetto")
+                            objdtDebitSubRow("dblMwSt") = 0
+                            objdtDebitSubRow("dblBrutto") = subTARow("dblNetto")
+                            objdtDebitSubRow("dblMwStsatz") = 0
+                            objdtDebitSubRow("strMwStKey") = "ohne"
+                            objdtDebitSubRow("strDebSubText") = "TA"
+                            objdtDebitSubRow("strDebSubText") = row("strDebRGNbr") + ", TA Auflösung"
+                            objdtDebitSubs.Rows.Add(objdtDebitSubRow)
+                            objdtDebitSubRow = Nothing
+                        Next
                         'TA Akt
                         objdrDebiHead = objDebitsCopy.NewRow
                         objdrDebiHead("strDebRGNbr") = row("strDebRGNbr") + "TAK"
@@ -1283,6 +1327,9 @@ ErrorHandler:
                         objdrDebiHead("lngDebIdentNbr") = row("lngDebIdentNbr")
                         objdrDebiHead("booDebBook") = False
                         objdrDebiHead("intBuchungsart") = 4
+                        objdrDebiHead("intRGArt") = 1
+                        objdrDebiHead("strRGArt") = "TA"
+                        objdrDebiHead("booPGV") = False
                         objdrDebiHead("intRGArt") = row("intRGArt")
                         objdrDebiHead("strOPNr") = row("strOPNr")
                         objdrDebiHead("lngDebNbr") = row("lngDebNbr")
@@ -1297,6 +1344,45 @@ ErrorHandler:
                         objdrDebiHead("lngDebiKST") = row("lngDebiKST")
                         objDebitsCopy.Rows.Add(objdrDebiHead)
                         objdrDebiHead = Nothing
+                        'SB 
+                        For Each subTARow In selTAsubRow
+                            'Gleiches Konto gleiche Seite
+                            Dim objdtDebitSubRow As DataRow = objdtDebitSubs.NewRow
+                            objdtDebitSubRow("strRGNr") = row("strDebRGNbr") + "TAK"
+                            If subTARow("intSollHaben") = 0 Then
+                                objdtDebitSubRow("intSollHaben") = 0
+                            Else
+                                objdtDebitSubRow("intSollHaben") = 1
+                            End If
+                            objdtDebitSubRow("lngKto") = subTARow("lngKto")
+                            objdtDebitSubRow("lngKST") = subTARow("lngKST")
+                            objdtDebitSubRow("dblNetto") = subTARow("dblNetto")
+                            objdtDebitSubRow("dblMwSt") = 0
+                            objdtDebitSubRow("dblBrutto") = subTARow("dblNetto")
+                            objdtDebitSubRow("dblMwStsatz") = 0
+                            objdtDebitSubRow("strMwStKey") = "ohne"
+                            objdtDebitSubRow("strDebSubText") = "TA"
+                            objdtDebitSubRow("strDebSubText") = row("strDebRGNbr") + ", TA Aktivierung"
+                            objdtDebitSubs.Rows.Add(objdtDebitSubRow)
+                            objdtDebitSubRow = Nothing
+                            '1312
+                            objdtDebitSubRow = objdtDebitSubs.NewRow
+                            objdtDebitSubRow("strRGNr") = row("strDebRGNbr") + "TAK"
+                            'Muss dynamisch werden, prov.
+                            objdtDebitSubRow("intSollHaben") = 0
+                            objdtDebitSubRow("lngKto") = 1312
+                            objdtDebitSubRow("lngKST") = 0
+                            objdtDebitSubRow("dblNetto") = subTARow("dblNetto")
+                            objdtDebitSubRow("dblMwSt") = 0
+                            objdtDebitSubRow("dblBrutto") = subTARow("dblNetto")
+                            objdtDebitSubRow("dblMwStsatz") = 0
+                            objdtDebitSubRow("strMwStKey") = "ohne"
+                            objdtDebitSubRow("strDebSubText") = "TA"
+                            objdtDebitSubRow("strDebSubText") = row("strDebRGNbr") + ", TA Aktivierung"
+                            objdtDebitSubs.Rows.Add(objdtDebitSubRow)
+                            objdtDebitSubRow = Nothing
+                        Next
+
                     Else
                         'PGB
                     End If
