@@ -104,6 +104,10 @@ Friend Class frmImportMain
 
     Private Sub butDebitoren_Click(sender As Object, e As EventArgs) Handles butDebitoren.Click
 
+        'Dim objdtDebitorenHead As New DataTable("tbliDebiHead")
+        'Dim objdtDebitorenHeadRead As New DataTable("tbliDebitorenHeadR")
+        'Dim objdtDebitorenSub As New DataTable("tbliDebiSub")
+
         Dim strIncrBelNbr As String = String.Empty
 
 
@@ -135,6 +139,8 @@ Friend Class frmImportMain
             objdtDebitorenSub = Main.tblDebitorenSub()
 
             objdtInfo.Clear()
+            objdtInfo.Constraints.Clear()
+            objdtInfo.Dispose()
 
             'dgvBookings.Rows.Clear()
             'If dgvBookings.Columns.Contains("intBuchungsart") Then
@@ -149,12 +155,12 @@ Friend Class frmImportMain
             dgvBookingSub.Rows.Clear()
             dgvBookingSub.Columns.Clear()
 
-            dgvBookings.DataSource = objdtDebitorenHead
-            dgvBookingSub.DataSource = objdtDebitorenSub
-            objdbConn.Open()
-            Call InitdgvDebitoren()
-            Call InitdgvDebitorenSub()
-            objdbConn.Close()
+            'dgvBookings.DataSource = objdtDebitorenHead
+            'dgvBookingSub.DataSource = objdtDebitorenSub
+            'objdbConn.Open()
+            'Call InitdgvDebitoren()
+            'Call InitdgvDebitorenSub()
+            'objdbConn.Close()
 
             Call InitVar()
 
@@ -232,6 +238,14 @@ Friend Class frmImportMain
                                    strPeriodStatus,
                                    chkValutaCorrect.Checked,
                                    dtpValutaCorrect.Value)
+
+            'Versuch ob stabiler
+            dgvBookings.DataSource = objdtDebitorenHead
+            dgvBookingSub.DataSource = objdtDebitorenSub
+            objdbConn.Open()
+            Call InitdgvDebitoren()
+            Call InitdgvDebitorenSub()
+            objdbConn.Close()
 
             'Anzahl schreiben
             txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
@@ -692,6 +706,8 @@ Friend Class frmImportMain
 
     Private Sub butImport_Click(sender As Object, e As EventArgs) Handles butImport.Click
 
+        'Dim objdtDebitorenHead As New DataTable("tbliDebiHead")
+        'Dim objdtDebitorenSub As New DataTable("tbliDebiSub")
 
         Dim intReturnValue As Int32
         Dim intDebBelegsNummer As Int32
@@ -1606,10 +1622,11 @@ Friend Class frmImportMain
         Finally
 
             'Neu aufbauen
-            butDebitoren_Click(butDebitoren, EventArgs.Empty)
+            'butDebitoren_Click(butDebitoren, EventArgs.Empty)
 
             Me.Cursor = Cursors.Default
-            Me.butImport.Enabled = True
+            'Me.butImport.Enabled = True
+            Application.Restart()
 
         End Try
 
@@ -1700,6 +1717,7 @@ Friend Class frmImportMain
 
         Dim intReturnValue As Int16
 
+
         Try
 
             Me.Cursor = Cursors.WaitCursor
@@ -1730,15 +1748,16 @@ Friend Class frmImportMain
             dgvBookings.DataSource = Nothing
             dgvBookings.Rows.Clear()
             dgvBookings.Columns.Clear()
-            dgvBookings.DataSource = objdtKreditorenHead
+            'dgvBookings.DataSource = objdtKreditorenHead
             dgvBookingSub.DataSource = Nothing
             dgvBookingSub.Rows.Clear()
             dgvBookingSub.Columns.Clear()
-            dgvBookingSub.DataSource = objdtKreditorenSub
-            objdbConn.Open()
-            Call InitdgvKreditoren()
-            Call InitdgvKreditorenSub()
-            objdbConn.Close()
+            'dgvBookingSub.DataSource = objdtKreditorenSub
+
+            'objdbConn.Open()
+            'Call InitdgvKreditoren()
+            'Call InitdgvKreditorenSub()
+            'objdbConn.Close()
 
             Call InitVar()
 
@@ -1809,6 +1828,14 @@ Friend Class frmImportMain
                                 chkValutaCorrect.Checked,
                                 dtpValutaCorrect.Value)
 
+            dgvBookings.DataSource = objdtKreditorenHead
+            dgvBookingSub.DataSource = objdtKreditorenSub
+            objdbConn.Open()
+            Call InitdgvKreditoren()
+            Call InitdgvKreditorenSub()
+            objdbConn.Close()
+
+
             'Anzahl schreiben
             txtNumber.Text = objdtKreditorenHead.Rows.Count.ToString
 
@@ -1831,6 +1858,8 @@ Friend Class frmImportMain
     End Sub
 
     Private Sub butImportK_Click(sender As Object, e As EventArgs) Handles butImportK.Click
+
+        'Dim objdtDebitorenHead As New DataTable("tbliDebiHead")
 
         Dim intReturnValue As Int32
         Dim intKredBelegsNummer As UInt32
@@ -1893,6 +1922,7 @@ Friend Class frmImportMain
 
         'Sammelbeleg
         Dim intCommonKonto As Int32
+        Dim strKRGReferTo As String
 
         'Dim intTeqNbr As Int32
 
@@ -2399,10 +2429,18 @@ Friend Class frmImportMain
                         row("booBooked") = True
                         row("datBooked") = Now()
                         row("lngBelegNr") = intKredBelegsNummer
-
+                        'strKRGReferTo = "lngKredID"
+                        'strKRGReferTo = "strKredRGNbr"
+                        If objdbConn.State = ConnectionState.Closed Then
+                            objdbConn.Open()
+                        End If
+                        strKRGReferTo = Main.FcReadFromSettings(objdbConn, "Buchh_TableKRGReferTo", cmbBuha.SelectedValue)
+                        If objdbConn.State = ConnectionState.Open Then
+                            objdbConn.Close()
+                        End If
                         'Status in File RG-Tabelle schreiben
                         intReturnValue = MainKreditor.FcWriteToKrediRGTable(cmbBuha.SelectedValue,
-                                                                        row("lngKredID"),
+                                                                        row(strKRGReferTo),
                                                                         row("datBooked"),
                                                                         row("lngBelegNr"),
                                                                         objdbAccessConn,
@@ -2432,10 +2470,11 @@ Friend Class frmImportMain
 
         Finally
             'Neu aufbauen
-            butKreditoren_Click(butDebitoren, EventArgs.Empty)
+            'butKreditoren_Click(butDebitoren, EventArgs.Empty)
 
             Me.Cursor = Cursors.Default
-            Me.butImportK.Enabled = True
+            'Me.butImportK.Enabled = True
+            Application.Restart()
 
         End Try
 
@@ -2601,64 +2640,66 @@ Friend Class frmImportMain
         Dim tblDebiSearch As New DataTable
         Dim intteqnbr As Int32
 
+        Application.Restart()
+
         'Überprüfung ob doppelte Debitoren existieren
         'Gleiche exterene Beleg-Nr., gleicher Betrag, gleiches Belegdatum
 
-        Try
+        'Try
 
-            intCheckDblDebis = MessageBox.Show("Soll wirklich eine Überprüfung auf doppelte Debitoren - Belege erfolgen?", "Doppelte Debi-Belege", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+        '    intCheckDblDebis = MessageBox.Show("Soll wirklich eine Überprüfung auf doppelte Debitoren - Belege erfolgen?", "Doppelte Debi-Belege", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
 
-            If intCheckDblDebis = vbYes Then
+        '    If intCheckDblDebis = vbYes Then
 
-                Me.Cursor = Cursors.WaitCursor
+        '        Me.Cursor = Cursors.WaitCursor
 
-                'durch die Debitoren - Belege steppen
-                objdbMSSQLConn.Open()
-                intteqnbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
+        '        'durch die Debitoren - Belege steppen
+        '        objdbMSSQLConn.Open()
+        '        intteqnbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
 
-                'Zuerst nach Rechnungen suchen
-                objdbSQLcommand.CommandText = "SELECT * FROM debibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='R' AND NOT belnr IS NULL ORDER BY belnr"
-                objdbSQLcommand.Connection = objdbMSSQLConn
-                tblDebiBelege.Load(objdbSQLcommand.ExecuteReader)
-                For Each drdebibelege In tblDebiBelege.Rows
-                    'Gibt es mehr als einen Beleg mit gleichem Betrag und gleicher externer Beleg-Nr.?
-                    tblDebiSearch.Rows.Clear()
-                    objdbSQLcommand.CommandText = "SELECT COUNT(belnr) FROM debibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='R' AND belnr='" + drdebibelege.item("belnr") + "' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
-                    tblDebiSearch.Load(objdbSQLcommand.ExecuteReader)
-                    If tblDebiSearch.Rows(0).Item(0) > 1 Then
-                        MessageBox.Show("Mögliche Verdopplung gefunden 'R' belnr " + drdebibelege.item("belnr") + vbCrLf + "Betrag " + drdebibelege.item("skontobetrag").ToString, "Verdopplung gefunden", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                    End If
-                Next
+        '        'Zuerst nach Rechnungen suchen
+        '        objdbSQLcommand.CommandText = "SELECT * FROM debibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='R' AND NOT belnr IS NULL ORDER BY belnr"
+        '        objdbSQLcommand.Connection = objdbMSSQLConn
+        '        tblDebiBelege.Load(objdbSQLcommand.ExecuteReader)
+        '        For Each drdebibelege In tblDebiBelege.Rows
+        '            'Gibt es mehr als einen Beleg mit gleichem Betrag und gleicher externer Beleg-Nr.?
+        '            tblDebiSearch.Rows.Clear()
+        '            objdbSQLcommand.CommandText = "SELECT COUNT(belnr) FROM debibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='R' AND belnr='" + drdebibelege.item("belnr") + "' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
+        '            tblDebiSearch.Load(objdbSQLcommand.ExecuteReader)
+        '            If tblDebiSearch.Rows(0).Item(0) > 1 Then
+        '                MessageBox.Show("Mögliche Verdopplung gefunden 'R' belnr " + drdebibelege.item("belnr") + vbCrLf + "Betrag " + drdebibelege.item("skontobetrag").ToString, "Verdopplung gefunden", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        '            End If
+        '        Next
 
-                'Dann nach Gutschriften
-                tblDebiBelege.Dispose()
-                objdbSQLcommand.CommandText = "SELECT * FROM debibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='G' AND NOT belnr IS NULL ORDER BY belnr"
-                objdbSQLcommand.Connection = objdbMSSQLConn
-                tblDebiBelege.Load(objdbSQLcommand.ExecuteReader)
-                For Each drdebibelege In tblDebiBelege.Rows
-                    'Gibt es mehr als einen Beleg mit gleichem Betrag und gleicher externer Beleg-Nr.?
-                    tblDebiSearch.Rows.Clear()
-                    objdbSQLcommand.CommandText = "SELECT COUNT(belnr) FROM debibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='G' AND belnr='" + drdebibelege.item("belnr") + "' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
-                    tblDebiSearch.Load(objdbSQLcommand.ExecuteReader)
-                    If tblDebiSearch.Rows(0).Item(0) > 1 Then
-                        MessageBox.Show("Mögliche Verdopplung gefunden 'G' belnr " + drdebibelege.item("belnr") + vbCrLf + "Betrag " + drdebibelege.item("skontobetrag").ToString, "Verdopplung gefunden", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                    End If
-                Next
+        '        'Dann nach Gutschriften
+        '        tblDebiBelege.Dispose()
+        '        objdbSQLcommand.CommandText = "SELECT * FROM debibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='G' AND NOT belnr IS NULL ORDER BY belnr"
+        '        objdbSQLcommand.Connection = objdbMSSQLConn
+        '        tblDebiBelege.Load(objdbSQLcommand.ExecuteReader)
+        '        For Each drdebibelege In tblDebiBelege.Rows
+        '            'Gibt es mehr als einen Beleg mit gleichem Betrag und gleicher externer Beleg-Nr.?
+        '            tblDebiSearch.Rows.Clear()
+        '            objdbSQLcommand.CommandText = "SELECT COUNT(belnr) FROM debibuchung WHERE teqnbr=" + intteqnbr.ToString + " AND typ='G' AND belnr='" + drdebibelege.item("belnr") + "' AND skontobetrag=" + drdebibelege.item("skontobetrag").ToString
+        '            tblDebiSearch.Load(objdbSQLcommand.ExecuteReader)
+        '            If tblDebiSearch.Rows(0).Item(0) > 1 Then
+        '                MessageBox.Show("Mögliche Verdopplung gefunden 'G' belnr " + drdebibelege.item("belnr") + vbCrLf + "Betrag " + drdebibelege.item("skontobetrag").ToString, "Verdopplung gefunden", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        '            End If
+        '        Next
 
-                MessageBox.Show("Suche beendet.", "Suche beendet", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        '        MessageBox.Show("Suche beendet.", "Suche beendet", MessageBoxButtons.OK, MessageBoxIcon.Information)
 
-            End If
+        '    End If
 
-        Catch ex As Exception
-            MessageBox.Show(ex.Message, "Problem " + (Err.Number.ToString))
+        'Catch ex As Exception
+        '    MessageBox.Show(ex.Message, "Problem " + (Err.Number.ToString))
 
-        Finally
-            objdbMSSQLConn.Close()
-            tblDebiBelege.Dispose()
-            tblDebiSearch.Dispose()
-            Me.Cursor = Cursors.Default
+        'Finally
+        '    objdbMSSQLConn.Close()
+        '    tblDebiBelege.Dispose()
+        '    tblDebiSearch.Dispose()
+        '    Me.Cursor = Cursors.Default
 
-        End Try
+        'End Try
 
     End Sub
 

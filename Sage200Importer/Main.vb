@@ -3675,6 +3675,7 @@ ErrorHandler:
         Dim booDiffHeadText As Boolean
         Dim strKrediHeadText As String
         Dim booDiffSubText As Boolean
+        Dim booLeaveSubText As Boolean
         Dim strKrediSubText As String
         Dim intKreditorNew As Int32
         Dim strCleanOPNbr As String
@@ -4291,21 +4292,25 @@ ErrorHandler:
                 End If
 
                 'Wird ein anderer Text in den Sub-Buchung gewünscht?
-                booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_KSubTextSpecial", intAccounting) = "0", False, True)
-                If booDiffSubText Then
-                    strKrediSubText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn,
+                'Soll der Gelesene Sub-Text bleiben?
+                booLeaveSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_KSubLeaveText", intAccounting) = "0", False, True)
+                If Not booLeaveSubText Then
+                    booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_KSubTextSpecial", intAccounting) = "0", False, True)
+                    If booDiffSubText Then
+                        strKrediSubText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn,
                                                                                 "Buchh_KSubTextSpecialText",
                                                                                 intAccounting),
                                                                                 row("strKredRGNbr"),
                                                                            objdtKredits,
                                                                            "C")
-                Else
-                    strKrediSubText = row("strKredText")
+                    Else
+                        strKrediSubText = row("strKredText")
+                    End If
+                    selsubrow = objdtKreditSubs.Select("lngKredID=" + row("lngKredID").ToString)
+                    For Each subrow As DataRow In selsubrow
+                        subrow("strKredSubText") = strKrediSubText
+                    Next
                 End If
-                selsubrow = objdtKreditSubs.Select("lngKredID=" + row("lngKredID").ToString)
-                For Each subrow As DataRow In selsubrow
-                    subrow("strKredSubText") = strKrediSubText
-                Next
 
                 'Init
                 strBitLog = String.Empty

@@ -663,7 +663,7 @@ Public Class MainKreditor
     End Function
 
     Public Shared Function FcWriteToKrediRGTable(ByVal intMandant As Int32,
-                                                 ByVal lngKredID As Int32,
+                                                 ByVal strKredID As String,
                                                  ByVal datDate As Date,
                                                  ByVal intBelegNr As Int32,
                                                  ByRef objdbAccessConn As OleDb.OleDbConnection,
@@ -682,6 +682,7 @@ Public Class MainKreditor
         Dim strBelegNrName As String
         Dim strKRGNbrFieldName As String
         Dim strKRGTableType As String
+        Dim strKRGNbrFieldType As String
         Dim strMDBName As String
 
         objMySQLConn.Open()
@@ -691,6 +692,7 @@ Public Class MainKreditor
         strNameKRGTable = Main.FcReadFromSettings(objMySQLConn, "Buchh_TableKred", intMandant)
         strBelegNrName = Main.FcReadFromSettings(objMySQLConn, "Buchh_TableKRGBelegNrName", intMandant)
         strKRGNbrFieldName = Main.FcReadFromSettings(objMySQLConn, "Buchh_TableKRGNbrFieldName", intMandant)
+        strKRGNbrFieldType = Main.FcReadFromSettings(objMySQLConn, "Buchh_TableKRGNbrFieldType", intMandant)
         'strSQL = "UPDATE " + strNameRGTable + " SET gebucht=true, gebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "=" + intBelegNr.ToString + " WHERE " + strRGNbrFieldName + "=" + strRGNbr
 
         Try
@@ -698,7 +700,7 @@ Public Class MainKreditor
             If strKRGTableType = "A" Then
                 'Access
                 Call Main.FcInitAccessConnecation(objdbAccessConn, strMDBName)
-                strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + lngKredID.ToString
+                strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + IIf(strKRGNbrFieldType = "T", "'", "") + strKredID + IIf(strKRGNbrFieldType = "T", "'", "")
 
                 objdbAccessConn.Open()
                 objlocOLEdbcmd.CommandText = strSQL
@@ -709,9 +711,9 @@ Public Class MainKreditor
                 'MySQL
                 'Bei IG andere Feldnamen
                 If intMandant = 25 Then
-                    strSQL = "UPDATE " + strNameKRGTable + " SET IGKBooked=true, IGKBDate=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + lngKredID.ToString
+                    strSQL = "UPDATE " + strNameKRGTable + " SET IGKBooked=true, IGKBDate=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + IIf(strKRGNbrFieldType = "T", "'", "") + strKredID + IIf(strKRGNbrFieldType = "T", "'", "")
                 Else
-                    strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + lngKredID.ToString
+                    strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=DATE('" + Format(datDate, "yyyy-MM-dd").ToString + "'), " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + IIf(strKRGNbrFieldType = "T", "'", "") + strKredID + IIf(strKRGNbrFieldType = "T", "'", "")
                 End If
 
                 objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
@@ -719,7 +721,7 @@ Public Class MainKreditor
                 objlocMySQLRGcmd.Connection = objlocMySQLRGConn
                 objlocMySQLRGcmd.CommandText = strSQL
                 intAffected = objlocMySQLRGcmd.ExecuteNonQuery()
-                If intAffected <> 1 Then
+                If intAffected = 0 Then
                     Return 9
                 End If
 
@@ -1048,6 +1050,7 @@ Public Class MainKreditor
         Dim intPipePositionBegin, intPipePositionEnd As Integer
         Dim strWork, strField As String
         Dim RowKredi() As DataRow
+        Dim strFieldType As String
 
         Try
 
@@ -1064,6 +1067,10 @@ Public Class MainKreditor
                     Select Case strField
                         Case "rsKredi.Fields(""KrediID"")"
                             strField = RowKredi(0).Item("lngKredID")
+                            strFieldType = "V"
+                        Case "rsKredi.Fields(""KrediRGNr"")"
+                            strField = RowKredi(0).Item("strKredRGNbr")
+                            strFieldType = "T"
                             'Case "rsDebiTemp.Fields([strRGArt])"
                             '    strField = rsDebiTemp.Fields("strRGArt")
                             'Case "rsDebiTemp.Fields([strRGName])"
@@ -1087,7 +1094,7 @@ Public Class MainKreditor
                         Case Else
                             strField = "unknown field"
                     End Select
-                    strSQLToParse = Left(strSQLToParse, intPipePositionBegin - 1) & strField & Right(strSQLToParse, Len(strSQLToParse) - intPipePositionEnd)
+                    strSQLToParse = Left(strSQLToParse, intPipePositionBegin - 1) + IIf(strFieldType = "T", "'", "") + strField + IIf(strFieldType = "T", "'", "") + Right(strSQLToParse, Len(strSQLToParse) - intPipePositionEnd)
                     'Neuer Anfang suchen für evtl. weitere |
                     intPipePositionBegin = InStr(strSQLToParse, "|")
                     'intPipePositionBegin = InStr(intPipePositionEnd + 1, strSQLToParse, "|")
