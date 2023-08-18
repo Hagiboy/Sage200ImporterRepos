@@ -1089,7 +1089,7 @@ Friend Class frmImportMain
 
                             'Bei SplittBill 2ter Rechnung TZahlung auf LinkedRG machen
                             'Prinzip: Beleg einlesen anhand und Betrag ausrechnen => Summe Beleg - diesen Beleg
-                            If row("booLinked") Then
+                            If row("booLinked") And Mid(row("strDebStatusBitLog"), 13, 1) = "0" Then 'Nur wenn Beleg in gleicher Buha
                                 'Betrag von Beleg 1 holen
                                 intLaufNbr = DbBhg.doesBelegExist2(row("lngLinkedDeb").ToString,
                                                                    row("strDebCur"),
@@ -1654,8 +1654,12 @@ Friend Class frmImportMain
                         'MsgBox("Geändert zu checked " + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + ", " + dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value.ToString + Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value).ToString)
                         'Zulassen? = keine Fehler
                         If Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 0 And Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 10000 Then
-                            MsgBox("Rechnung ist nicht buchbar.", vbOKOnly + vbExclamation, "Nicht buchbar")
-                            dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value = False
+                            If Val(Strings.Mid(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value, 13, 1)) = 1 Then
+                                MsgBox("Erst - RG Splitt-Bill ist nicht auffindbar. Wird trotzdem gebucht, wird nur die Zweit-RG gebucht.", vbOKOnly + vbExclamation, "Splitt-Bill No RG 1")
+                            Else
+                                MsgBox("Debi-Rechnung ist nicht buchbar.", vbOKOnly + vbExclamation, "Nicht buchbar")
+                                dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value = False
+                            End If
                         End If
 
                     End If
@@ -1667,7 +1671,7 @@ Friend Class frmImportMain
                         'MsgBox("Geändert zu checked " + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + ", " + dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value.ToString + Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value).ToString)
                         'Zulassen? = keine Fehler
                         If Val(dgvBookings.Rows(e.RowIndex).Cells("strKredStatusBitLog").Value) <> 0 Then
-                            MsgBox("Rechnung ist nicht buchbar.", vbOKOnly + vbExclamation, "Nicht buchbar")
+                            MsgBox("Kredi-Rechnung ist nicht buchbar.", vbOKOnly + vbExclamation, "Nicht buchbar")
                             dgvBookings.Rows(e.RowIndex).Cells("booKredBook").Value = False
                         End If
 

@@ -314,10 +314,13 @@ Public Class MainDebitor
                                                            IIf(IsDBNull(objdtDebitor.Rows(0).Item("ID")), 0, objdtDebitor.Rows(0).Item("ID")),
                                                            "P")
                         Else
+                            'D.h. Neue PK-Nr. wird nie von anderer Tabelle gelesen als t_customer oder Repbetriebe, bei einem <> t_customer muss de Rep_Betiebnr mitgegeben werden
                             intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02,
                                                            objsqlcommandZHDB02,
                                                            IIf(IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)), 0, objdtDebitor.Rows(0).Item(strDebNewField)),
                                                            "R")
+
+                            'Stop
                         End If
 
                         If intPKNewField = 0 Then
@@ -350,6 +353,7 @@ Public Class MainDebitor
                                         Return 1
                                     End If
                                 End If
+                                Stop
                             End If
                             'intDebiNew = 0
                             'Return 3
@@ -764,6 +768,9 @@ Public Class MainDebitor
 
                     'Sachbearbeiter suchen
                     'Ist Ausnahme definiert?
+                    If IsNothing(objsqlcommandZHDB02.Connection) Then
+                        objsqlcommandZHDB02.Connection = objdbconnZHDB02
+                    End If
                     objsqlcommandZHDB02.CommandText = "SELECT CustomerID FROM t_rep_sagesachbearbeiter WHERE Rep_Nr=" + objdtDebitor.Rows(0).Item("Rep_Nr").ToString + " And Buchh_Nr=" + intAccounting.ToString
                     objdtSachB.Load(objsqlcommandZHDB02.ExecuteReader)
                     If objdtSachB.Rows.Count > 0 Then 'Ausnahme definiert auf Rep-Betrieb

@@ -1011,13 +1011,13 @@ ErrorHandler:
                 strPeriodenDef(3) = objlocdtPeriDef.Rows(0).Item(5)  'Status
 
                 objdtInfo.Rows.Add("Perioden S200", strPeriodenDef(0))
-                objdtInfo.Rows.Add("Von - Bis/ Status", strPeriodenDef(1) + " - " + strPeriodenDef(2) + "/ " + strPeriodenDef(3))
+                objdtInfo.Rows.Add("Von - Bis/ Status", Format(Convert.ToDateTime(strPeriodenDef(1)), "dd.MM.yyyy hh:mm:ss") + " - " + Format(Convert.ToDateTime(strPeriodenDef(2)), "dd.MM.yyyy hh:mm:ss") + "/ " + strPeriodenDef(3))
 
                 Return 0
             Else
 
                 objdtInfo.Rows.Add("Perioden S200", "keine")
-                objdtInfo.Rows.Add("Von - Bis/ Status", "01.01." + strYear + " 00:00:00 - " + "31.12." + strYear + " 23:59:59/ " + "O")
+                objdtInfo.Rows.Add("Von - Bis/ Status", Format(Convert.ToDateTime("01.01." + strYear + " 00:00:00"), "dd.MM.yyyy hh:mm:ss") + " - " + Format(Convert.ToDateTime("31.12." + strYear + " 23:59:59"), "dd.MM.yyyy hh:mm:ss") + "/ " + "O")
 
                 Return 1
 
@@ -2907,7 +2907,9 @@ ErrorHandler:
                                               ByVal intBuchungsArt As Int32,
                                               ByVal booAutoCorrect As Boolean,
                                               ByVal booCpyKSTToSub As Boolean,
-                                              ByVal lngKrediKST As Int32) As Int16
+                                              ByVal lngKrediKST As Int32,
+                                              ByVal intPayType As Int16,
+                                              ByVal strKrediBank As String) As Int16
 
         'Functin Returns 0=ok, 1=Problem sub, 2=OP Diff zu Kopf, 3=OP nicht 0, 9=keine Subs
 
@@ -2983,6 +2985,17 @@ ErrorHandler:
                         subrow("strMwStKey") = Nothing
                     End If
                     subrow("lngKST") = 0
+                End If
+
+                'Falls IBAN und BankKonto nicht CH, dann MwSt-Satz und MwSt-Key ändern
+                If intPayType = 9 Then
+                    If Char.IsLetter(CChar(Strings.Left(strKrediBank, 1))) And Char.IsLetter(CChar(Strings.Mid(strKrediBank, 2, 1))) Then
+                        'Nun da klar ist, dass es 2 Zeichen sind muss noch geklärt werden. ob es keine CH Bankv. ist
+                        If Strings.Left(strKrediBank, 2) <> "CH" Or Strings.Left(strKrediBank, 2) <> "ch" Then
+                            subrow("dblMwStSatz") = 0
+                            subrow("strMwStKey") = Nothing
+                        End If
+                    End If
                 End If
 
                 'MwSt prüfen 01
@@ -3694,6 +3707,7 @@ ErrorHandler:
         Dim intMonthsAJ As Int16
         Dim intMonthsNJ As Int16
         Dim datValutaSave As Date
+        Dim booPKPrivate As Boolean
 
         Try
 
@@ -3760,7 +3774,9 @@ ErrorHandler:
                                                          row("intBuchungsart"),
                                                          booAutoCorrect,
                                                          booCpyKSTToSub,
-                                                         row("lngKrediKST"))
+                                                         row("lngKrediKST"),
+                                                         row("intPayType"),
+                                                         row("strKrediBank"))
 
                 strBitLog += Trim(intReturnValue.ToString)
 
@@ -4100,11 +4116,26 @@ ErrorHandler:
                 End If
 
                 'Status-String auswerten
+                booPKPrivate = IIf(FcReadFromSettings(objdbconn, "Buchh_PKKrediTable", intAccounting) = "t_customer", True, False)
                 'Kreditor 1
                 If Left(strBitLog, 1) <> "0" Then
                     strStatus += "Kred"
                     If Left(strBitLog, 1) <> "2" Then
-                        intReturnValue = MainKreditor.FcIsKreditorCreatable(objdbconn,
+                        If booPKPrivate Then
+                            intReturnValue = MainKreditor.FcIsPrivateKreditorCreatable(objdbconn,
+                                                                                        objdbconnZHDB02,
+                                                                                        objsqlcommandZHDB02,
+                                                                                        intKreditorNew,
+                                                                                        objKrBuha,
+                                                                                        objfiBuha,
+                                                                                        IIf(IsDBNull(row("intPayType")), 3, row("intPayType")),
+                                                                                        IIf(IsDBNull(row("strKredRef")), "", row("strKredRef")),
+                                                                                        intintBank,
+                                                                                        IIf(IsDBNull(row("strKrediBank")), "", row("strKrediBank")),
+                                                                                        strcmbBuha,
+                                                                                        intAccounting)
+                        Else
+                            intReturnValue = MainKreditor.FcIsKreditorCreatable(objdbconn,
                                                                             objdbconnZHDB02,
                                                                             objsqlcommandZHDB02,
                                                                             intKreditorNew,
@@ -4116,6 +4147,8 @@ ErrorHandler:
                                                                             intintBank,
                                                                             IIf(IsDBNull(row("strKrediBank")), "", row("strKrediBank")),
                                                                             intAccounting)
+
+                        End If
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
                             row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
@@ -4280,6 +4313,9 @@ ErrorHandler:
                 row("strKredStatusBitLog") = strBitLog
 
                 'Wird ein anderer Text in der Head-Buchung gewünscht?
+                If objdbconn.State = ConnectionState.Closed Then
+                    objdbconn.Open()
+                End If
                 booDiffHeadText = IIf(FcReadFromSettings(objdbconn, "Buchh_KTextSpecial", intAccounting) = "0", False, True)
                 If booDiffHeadText Then
                     strKrediHeadText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn,
