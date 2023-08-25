@@ -34,10 +34,9 @@ Public Class MainDebitor
 
         Try
 
-            objdbconn.Open()
+            'objdbconn.Open()
 
-            strMDBName = Main.FcReadFromSettings(objdbconn,
-                                                 "Buchh_RGTableMDB",
+            strMDBName = Main.FcReadFromSettingsNC("Buchh_RGTableMDB",
                                                  intAccounting)
 
             'Head Debitoren löschen
@@ -49,11 +48,9 @@ Public Class MainDebitor
             objdtSub.Constraints.Clear()
             objdtSub.Dispose()
 
-            strSQL = Main.FcReadFromSettings(objdbconn,
-                                             "Buchh_SQLHead",
+            strSQL = Main.FcReadFromSettingsNC("Buchh_SQLHead",
                                              intAccounting)
-            strRGTableType = Main.FcReadFromSettings(objdbconn,
-                                                     "Buchh_RGTableType",
+            strRGTableType = Main.FcReadFromSettingsNC("Buchh_RGTableType",
                                                      intAccounting)
 
             'objlocMySQLcmd.CommandText = strSQL
@@ -90,8 +87,7 @@ Public Class MainDebitor
                 '    objdtSub.Rows.Add(objdrSub)
                 'End If
                 'If row("strDebRGNbr") = "" Then Stop
-                strSQLSub = MainDebitor.FcSQLParse(Main.FcReadFromSettings(objdbconn,
-                                                                           "Buchh_SQLDetail",
+                strSQLSub = MainDebitor.FcSQLParse(Main.FcReadFromSettingsNC("Buchh_SQLDetail",
                                                                            intAccounting),
                                                    row("strDebRGNbr"),
                                                    objdtHead,
@@ -126,7 +122,7 @@ Public Class MainDebitor
             If objRGMySQLConn.State = ConnectionState.Open Then
                 objRGMySQLConn.Close()
             End If
-            objdbconn.Close()
+            'objdbconn.Close()
 
             objRGMySQLConn.Dispose()
             objlocMySQLcmd.Dispose()
@@ -220,25 +216,20 @@ Public Class MainDebitor
         Dim objsqlCommDeb As New MySqlCommand
 
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
-        Dim strMDBName As String = Main.FcReadFromSettings(objdbconn,
-                                                           "Buchh_PKTableConnection",
+        Dim strMDBName As String = Main.FcReadFromSettingsNC("Buchh_PKTableConnection",
                                                            intAccounting)
         Dim strSQL As String
         Dim intFunctionReturns As Int16
 
         Try
 
-            strTableName = Main.FcReadFromSettings(objdbconn,
-                                                   "Buchh_PKTable",
+            strTableName = Main.FcReadFromSettingsNC("Buchh_PKTable",
                                                    intAccounting)
-            strTableType = Main.FcReadFromSettings(objdbconn,
-                                                   "Buchh_PKTableType",
+            strTableType = Main.FcReadFromSettingsNC("Buchh_PKTableType",
                                                    intAccounting)
-            strDebFieldName = Main.FcReadFromSettings(objdbconn,
-                                                      "Buchh_PKField",
+            strDebFieldName = Main.FcReadFromSettingsNC("Buchh_PKField",
                                                       intAccounting)
-            strDebNewField = Main.FcReadFromSettings(objdbconn,
-                                                     "Buchh_PKNewField",
+            strDebNewField = Main.FcReadFromSettingsNC("Buchh_PKNewField",
                                                      intAccounting)
             'strDebNewFieldType = Main.FcReadFromSettings(objdbconn,
             '                                             "Buchh_PKNewFType",
@@ -1290,7 +1281,7 @@ Public Class MainDebitor
 
         Try
 
-            objMySQLConn.Open()
+            'objMySQLConn.Open()
             strSQL = Main.FcReadFromSettings(objMySQLConn, "Buchh_SQLbeforeDebiRun", intMandant)
             strBeforeDebiRunType = Main.FcReadFromSettings(objMySQLConn, "Buchh_SQLbeforeDebiType", intMandant)
             strMDBName = Main.FcReadFromSettings(objMySQLConn, "Buchh_SQLbeforeDebiMDB", intMandant)
@@ -1429,9 +1420,10 @@ Public Class MainDebitor
             If striBankS50 <> "" Then
                 'Sage 50 - Bank suchen
                 objdbcommand.Connection = objdbconn
-                If objdbconn.State = ConnectionState.Closed Then
-                    objdbconn.Open()
-                End If
+                'If objdbconn.State = ConnectionState.Closed Then
+                '    objdbconn.Open()
+                'End If
+                objdbcommand.Connection.Open()
                 If intPayType = 10 Then 'QR - Fall
                     objdbcommand.CommandText = "SELECT intSage200QR FROM t_sage_tblaccountingbank WHERE QRTNNR='" + striBankS50 + "' AND intAccountingID=" + intAccounting.ToString
                 Else
@@ -1479,8 +1471,9 @@ Public Class MainDebitor
 
         Finally
             If objdbconn.State = ConnectionState.Open Then
-                'objdbconn.Close()
+                objdbconn.Close()
             End If
+            objdbcommand = Nothing
             objdtiBank.Constraints.Clear()
             objdtiBank.Clear()
             objdtiBank.Dispose()

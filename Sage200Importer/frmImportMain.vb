@@ -80,9 +80,19 @@ Friend Class frmImportMain
         'objdtDebitorenHeadRead.Clear()
         'objdtDebitorenHead.Clear()
         'objdtDebitorenSub.Clear()
+
+        objdtKreditorenHeadRead.Constraints.Clear()
         objdtKreditorenHeadRead.Clear()
+        objdtKreditorenHeadRead.Dispose()
+
+        objdtKreditorenHead.Constraints.Clear()
         objdtKreditorenHead.Clear()
+        objdtKreditorenHead.Dispose()
+
+        objdtKreditorenSub.Constraints.Clear()
         objdtKreditorenSub.Clear()
+        objdtKreditorenSub.Dispose()
+
         'Call Check_CheckStateChanged(Check, New System.EventArgs())
 
         FELD_SEP = "{<}"
@@ -108,6 +118,10 @@ Friend Class frmImportMain
         'Dim objdtDebitorenHeadRead As New DataTable("tbliDebitorenHeadR")
         'Dim objdtDebitorenSub As New DataTable("tbliDebiSub")
 
+        'Versuch Stabilität
+        Dim objdtDebitorenHeadLoc As New DataTable("tbliDebiHead")
+        Dim objdtDebitorenSubLoc As New DataTable("tbliDebiSub")
+
         Dim strIncrBelNbr As String = String.Empty
 
 
@@ -120,26 +134,28 @@ Friend Class frmImportMain
             'objdtDebitorenHead = Nothing
             'objdtDebitorenHeadRead = Nothing
             'objdtDebitorenSub = Nothing
-            objdtDebitorenHead.Clear()
-            objdtDebitorenHead.Constraints.Clear()
-            objdtDebitorenHead.Dispose()
-            objdtDebitorenHeadRead.Clear()
-            objdtDebitorenHeadRead.Constraints.Clear()
-            objdtDebitorenHeadRead.Dispose()
-            objdtDebitorenSub.Clear()
-            objdtDebitorenSub.Constraints.Clear()
-            objdtDebitorenSub.Dispose()
+
+            'objdtDebitorenHead.Constraints.Clear()
+            'objdtDebitorenHead.Clear()
+            'objdtDebitorenHead.Dispose()
+
+            'objdtDebitorenHeadRead.Constraints.Clear()
+            'objdtDebitorenHeadRead.Clear()
+            'objdtDebitorenHeadRead.Dispose()
+
+            'objdtDebitorenSub.Constraints.Clear()
+            'objdtDebitorenSub.Clear()
+            'objdtDebitorenSub.Dispose()
 
             'Tabelle Debi/ Kredi Head erstellen
-            objdtDebitorenHead = Main.tblDebitorenHead()
-            objdtDebitorenHeadRead = Main.tblDebitorenHead()
-
+            objdtDebitorenHeadLoc = Main.tblDebitorenHead()
+            'objdtDebitorenHeadRead = Main.tblDebitorenHead()
 
             'Tabelle Debi/ Kredi Sub erstellen
-            objdtDebitorenSub = Main.tblDebitorenSub()
+            objdtDebitorenSubLoc = Main.tblDebitorenSub()
 
-            objdtInfo.Clear()
             objdtInfo.Constraints.Clear()
+            objdtInfo.Clear()
             objdtInfo.Dispose()
 
             'dgvBookings.Rows.Clear()
@@ -162,7 +178,7 @@ Friend Class frmImportMain
             'Call InitdgvDebitorenSub()
             'objdbConn.Close()
 
-            Call InitVar()
+            'Call InitVar()
 
             Call Main.FcLoginSage2(objdbConn,
                                   objdbMSSQLConn,
@@ -190,18 +206,18 @@ Friend Class frmImportMain
             '                                     objdbAccessConn)
 
             'Gibt es eine Query auszuführen bevor dem Buchen?
-            Call MainDebitor.FcExecuteBeforeDebit(cmbBuha.SelectedValue, objdbConn)
+            'Call MainDebitor.FcExecuteBeforeDebit(cmbBuha.SelectedValue, objdbConn)
 
             Call MainDebitor.FcFillDebit(cmbBuha.SelectedValue,
-                                         objdtDebitorenHeadRead,
-                                         objdtDebitorenSub,
+                                         objdtDebitorenHeadLoc,
+                                         objdtDebitorenSubLoc,
                                          objdbConn,
                                          objdbAccessConn,
                                          objOracleConn,
                                          objOracleCmd)
 
-            Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead,
-                                                objdtDebitorenHead)
+            'Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead,
+            ' objdtDebitorenHead)
 
             'Grid neu aufbauen
             Application.DoEvents()
@@ -210,8 +226,8 @@ Friend Class frmImportMain
             'dgvBookings.Refresh()
 
             Call Main.FcCheckDebit(cmbBuha.SelectedValue,
-                                   objdtDebitorenHead,
-                                   objdtDebitorenSub,
+                                   objdtDebitorenHeadLoc,
+                                   objdtDebitorenSubLoc,
                                    Finanz,
                                    FBhg,
                                    DbBhg,
@@ -240,15 +256,15 @@ Friend Class frmImportMain
                                    dtpValutaCorrect.Value)
 
             'Versuch ob stabiler
-            dgvBookings.DataSource = objdtDebitorenHead
-            dgvBookingSub.DataSource = objdtDebitorenSub
-            objdbConn.Open()
-            Call InitdgvDebitoren()
-            Call InitdgvDebitorenSub()
-            objdbConn.Close()
+            'dgvBookings.DataSource = objdtDebitorenHead
+            'dgvBookingSub.DataSource = objdtDebitorenSub
+            'objdbConn.Open()
+            'Call InitdgvDebitoren()
+            'Call InitdgvDebitorenSub()
+            'objdbConn.Close()
 
             'Anzahl schreiben
-            txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
+            txtNumber.Text = objdtDebitorenHeadLoc.Rows.Count.ToString
             Me.Cursor = Cursors.Default
 
             ''Ipmort Kredit hiden
@@ -259,6 +275,14 @@ Friend Class frmImportMain
             MessageBox.Show(ex.Message, "Problem Debitorenauflistung", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
+
+            objdtDebitorenHeadLoc.Constraints.Clear()
+            objdtDebitorenHeadLoc.Clear()
+            objdtDebitorenHeadLoc = Nothing
+
+            objdtDebitorenSubLoc.Constraints.Clear()
+            objdtDebitorenSubLoc.Clear()
+            objdtDebitorenSubLoc = Nothing
 
             Me.Cursor = Cursors.Default
 
@@ -1113,7 +1137,7 @@ Friend Class frmImportMain
                                         dblSplitPayed = dblBetrag
 
                                         'Teilzahlung buchen
-                                        Call DbBhg.SetZahlung(344,
+                                        Call DbBhg.SetZahlung(1944,
                                                           strBelegDatum,
                                                           strValutaDatum,
                                                           row("strDebCur"),

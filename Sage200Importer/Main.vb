@@ -663,11 +663,11 @@ Friend NotInheritable Class Main
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
 
-            objdbconn.Open()
+            'objdbconn.Open()
             strMandant = FcReadFromSettings(objdbconn,
                                             "Buchh200_Name",
                                             intAccounting)
-            objdbconn.Close()
+            'objdbconn.Close()
             booAccOk = objFinanz.CheckMandant(strMandant)
 
             'Open Mandantg
@@ -953,9 +953,9 @@ ErrorHandler:
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
 
-            objdbconn.Open()
+            'objdbconn.Open()
             strMandant = FcReadFromSettings(objdbconn, "Buchh200_Name", intAccounting)
-            objdbconn.Close()
+            'objdbconn.Close()
             booAccOk = objFinanz.CheckMandant(strMandant)
 
             'Combo leeren
@@ -1083,6 +1083,7 @@ ErrorHandler:
 
         Try
 
+            objdbconn.Open()
             objlocMySQLcmd.CommandText = "SELECT t_sage_buchhaltungen." + strField + " FROM t_sage_buchhaltungen WHERE Buchh_Nr=" + intMandant.ToString
             'Debug.Print(objlocMySQLcmd.CommandText)
             objlocMySQLcmd.Connection = objdbconn
@@ -1098,11 +1099,48 @@ ErrorHandler:
         Finally
             objlocdtSetting.Dispose()
             objlocMySQLcmd.Dispose()
+            objdbconn.Close()
 
         End Try
 
 
     End Function
+
+    Public Shared Function FcReadFromSettingsNC(ByVal strField As String,
+                                                ByVal intMandant As Int16) As String
+
+        Dim objlocdtSetting As New DataTable("tbllocSettings")
+        Dim objlocMySQLcmd As New MySqlCommand
+        Dim objdbConnLoc As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
+
+        Try
+
+            objdbconnLoc.Open()
+            objlocMySQLcmd.CommandText = "SELECT t_sage_buchhaltungen." + strField + " FROM t_sage_buchhaltungen WHERE Buchh_Nr=" + intMandant.ToString
+            'Debug.Print(objlocMySQLcmd.CommandText)
+            objlocMySQLcmd.Connection = objdbConnLoc
+            objlocdtSetting.Load(objlocMySQLcmd.ExecuteReader)
+            'Debug.Print("Records" + objlocdtSetting.Rows.Count.ToString)
+            'Debug.Print("Return " + objlocdtSetting.Rows(0).Item(0).ToString)
+            Return objlocdtSetting.Rows(0).Item(0).ToString
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Einstellung lesen")
+
+        Finally
+            objlocdtSetting.Constraints.Clear()
+            objlocdtSetting.Clear()
+            objlocdtSetting = Nothing
+
+            objlocMySQLcmd.Dispose()
+            objdbConnLoc.Close()
+
+        End Try
+
+
+    End Function
+
 
     Public Shared Function FcCheckDebit(ByVal intAccounting As Integer,
                                         ByRef objdtDebits As DataTable,
@@ -1186,7 +1224,7 @@ ErrorHandler:
             'Teq-Nbr extrahieren
             'intTeqNbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
 
-            objdbconn.Open()
+            'objdbconn.Open()
             'objOrdbconn.Open()
             'objdbAccessConn.Open()
 
@@ -2424,6 +2462,7 @@ ErrorHandler:
             objlocMySQLcmd.CommandText = "SELECT  * FROM t_sage_sage50mwst WHERE strKey='" + strStrCode + "'"
 
             objlocMySQLcmd.Connection = objdbconn
+            objlocMySQLcmd.Connection.Open()
             objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
 
             If objlocdtMwSt.Rows.Count = 0 Then
@@ -2473,6 +2512,9 @@ ErrorHandler:
         Catch ex As Exception
             MessageBox.Show(ex.Message, "MwSt-Key Check")
             Return 9
+
+        Finally
+            objlocMySQLcmd.Connection.Close()
 
         End Try
 
