@@ -1113,7 +1113,7 @@ Friend Class frmImportMain
                                         dblSplitPayed = dblBetrag
 
                                         'Teilzahlung buchen
-                                        Call DbBhg.SetZahlung(344,
+                                        Call DbBhg.SetZahlung(1944,
                                                           strBelegDatum,
                                                           strValutaDatum,
                                                           row("strDebCur"),

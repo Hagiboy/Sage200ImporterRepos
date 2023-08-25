@@ -320,7 +320,7 @@ Public Class MainDebitor
                                                            IIf(IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)), 0, objdtDebitor.Rows(0).Item(strDebNewField)),
                                                            "R")
 
-                            'Stop
+                            Stop
                         End If
 
                         If intPKNewField = 0 Then
