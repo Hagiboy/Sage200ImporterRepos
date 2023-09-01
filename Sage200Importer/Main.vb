@@ -3753,7 +3753,7 @@ ErrorHandler:
 
         Try
 
-            objdbconn.Open()
+            'objdbconn.Open()
             'objOrdbconn.Open()
 
             For Each row As DataRow In objdtKredits.Rows

@@ -1115,13 +1115,13 @@ Public Class MainKreditor
         Dim objdrSub As DataRow
         Dim intFcReturns As Int16
 
-        objdbconn.Open()
+        'objdbconn.Open()
 
         strMDBName = Main.FcReadFromSettings(objdbconn, "Buchh_KRGTableMDB", intAccounting)
 
         'Head Debitzoren löschen
-        objdtHead.Clear()
-        objdtHead.Constraints.Clear()
+        'objdtHead.Clear()
+        'objdtHead.Constraints.Clear()
         strSQL = Main.FcReadFromSettings(objdbconn, "Buchh_SQLHeadKred", intAccounting)
         strKRGTableType = Main.FcReadFromSettings(objdbconn, "Buchh_KRGTableType", intAccounting)
 

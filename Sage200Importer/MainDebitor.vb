@@ -40,13 +40,13 @@ Public Class MainDebitor
                                                  intAccounting)
 
             'Head Debitoren löschen
-            objdtHead.Clear()
-            objdtHead.Constraints.Clear()
-            objdtHead.Dispose()
+            'objdtHead.Clear()
+            'objdtHead.Constraints.Clear()
+            'objdtHead.Dispose()
 
-            objdtSub.Clear()
-            objdtSub.Constraints.Clear()
-            objdtSub.Dispose()
+            'objdtSub.Clear()
+            'objdtSub.Constraints.Clear()
+            'objdtSub.Dispose()
 
             strSQL = Main.FcReadFromSettingsNC("Buchh_SQLHead",
                                              intAccounting)
