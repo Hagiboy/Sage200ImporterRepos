@@ -117,18 +117,19 @@ Friend Class frmImportMain
 
             intMode = 0
 
-            'objdtDebitorenHead = Nothing
-            'objdtDebitorenHeadRead = Nothing
-            'objdtDebitorenSub = Nothing
-            objdtDebitorenHead.Clear()
-            objdtDebitorenHead.Constraints.Clear()
-            objdtDebitorenHead.Dispose()
-            objdtDebitorenHeadRead.Clear()
-            objdtDebitorenHeadRead.Constraints.Clear()
-            objdtDebitorenHeadRead.Dispose()
-            objdtDebitorenSub.Clear()
-            objdtDebitorenSub.Constraints.Clear()
-            objdtDebitorenSub.Dispose()
+            objdtDebitorenHead = Nothing
+            objdtDebitorenHeadRead = Nothing
+            objdtDebitorenSub = Nothing
+            objdtInfo = Nothing
+            'objdtDebitorenHead.Clear()
+            'objdtDebitorenHead.Constraints.Clear()
+            'objdtDebitorenHead.Dispose()
+            'objdtDebitorenHeadRead.Clear()
+            'objdtDebitorenHeadRead.Constraints.Clear()
+            'objdtDebitorenHeadRead.Dispose()
+            'objdtDebitorenSub.Clear()
+            'objdtDebitorenSub.Constraints.Clear()
+            'objdtDebitorenSub.Dispose()
 
             'Tabelle Debi/ Kredi Head erstellen
             objdtDebitorenHead = Main.tblDebitorenHead()
@@ -138,9 +139,10 @@ Friend Class frmImportMain
             'Tabelle Debi/ Kredi Sub erstellen
             objdtDebitorenSub = Main.tblDebitorenSub()
 
-            objdtInfo.Clear()
-            objdtInfo.Constraints.Clear()
-            objdtInfo.Dispose()
+            'objdtInfo.Clear()
+            'objdtInfo.Constraints.Clear()
+            ''objdtInfo.Dispose()
+            objdtInfo = Main.tblInfo()
 
             'dgvBookings.Rows.Clear()
             'If dgvBookings.Columns.Contains("intBuchungsart") Then
@@ -149,11 +151,14 @@ Friend Class frmImportMain
 
             'DGV Debitoren
             dgvBookings.DataSource = Nothing
-            dgvBookings.Rows.Clear()
-            dgvBookings.Columns.Clear()
+            'dgvBookings.Rows.Clear()
+            'dgvBookings.Columns.Clear()
             dgvBookingSub.DataSource = Nothing
-            dgvBookingSub.Rows.Clear()
-            dgvBookingSub.Columns.Clear()
+            'dgvBookingSub.Rows.Clear()
+            'dgvBookingSub.Columns.Clear()
+            dgvInfo.DataSource = Nothing
+            'dgvInfo.Rows.Clear()
+            'dgvInfo.Columns.Clear()
 
             'dgvBookings.DataSource = objdtDebitorenHead
             'dgvBookingSub.DataSource = objdtDebitorenSub
@@ -242,9 +247,11 @@ Friend Class frmImportMain
             'Versuch ob stabiler
             dgvBookings.DataSource = objdtDebitorenHead
             dgvBookingSub.DataSource = objdtDebitorenSub
+            dgvInfo.DataSource = objdtInfo
             objdbConn.Open()
             Call InitdgvDebitoren()
             Call InitdgvDebitorenSub()
+            Call InitdgvInfo()
             objdbConn.Close()
 
             'Anzahl schreiben
@@ -266,6 +273,22 @@ Friend Class frmImportMain
 
 
     End Sub
+
+    Public Sub InitdgvInfo()
+
+        'DGV - Info
+        dgvInfo.DataSource = objdtInfo
+        dgvInfo.AllowUserToAddRows = False
+        dgvInfo.AllowUserToDeleteRows = False
+        dgvInfo.Enabled = False
+        dgvInfo.RowHeadersVisible = False
+        dgvInfo.Columns("strInfoT").HeaderText = "Info"
+        dgvInfo.Columns("strInfoT").Width = 100
+        dgvInfo.Columns("strInfoV").HeaderText = "Wert"
+        dgvInfo.Columns("strInfoV").Width = 250
+
+    End Sub
+
 
     Private Sub InitdgvDebitoren()
 
@@ -656,11 +679,11 @@ Friend Class frmImportMain
 
             'Tabelle Debi/ Kredi Head erstellen
             'objdtDebitorenHead = Main.tblDebitorenHead()
-            objdtKreditorenHead = Main.tblKreditorenHead()
+            'objdtKreditorenHead = Main.tblKreditorenHead()
 
             'Tabelle Debi/ Kredi Sub erstellen
             'objdtDebitorenSub = Main.tblDebitorenSub()
-            objdtKreditorenSub = Main.tblKreditorenSub()
+            'objdtKreditorenSub = Main.tblKreditorenSub()
 
             'Info - Tabelle erstellen
             objdtInfo = Main.tblInfo()
@@ -670,15 +693,15 @@ Friend Class frmImportMain
             'dgvDebitorenSub.Visible = False
 
             'DGV - Info
-            dgvInfo.DataSource = objdtInfo
-            dgvInfo.AllowUserToAddRows = False
-            dgvInfo.AllowUserToDeleteRows = False
-            dgvInfo.Enabled = False
-            dgvInfo.RowHeadersVisible = False
-            dgvInfo.Columns("strInfoT").HeaderText = "Info"
-            dgvInfo.Columns("strInfoT").Width = 100
-            dgvInfo.Columns("strInfoV").HeaderText = "Wert"
-            dgvInfo.Columns("strInfoV").Width = 250
+            'dgvInfo.DataSource = objdtInfo
+            'dgvInfo.AllowUserToAddRows = False
+            'dgvInfo.AllowUserToDeleteRows = False
+            'dgvInfo.Enabled = False
+            'dgvInfo.RowHeadersVisible = False
+            'dgvInfo.Columns("strInfoT").HeaderText = "Info"
+            'dgvInfo.Columns("strInfoT").Width = 100
+            'dgvInfo.Columns("strInfoV").HeaderText = "Wert"
+            'dgvInfo.Columns("strInfoV").Width = 250
 
             'Version
             'Debug.Print("1 " + System.Reflection.Assembly.GetExecutingAssembly().GetName.Version.ToString)

@@ -929,7 +929,7 @@ Public Class MainKreditor
             If intPayDefault = 9 Then 'IBAN
                 If Len(strZVIBAN) > 15 Then
 
-                    If Strings.Mid(strZVIBAN, 5, 1) <> "3" Then
+                    If Strings.Mid(strZVIBAN, 5, 1) <> "3" Or Strings.Left(strZVIBAN, 2) <> "CH" Then
 
                         Call objKrBhg.SetZahlungsverbindung("B",
                                                         strZVIBAN,
