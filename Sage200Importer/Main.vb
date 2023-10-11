@@ -2992,23 +2992,44 @@ ErrorHandler:
                     If Char.IsLetter(CChar(Strings.Left(strKrediBank, 1))) And Char.IsLetter(CChar(Strings.Mid(strKrediBank, 2, 1))) Then
                         'Nun da klar ist, dass es 2 Zeichen sind muss noch geklärt werden. ob es keine CH Bankv. ist
                         If Strings.Left(strKrediBank, 2) <> "CH" Or Strings.Left(strKrediBank, 2) <> "ch" Then
+                            'TODO: Routine ausprogrammieren.
                             subrow("dblMwStSatz") = 0
                             subrow("strMwStKey") = Nothing
+                            subrow("dblNetto") = subrow("dblBrutto")
+                            subrow("dblMwSt") = 0
+                            'If booAutoCorrect Then
+                            '    strStatusText = "MwSt K " + subrow("dblMwst").ToString + " -> " + Val(strSteuer(2)).ToString
+                            '    subrow("dblMwst") = Val(strSteuer(2))
+                            '    subrow("dblBrutto") = subrow("dblNetto") + subrow("dblMwSt")
+                            'Else
+                            '    'Nur korrigieren wenn weniger als 1 Fr
+                            '    strStatusText = "MwSt K " + subrow("dblMwSt").ToString + ", " + Val(strSteuer(2)).ToString
+                            '    If Math.Abs(subrow("dblMwSt") - Val(strSteuer(2))) > 1 Then
+                            '        strStatusText += " >1 "
+                            '        intReturnValue = 1
+                            '    Else
+                            '        strStatusText += " <1 "
+                            '        subrow("dblMwst") = Val(strSteuer(2))
+                            '        subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                            '    End If
+
+                            'End If
                         End If
+                    Else
+                        'subrow("strMwStKey") = "n/a"
                     End If
+                Else
+                    'subrow("strMwStKey") = "null"
+                    'subrow("dblMwst") = 0
+                    'intReturnValue = 0
+
                 End If
 
-                'MwSt prüfen 01
+                'Falsch vergebener MwSt-Schlüssel zurücksetzen
+                If subrow("dblMwStSatz") = 0 And subrow("dblMwSt") = 0 And Len(subrow("strMwStKey")) > 0 Then
+                    subrow("strMwStKey") = Nothing
+                End If
                 If Not IsDBNull(subrow("strMwStKey")) Then
-                    'If subrow("dblMwStSatz") > 0 And subrow("dblMwSt") = 0 Then Stop
-                    If subrow("dblMwStSatz") > 0 And subrow("dblMwSt") > 0 And subrow("strMwStKey") = "ohne" Then Stop
-                    If subrow("dblMwStSatz") = 0 And subrow("dblMwSt") = 0 And subrow("strMwStKey") <> "ohne" Then
-                        subrow("strMwStKey") = "ohne"
-                    End If
-                    intReturnValue = FcCheckMwStToCorrect(objdbconn,
-                                                          subrow("strMwStKey"),
-                                                          subrow("dblMwStSatz"),
-                                                          subrow("dblMwSt"))
                     intReturnValue = FcCheckMwSt(objdbconn,
                                                  objFiBhg,
                                                  subrow("strMwStKey"),
@@ -3017,11 +3038,10 @@ ErrorHandler:
                                                  subrow("lngKto"))
                     If intReturnValue = 0 Then
                         subrow("strMwStKey") = strStrStCodeSage200
-                        'Check of korrekt berechnet
+                        'Check ob korrekt berechnet
                         strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
                         If Val(strSteuer(2)) <> subrow("dblMwst") Then
                             'Im Fall von Auto-Korrekt anpassen
-                            'Stop
                             If booAutoCorrect Then
                                 strStatusText = "MwSt K " + subrow("dblMwst").ToString + " -> " + Val(strSteuer(2)).ToString
                                 subrow("dblMwst") = Val(strSteuer(2))
@@ -3045,10 +3065,9 @@ ErrorHandler:
                     End If
                 Else
                     subrow("strMwStKey") = "null"
-                    subrow("dblMwst") = 0
                     intReturnValue = 0
-
                 End If
+
                 strBitLog += Trim(intReturnValue.ToString)
 
 
@@ -3275,7 +3294,7 @@ ErrorHandler:
 
                 objlocMySQLcmd.CommandText = "Select  * FROM t_sage_sage50mwst WHERE strKey='" + strStrCode + "'"
 
-                objlocMySQLcmd.Connection = objdbconn
+                            objlocMySQLcmd.Connection = objdbconn
                 objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
 
                 If objlocdtMwSt.Rows.Count = 0 Then
@@ -3714,10 +3733,14 @@ ErrorHandler:
             objdbconn.Open()
             'objOrdbconn.Open()
 
+            booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadKAutoCorrect", intAccounting)))
+            'booAutoCorrect = False
+            booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_KKSTHeadToSub", intAccounting)))
+
             For Each row As DataRow In objdtKredits.Rows
 
 
-                'If row("lngKredID") = "6978" Then Stop
+                'If row("lngKredID") = "117383" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -3759,9 +3782,9 @@ ErrorHandler:
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Sub 04
-                booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadKAutoCorrect", intAccounting)))
-                'booAutoCorrect = False
-                booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_KKSTHeadToSub", intAccounting)))
+                'booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadKAutoCorrect", intAccounting)))
+                ''booAutoCorrect = False
+                'booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_KKSTHeadToSub", intAccounting)))
                 intReturnValue = FcCheckKrediSubBookings(row("lngKredID"),
                                                          objdtKreditSubs,
                                                          intSubNumber,
@@ -3776,7 +3799,7 @@ ErrorHandler:
                                                          booCpyKSTToSub,
                                                          row("lngKrediKST"),
                                                          row("intPayType"),
-                                                         row("strKrediBank"))
+                                                         IIf(IsDBNull(row("strKrediBank")), "", row("strKrediBank")))
 
                 strBitLog += Trim(intReturnValue.ToString)
 
@@ -4072,20 +4095,26 @@ ErrorHandler:
                 strBitLog += Trim(intReturnValue.ToString)
 
                 ''Referenz 12
-                If (Not String.IsNullOrEmpty(row("strKredRef"))) And (row("intPayType") = 3 Or row("intPayType") = 10) Then
-                    If Val(Left(row("strKredRef"), Len(row("strKredRef")) - 1)) > 0 Then
-
-                        If Right(row("strKredRef"), 1) <> Main.FcModulo10(Left(row("strKredRef"), Len(row("strKredRef")) - 1)) Then
-                            strBitLog += "1"
-                        Else
-                            strBitLog += "0"
-                        End If
-
-                    Else
-                        strBitLog += "1"
-                    End If
+                If IsDBNull(row("strKredRef")) Then
+                    row("strKredRef") = ""
+                    strBitLog += "1"
                 Else
-                    strBitLog += "0"
+                    If (Not String.IsNullOrEmpty(row("strKredRef"))) And (row("intPayType") = 3 Or row("intPayType") = 10) Then
+                        If Val(Left(row("strKredRef"), Len(row("strKredRef")) - 1)) > 0 Then
+
+                            If Right(row("strKredRef"), 1) <> Main.FcModulo10(Left(row("strKredRef"), Len(row("strKredRef")) - 1)) Then
+                                strBitLog += "1"
+                            Else
+                                strBitLog += "0"
+                            End If
+
+                        Else
+                            strBitLog += "1"
+                        End If
+                    Else
+                        strBitLog += "0"
+                    End If
+
                 End If
                 'Debug.Print("Erfasste Prüfziffer " + Right(row("strKredRef"), 1) + ", kalkuliert " + Main.FcModulo10(Left(row("strKredRef"), Len(row("strKredRef")) - 1)).ToString)
                 'intReturnValue = IIf(IsDBNull(row("strKredRef")), 1, 0)
@@ -4175,9 +4204,9 @@ ErrorHandler:
                     If row("intPayType") = 9 Then
                         strIBANToPass = row("strKredRef")
                     ElseIf row("intPayType") = 10 Then
-                        strIBANToPass = row("strKrediBank")
+                        strIBANToPass = IIf(IsDBNull(row("strKrediBank")), "", row("strKrediBank"))
                     End If
-                    If row("intPayType") = 9 Or row("intPayType") = 10 Then
+                    If (row("intPayType") = 9 Or row("intPayType") = 10) And Len(strIBANToPass) > 0 Then
                         intReturnValue = MainKreditor.FcCheckKreditBank(objdbconn,
                                                        objdbconnZHDB02,
                                                        objKrBuha,

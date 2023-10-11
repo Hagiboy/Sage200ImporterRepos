@@ -30,6 +30,7 @@ Public Class MainDebitor
         'Dim objdrSub As DataRow
         'Dim intFcReturns As Int16
         Dim strMDBName As String
+        Dim strSQLToParse As String
 
 
         Try
@@ -76,6 +77,9 @@ Public Class MainDebitor
             'objlocMySQLcmd.Connection = objdbconn
             'objDTDebiHead.Load(objlocMySQLcmd.ExecuteReader)
             'Durch die Records steppen und Sub-Tabelle füllen
+            strSQLToParse = Main.FcReadFromSettings(objdbconn,
+                                                    "Buchh_SQLDetail",
+                                                    intAccounting)
             For Each row In objdtHead.Rows
                 'Debug.Print(strSQLSub)
                 'If row("intBuchungsart") = 1 Then
@@ -90,9 +94,7 @@ Public Class MainDebitor
                 '    objdtSub.Rows.Add(objdrSub)
                 'End If
                 'If row("strDebRGNbr") = "" Then Stop
-                strSQLSub = MainDebitor.FcSQLParse(Main.FcReadFromSettings(objdbconn,
-                                                                           "Buchh_SQLDetail",
-                                                                           intAccounting),
+                strSQLSub = MainDebitor.FcSQLParse(strSQLToParse,
                                                    row("strDebRGNbr"),
                                                    objdtHead,
                                                    "D")

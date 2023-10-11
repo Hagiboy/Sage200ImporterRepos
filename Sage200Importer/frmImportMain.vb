@@ -2037,6 +2037,7 @@ Friend Class frmImportMain
                             'Belegsnummer abholen
                             KrBhg.IncrBelNbr = "J"
                             intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
+                            'Muss auf Nicht hochzählen gesetzt werden da Sage 200 nicht merkt, dass Beleg-Nr. schon vergeben worden sind. => In den Einstellungen muss von Zeit zu Zeit der Zähler geändert werden
                             KrBhg.IncrBelNbr = "N"
 
                             intReturnValue = MainKreditor.FcCheckKrediExistance(objdbMSSQLConn,
