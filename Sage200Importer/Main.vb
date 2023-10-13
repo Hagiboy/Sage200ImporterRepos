@@ -1190,6 +1190,15 @@ ErrorHandler:
             'objOrdbconn.Open()
             'objdbAccessConn.Open()
 
+            'Variablen einlesen
+            booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
+            booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_KSTHeadToSub", intAccounting)))
+            booSplittBill = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_LinkedBookings", intAccounting)))
+            'TODO: Was ist CashSollCorrect?
+            booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_CashSollKontoKorr", intAccounting)))
+            'TODO: Was ist Generate Pament Booking
+            booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_GeneratePaymentBooking", intAccounting)))
+
             For Each row As DataRow In objdtDebits.Rows
 
                 'If row("strDebRGNbr") = "101261" Then Stop
@@ -1252,16 +1261,16 @@ ErrorHandler:
                 Application.DoEvents()
 
                 'Sub 04
-                booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
-                booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_KSTHeadToSub", intAccounting)))
-                booSplittBill = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_LinkedBookings", intAccounting)))
+                'booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
+                'booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_KSTHeadToSub", intAccounting)))
+                'booSplittBill = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_LinkedBookings", intAccounting)))
                 If booSplittBill And IIf(IsDBNull(row("intRGArt")), 0, row("intRGArt")) = 10 Then
                     row("booLinked") = True
 
                 Else
                     row("booLinked") = False
                 End If
-                booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_CashSollKontoKorr", intAccounting)))
+                'booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_CashSollKontoKorr", intAccounting)))
                 intReturnValue = FcCheckSubBookings(row("strDebRGNbr"),
                                                     objdtDebitSubs,
                                                     intSubNumber,
@@ -1283,7 +1292,7 @@ ErrorHandler:
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Gibt es eine Bezahlbuchung zu erstellen? 
-                booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_GeneratePaymentBooking", intAccounting)))
+                'booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_GeneratePaymentBooking", intAccounting)))
                 If booGeneratePymentBooking And row("intBuchungsart") <> 1 And row("intKtoPayed") > 0 Then
                     'Bedingungen erfüllt
                     Dim drPaymentBuchung As DataRow = objdtDebitSubs.NewRow
@@ -3026,7 +3035,7 @@ ErrorHandler:
                 End If
 
                 'Falsch vergebener MwSt-Schlüssel zurücksetzen
-                If subrow("dblMwStSatz") = 0 And subrow("dblMwSt") = 0 And Len(subrow("strMwStKey")) > 0 Then
+                If subrow("dblMwStSatz") = 0 And subrow("dblMwSt") = 0 And Not IsDBNull(subrow("strMwStKey")) Then
                     subrow("strMwStKey") = Nothing
                 End If
                 If Not IsDBNull(subrow("strMwStKey")) Then
@@ -5306,6 +5315,54 @@ ErrorHandler:
             If objdbconnZHDB02.State = ConnectionState.Open Then
                 'objdbconnZHDB02.Close()
             End If
+
+        End Try
+
+    End Function
+
+    Public Shared Function FcGetDKDef(ByVal intBuha As Int16) As String
+
+        Dim booDebDef As Boolean
+        Dim booKredDef As Boolean
+        Dim objdbcon As New MySqlConnection
+        Dim strReturn As String
+        Dim strFctReturn As String
+
+
+        Try
+
+            objdbcon.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02")
+            objdbcon.Open()
+            'Buha - Kürzel
+            strReturn = FcReadFromSettings(objdbcon, "Buchh200_Name", intBuha)
+            If String.IsNullOrEmpty(strReturn) Then
+                strFctReturn = ", n/a"
+            Else
+                strFctReturn = ", " + strReturn
+            End If
+            'Debitoren - Def vorhanden?
+            strReturn = FcReadFromSettings(objdbcon, "Buchh_SQLHead", intBuha)
+            If String.IsNullOrEmpty(strReturn) Then
+                strFctReturn += ", n/a"
+            Else
+                strFctReturn += ", D"
+            End If
+            'Kreditoren - Def vorhanden?
+            strReturn = FcReadFromSettings(objdbcon, "Buchh_SQLHeadKred", intBuha)
+            If String.IsNullOrEmpty(strReturn) Then
+                strFctReturn += ", n/a"
+            Else
+                strFctReturn += ", K"
+            End If
+
+            Return strFctReturn
+
+        Catch ex As Exception
+            MessageBox.Show("Fehler bei Abfrage Status Buha", ex.Message)
+            Return "Error"
+
+        Finally
+            objdbcon.Close()
 
         End Try
 

@@ -659,6 +659,7 @@ Friend Class frmImportMain
 
     Private Sub frmImportMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
+        Dim strDKDef As String
 
         Try
 
@@ -672,10 +673,17 @@ Friend Class frmImportMain
             'Comboxen
             objdtBuchhaltungen.Clear()
             objDABuchhaltungen.Fill(objdtBuchhaltungen)
+
+            For Each drBuha In objdtBuchhaltungen.Rows
+                strDKDef = Main.FcGetDKDef(drBuha("Buchh_Nr"))
+                drBuha("Buchh_Bez") += strDKDef
+            Next
             'cmbMarken.Sorted = True
             cmbBuha.DataSource = objdtBuchhaltungen
             cmbBuha.DisplayMember = "Buchh_Bez"
             cmbBuha.ValueMember = "Buchh_Nr"
+
+            cmbBuha.DropDownWidth = 330
 
             'Tabelle Debi/ Kredi Head erstellen
             'objdtDebitorenHead = Main.tblDebitorenHead()
