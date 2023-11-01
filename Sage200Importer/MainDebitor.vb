@@ -7,23 +7,21 @@ Imports System.Data.SqlClient
 Imports System.Net
 Imports System.IO
 Imports System.Xml
+Imports System.Data.OleDb
 
 
 Public Class MainDebitor
 
     Public Shared Function FcFillDebit(ByVal intAccounting As Integer,
                                        ByRef objdtHead As DataTable,
-                                       ByRef objdtSub As DataTable,
-                                       ByRef objdbconn As MySqlConnection,
-                                       ByRef objdbAccessConn As OleDb.OleDbConnection,
-                                       ByRef objOracleCon As OracleConnection,
-                                       ByRef objOracleCmd As OracleCommand) As Integer
+                                       ByRef objdtSub As DataTable) As Integer
 
         Dim strSQL As String
         Dim strSQLSub As String
         Dim strRGTableType As String
         Dim objRGMySQLConn As New MySqlConnection
         Dim objlocMySQLcmd As New MySqlCommand
+        Dim objdbAccessConn As New OleDb.OleDbConnection
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
 
         'Dim objDTDebiHead As New DataTable
@@ -35,26 +33,19 @@ Public Class MainDebitor
 
         Try
 
-            objdbconn.Open()
-
-            strMDBName = Main.FcReadFromSettings(objdbconn,
-                                                 "Buchh_RGTableMDB",
+            strMDBName = Main.FcReadFromSettingsII("Buchh_RGTableMDB",
                                                  intAccounting)
 
             'Head Debitoren löschen
-            objdtHead.Clear()
-            objdtHead.Constraints.Clear()
-            objdtHead.Dispose()
+            'objdtHead.Clear()
+            'objdtHead.Constraints.Clear()
 
-            objdtSub.Clear()
-            objdtSub.Constraints.Clear()
-            objdtSub.Dispose()
+            'objdtSub.Clear()
+            'objdtSub.Constraints.Clear()
 
-            strSQL = Main.FcReadFromSettings(objdbconn,
-                                             "Buchh_SQLHead",
+            strSQL = Main.FcReadFromSettingsII("Buchh_SQLHead",
                                              intAccounting)
-            strRGTableType = Main.FcReadFromSettings(objdbconn,
-                                                     "Buchh_RGTableType",
+            strRGTableType = Main.FcReadFromSettingsII("Buchh_RGTableType",
                                                      intAccounting)
 
             'objlocMySQLcmd.CommandText = strSQL
@@ -64,21 +55,22 @@ Public Class MainDebitor
                                                   strMDBName)
 
                 objlocOLEdbcmd.CommandText = strSQL
-                objdbAccessConn.Open()
                 objlocOLEdbcmd.Connection = objdbAccessConn
+                objdbAccessConn.Open()
                 objdtHead.Load(objlocOLEdbcmd.ExecuteReader)
+                objdbAccessConn.Close()
             ElseIf strRGTableType = "M" Then
                 objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                 objlocMySQLcmd.Connection = objRGMySQLConn
                 objlocMySQLcmd.CommandText = strSQL
                 objRGMySQLConn.Open()
                 objdtHead.Load(objlocMySQLcmd.ExecuteReader)
+                objRGMySQLConn.Close()
             End If
             'objlocMySQLcmd.Connection = objdbconn
             'objDTDebiHead.Load(objlocMySQLcmd.ExecuteReader)
             'Durch die Records steppen und Sub-Tabelle füllen
-            strSQLToParse = Main.FcReadFromSettings(objdbconn,
-                                                    "Buchh_SQLDetail",
+            strSQLToParse = Main.FcReadFromSettingsII("Buchh_SQLDetail",
                                                     intAccounting)
             For Each row In objdtHead.Rows
                 'Debug.Print(strSQLSub)
@@ -100,10 +92,14 @@ Public Class MainDebitor
                                                    "D")
                 If strRGTableType = "A" Then
                     objlocOLEdbcmd.CommandText = strSQLSub
+                    objdbAccessConn.Open()
                     objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
+                    objdbAccessConn.Close()
                 ElseIf strRGTableType = "M" Then
                     objlocMySQLcmd.CommandText = strSQLSub
+                    objRGMySQLConn.Open()
                     objdtSub.Load(objlocMySQLcmd.ExecuteReader)
+                    objRGMySQLConn.Close()
                 End If
 
                 Application.DoEvents()
@@ -128,11 +124,11 @@ Public Class MainDebitor
             If objRGMySQLConn.State = ConnectionState.Open Then
                 objRGMySQLConn.Close()
             End If
-            objdbconn.Close()
 
-            objRGMySQLConn.Dispose()
-            objlocMySQLcmd.Dispose()
-            objlocOLEdbcmd.Dispose()
+            objRGMySQLConn = Nothing
+            objdbAccessConn = Nothing
+            objlocMySQLcmd = Nothing
+            objlocOLEdbcmd = Nothing
 
         End Try
 
@@ -3102,6 +3098,162 @@ Public Class MainDebitor
 
         Finally
             objdbMSSQLConn.Close()
+
+        End Try
+
+
+    End Function
+
+    Public Shared Function FcWriteDebHeadToDB(ByVal objdtDebitorenHeadRead As DataTable,
+                                              ByVal intBuha As Int16) As Int16
+
+        'Returns: 0=ok, 9=Problem
+
+        'Tabelle speichern.
+        Dim strSQLFields As String
+        Dim strSQLValues As String
+        Dim strActualValue As String
+        Dim intdbAffected As Int16
+        Dim objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
+        Dim objdbcommand As New MySqlCommand
+
+        Try
+
+            For Each drDebitorenHead As DataRow In objdtDebitorenHeadRead.Rows
+                For Each clDebitorenHead As DataColumn In drDebitorenHead.Table.Columns
+                    'Feldnamen zusammenstellen
+                    strSQLFields = strSQLFields + IIf(Len(strSQLFields) > 0, ", ", "(") + clDebitorenHead.ColumnName
+                    'Je nach Feld andere Werte setzen
+                    Select Case clDebitorenHead.ColumnName
+                        Case "intBuchhaltung"
+                            strActualValue = intBuha.ToString
+                            'Case "booDebBook"
+                            '    strActualValue = "false"
+                        Case Else
+                            'Wert je nach Typ mit oder ohne ' setzen
+                            Select Case clDebitorenHead.DataType.Name
+                                Case "String"
+                                    strActualValue = "'" + drDebitorenHead.Item(clDebitorenHead.ColumnName).ToString + "'"
+                                Case "DateTime"
+                                    If IsDBNull(drDebitorenHead.Item(clDebitorenHead.ColumnName)) Then
+                                        strActualValue = "null"
+                                    Else
+                                        strActualValue = "'" + DateAndTime.Year(drDebitorenHead.Item(clDebitorenHead.ColumnName)).ToString + "-" + DateAndTime.Month(drDebitorenHead.Item(clDebitorenHead.ColumnName)).ToString + "-" + DateAndTime.Day(drDebitorenHead.Item(clDebitorenHead.ColumnName)).ToString + "'"
+                                    End If
+                                Case "Boolean"
+                                    If IsDBNull(drDebitorenHead.Item(clDebitorenHead.ColumnName)) Then
+                                        strActualValue = "false"
+                                    ElseIf drDebitorenHead.Item(clDebitorenHead.ColumnName) = 0 Then
+                                        strActualValue = "false"
+                                    Else
+                                        strActualValue = "true"
+                                    End If
+                                Case Else
+                                    If IsDBNull(drDebitorenHead.Item(clDebitorenHead.ColumnName)) Then
+                                        strActualValue = "null"
+                                    Else
+                                        strActualValue = drDebitorenHead.Item(clDebitorenHead.ColumnName).ToString
+                                    End If
+                            End Select
+                    End Select
+                    strSQLValues = strSQLValues + IIf(Len(strSQLValues) > 0, ", ", "(") + strActualValue
+                Next
+                'Jetzt noch Identity und Process - ID hinzufügen
+                strSQLFields = strSQLFields + ", IdentityName, ProcessID)"
+                strSQLValues = strSQLValues + ", '" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "', " + Process.GetCurrentProcess().Id.ToString + ")"
+                objdbConn.Open()
+                objdbcommand.Connection = objdbConn
+                objdbcommand.CommandText = "INSERT INTO tbldebitorenjhead " + strSQLFields + " VALUES " + strSQLValues
+                intdbAffected = objdbcommand.ExecuteNonQuery()
+                objdbConn.Close()
+                strSQLFields = ""
+                strSQLValues = ""
+                strActualValue = ""
+            Next
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Debitor - HeadTabelleTODB ")
+            Return 9
+
+        Finally
+            objdbcommand = Nothing
+            objdbConn = Nothing
+
+        End Try
+
+
+    End Function
+
+    Public Shared Function FcWriteDebSubToDB(ByVal objdtDebitorenHeadRead As DataTable) As Int16
+
+        'Returns: 0=ok, 9=Problem
+
+        'Tabelle speichern.
+        Dim strSQLFields As String
+        Dim strSQLValues As String
+        Dim strActualValue As String
+        Dim intdbAffected As Int16
+        Dim objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
+        Dim objdbcommand As New MySqlCommand
+
+        Try
+
+            For Each drDebitorenHead As DataRow In objdtDebitorenHeadRead.Rows
+                For Each clDebitorenHead As DataColumn In drDebitorenHead.Table.Columns
+                    'Feldnamen zusammenstellen
+                    strSQLFields = strSQLFields + IIf(Len(strSQLFields) > 0, ", ", "(") + clDebitorenHead.ColumnName
+                    'Je nach Feld andere Werte setzen
+
+                    'Wert je nach Typ mit oder ohne ' setzen
+                    Select Case clDebitorenHead.DataType.Name
+                        Case "String"
+                            strActualValue = "'" + drDebitorenHead.Item(clDebitorenHead.ColumnName).ToString + "'"
+                        Case "DateTime"
+                            If IsDBNull(drDebitorenHead.Item(clDebitorenHead.ColumnName)) Then
+                                strActualValue = "null"
+                            Else
+                                strActualValue = "'" + DateAndTime.Year(drDebitorenHead.Item(clDebitorenHead.ColumnName)).ToString + "-" + DateAndTime.Month(drDebitorenHead.Item(clDebitorenHead.ColumnName)).ToString + "-" + DateAndTime.Day(drDebitorenHead.Item(clDebitorenHead.ColumnName)).ToString + "'"
+                            End If
+                        Case "Boolean"
+                            If IsDBNull(drDebitorenHead.Item(clDebitorenHead.ColumnName)) Then
+                                strActualValue = "false"
+                            ElseIf drDebitorenHead.Item(clDebitorenHead.ColumnName) = 0 Then
+                                strActualValue = "false"
+                            Else
+                                strActualValue = "true"
+                            End If
+                        Case Else
+                            If IsDBNull(drDebitorenHead.Item(clDebitorenHead.ColumnName)) Then
+                                strActualValue = "null"
+                            Else
+                                strActualValue = drDebitorenHead.Item(clDebitorenHead.ColumnName).ToString
+                            End If
+                    End Select
+
+                    strSQLValues = strSQLValues + IIf(Len(strSQLValues) > 0, ", ", "(") + strActualValue
+                Next
+                'Jetzt noch Identity und Process - ID hinzufügen
+                strSQLFields = strSQLFields + ", IdentityName, ProcessID)"
+                strSQLValues = strSQLValues + ", '" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "', " + Process.GetCurrentProcess().Id.ToString + ")"
+                objdbConn.Open()
+                objdbcommand.Connection = objdbConn
+                objdbcommand.CommandText = "INSERT INTO tbldebitorensub " + strSQLFields + " VALUES " + strSQLValues
+                intdbAffected = objdbcommand.ExecuteNonQuery()
+                objdbConn.Close()
+                strSQLFields = ""
+                strSQLValues = ""
+                strActualValue = ""
+            Next
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Debitor - SubTabelleTODB ")
+            Return 9
+
+        Finally
+            objdbcommand = Nothing
+            objdbConn = Nothing
 
         End Try
 

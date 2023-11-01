@@ -109,7 +109,25 @@ Friend Class frmImportMain
         'Dim objdtDebitorenSub As New DataTable("tbliDebiSub")
 
         Dim strIncrBelNbr As String = String.Empty
+        Dim intFunctionReturns As Int16
 
+        'Debitoren - Head
+        Dim daDebitorenHead As New MySqlDataAdapter()
+        Dim daselDebitorenHead As New MySqlCommand("SELECT * FROM tbldebitorenjhead WHERE IdentityName='" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
+        Dim cmbDebitorenHead As New MySqlCommandBuilder(daDebitorenHead)
+        Dim dadelDebitorenHead As New MySqlCommand("DELETE FROM tbldebitorenjhead WHERE IdentityName='" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
+        Dim dsDebitorenHead As New DataSet()
+        daDebitorenHead.SelectCommand = daselDebitorenHead
+        daDebitorenHead.DeleteCommand = dadelDebitorenHead
+
+        'Debitoren - Sub
+        Dim daDebitorenSub As New MySqlDataAdapter()
+        Dim daselDebitorenSub As New MySqlCommand("SELECT * FROM tbldebitorensub WHERE IdentityName='" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
+        Dim cmdDebitorenSub As New MySqlCommandBuilder(daDebitorenSub)
+        Dim dadelDebitorenSub As New MySqlCommand("DELETE FROM tbldebitorensub WHERE IdentityName='" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
+        Dim dsDebitorenSub As New DataSet()
+        daDebitorenSub.SelectCommand = daselDebitorenSub
+        daDebitorenSub.DeleteCommand = dadelDebitorenSub
 
         Try
 
@@ -132,7 +150,7 @@ Friend Class frmImportMain
             'objdtDebitorenSub.Dispose()
 
             'Tabelle Debi/ Kredi Head erstellen
-            objdtDebitorenHead = Main.tblDebitorenHead()
+            'objdtDebitorenHead = Main.tblDebitorenHead()
             objdtDebitorenHeadRead = Main.tblDebitorenHead()
 
 
@@ -153,7 +171,7 @@ Friend Class frmImportMain
             dgvBookings.DataSource = Nothing
             'dgvBookings.Rows.Clear()
             'dgvBookings.Columns.Clear()
-            dgvBookingSub.DataSource = Nothing
+            'dgvBookingSub.DataSource = Nothing
             'dgvBookingSub.Rows.Clear()
             'dgvBookingSub.Columns.Clear()
             dgvInfo.DataSource = Nothing
@@ -199,14 +217,37 @@ Friend Class frmImportMain
 
             Call MainDebitor.FcFillDebit(cmbBuha.SelectedValue,
                                          objdtDebitorenHeadRead,
-                                         objdtDebitorenSub,
-                                         objdbConn,
-                                         objdbAccessConn,
-                                         objOracleConn,
-                                         objOracleCmd)
+                                         objdtDebitorenSub)
 
-            Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead,
-                                                objdtDebitorenHead)
+            'Zuerst DS von DB löschen
+            objdbConn.Open()
+            daDebitorenHead.DeleteCommand.ExecuteNonQuery()
+            daDebitorenSub.DeleteCommand.ExecuteNonQuery()
+            objdbConn.Close()
+
+            'Head in Tabelle schreiben
+            intFunctionReturns = MainDebitor.FcWriteDebHeadToDB(objdtDebitorenHeadRead,
+                                                                cmbBuha.SelectedValue)
+            'Anzahl schreiben
+            txtNumber.Text = objdtDebitorenHeadRead.Rows.Count.ToString
+
+            objdtDebitorenHeadRead = Nothing
+            daDebitorenHead.Fill(dsDebitorenHead, "tblDebiHeadsFromUser")
+            dsDebitorenHead.Tables("tblDebiHeadsFromUser").AcceptChanges()
+
+            dgvBookings.DataSource = dsDebitorenHead.Tables("tblDebiHeadsFromUser")
+
+            'Sub in Tabelle schreiben
+            intFunctionReturns = MainDebitor.FcWriteDebSubToDB(objdtDebitorenSub)
+
+            objdtDebitorenSub = Nothing
+            daDebitorenSub.Fill(dsDebitorenSub, "tblDebiSubsFromUser")
+            dsDebitorenSub.Tables("tblDebiSubsFromUser").AcceptChanges()
+
+            'dgvBookingSub.DataSource = dsDebitorenSub.Tables("tblDebiSubsFromUser")
+
+            'Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead,
+            '                                    objdtDebitorenHead)
 
             'Grid neu aufbauen
             Application.DoEvents()
@@ -215,8 +256,8 @@ Friend Class frmImportMain
             'dgvBookings.Refresh()
 
             Call Main.FcCheckDebit(cmbBuha.SelectedValue,
-                                   objdtDebitorenHead,
-                                   objdtDebitorenSub,
+                                   dsDebitorenHead,
+                                   dsDebitorenSub,
                                    Finanz,
                                    FBhg,
                                    DbBhg,
@@ -244,18 +285,24 @@ Friend Class frmImportMain
                                    chkValutaCorrect.Checked,
                                    dtpValutaCorrect.Value)
 
+            Dim rowsHead As DataRow() = dsDebitorenHead.Tables("tblDebiHeadsFromUser").Select(vbNullString, vbNullString, DataViewRowState.ModifiedCurrent)
+            daDebitorenHead.Update(rowsHead)
+
+            Dim rowsSub As DataRow() = dsDebitorenSub.Tables("tblDebiSubsFromUser").Select(vbNullString, vbNullString, DataViewRowState.ModifiedCurrent)
+            daDebitorenSub.Update(rowsSub)
+
             'Versuch ob stabiler
-            dgvBookings.DataSource = objdtDebitorenHead
-            dgvBookingSub.DataSource = objdtDebitorenSub
-            dgvInfo.DataSource = objdtInfo
-            objdbConn.Open()
-            Call InitdgvDebitoren()
-            Call InitdgvDebitorenSub()
-            Call InitdgvInfo()
-            objdbConn.Close()
+            'dgvBookings.DataSource = objdtDebitorenHead
+            'dgvBookingSub.DataSource = objdtDebitorenSub
+            'dgvInfo.DataSource = objdtInfo
+            'objdbConn.Open()
+            'Call InitdgvDebitoren()
+            'Call InitdgvDebitorenSub()
+            'Call InitdgvInfo()
+            'objdbConn.Close()
 
             'Anzahl schreiben
-            txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
+            'txtNumber.Text = objdtDebitorenHead.Rows.Count.ToString
             Me.Cursor = Cursors.Default
 
             ''Ipmort Kredit hiden
@@ -354,7 +401,7 @@ Friend Class frmImportMain
             'Dim cmbBuchungsart As New DataGridViewComboBoxColumn()
             'Dim objdtBA As New DataTable("objidtBA")
             'Dim objlocMySQLcmd As New MySqlCommand
-            'objlocMySQLcmd.CommandText = "SELECT * FROM t_sage_tblbuchungsarten"
+            'objlocMySQLcmd.CommandText = "Select * FROM t_sage_tblbuchungsarten"
             'objlocMySQLcmd.Connection = objdbConn
             'objdtBA.Load(objlocMySQLcmd.ExecuteReader)
             'cmbBuchungsart.DataSource = objdtBA
@@ -540,7 +587,7 @@ Friend Class frmImportMain
             'Dim objdtBA As New DataTable("objidtBA")
             'Dim objlocMySQLcmd As New MySqlCommand
             ''objdbConn.Open()
-            'objlocMySQLcmd.CommandText = "SELECT * FROM t_sage_tblbuchungsarten"
+            'objlocMySQLcmd.CommandText = "Select * FROM t_sage_tblbuchungsarten"
             'objlocMySQLcmd.Connection = objdbConn
             'objdtBA.Load(objlocMySQLcmd.ExecuteReader)
             'cmbBuchungsart.DataSource = objdtBA
@@ -727,7 +774,7 @@ Friend Class frmImportMain
             'objdbConn.Close()
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Error in Load" + Err.Number.ToString)
+            MessageBox.Show(ex.Message, "Error In Load" + Err.Number.ToString)
 
         End Try
 
@@ -1013,7 +1060,7 @@ Friend Class frmImportMain
                         End Try
 
                         selDebiSub = objdtDebitorenSub.Select("strRGNr='" + row("strDebRGNbr") + "'")
-                        strRGNbr = row("strDebRGNbr")
+        strRGNbr = row("strDebRGNbr")
 
                         For Each SubRow As DataRow In selDebiSub
 

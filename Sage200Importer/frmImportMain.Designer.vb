@@ -103,6 +103,7 @@ Partial Class frmImportMain
         '
         'dgvBookings
         '
+        Me.dgvBookings.AllowUserToOrderColumns = True
         Me.dgvBookings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvBookings.Location = New System.Drawing.Point(12, 158)
         Me.dgvBookings.Name = "dgvBookings"
@@ -121,6 +122,7 @@ Partial Class frmImportMain
         '
         'dgvBookingSub
         '
+        Me.dgvBookingSub.AllowUserToOrderColumns = True
         Me.dgvBookingSub.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         DataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
         DataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window
@@ -137,6 +139,7 @@ Partial Class frmImportMain
         '
         'dgvInfo
         '
+        Me.dgvInfo.AllowUserToOrderColumns = True
         Me.dgvInfo.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         DataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
         DataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window

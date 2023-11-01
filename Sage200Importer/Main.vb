@@ -1096,17 +1096,50 @@ ErrorHandler:
             MessageBox.Show(ex.Message, "Einstellung lesen")
 
         Finally
-            objlocdtSetting.Dispose()
-            objlocMySQLcmd.Dispose()
+            objlocdtSetting = Nothing
+            objlocMySQLcmd = Nothing
 
         End Try
 
 
     End Function
 
+    Public Shared Function FcReadFromSettingsII(ByVal strField As String,
+                                              ByVal intMandant As Int16) As String
+
+        Dim objdbconn As New MySqlConnection
+        Dim objlocdtSetting As New DataTable("tbllocSettings")
+        Dim objlocMySQLcmd As New MySqlCommand
+
+        Try
+
+            objlocMySQLcmd.CommandText = "SELECT t_sage_buchhaltungen." + strField + " FROM t_sage_buchhaltungen WHERE Buchh_Nr=" + intMandant.ToString
+            'Debug.Print(objlocMySQLcmd.CommandText)
+            objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
+            objdbconn.Open()
+            objlocMySQLcmd.Connection = objdbconn
+            objlocdtSetting.Load(objlocMySQLcmd.ExecuteReader)
+            objdbconn.Close()
+            'Debug.Print("Records" + objlocdtSetting.Rows.Count.ToString)
+            'Debug.Print("Return " + objlocdtSetting.Rows(0).Item(0).ToString)
+            Return objlocdtSetting.Rows(0).Item(0).ToString
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Einstellung lesen")
+
+        Finally
+            objlocdtSetting = Nothing
+            objlocMySQLcmd = Nothing
+            objdbconn = Nothing
+
+        End Try
+
+    End Function
+
     Public Shared Function FcCheckDebit(ByVal intAccounting As Integer,
-                                        ByRef objdtDebits As DataTable,
-                                        ByRef objdtDebitSubs As DataTable,
+                                        ByRef objdtDebits As DataSet,
+                                        ByRef objdtDebitSubs As DataSet,
                                         ByRef objFinanz As SBSXASLib.AXFinanz,
                                         ByRef objfiBuha As SBSXASLib.AXiFBhg,
                                         ByRef objdbBuha As SBSXASLib.AXiDbBhg,
@@ -1191,18 +1224,29 @@ ErrorHandler:
             'objdbAccessConn.Open()
 
             'Variablen einlesen
-            booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_HeadAutoCorrect", intAccounting)))
-            booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_KSTHeadToSub", intAccounting)))
-            booSplittBill = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_LinkedBookings", intAccounting)))
+            booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_HeadAutoCorrect", intAccounting)))
+            booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_KSTHeadToSub", intAccounting)))
+            booSplittBill = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_LinkedBookings", intAccounting)))
             'TODO: Was ist CashSollCorrect?
-            booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_CashSollKontoKorr", intAccounting)))
+            booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_CashSollKontoKorr", intAccounting)))
             'TODO: Was ist Generate Pament Booking
-            booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_GeneratePaymentBooking", intAccounting)))
+            booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_GeneratePaymentBooking", intAccounting)))
 
-            For Each row As DataRow In objdtDebits.Rows
+            objdtDebits.Tables(0).Columns("dblDebNetto").ReadOnly = False
+            objdtDebits.Tables(0).Columns("dblDebMwSt").ReadOnly = False
+            objdtDebits.Tables(0).Columns("dblDebBrutto").ReadOnly = False
+            objdtDebits.Tables(0).Columns("datRGCreate").ReadOnly = False
+            objdtDebits.Tables(0).Columns("booCrToInv").ReadOnly = False
+            objdtDebits.Tables(0).Columns("intKtoPayed").ReadOnly = False
+            objdtDebits.Tables(0).Columns("lngDebNbr").ReadOnly = False
+            objdtDebits.Tables(0).Columns("booLinked").ReadOnly = False
+
+
+            For Each row As DataRow In objdtDebits.Tables(0).Rows
 
                 'If row("strDebRGNbr") = "101261" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
+                Debug.Print("Start check RG " + strRGNbr + ", " + strcmbBuha)
 
                 'Runden
                 row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 4, MidpointRounding.AwayFromZero)
@@ -1271,8 +1315,9 @@ ErrorHandler:
                     row("booLinked") = False
                 End If
                 'booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_CashSollKontoKorr", intAccounting)))
+                Debug.Print("Before Sub RG " + strRGNbr + ", " + strcmbBuha)
                 intReturnValue = FcCheckSubBookings(row("strDebRGNbr"),
-                                                    objdtDebitSubs,
+                                                    objdtDebitSubs.Tables(0),
                                                     intSubNumber,
                                                     dblSubBrutto,
                                                     dblSubNetto,
@@ -1295,7 +1340,7 @@ ErrorHandler:
                 'booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_GeneratePaymentBooking", intAccounting)))
                 If booGeneratePymentBooking And row("intBuchungsart") <> 1 And row("intKtoPayed") > 0 Then
                     'Bedingungen erfüllt
-                    Dim drPaymentBuchung As DataRow = objdtDebitSubs.NewRow
+                    Dim drPaymentBuchung As DataRow = objdtDebitSubs.Tables(0).NewRow
                     'Felder zuweisen
                     drPaymentBuchung("strRGNr") = row("strDebRGNbr")
                     drPaymentBuchung("intSollHaben") = 0
@@ -1312,7 +1357,7 @@ ErrorHandler:
                     drPaymentBuchung("strMwStKey") = "null"
                     drPaymentBuchung("strArtikel") = "Bezahlvorgang"
                     drPaymentBuchung("strDebSubText") = "Bezahlvorgang"
-                    objdtDebitSubs.Rows.Add(drPaymentBuchung)
+                    objdtDebitSubs.Tables(0).Rows.Add(drPaymentBuchung)
                     drPaymentBuchung = Nothing
                     'Summe der Sub-Buchungen anpassen
                     dblSubBrutto = Decimal.Round(dblSubBrutto + row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
@@ -1380,7 +1425,7 @@ ErrorHandler:
                             dblRDiffNetto = 0 ' row("dblDebNetto") - Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
 
                             'Zu sub-Table hinzifügen
-                            Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
+                            Dim objdrDebiSub As DataRow = objdtDebitSubs.Tables(0).NewRow
                             objdrDebiSub("strRGNr") = row("strDebRGNbr")
                             objdrDebiSub("intSollHaben") = 1
                             objdrDebiSub("lngKto") = 6906
@@ -1400,7 +1445,7 @@ ErrorHandler:
                             Else
                                 objdrDebiSub("strStatusUBText") = "ok"
                             End If
-                            objdtDebitSubs.Rows.Add(objdrDebiSub)
+                            objdtDebitSubs.Tables(0).Rows.Add(objdrDebiSub)
                             objdrDebiSub = Nothing
                             'Summe der Sub-Buchungen anpassen
                             dblSubBrutto = Decimal.Round(dblSubBrutto - dblRDiffBrutto, 2, MidpointRounding.AwayFromZero)
@@ -1470,7 +1515,7 @@ ErrorHandler:
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Status-String auswerten, vorziehen um neue PK - Nummer auszulesen
-                booPKPrivate = IIf(FcReadFromSettings(objdbconn, "Buchh_PKTable", intAccounting) = "t_customer", True, False)
+                booPKPrivate = IIf(FcReadFromSettingsII("Buchh_PKTable", intAccounting) = "t_customer", True, False)
                 'Debitor
                 If Left(strBitLog, 1) <> "0" Then
                     strStatus += "Deb"
@@ -1741,13 +1786,13 @@ ErrorHandler:
                     End If
 
                     'UB - Löschen und Buchung erstellen ohne MwSt und ohne KST da schon in RG 1 beinhaltet
-                    selSBrows = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
+                    selSBrows = objdtDebitSubs.Tables(0).Select("strRGNr='" + row("strDebRGNbr") + "'")
 
                     For Each SBsubrow As DataRow In selSBrows
                         SBsubrow.Delete()
                     Next
 
-                    Dim drSBBuchung As DataRow = objdtDebitSubs.NewRow
+                    Dim drSBBuchung As DataRow = objdtDebitSubs.Tables(0).NewRow
                     'Felder zuweisen
                     drSBBuchung("strRGNr") = row("strDebRGNbr")
                     drSBBuchung("intSollHaben") = 1
@@ -1764,7 +1809,7 @@ ErrorHandler:
                     drSBBuchung("strMwStKey") = "null"
                     drSBBuchung("strArtikel") = "SB - Buchung"
                     drSBBuchung("strDebSubText") = row("lngDebIdentNbr").ToString + ", FRG, " + row("lngLinkedRG").ToString
-                    objdtDebitSubs.Rows.Add(drSBBuchung)
+                    objdtDebitSubs.Tables(0).Rows.Add(drSBBuchung)
                     drSBBuchung = Nothing
 
                 Else
@@ -1812,8 +1857,7 @@ ErrorHandler:
                     row("intZKond") = intDZKond
                 End If
                 'Prüfem ob Zahlungs-Kondition - ID existiert in Sage 200 bei Mandant
-                strMandant = FcReadFromSettings(objdbconn,
-                                                "Buchh200_Name",
+                strMandant = FcReadFromSettingsII("Buchh200_Name",
                                                 intAccounting)
                 intReturnValue = MainDebitor.FcCheckDZKond(objdbSQLConn,
                                                            objdbSQLCmd,
@@ -1975,7 +2019,7 @@ ErrorHandler:
                                                                                 "Buchh_TextSpecialText",
                                                                                 intAccounting),
                                                              row("strDebRGNbr"),
-                                                             objdtDebits,
+                                                             objdtDebits.Tables(0),
                                                              "D")
                     row("strDebText") = strDebiHeadText
                 End If
@@ -1987,14 +2031,14 @@ ErrorHandler:
                                                                                "Buchh_SubTextSpecialText",
                                                                                intAccounting),
                                                             row("strDebRGNbr"),
-                                                            objdtDebits,
+                                                            objdtDebits.Tables(0),
                                                             "D")
                 Else
                     strDebiSubText = row("strDebText")
                 End If
                 'Falls nicht SB - Linked dann Text in SB ersetzen
                 If Not row("booLinked") Then
-                    selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
+                    selsubrow = objdtDebitSubs.Tables(0).Select("strRGNr='" + row("strDebRGNbr") + "'")
                     For Each subrow In selsubrow
                         subrow("strDebSubText") = strDebiSubText
                     Next
@@ -2010,6 +2054,7 @@ ErrorHandler:
                 intDZKond = 0
 
                 Application.DoEvents()
+                Debug.Print("End check RG " + strRGNbr + ", " + strcmbBuha)
 
             Next
 
