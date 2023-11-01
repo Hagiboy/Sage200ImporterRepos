@@ -3133,7 +3133,10 @@ Public Class MainDebitor
                             'Wert je nach Typ mit oder ohne ' setzen
                             Select Case clDebitorenHead.DataType.Name
                                 Case "String"
-                                    strActualValue = "'" + drDebitorenHead.Item(clDebitorenHead.ColumnName).ToString + "'"
+                                    strActualValue = drDebitorenHead.Item(clDebitorenHead.ColumnName).ToString
+                                    'Apostrophs entfernen
+                                    strActualValue = Replace(strActualValue, "'", "`")
+                                    strActualValue = "'" + strActualValue + "'"
                                 Case "DateTime"
                                     If IsDBNull(drDebitorenHead.Item(clDebitorenHead.ColumnName)) Then
                                         strActualValue = "null"

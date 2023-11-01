@@ -1139,7 +1139,7 @@ ErrorHandler:
 
     Public Shared Function FcCheckDebit(ByVal intAccounting As Integer,
                                         ByRef objdtDebits As DataSet,
-                                        ByRef objdtDebitSubs As DataSet,
+                                        ByRef objdtDebitSubs As DataTable,
                                         ByRef objFinanz As SBSXASLib.AXFinanz,
                                         ByRef objfiBuha As SBSXASLib.AXiFBhg,
                                         ByRef objdbBuha As SBSXASLib.AXiDbBhg,
@@ -1232,14 +1232,14 @@ ErrorHandler:
             'TODO: Was ist Generate Pament Booking
             booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_GeneratePaymentBooking", intAccounting)))
 
-            objdtDebits.Tables(0).Columns("dblDebNetto").ReadOnly = False
-            objdtDebits.Tables(0).Columns("dblDebMwSt").ReadOnly = False
-            objdtDebits.Tables(0).Columns("dblDebBrutto").ReadOnly = False
-            objdtDebits.Tables(0).Columns("datRGCreate").ReadOnly = False
-            objdtDebits.Tables(0).Columns("booCrToInv").ReadOnly = False
-            objdtDebits.Tables(0).Columns("intKtoPayed").ReadOnly = False
-            objdtDebits.Tables(0).Columns("lngDebNbr").ReadOnly = False
-            objdtDebits.Tables(0).Columns("booLinked").ReadOnly = False
+            'objdtDebits.Tables(0).Columns("dblDebNetto").ReadOnly = False
+            'objdtDebits.Tables(0).Columns("dblDebMwSt").ReadOnly = False
+            'objdtDebits.Tables(0).Columns("dblDebBrutto").ReadOnly = False
+            'objdtDebits.Tables(0).Columns("datRGCreate").ReadOnly = False
+            'objdtDebits.Tables(0).Columns("booCrToInv").ReadOnly = False
+            'objdtDebits.Tables(0).Columns("intKtoPayed").ReadOnly = False
+            'objdtDebits.Tables(0).Columns("lngDebNbr").ReadOnly = False
+            'objdtDebits.Tables(0).Columns("booLinked").ReadOnly = False
 
 
             For Each row As DataRow In objdtDebits.Tables(0).Rows
@@ -1317,7 +1317,7 @@ ErrorHandler:
                 'booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_CashSollKontoKorr", intAccounting)))
                 Debug.Print("Before Sub RG " + strRGNbr + ", " + strcmbBuha)
                 intReturnValue = FcCheckSubBookings(row("strDebRGNbr"),
-                                                    objdtDebitSubs.Tables(0),
+                                                    objdtDebitSubs,
                                                     intSubNumber,
                                                     dblSubBrutto,
                                                     dblSubNetto,
@@ -1340,7 +1340,7 @@ ErrorHandler:
                 'booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_GeneratePaymentBooking", intAccounting)))
                 If booGeneratePymentBooking And row("intBuchungsart") <> 1 And row("intKtoPayed") > 0 Then
                     'Bedingungen erfüllt
-                    Dim drPaymentBuchung As DataRow = objdtDebitSubs.Tables(0).NewRow
+                    Dim drPaymentBuchung As DataRow = objdtDebitSubs.NewRow
                     'Felder zuweisen
                     drPaymentBuchung("strRGNr") = row("strDebRGNbr")
                     drPaymentBuchung("intSollHaben") = 0
@@ -1357,7 +1357,7 @@ ErrorHandler:
                     drPaymentBuchung("strMwStKey") = "null"
                     drPaymentBuchung("strArtikel") = "Bezahlvorgang"
                     drPaymentBuchung("strDebSubText") = "Bezahlvorgang"
-                    objdtDebitSubs.Tables(0).Rows.Add(drPaymentBuchung)
+                    objdtDebitSubs.Rows.Add(drPaymentBuchung)
                     drPaymentBuchung = Nothing
                     'Summe der Sub-Buchungen anpassen
                     dblSubBrutto = Decimal.Round(dblSubBrutto + row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
@@ -1425,7 +1425,7 @@ ErrorHandler:
                             dblRDiffNetto = 0 ' row("dblDebNetto") - Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
 
                             'Zu sub-Table hinzifügen
-                            Dim objdrDebiSub As DataRow = objdtDebitSubs.Tables(0).NewRow
+                            Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
                             objdrDebiSub("strRGNr") = row("strDebRGNbr")
                             objdrDebiSub("intSollHaben") = 1
                             objdrDebiSub("lngKto") = 6906
@@ -1445,7 +1445,7 @@ ErrorHandler:
                             Else
                                 objdrDebiSub("strStatusUBText") = "ok"
                             End If
-                            objdtDebitSubs.Tables(0).Rows.Add(objdrDebiSub)
+                            objdtDebitSubs.Rows.Add(objdrDebiSub)
                             objdrDebiSub = Nothing
                             'Summe der Sub-Buchungen anpassen
                             dblSubBrutto = Decimal.Round(dblSubBrutto - dblRDiffBrutto, 2, MidpointRounding.AwayFromZero)
@@ -1786,13 +1786,13 @@ ErrorHandler:
                     End If
 
                     'UB - Löschen und Buchung erstellen ohne MwSt und ohne KST da schon in RG 1 beinhaltet
-                    selSBrows = objdtDebitSubs.Tables(0).Select("strRGNr='" + row("strDebRGNbr") + "'")
+                    selSBrows = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
 
                     For Each SBsubrow As DataRow In selSBrows
                         SBsubrow.Delete()
                     Next
 
-                    Dim drSBBuchung As DataRow = objdtDebitSubs.Tables(0).NewRow
+                    Dim drSBBuchung As DataRow = objdtDebitSubs.NewRow
                     'Felder zuweisen
                     drSBBuchung("strRGNr") = row("strDebRGNbr")
                     drSBBuchung("intSollHaben") = 1
@@ -1809,7 +1809,7 @@ ErrorHandler:
                     drSBBuchung("strMwStKey") = "null"
                     drSBBuchung("strArtikel") = "SB - Buchung"
                     drSBBuchung("strDebSubText") = row("lngDebIdentNbr").ToString + ", FRG, " + row("lngLinkedRG").ToString
-                    objdtDebitSubs.Tables(0).Rows.Add(drSBBuchung)
+                    objdtDebitSubs.Rows.Add(drSBBuchung)
                     drSBBuchung = Nothing
 
                 Else
@@ -2038,7 +2038,7 @@ ErrorHandler:
                 End If
                 'Falls nicht SB - Linked dann Text in SB ersetzen
                 If Not row("booLinked") Then
-                    selsubrow = objdtDebitSubs.Tables(0).Select("strRGNr='" + row("strDebRGNbr") + "'")
+                    selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
                     For Each subrow In selsubrow
                         subrow("strDebSubText") = strDebiSubText
                     Next

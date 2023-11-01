@@ -22,18 +22,13 @@ Partial Class frmImportMain
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
-        Dim DataGridViewCellStyle1 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle2 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmImportMain))
         Me.cmbBuha = New System.Windows.Forms.ComboBox()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.butKreditoren = New System.Windows.Forms.Button()
         Me.butDblKredis = New System.Windows.Forms.Button()
         Me.butDebitoren = New System.Windows.Forms.Button()
-        Me.dgvBookings = New System.Windows.Forms.DataGridView()
         Me.butImport = New System.Windows.Forms.Button()
-        Me.dgvBookingSub = New System.Windows.Forms.DataGridView()
-        Me.dgvInfo = New System.Windows.Forms.DataGridView()
         Me.txtNumber = New System.Windows.Forms.TextBox()
         Me.butImportK = New System.Windows.Forms.Button()
         Me.cmbPerioden = New System.Windows.Forms.ComboBox()
@@ -43,11 +38,12 @@ Partial Class frmImportMain
         Me.chkValutaCorrect = New System.Windows.Forms.CheckBox()
         Me.dtpValutaCorrect = New System.Windows.Forms.DateTimePicker()
         Me.GroupBox2 = New System.Windows.Forms.GroupBox()
+        Me.dgvInfo = New System.Windows.Forms.DataGridView()
+        Me.dgvBookings = New System.Windows.Forms.DataGridView()
         Me.GroupBox1.SuspendLayout()
-        CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.GroupBox2.SuspendLayout()
+        CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'cmbBuha
@@ -101,15 +97,6 @@ Partial Class frmImportMain
         Me.butDebitoren.Text = "&Debitoren"
         Me.butDebitoren.UseVisualStyleBackColor = True
         '
-        'dgvBookings
-        '
-        Me.dgvBookings.AllowUserToOrderColumns = True
-        Me.dgvBookings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvBookings.Location = New System.Drawing.Point(12, 158)
-        Me.dgvBookings.Name = "dgvBookings"
-        Me.dgvBookings.Size = New System.Drawing.Size(1656, 467)
-        Me.dgvBookings.TabIndex = 3
-        '
         'butImport
         '
         Me.butImport.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
@@ -119,41 +106,6 @@ Partial Class frmImportMain
         Me.butImport.TabIndex = 4
         Me.butImport.Text = "&Import D"
         Me.butImport.UseVisualStyleBackColor = True
-        '
-        'dgvBookingSub
-        '
-        Me.dgvBookingSub.AllowUserToOrderColumns = True
-        Me.dgvBookingSub.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        DataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window
-        DataGridViewCellStyle1.Font = New System.Drawing.Font("Microsoft Sans Serif", 7.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText
-        DataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
-        Me.dgvBookingSub.DefaultCellStyle = DataGridViewCellStyle1
-        Me.dgvBookingSub.Location = New System.Drawing.Point(299, 19)
-        Me.dgvBookingSub.Name = "dgvBookingSub"
-        Me.dgvBookingSub.Size = New System.Drawing.Size(754, 133)
-        Me.dgvBookingSub.TabIndex = 5
-        '
-        'dgvInfo
-        '
-        Me.dgvInfo.AllowUserToOrderColumns = True
-        Me.dgvInfo.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        DataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window
-        DataGridViewCellStyle2.Font = New System.Drawing.Font("Microsoft Sans Serif", 7.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText
-        DataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
-        Me.dgvInfo.DefaultCellStyle = DataGridViewCellStyle2
-        Me.dgvInfo.Location = New System.Drawing.Point(1059, 19)
-        Me.dgvInfo.Name = "dgvInfo"
-        Me.dgvInfo.RowTemplate.Height = 18
-        Me.dgvInfo.Size = New System.Drawing.Size(354, 133)
-        Me.dgvInfo.TabIndex = 7
         '
         'txtNumber
         '
@@ -240,12 +192,33 @@ Partial Class frmImportMain
         Me.GroupBox2.TabStop = False
         Me.GroupBox2.Text = "Optionen"
         '
+        'dgvInfo
+        '
+        Me.dgvInfo.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvInfo.Location = New System.Drawing.Point(1064, 16)
+        Me.dgvInfo.Name = "dgvInfo"
+        Me.dgvInfo.Size = New System.Drawing.Size(337, 131)
+        Me.dgvInfo.TabIndex = 18
+        '
+        'dgvBookings
+        '
+        Me.dgvBookings.AllowUserToAddRows = False
+        Me.dgvBookings.AllowUserToDeleteRows = False
+        Me.dgvBookings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvBookings.Location = New System.Drawing.Point(4, 155)
+        Me.dgvBookings.Name = "dgvBookings"
+        Me.dgvBookings.ReadOnly = True
+        Me.dgvBookings.Size = New System.Drawing.Size(1664, 479)
+        Me.dgvBookings.TabIndex = 19
+        '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.AutoScroll = True
         Me.ClientSize = New System.Drawing.Size(1672, 637)
+        Me.Controls.Add(Me.dgvBookings)
+        Me.Controls.Add(Me.dgvInfo)
         Me.Controls.Add(Me.GroupBox2)
         Me.Controls.Add(Me.butDblDebis)
         Me.Controls.Add(Me.butMail)
@@ -253,21 +226,17 @@ Partial Class frmImportMain
         Me.Controls.Add(Me.cmbPerioden)
         Me.Controls.Add(Me.butImportK)
         Me.Controls.Add(Me.txtNumber)
-        Me.Controls.Add(Me.dgvInfo)
-        Me.Controls.Add(Me.dgvBookingSub)
         Me.Controls.Add(Me.butImport)
-        Me.Controls.Add(Me.dgvBookings)
         Me.Controls.Add(Me.GroupBox1)
         Me.Controls.Add(Me.cmbBuha)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.Name = "frmImportMain"
         Me.Text = "Sage200 - Importer"
         Me.GroupBox1.ResumeLayout(False)
-        CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).EndInit()
         Me.GroupBox2.ResumeLayout(False)
         Me.GroupBox2.PerformLayout()
+        CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -277,10 +246,7 @@ Partial Class frmImportMain
     Friend WithEvents GroupBox1 As GroupBox
     Friend WithEvents butKreditoren As Button
     Friend WithEvents butDebitoren As Button
-    Friend WithEvents dgvBookings As DataGridView
     Friend WithEvents butImport As Button
-    Friend WithEvents dgvBookingSub As DataGridView
-    Friend WithEvents dgvInfo As DataGridView
     Friend WithEvents txtNumber As TextBox
     Friend WithEvents butImportK As Button
     Friend WithEvents cmbPerioden As ComboBox
@@ -291,4 +257,6 @@ Partial Class frmImportMain
     Friend WithEvents chkValutaCorrect As CheckBox
     Friend WithEvents dtpValutaCorrect As DateTimePicker
     Friend WithEvents GroupBox2 As GroupBox
+    Friend WithEvents dgvInfo As DataGridView
+    Friend WithEvents dgvBookings As DataGridView
 End Class
