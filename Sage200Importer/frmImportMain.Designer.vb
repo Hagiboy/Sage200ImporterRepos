@@ -202,13 +202,11 @@ Partial Class frmImportMain
         '
         'dgvBookings
         '
-        Me.dgvBookings.AllowUserToAddRows = False
-        Me.dgvBookings.AllowUserToDeleteRows = False
+        Me.dgvBookings.AllowUserToOrderColumns = True
         Me.dgvBookings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvBookings.Location = New System.Drawing.Point(4, 155)
+        Me.dgvBookings.Location = New System.Drawing.Point(8, 153)
         Me.dgvBookings.Name = "dgvBookings"
-        Me.dgvBookings.ReadOnly = True
-        Me.dgvBookings.Size = New System.Drawing.Size(1664, 479)
+        Me.dgvBookings.Size = New System.Drawing.Size(1280, 472)
         Me.dgvBookings.TabIndex = 19
         '
         'frmImportMain
