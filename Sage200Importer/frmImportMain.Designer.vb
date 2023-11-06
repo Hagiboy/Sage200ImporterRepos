@@ -40,10 +40,22 @@ Partial Class frmImportMain
         Me.GroupBox2 = New System.Windows.Forms.GroupBox()
         Me.dgvInfo = New System.Windows.Forms.DataGridView()
         Me.dgvBookings = New System.Windows.Forms.DataGridView()
+        Me.dsDebitoren = New System.Data.DataSet()
+        Me.MySQLdaDebitoren = New MySqlConnector.MySqlDataAdapter()
+        Me.mysqlcmdDebDel = New MySqlConnector.MySqlCommand()
+        Me.mysqlconn = New MySqlConnector.MySqlConnection()
+        Me.mysqlcmdDebIns = New MySqlConnector.MySqlCommand()
+        Me.mysqlcmdDebRead = New MySqlConnector.MySqlCommand()
+        Me.mysqlcmbld = New MySqlConnector.MySqlCommandBuilder()
+        Me.MySQLdaDebitorenSub = New MySqlConnector.MySqlDataAdapter()
+        Me.mysqlcmdDebSubIns = New MySqlConnector.MySqlCommand()
+        Me.mysqlcmdDebSubRead = New MySqlConnector.MySqlCommand()
+        Me.mysqlcmdDebSubDel = New MySqlConnector.MySqlCommand()
         Me.GroupBox1.SuspendLayout()
         Me.GroupBox2.SuspendLayout()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'cmbBuha
@@ -209,6 +221,80 @@ Partial Class frmImportMain
         Me.dgvBookings.Size = New System.Drawing.Size(1280, 472)
         Me.dgvBookings.TabIndex = 19
         '
+        'dsDebitoren
+        '
+        Me.dsDebitoren.DataSetName = "dsDebiitorenHead"
+        '
+        'MySQLdaDebitoren
+        '
+        Me.MySQLdaDebitoren.DeleteCommand = Me.mysqlcmdDebDel
+        Me.MySQLdaDebitoren.InsertCommand = Me.mysqlcmdDebIns
+        Me.MySQLdaDebitoren.SelectCommand = Me.mysqlcmdDebRead
+        Me.MySQLdaDebitoren.UpdateBatchSize = 0
+        Me.MySQLdaDebitoren.UpdateCommand = Nothing
+        '
+        'mysqlcmdDebDel
+        '
+        Me.mysqlcmdDebDel.CommandTimeout = 30
+        Me.mysqlcmdDebDel.Connection = Me.mysqlconn
+        Me.mysqlcmdDebDel.Transaction = Nothing
+        Me.mysqlcmdDebDel.UpdatedRowSource = System.Data.UpdateRowSource.None
+        '
+        'mysqlconn
+        '
+        Me.mysqlconn.ProvideClientCertificatesCallback = Nothing
+        Me.mysqlconn.ProvidePasswordCallback = Nothing
+        Me.mysqlconn.RemoteCertificateValidationCallback = Nothing
+        '
+        'mysqlcmdDebIns
+        '
+        Me.mysqlcmdDebIns.CommandTimeout = 30
+        Me.mysqlcmdDebIns.Connection = Me.mysqlconn
+        Me.mysqlcmdDebIns.Transaction = Nothing
+        Me.mysqlcmdDebIns.UpdatedRowSource = System.Data.UpdateRowSource.None
+        '
+        'mysqlcmdDebRead
+        '
+        Me.mysqlcmdDebRead.CommandTimeout = 30
+        Me.mysqlcmdDebRead.Connection = Me.mysqlconn
+        Me.mysqlcmdDebRead.Transaction = Nothing
+        Me.mysqlcmdDebRead.UpdatedRowSource = System.Data.UpdateRowSource.None
+        '
+        'mysqlcmbld
+        '
+        Me.mysqlcmbld.DataAdapter = Me.MySQLdaDebitoren
+        Me.mysqlcmbld.QuotePrefix = "`"
+        Me.mysqlcmbld.QuoteSuffix = "`"
+        '
+        'MySQLdaDebitorenSub
+        '
+        Me.MySQLdaDebitorenSub.DeleteCommand = Me.mysqlcmdDebSubDel
+        Me.MySQLdaDebitorenSub.InsertCommand = Me.mysqlcmdDebSubIns
+        Me.MySQLdaDebitorenSub.SelectCommand = Me.mysqlcmdDebSubRead
+        Me.MySQLdaDebitorenSub.UpdateBatchSize = 0
+        Me.MySQLdaDebitorenSub.UpdateCommand = Nothing
+        '
+        'mysqlcmdDebSubIns
+        '
+        Me.mysqlcmdDebSubIns.CommandTimeout = 0
+        Me.mysqlcmdDebSubIns.Connection = Me.mysqlconn
+        Me.mysqlcmdDebSubIns.Transaction = Nothing
+        Me.mysqlcmdDebSubIns.UpdatedRowSource = System.Data.UpdateRowSource.None
+        '
+        'mysqlcmdDebSubRead
+        '
+        Me.mysqlcmdDebSubRead.CommandTimeout = 30
+        Me.mysqlcmdDebSubRead.Connection = Me.mysqlconn
+        Me.mysqlcmdDebSubRead.Transaction = Nothing
+        Me.mysqlcmdDebSubRead.UpdatedRowSource = System.Data.UpdateRowSource.None
+        '
+        'mysqlcmdDebSubDel
+        '
+        Me.mysqlcmdDebSubDel.CommandTimeout = 30
+        Me.mysqlcmdDebSubDel.Connection = Me.mysqlconn
+        Me.mysqlcmdDebSubDel.Transaction = Nothing
+        Me.mysqlcmdDebSubDel.UpdatedRowSource = System.Data.UpdateRowSource.None
+        '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -235,6 +321,7 @@ Partial Class frmImportMain
         Me.GroupBox2.PerformLayout()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -257,4 +344,15 @@ Partial Class frmImportMain
     Friend WithEvents GroupBox2 As GroupBox
     Friend WithEvents dgvInfo As DataGridView
     Friend WithEvents dgvBookings As DataGridView
+    Public WithEvents MySQLdaDebitoren As MySqlConnector.MySqlDataAdapter
+    Public WithEvents dsDebitoren As DataSet
+    Public WithEvents mysqlconn As MySqlConnector.MySqlConnection
+    Public WithEvents mysqlcmdDebRead As MySqlConnector.MySqlCommand
+    Friend WithEvents mysqlcmbld As MySqlConnector.MySqlCommandBuilder
+    Public WithEvents mysqlcmdDebIns As MySqlConnector.MySqlCommand
+    Public WithEvents mysqlcmdDebDel As MySqlConnector.MySqlCommand
+    Public WithEvents MySQLdaDebitorenSub As MySqlConnector.MySqlDataAdapter
+    Public WithEvents mysqlcmdDebSubRead As MySqlConnector.MySqlCommand
+    Public WithEvents mysqlcmdDebSubIns As MySqlConnector.MySqlCommand
+    Friend WithEvents mysqlcmdDebSubDel As MySqlConnector.MySqlCommand
 End Class

@@ -197,14 +197,7 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcGetRefDebiNr(ByRef objdbconn As MySqlConnection,
-                                          ByRef objdbconnZHDB02 As MySqlConnection,
-                                          ByRef objsqlcommand As MySqlCommand,
-                                          ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                          ByRef objOrdbconn As OracleClient.OracleConnection,
-                                          ByRef objOrcommand As OracleClient.OracleCommand,
-                                          ByRef objdbAccessConn As OleDb.OleDbConnection,
-                                          ByVal lngDebiNbr As Int32,
+    Public Shared Function FcGetRefDebiNr(ByVal lngDebiNbr As Int32,
                                           ByVal intAccounting As Int32,
                                           ByRef intDebiNew As Int32) As Int16
 
@@ -217,26 +210,23 @@ Public Class MainDebitor
         Dim objdbConnDeb As New MySqlConnection
         Dim objsqlCommDeb As New MySqlCommand
 
+        Dim objdbAccessConn As OleDb.OleDbConnection
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
-        Dim strMDBName As String = Main.FcReadFromSettings(objdbconn,
-                                                           "Buchh_PKTableConnection",
+        Dim strMDBName As String = Main.FcReadFromSettingsII("Buchh_PKTableConnection",
                                                            intAccounting)
+        Dim objOrcommand As OracleClient.OracleCommand
         Dim strSQL As String
         Dim intFunctionReturns As Int16
 
         Try
 
-            strTableName = Main.FcReadFromSettings(objdbconn,
-                                                   "Buchh_PKTable",
+            strTableName = Main.FcReadFromSettingsII("Buchh_PKTable",
                                                    intAccounting)
-            strTableType = Main.FcReadFromSettings(objdbconn,
-                                                   "Buchh_PKTableType",
+            strTableType = Main.FcReadFromSettingsII("Buchh_PKTableType",
                                                    intAccounting)
-            strDebFieldName = Main.FcReadFromSettings(objdbconn,
-                                                      "Buchh_PKField",
+            strDebFieldName = Main.FcReadFromSettingsII("Buchh_PKField",
                                                       intAccounting)
-            strDebNewField = Main.FcReadFromSettings(objdbconn,
-                                                     "Buchh_PKNewField",
+            strDebNewField = Main.FcReadFromSettingsII("Buchh_PKNewField",
                                                      intAccounting)
             'strDebNewFieldType = Main.FcReadFromSettings(objdbconn,
             '                                             "Buchh_PKNewFType",
@@ -278,7 +268,7 @@ Public Class MainDebitor
                 ElseIf strTableType = "M" Then 'MySQL
                     intDebiNew = 0
                     'MySQL - Tabelle einlesen
-                    objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting))
+                    objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettingsII("Buchh_PKTableConnection", intAccounting))
                     objdbConnDeb.Open()
                     'objsqlCommDeb.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
                     '                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
@@ -307,15 +297,11 @@ Public Class MainDebitor
                     If strTableName <> "Tab_Repbetriebe" Then
                         'intPKNewField = objdtDebitor.Rows(0).Item(strDebNewField)
                         If strTableName = "t_customer" Then
-                            intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02,
-                                                           objsqlcommandZHDB02,
-                                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item("ID")), 0, objdtDebitor.Rows(0).Item("ID")),
+                            intPKNewField = Main.FcGetPKNewFromRep(IIf(IsDBNull(objdtDebitor.Rows(0).Item("ID")), 0, objdtDebitor.Rows(0).Item("ID")),
                                                            "P")
                         Else
                             'D.h. Neue PK-Nr. wird nie von anderer Tabelle gelesen als t_customer oder Repbetriebe, bei einem <> t_customer muss de Rep_Betiebnr mitgegeben werden
-                            intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02,
-                                                           objsqlcommandZHDB02,
-                                                           IIf(IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)), 0, objdtDebitor.Rows(0).Item(strDebNewField)),
+                            intPKNewField = Main.FcGetPKNewFromRep(IIf(IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)), 0, objdtDebitor.Rows(0).Item(strDebNewField)),
                                                            "R")
 
                             Stop
@@ -324,26 +310,22 @@ Public Class MainDebitor
                         If intPKNewField = 0 Then
                             'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
                             If strTableName = "t_customer" Then
-                                intFunctionReturns = Main.FcNextPrivatePKNr(objdbconn,
-                                                                            objdtDebitor.Rows(0).Item("ID"),
+                                intFunctionReturns = Main.FcNextPrivatePKNr(objdtDebitor.Rows(0).Item("ID"),
                                                                             intDebiNew)
                                 If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
-                                    intFunctionReturns = Main.FcWriteNewPrivateDebToRepbetrieb(objdbconn,
-                                                                                               objdtDebitor.Rows(0).Item("ID"),
+                                    intFunctionReturns = Main.FcWriteNewPrivateDebToRepbetrieb(objdtDebitor.Rows(0).Item("ID"),
                                                                                                intDebiNew)
                                     If intFunctionReturns = 0 Then 'Schreiben hat geklappt
                                         Return 1
                                     End If
                                 End If
                             Else
-                                intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02,
-                                                                     objdtDebitor.Rows(0).Item(strDebNewField),
+                                intFunctionReturns = Main.FcNextPKNr(objdtDebitor.Rows(0).Item(strDebNewField),
                                                                      intDebiNew,
                                                                      intAccounting,
                                                                      "D")
                                 If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
-                                    intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02,
-                                                                                        objdtDebitor.Rows(0).Item(strDebNewField),
+                                    intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdtDebitor.Rows(0).Item(strDebNewField),
                                                                                         intDebiNew,
                                                                                         intAccounting,
                                                                                         "D")
@@ -364,14 +346,12 @@ Public Class MainDebitor
                         If Not IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)) Then
                             intDebiNew = objdtDebitor.Rows(0).Item(strDebNewField)
                         Else
-                            intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02,
-                                                                 lngDebiNbr,
+                            intFunctionReturns = Main.FcNextPKNr(lngDebiNbr,
                                                                  intDebiNew,
                                                                  intAccounting,
                                                                  "D")
                             If intFunctionReturns = 0 And intDebiNew > 0 Then 'Vergabe hat geklappt
-                                intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconnZHDB02,
-                                                                                    lngDebiNbr,
+                                intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(lngDebiNbr,
                                                                                     intDebiNew,
                                                                                     intAccounting,
                                                                                     "D")
@@ -400,20 +380,14 @@ Public Class MainDebitor
             Return 9
 
         Finally
-            'objdbconnZHDB02.Close()
-            objdtDebitor.Dispose()
-            objOrdbconn.Close()
-            Application.DoEvents()
+            objdtDebitor = Nothing
 
         End Try
 
 
     End Function
 
-    Public Shared Function FcGetDZkondFromCust(ByRef objdbconn As MySqlConnection,
-                                              ByRef objdbconnZHDB02 As MySqlConnection,
-                                              ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                              ByVal lngDebiNbr As Long,
+    Public Shared Function FcGetDZkondFromCust(ByVal lngDebiNbr As Long,
                                               ByRef intDZkond As Int16,
                                               ByVal intAccounting As Int16) As Int16
 
@@ -421,15 +395,15 @@ Public Class MainDebitor
 
         Dim intDZKondDefault As Int16
 
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objsqlcommandZHDB02 As New MySqlCommand
         Dim objdsDebitor As New DataSet
         Dim objDADebitor As New MySqlDataAdapter
         Dim objdtDZKond As New DataTable("tbllocDZKond")
 
         Try
 
-            If objdbconnZHDB02.State = ConnectionState.Closed Then
-                objdbconnZHDB02.Open()
-            End If
+            objdbconnZHDB02.Open()
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
 
             'Standard suchen auf Mandant
@@ -498,35 +472,33 @@ Public Class MainDebitor
 
         Finally
             objdbconnZHDB02.Close()
-            objdsDebitor.Dispose()
-            objDADebitor.Dispose()
-            Application.DoEvents()
+            objdbconnZHDB02 = Nothing
+            objsqlcommandZHDB02 = Nothing
+            objdsDebitor = Nothing
+            objDADebitor = Nothing
+            objdtDZKond = Nothing
 
         End Try
 
 
     End Function
 
-    Public Shared Function FcGetDZkondFromRep(ByRef objdbconn As MySqlConnection,
-                                              ByRef objdbconnZHDB02 As MySqlConnection,
-                                              ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                              ByVal lngDebiNbr As Long,
+    Public Shared Function FcGetDZkondFromRep(ByVal lngDebiNbr As Long,
                                               ByRef intDZkond As Int16,
                                               ByVal intAccounting As Int16) As Int16
 
         'Returns 0=ok, 1=Repbetrieb nicht gefunden, 9=Problem; intDZKond wird abgefüllt
 
         Dim intDZKondDefault As Int16
-
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objsqlcommandZHDB02 As New MySqlCommand
         Dim objdsDebitor As New DataSet
         Dim objDADebitor As New MySqlDataAdapter
         Dim objdtDZKond As New DataTable("tbllocDZKond")
 
         Try
 
-            If objdbconnZHDB02.State = ConnectionState.Closed Then
-                objdbconnZHDB02.Open()
-            End If
+            objdbconnZHDB02.Open()
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
 
             'Standard suchen auf Mandant
@@ -596,21 +568,18 @@ Public Class MainDebitor
 
         Finally
             objdbconnZHDB02.Close()
-            objdsDebitor.Dispose()
-            objDADebitor.Dispose()
-            objdtDZKond.Clear()
-            objdtDZKond.Dispose()
-            Application.DoEvents()
+            objdbconnZHDB02 = Nothing
+            objsqlcommandZHDB02 = Nothing
+            objdsDebitor = Nothing
+            objDADebitor = Nothing
+            objdtDZKond = Nothing
 
         End Try
 
 
     End Function
 
-    Public Shared Function FcGetDZKondSageID(ByRef objdbconn As MySqlConnection,
-                                              ByRef objdbconnZHDB02 As MySqlConnection,
-                                              ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                              ByVal intDZkond As Int16,
+    Public Shared Function FcGetDZKondSageID(ByVal intDZkond As Int16,
                                               ByRef intDZKondS200 As Int16) As Int16
 
         'Returns 0=ok, 1=ZK nicht gefunden, 9=Problem; intDZKond wird mit Sage 200 ZK abgefüllt
@@ -618,12 +587,13 @@ Public Class MainDebitor
         Dim objdsDebitor As New DataSet
         Dim objDADebitor As New MySqlDataAdapter
         Dim objdtDZKond As New DataTable("tbllocDZKond")
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objsqlcommandZHDB02 As New MySqlCommand
 
         Try
 
-            If objdbconnZHDB02.State = ConnectionState.Closed Then
-                objdbconnZHDB02.Open()
-            End If
+            objdbconnZHDB02.Open()
+
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
 
             'Zahlungsbedingung suchen
@@ -662,11 +632,12 @@ Public Class MainDebitor
 
         Finally
             objdbconnZHDB02.Close()
-            objdsDebitor.Dispose()
-            objDADebitor.Dispose()
-            objdtDZKond.Clear()
-            objdtDZKond.Dispose()
-            Application.DoEvents()
+            objdbconnZHDB02 = Nothing
+            objsqlcommandZHDB02 = Nothing
+            objdtDZKond = Nothing
+            objdsDebitor = Nothing
+            objDADebitor = Nothing
+
 
         End Try
 
@@ -674,11 +645,7 @@ Public Class MainDebitor
     End Function
 
 
-    Public Shared Function FcIsDebitorCreatable(ByRef objdbconn As MySqlConnection,
-                                                ByRef objdbconnZHDB02 As MySqlConnection,
-                                                ByRef objsqlcommand As MySqlCommand,
-                                                ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                                ByVal lngDebiNbr As Long,
+    Public Shared Function FcIsDebitorCreatable(ByVal lngDebiNbr As Long,
                                                 ByRef objDbBhg As SBSXASLib.AXiDbBhg,
                                                 ByVal strcmbBuha As String,
                                                 ByVal intAccounting As Int16) As Int16
@@ -711,17 +678,18 @@ Public Class MainDebitor
         Dim intintBank As Int16
         Dim objdbConnDeb As New MySqlConnection
         Dim objsqlConnDeb As New MySqlCommand
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objsqlcommandZHDB02 As New MySqlCommand
 
         Try
 
             'Angaben einlesen
-            objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buch_TabRepConnection", intAccounting))
-            If objdbConnDeb.State = ConnectionState.Closed Then
-                objdbConnDeb.Open()
-            End If
-            If objdbconnZHDB02.State = ConnectionState.Closed Then
-                objdbconnZHDB02.Open()
-            End If
+            objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettingsII("Buch_TabRepConnection", intAccounting))
+
+            objdbConnDeb.Open()
+
+            objdbconnZHDB02.Open()
+
             objsqlConnDeb.Connection = objdbConnDeb
             objsqlConnDeb.CommandText = "Select Rep_Nr, " +
                                                       "Rep_Suchtext, " +
@@ -786,16 +754,12 @@ Public Class MainDebitor
                     End If
 
                     'interne Bank
-                    intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
-                                                             intAccounting,
+                    intReturnValue = Main.FcCheckDebiIntBank(intAccounting,
                                                              objdtDebitor.Rows(0).Item("Rep_Kred_BankIntern"),
                                                              intintBank)
 
                     'Zahlungsbedingung suchen
-                    intReturnValue = FcGetDZkondFromRep(objdbconn,
-                                                        objdbconnZHDB02,
-                                                        objsqlcommandZHDB02,
-                                                        lngDebiNbr,
+                    intReturnValue = FcGetDZkondFromRep(lngDebiNbr,
                                                         intDebZB,
                                                         intAccounting)
 
@@ -861,8 +825,7 @@ Public Class MainDebitor
                         'If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
                         intPayType = 9
                         'End If
-                        intReturnValue = Main.FcGetIBANDetails(objdbconn,
-                                                          strIBANNr,
+                        intReturnValue = Main.FcGetIBANDetails(strIBANNr,
                                                           strBankName,
                                                           strBankAddress1,
                                                           strBankAddress2,
@@ -936,14 +899,13 @@ Public Class MainDebitor
             Return 9
 
         Finally
-            objdbconn.Close()
             objdbconnZHDB02.Close()
+            objdbconnZHDB02 = Nothing
             objdbConnDeb.Close()
-            objdtDebitor.Dispose()
-            objdtSachB.Dispose()
-            objdsDebitor.Dispose()
-            objDADebitor.Dispose()
-            Application.DoEvents()
+            objdbConnDeb = Nothing
+            objsqlcommandZHDB02 = Nothing
+            objdsDebitor = Nothing
+            objDADebitor = Nothing
 
         End Try
 
@@ -1106,13 +1068,13 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcCheckDZKond(ByRef objSQLConnection As SqlClient.SqlConnection,
-                                         ByRef objSQLCommand As SqlClient.SqlCommand,
-                                         ByVal strMandant As String,
+    Public Shared Function FcCheckDZKond(ByVal strMandant As String,
                                          ByVal intDZKond As Int16) As Int16
 
         'Return 0=definiert, 1=nicht definiert, 9=Problem
 
+        Dim objSQLConnection As New SqlClient.SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
+        Dim objSQLCommand As New SqlClient.SqlCommand
         Dim objdtDZKond As New DataTable
 
         Try
@@ -1152,9 +1114,9 @@ Public Class MainDebitor
 
         Finally
             objSQLConnection.Close()
-            objdtDZKond.Constraints.Clear()
-            objdtDZKond.Clear()
-            objdtDZKond.Dispose()
+            objSQLConnection = Nothing
+            objSQLCommand = Nothing
+            objdtDZKond = Nothing
 
         End Try
 
@@ -1411,14 +1373,14 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcCheckDebiIntBank(ByRef objdbconn As MySqlConnection,
-                                              ByVal intAccounting As Integer,
+    Public Shared Function FcCheckDebiIntBank(ByVal intAccounting As Integer,
                                               ByVal striBankS50 As String,
                                               ByVal intPayType As Int16,
                                               ByRef intIBankS200 As String) As Int16
 
         '0=ok, 1=Sage50 iBank nicht gefunden, 2=Kein Standard gesetzt, 3=Nichts angegeben, auf Standard gesetzt, 9=Problem
 
+        Dim objdbconn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
         Dim objdbcommand As New MySqlCommand
         Dim objdtiBank As New DataTable
 
@@ -1427,9 +1389,9 @@ Public Class MainDebitor
             If striBankS50 <> "" Then
                 'Sage 50 - Bank suchen
                 objdbcommand.Connection = objdbconn
-                If objdbconn.State = ConnectionState.Closed Then
-                    objdbconn.Open()
-                End If
+
+                objdbconn.Open()
+
                 If intPayType = 10 Then 'QR - Fall
                     objdbcommand.CommandText = "SELECT intSage200QR FROM t_sage_tblaccountingbank WHERE QRTNNR='" + striBankS50 + "' AND intAccountingID=" + intAccounting.ToString
                 Else
@@ -1476,13 +1438,10 @@ Public Class MainDebitor
             Return 9
 
         Finally
-            If objdbconn.State = ConnectionState.Open Then
-                'objdbconn.Close()
-            End If
-            objdtiBank.Constraints.Clear()
-            objdtiBank.Clear()
-            objdtiBank.Dispose()
-            Application.DoEvents()
+            objdbconn.Close()
+            objdbconn = Nothing
+            objdbcommand = Nothing
+            objdtiBank = Nothing
 
         End Try
 
@@ -1619,10 +1578,7 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcIsPrivateDebitorCreatable(ByRef objdbconn As MySqlConnection,
-                                             ByRef objdbconnZHDB02 As MySqlConnection,
-                                             ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                             ByVal lngDebiNbr As Long,
+    Public Shared Function FcIsPrivateDebitorCreatable(ByVal lngDebiNbr As Long,
                                              ByRef objDbBhg As SBSXASLib.AXiDbBhg,
                                              ByVal strcmbBuha As String,
                                              ByVal intAccounting As Int16) As Int16
@@ -1647,6 +1603,8 @@ Public Class MainDebitor
         Dim strBankClearing As String = String.Empty
         Dim intReturnValue As Int16
         Dim intDebZB As Int16
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objsqlcommandZHDB02 As New MySqlCommand
         Dim objdsDebitor As New DataSet
         Dim objDADebitor As New MySqlDataAdapter
         Dim objdtSachB As New DataTable("tbliSachB")
@@ -1709,17 +1667,13 @@ Public Class MainDebitor
                     End If
 
                     'interne Bank
-                    intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
-                                                         intAccounting,
+                    intReturnValue = Main.FcCheckDebiIntBank(intAccounting,
                                                          objdtDebitor.Rows(0).Item("BankIntern"),
                                                          intintBank)
 
 
                     'Zahlungsbedingung suchen
-                    intReturnValue = FcGetDZkondFromCust(objdbconn,
-                                                     objdbconnZHDB02,
-                                                     objsqlcommandZHDB02,
-                                                     lngDebiNbr,
+                    intReturnValue = FcGetDZkondFromCust(lngDebiNbr,
                                                      intDebZB,
                                                      intAccounting)
 
@@ -1783,8 +1737,7 @@ Public Class MainDebitor
                         'If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
                         intPayType = 9
                         'End If
-                        intReturnValue = Main.FcGetIBANDetails(objdbconn,
-                                                      strIBANNr,
+                        intReturnValue = Main.FcGetIBANDetails(strIBANNr,
                                                       strBankName,
                                                       strBankAddress1,
                                                       strBankAddress2,
@@ -1848,8 +1801,7 @@ Public Class MainDebitor
                         'objsqlcommandZHDB02.CommandText = strSQL
                         'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
 
-                        intCreatable = MainDebitor.FcWriteDatetoPrivate(objdbconn,
-                                                             lngDebiNbr,
+                        intCreatable = MainDebitor.FcWriteDatetoPrivate(lngDebiNbr,
                                                              intAccounting,
                                                              0)
 
@@ -1872,13 +1824,18 @@ Public Class MainDebitor
 
         Finally
             objdbconnZHDB02.Close()
+            objdbconnZHDB02 = Nothing
+            objsqlcommandZHDB02 = Nothing
+            objdsDebitor = Nothing
+            objDADebitor = Nothing
+            objdtDebitor = Nothing
+            objdtSachB = Nothing
 
         End Try
 
     End Function
 
-    Public Shared Function FcWriteDatetoPrivate(ByRef objdbcon As MySqlConnection,
-                                                   ByVal intNewPKNr As Int32,
+    Public Shared Function FcWriteDatetoPrivate(ByVal intNewPKNr As Int32,
                                                    ByVal intAccounting As Int16,
                                                    ByVal intDebitKredit As Int16) As Int16
 
@@ -1890,6 +1847,7 @@ Public Class MainDebitor
         Dim intRepNr As Int32
         Dim objdtPrivate As New DataTable
         Dim strDebiCreatedField As String
+        Dim objdbcon As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
 
         Try
 
@@ -1900,9 +1858,9 @@ Public Class MainDebitor
             End If
 
             'Zuerst CustomerID suchen
-            If objdbcon.State = ConnectionState.Closed Then
-                objdbcon.Open()
-            End If
+
+            objdbcon.Open()
+
             objdbCmd.Connection = objdbcon
             objdbCmd.CommandText = "SELECT ID FROM t_customer WHERE PKNr=" + intNewPKNr.ToString
             objdtPrivate.Load(objdbCmd.ExecuteReader)
@@ -1937,11 +1895,10 @@ Public Class MainDebitor
             Return 9
 
         Finally
-            If objdbcon.State() = ConnectionState.Open Then
-                objdbcon.Close()
-            End If
-            objdtPrivate.Dispose()
-            objdbCmd.Dispose()
+            objdbcon.Close()
+            objdbcon = Nothing
+            objdbCmd = Nothing
+            objdtPrivate = Nothing
 
         End Try
 
@@ -1995,16 +1952,7 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcGetDebitorFromLinkedRG(ByRef objdbconn As MySqlConnection,
-                                                    ByRef objdbconnZHDB02 As MySqlConnection,
-                                                    ByRef objsqlcommand As MySqlCommand,
-                                                    ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                                    ByRef objOrdbconn As OracleClient.OracleConnection,
-                                                    ByRef objOrcommand As OracleClient.OracleCommand,
-                                                    ByRef objdbAccessConn As OleDb.OleDbConnection,
-                                                    ByRef objdbSQLConn As SqlConnection,
-                                                    ByRef objdbSQLCmd As SqlCommand,
-                                                    ByVal lngRGNbr As Int32,
+    Public Shared Function FcGetDebitorFromLinkedRG(ByVal lngRGNbr As Int32,
                                                     ByVal intAccounting As Int32,
                                                     ByRef intDebiNew As Int32,
                                                     ByVal intTeqNbr As Int16,
@@ -2023,6 +1971,9 @@ Public Class MainDebitor
         Dim strTableType As String
         Dim strDebFieldName As String
         Dim tblDebiBuchung As New DataTable
+        Dim objOrcommand As New OracleClient.OracleCommand
+        Dim objdbSQLConn As New SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
+        Dim objdbSQLCmd As New SqlCommand
 
         'Dim objlocOLEdbcmd As New OleDb.OleDbCommand
         'Dim strMDBName As String = Main.FcReadFromSettings(objdbconn, "Buchh_PKTableConnection", intAccounting)
@@ -2032,9 +1983,8 @@ Public Class MainDebitor
         Try
 
             'Zuerst probieren vom Beleg zu holen
-            If objdbSQLConn.State = ConnectionState.Closed Then
-                objdbSQLConn.Open()
-            End If
+            objdbSQLConn.Open()
+
             objdbSQLCmd.CommandText = "SELECT * FROM debibuchung WHERE teqnbr IN (" + intTeqNbr.ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString + ")" +
                                                                  " AND belnbr=" + lngRGNbr.ToString +
                                                                  " AND typ='R'"
@@ -2046,8 +1996,8 @@ Public Class MainDebitor
                 Return 0
             Else
                 'Sonst von RG holen
-                strTableName = Main.FcReadFromSettings(objdbconn, "Buchh_TableDeb", intAccounting)
-                strTableType = Main.FcReadFromSettings(objdbconn, "Buchh_RGTableType", intAccounting)
+                strTableName = Main.FcReadFromSettingsII("Buchh_TableDeb", intAccounting)
+                strTableType = Main.FcReadFromSettingsII("Buchh_RGTableType", intAccounting)
                 strDebFieldName = "RGNr"
                 'strDebNewField = Main.FcReadFromSettings(objdbconn, "Buchh_PKNewField", intAccounting)
                 'strDebNewFieldType = Main.FcReadFromSettings(objdbconn, "Buchh_PKNewFType", intAccounting)
@@ -2076,7 +2026,7 @@ Public Class MainDebitor
                     ElseIf strTableType = "M" Then 'MySQL
                         intDebiNew = 0
                         'MySQL - Tabelle einlesen
-                        objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buchh_RGTableMDB", intAccounting))
+                        objdbConnDeb.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettingsII("Buchh_RGTableMDB", intAccounting))
                         objdbConnDeb.Open()
                         'objsqlCommDeb.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
                         '                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
@@ -2131,9 +2081,13 @@ Public Class MainDebitor
             Return 9
 
         Finally
-            If objdbSQLConn.State = ConnectionState.Open Then
-                objdbSQLConn.Close()
-            End If
+            objdbSQLConn.Close()
+            objdbSQLConn = Nothing
+            objdbConnDeb = Nothing
+            objsqlCommDeb = Nothing
+            objdbSQLConn = Nothing
+            objOrcommand = Nothing
+            objdtDebitor = Nothing
 
         End Try
 

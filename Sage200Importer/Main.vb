@@ -591,9 +591,9 @@ Friend NotInheritable Class Main
 
     Public Shared Function tblInfo() As DataTable
 
-        Try
+        Dim DT As DataTable
 
-            Dim DT As DataTable
+        Try
             DT = New DataTable("tblDebitorenSub")
             Dim strInfoT As DataColumn = New DataColumn("strInfoT")
             strInfoT.DataType = System.Type.[GetType]("System.String")
@@ -609,6 +609,9 @@ Friend NotInheritable Class Main
 
         Catch ex As Exception
             MessageBox.Show(ex.Message + "Info-Sub-Tabelle " + Err.Number.ToString)
+
+        Finally
+            DT = Nothing
 
         End Try
 
@@ -664,8 +667,7 @@ Friend NotInheritable Class Main
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
 
             objdbconn.Open()
-            strMandant = FcReadFromSettings(objdbconn,
-                                            "Buchh200_Name",
+            strMandant = FcReadFromSettingsII("Buchh200_Name",
                                             intAccounting)
             objdbconn.Close()
             booAccOk = objFinanz.CheckMandant(strMandant)
@@ -1040,11 +1042,11 @@ ErrorHandler:
 
     Public Shared Function FcReadBankSettings(ByVal intAccounting As Int16,
                                               ByVal intPayType As Int16,
-                                              ByVal strBank As String,
-                                              ByRef objdbconn As MySqlConnection) As String
+                                              ByVal strBank As String) As String
 
         Dim objlocdtBank As New DataTable("tbllocBank")
         Dim objlocMySQLcmd As New MySqlCommand
+        Dim objdbconn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
 
         Try
 
@@ -1055,6 +1057,7 @@ ErrorHandler:
                 objlocMySQLcmd.CommandText = "SELECT strBLZ FROM t_sage_tblaccountingbank WHERE intAccountingID=" + intAccounting.ToString + " AND strBank='" + strBank + "'"
             End If
 
+            objdbconn.Open()
             objlocMySQLcmd.Connection = objdbconn
             objlocdtBank.Load(objlocMySQLcmd.ExecuteReader)
 
@@ -1065,8 +1068,10 @@ ErrorHandler:
             MessageBox.Show(ex.Message, "Bankleitzahl suchen.")
 
         Finally
-            objlocdtBank.Dispose()
-            objlocMySQLcmd.Dispose()
+            objdbconn.Close()
+            objdbconn = Nothing
+            objlocdtBank = Nothing
+            objlocMySQLcmd = Nothing
 
         End Try
 
@@ -1139,21 +1144,11 @@ ErrorHandler:
 
     Public Shared Function FcCheckDebit(ByVal intAccounting As Integer,
                                         ByRef objdtDebits As DataSet,
-                                        ByRef objdtDebitSubs As DataTable,
                                         ByRef objFinanz As SBSXASLib.AXFinanz,
                                         ByRef objfiBuha As SBSXASLib.AXiFBhg,
                                         ByRef objdbBuha As SBSXASLib.AXiDbBhg,
                                         ByRef objdbPIFb As SBSXASLib.AXiPlFin,
                                         ByRef objFiBebu As SBSXASLib.AXiBeBu,
-                                        ByRef objdbconn As MySqlConnection,
-                                        ByRef objdbconnZHDB02 As MySqlConnection,
-                                        ByRef objsqlcommand As MySqlCommand,
-                                        ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                        ByRef objOrdbconn As OracleClient.OracleConnection,
-                                        ByRef objOrcommand As OracleClient.OracleCommand,
-                                        ByRef objdbAccessConn As OleDb.OleDbConnection,
-                                        ByRef objdbSQLConn As SqlConnection,
-                                        ByRef objdbSQLCmd As SqlCommand,
                                         ByRef objdtInfo As DataTable,
                                         ByVal strcmbBuha As String,
                                         ByVal intTeqNbr As Int16,
@@ -1219,7 +1214,7 @@ ErrorHandler:
             'Teq-Nbr extrahieren
             'intTeqNbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
 
-            objdbconn.Open()
+            'objdbconn.Open()
             'objOrdbconn.Open()
             'objdbAccessConn.Open()
 
@@ -1242,11 +1237,11 @@ ErrorHandler:
             'objdtDebits.Tables(0).Columns("booLinked").ReadOnly = False
 
 
-            For Each row As DataRow In objdtDebits.Tables(0).Rows
+            For Each row As DataRow In objdtDebits.Tables("tblDebiHeadsFromUser").Rows
 
                 'If row("strDebRGNbr") = "101261" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
-                Debug.Print("Start check RG " + strRGNbr + ", " + strcmbBuha)
+                'Debug.Print("Start check RG " + strRGNbr + ", " + strcmbBuha)
 
                 'Runden
                 row("dblDebNetto") = Decimal.Round(row("dblDebNetto"), 4, MidpointRounding.AwayFromZero)
@@ -1269,14 +1264,7 @@ ErrorHandler:
 
                 'Status-String erstellen
                 'Debitor 01
-                intReturnValue = MainDebitor.FcGetRefDebiNr(objdbconn,
-                                                objdbconnZHDB02,
-                                                objsqlcommand,
-                                                objsqlcommandZHDB02,
-                                                objOrdbconn,
-                                                objOrcommand,
-                                                objdbAccessConn,
-                                                IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")),
+                intReturnValue = MainDebitor.FcGetRefDebiNr(IIf(IsDBNull(row("lngDebNbr")), 0, row("lngDebNbr")),
                                                 intAccounting,
                                                 intDebitorNew)
 
@@ -1315,14 +1303,13 @@ ErrorHandler:
                     row("booLinked") = False
                 End If
                 'booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_CashSollKontoKorr", intAccounting)))
-                Debug.Print("Before Sub RG " + strRGNbr + ", " + strcmbBuha)
+                'Debug.Print("Before Sub RG " + strRGNbr + ", " + strcmbBuha)
                 intReturnValue = FcCheckSubBookings(row("strDebRGNbr"),
-                                                    objdtDebitSubs,
+                                                    objdtDebits.Tables("tblDebiSubsFromUser"),
                                                     intSubNumber,
                                                     dblSubBrutto,
                                                     dblSubNetto,
                                                     dblSubMwSt,
-                                                    objdbconn,
                                                     objfiBuha,
                                                     objdbPIFb,
                                                     objFiBebu,
@@ -1340,7 +1327,7 @@ ErrorHandler:
                 'booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettings(objdbconn, "Buchh_GeneratePaymentBooking", intAccounting)))
                 If booGeneratePymentBooking And row("intBuchungsart") <> 1 And row("intKtoPayed") > 0 Then
                     'Bedingungen erfüllt
-                    Dim drPaymentBuchung As DataRow = objdtDebitSubs.NewRow
+                    Dim drPaymentBuchung As DataRow = objdtDebits.Tables("tblDebiSubsFromUser").NewRow
                     'Felder zuweisen
                     drPaymentBuchung("strRGNr") = row("strDebRGNbr")
                     drPaymentBuchung("intSollHaben") = 0
@@ -1357,7 +1344,7 @@ ErrorHandler:
                     drPaymentBuchung("strMwStKey") = "null"
                     drPaymentBuchung("strArtikel") = "Bezahlvorgang"
                     drPaymentBuchung("strDebSubText") = "Bezahlvorgang"
-                    objdtDebitSubs.Rows.Add(drPaymentBuchung)
+                    objdtDebits.Tables("tblDebiSubsFromUser").Rows.Add(drPaymentBuchung)
                     drPaymentBuchung = Nothing
                     'Summe der Sub-Buchungen anpassen
                     dblSubBrutto = Decimal.Round(dblSubBrutto + row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
@@ -1425,7 +1412,7 @@ ErrorHandler:
                             dblRDiffNetto = 0 ' row("dblDebNetto") - Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
 
                             'Zu sub-Table hinzifügen
-                            Dim objdrDebiSub As DataRow = objdtDebitSubs.NewRow
+                            Dim objdrDebiSub As DataRow = objdtDebits.Tables("tblDebiSubsFromUser").NewRow
                             objdrDebiSub("strRGNr") = row("strDebRGNbr")
                             objdrDebiSub("intSollHaben") = 1
                             objdrDebiSub("lngKto") = 6906
@@ -1445,7 +1432,7 @@ ErrorHandler:
                             Else
                                 objdrDebiSub("strStatusUBText") = "ok"
                             End If
-                            objdtDebitSubs.Rows.Add(objdrDebiSub)
+                            objdtDebits.Tables("tblDebiSubsFromUser").Rows.Add(objdrDebiSub)
                             objdrDebiSub = Nothing
                             'Summe der Sub-Buchungen anpassen
                             dblSubBrutto = Decimal.Round(dblSubBrutto - dblRDiffBrutto, 2, MidpointRounding.AwayFromZero)
@@ -1495,8 +1482,7 @@ ErrorHandler:
                 'strBitLog += "0"
                 'Referenz 08
                 If IIf(IsDBNull(row("strDebReferenz")), "", row("strDebReferenz")) = "" And row("intBuchungsart") = 1 Then
-                    intReturnValue = FcCreateDebRef(objdbconn,
-                                                    intAccounting,
+                    intReturnValue = FcCreateDebRef(intAccounting,
                                                     row("strDebiBank"),
                                                     row("strDebRGNbr"),
                                                     row("strOPNr"),
@@ -1521,19 +1507,12 @@ ErrorHandler:
                     strStatus += "Deb"
                     If Left(strBitLog, 1) <> "2" Then
                         If booPKPrivate = True Then
-                            intReturnValue = MainDebitor.FcIsPrivateDebitorCreatable(objdbconn,
-                                                                                     objdbconnZHDB02,
-                                                                                     objsqlcommandZHDB02,
-                                                                                     intDebitorNew,
+                            intReturnValue = MainDebitor.FcIsPrivateDebitorCreatable(intDebitorNew,
                                                                                      objdbBuha,
                                                                                      strcmbBuha,
                                                                                      intAccounting)
                         Else
-                            intReturnValue = MainDebitor.FcIsDebitorCreatable(objdbconn,
-                                                                              objdbconnZHDB02,
-                                                                              objsqlcommand,
-                                                                              objsqlcommandZHDB02,
-                                                                              intDebitorNew,
+                            intReturnValue = MainDebitor.FcIsDebitorCreatable(intDebitorNew,
                                                                               objdbBuha,
                                                                               strcmbBuha,
                                                                               intAccounting)
@@ -1678,8 +1657,7 @@ ErrorHandler:
                 'Bei PGV checken ob PGV-Startdatum in blockierter Periode
                 If row("booPGV") And intReturnValue = 0 Then
                     intReturnValue = FcCheckPGVDate(row("datPGVFrom"),
-                                                    intAccounting,
-                                                    objdbconnZHDB02)
+                                                    intAccounting)
                     If intReturnValue <> 0 Then
                         'Falls TA-Buchung in blockierter Periode probieren mit Valuta-Korrektur
                         If intPGVMonths = 1 And booValutaCorrect Then
@@ -1745,8 +1723,7 @@ ErrorHandler:
                 If IsDBNull(row("intPayType")) Then
                     row("intPayType") = 9
                 End If
-                intReturnValue = MainDebitor.FcCheckDebiIntBank(objdbconn,
-                                                                intAccounting,
+                intReturnValue = MainDebitor.FcCheckDebiIntBank(intAccounting,
                                                                 IIf(IsDBNull(row("strDebiBank")), "", row("strDebiBank")),
                                                                 row("intPayType"),
                                                                 intiBankSage200)
@@ -1755,16 +1732,7 @@ ErrorHandler:
                 'Bei SplittBill: Existiert verlinkter Beleg? 13
                 If row("booLinked") Then
                     'Zuerst Debitor von erstem Beleg suchen
-                    intDebitorNew = MainDebitor.FcGetDebitorFromLinkedRG(objdbconn,
-                                                                         objdbconnZHDB02,
-                                                                         objsqlcommand,
-                                                                         objsqlcommandZHDB02,
-                                                                         objOrdbconn,
-                                                                         objOrcommand,
-                                                                         objdbAccessConn,
-                                                                         objdbSQLConn,
-                                                                         objdbSQLCmd,
-                                                                         IIf(IsDBNull(row("lngLinkedRG")), 0, row("lngLinkedRG")),
+                    intDebitorNew = MainDebitor.FcGetDebitorFromLinkedRG(IIf(IsDBNull(row("lngLinkedRG")), 0, row("lngLinkedRG")),
                                                                          intAccounting,
                                                                          intLinkedDebitor,
                                                                          intTeqNbr,
@@ -1786,13 +1754,13 @@ ErrorHandler:
                     End If
 
                     'UB - Löschen und Buchung erstellen ohne MwSt und ohne KST da schon in RG 1 beinhaltet
-                    selSBrows = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
+                    selSBrows = objdtDebits.Tables("tblDebiSubsFromUser").Select("strRGNr='" + row("strDebRGNbr") + "'")
 
                     For Each SBsubrow As DataRow In selSBrows
                         SBsubrow.Delete()
                     Next
 
-                    Dim drSBBuchung As DataRow = objdtDebitSubs.NewRow
+                    Dim drSBBuchung As DataRow = objdtDebits.Tables("tblDebiSubsFromUser").NewRow
                     'Felder zuweisen
                     drSBBuchung("strRGNr") = row("strDebRGNbr")
                     drSBBuchung("intSollHaben") = 1
@@ -1809,7 +1777,7 @@ ErrorHandler:
                     drSBBuchung("strMwStKey") = "null"
                     drSBBuchung("strArtikel") = "SB - Buchung"
                     drSBBuchung("strDebSubText") = row("lngDebIdentNbr").ToString + ", FRG, " + row("lngLinkedRG").ToString
-                    objdtDebitSubs.Rows.Add(drSBBuchung)
+                    objdtDebits.Tables("tblDebiSubsFromUser").Rows.Add(drSBBuchung)
                     drSBBuchung = Nothing
 
                 Else
@@ -1828,10 +1796,7 @@ ErrorHandler:
                     intDZKond = 0
                 Else
                     'ID in effektive Sage 200 umwandeln (=von Tabelle lesen)
-                    intReturnValue = MainDebitor.FcGetDZKondSageID(objdbconn,
-                                                                   objdbconnZHDB02,
-                                                                   objsqlcommandZHDB02,
-                                                                   row("intZKond"),
+                    intReturnValue = MainDebitor.FcGetDZKondSageID(row("intZKond"),
                                                                    intDZKondS200)
                     row("intZKond") = intDZKondS200
                 End If
@@ -1839,18 +1804,12 @@ ErrorHandler:
                     'Fall kein Privatekunde
                     If booPKPrivate = False Then
                         'Daten aus den Tab_Repbetriebe holen
-                        intReturnValue = MainDebitor.FcGetDZkondFromRep(objdbconn,
-                                                                    objdbconnZHDB02,
-                                                                    objsqlcommandZHDB02,
-                                                                    row("lngDebNbr"),
+                        intReturnValue = MainDebitor.FcGetDZkondFromRep(row("lngDebNbr"),
                                                                     intDZKond,
                                                                     intAccounting)
                     Else
                         'Daten aus der t_customer holen
-                        intReturnValue = MainDebitor.FcGetDZkondFromCust(objdbconn,
-                                                                         objdbconnZHDB02,
-                                                                         objsqlcommandZHDB02,
-                                                                         row("lngDebNbr"),
+                        intReturnValue = MainDebitor.FcGetDZkondFromCust(row("lngDebNbr"),
                                                                          intDZKond,
                                                                          intAccounting)
                     End If
@@ -1859,9 +1818,7 @@ ErrorHandler:
                 'Prüfem ob Zahlungs-Kondition - ID existiert in Sage 200 bei Mandant
                 strMandant = FcReadFromSettingsII("Buchh200_Name",
                                                 intAccounting)
-                intReturnValue = MainDebitor.FcCheckDZKond(objdbSQLConn,
-                                                           objdbSQLCmd,
-                                                           strMandant,
+                intReturnValue = MainDebitor.FcCheckDZKond(strMandant,
                                                            row("intZKond"))
                 strBitLog += Trim(intReturnValue.ToString)
 
@@ -2013,32 +1970,30 @@ ErrorHandler:
                 row("strDebStatusBitLog") = strBitLog
 
                 'Wird ein anderer Text in der Head-Buchung gewünscht?
-                booDiffHeadText = IIf(FcReadFromSettings(objdbconn, "Buchh_TextSpecial", intAccounting) = "0", False, True)
+                booDiffHeadText = IIf(FcReadFromSettingsII("Buchh_TextSpecial", intAccounting) = "0", False, True)
                 If booDiffHeadText Then
-                    strDebiHeadText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn,
-                                                                                "Buchh_TextSpecialText",
+                    strDebiHeadText = MainDebitor.FcSQLParse(FcReadFromSettingsII("Buchh_TextSpecialText",
                                                                                 intAccounting),
                                                              row("strDebRGNbr"),
-                                                             objdtDebits.Tables(0),
+                                                             objdtDebits.Tables("tblDebiHeadsFromUser"),
                                                              "D")
                     row("strDebText") = strDebiHeadText
                 End If
 
                 'Wird ein anderer Text in den Sub-Buchung gewünscht?
-                booDiffSubText = IIf(FcReadFromSettings(objdbconn, "Buchh_SubTextSpecial", intAccounting) = "0", False, True)
+                booDiffSubText = IIf(FcReadFromSettingsII("Buchh_SubTextSpecial", intAccounting) = "0", False, True)
                 If booDiffSubText And Not row("booLinked") Then
-                    strDebiSubText = MainDebitor.FcSQLParse(FcReadFromSettings(objdbconn,
-                                                                               "Buchh_SubTextSpecialText",
+                    strDebiSubText = MainDebitor.FcSQLParse(FcReadFromSettingsII("Buchh_SubTextSpecialText",
                                                                                intAccounting),
                                                             row("strDebRGNbr"),
-                                                            objdtDebits.Tables(0),
+                                                            objdtDebits.Tables("tblDebiHeadsFromUser"),
                                                             "D")
                 Else
                     strDebiSubText = row("strDebText")
                 End If
                 'Falls nicht SB - Linked dann Text in SB ersetzen
                 If Not row("booLinked") Then
-                    selsubrow = objdtDebitSubs.Select("strRGNr='" + row("strDebRGNbr") + "'")
+                    selsubrow = objdtDebits.Tables("tblDebiSubsFromUser").Select("strRGNr='" + row("strDebRGNbr") + "'")
                     For Each subrow In selsubrow
                         subrow("strDebSubText") = strDebiSubText
                     Next
@@ -2054,7 +2009,7 @@ ErrorHandler:
                 intDZKond = 0
 
                 Application.DoEvents()
-                Debug.Print("End check RG " + strRGNbr + ", " + strcmbBuha)
+                'Debug.Print("End check RG " + strRGNbr + ", " + strcmbBuha)
 
             Next
 
@@ -2062,17 +2017,6 @@ ErrorHandler:
             MessageBox.Show(ex.Message + vbCrLf + "Auf RG " + strRGNbr, "Debitor Kopfdaten-Check", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
-
-            If objOrdbconn.State = ConnectionState.Open Then
-                objOrdbconn.Close()
-            End If
-            If objdbconn.State = ConnectionState.Open Then
-                objdbconn.Close()
-            End If
-            If objdbAccessConn.State = ConnectionState.Open Then
-                objdbAccessConn.Close()
-            End If
-
             selsubrow = Nothing
             selSBrows = Nothing
 
@@ -2082,13 +2026,13 @@ ErrorHandler:
     End Function
 
     Public Shared Function FcCheckPGVDate(ByVal datPGVDateToCheck As Date,
-                                          ByVal intAccounting As Int16,
-                                          ByRef objdbconnZHDB02 As MySqlConnection)
+                                          ByVal intAccounting As Int16)
 
 
         Dim tblPeriods As New DataTable
         Dim intYearToCheck As Int16
         Dim objsqlcommand As New MySqlCommand
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
 
         Try
 
@@ -2097,9 +2041,9 @@ ErrorHandler:
 
             objsqlcommand.CommandText = "SELECT * FROM t_sage_buchhaltungen_periods WHERE year=" + intYearToCheck.ToString + " AND refMandant=" + intAccounting.ToString
             objsqlcommand.Connection = objdbconnZHDB02
-            If objdbconnZHDB02.State = ConnectionState.Closed Then
-                objdbconnZHDB02.Open()
-            End If
+
+            objdbconnZHDB02.Open()
+
             tblPeriods.Load(objsqlcommand.ExecuteReader)
 
             If tblPeriods.Rows.Count > 0 Then
@@ -2124,6 +2068,9 @@ ErrorHandler:
 
         Finally
             objdbconnZHDB02.Close()
+            objdbconnZHDB02 = Nothing
+            objsqlcommand = Nothing
+            tblPeriods = Nothing
 
         End Try
 
@@ -2248,8 +2195,7 @@ ErrorHandler:
     End Function
 
 
-    Public Shared Function FcCreateDebRef(ByRef objdbconn As MySqlConnection,
-                                          ByVal intAccounting As Integer,
+    Public Shared Function FcCreateDebRef(ByVal intAccounting As Integer,
                                           ByVal strBank As String,
                                           ByVal strRGNr As String,
                                           ByRef strOPNr As String,
@@ -2269,7 +2215,7 @@ ErrorHandler:
             If intBuchungsArt = 1 Then
                 'Checken ob Referenz aus OP - Nr. oder aus Rechnung erstellt werden soll
 
-                strRefFrom = FcReadFromSettings(objdbconn, "Buchh_ESRNrFrom", intAccounting)
+                strRefFrom = FcReadFromSettingsII("Buchh_ESRNrFrom", intAccounting)
                 If strRefFrom = "" Then
                     strRefFrom = "R"
                 End If
@@ -2285,8 +2231,7 @@ ErrorHandler:
 
                 strTLNNr = FcReadBankSettings(intAccounting,
                                               intPayType,
-                                              strBank,
-                                              objdbconn)
+                                              strBank)
 
                 'Bei HW Mandant an TLNr anhängen
                 If intAccounting = 29 Then
@@ -2308,6 +2253,9 @@ ErrorHandler:
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Problem Referenzerstellung")
             Return 1
+
+        Finally
+
 
         End Try
 
@@ -2447,8 +2395,7 @@ ErrorHandler:
     End Function
 
 
-    Public Shared Function FcCheckMwSt(ByRef objdbconn As MySqlConnection,
-                                       ByRef objFiBhg As SBSXASLib.AXiFBhg,
+    Public Shared Function FcCheckMwSt(ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                        ByVal strStrCode As String,
                                        ByVal dblStrWert As Double,
                                        ByRef strStrCode200 As String,
@@ -2456,6 +2403,7 @@ ErrorHandler:
 
         'returns 0=ok, 1=nicht gefunden
 
+        Dim objdbconn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
         Dim objlocdtMwSt As New DataTable("tbllocMwSt")
         Dim objlocMySQLcmd As New MySqlCommand
         Dim strSteuerRec As String = String.Empty
@@ -2477,6 +2425,7 @@ ErrorHandler:
             'Besprechung mit Muhi 20201209 => Es soll eine fixe Vergabe des MStSchlüssels passieren 
             objlocMySQLcmd.CommandText = "SELECT  * FROM t_sage_sage50mwst WHERE strKey='" + strStrCode + "'"
 
+            objdbconn.Open()
             objlocMySQLcmd.Connection = objdbconn
             objlocdtMwSt.Load(objlocMySQLcmd.ExecuteReader)
 
@@ -2528,6 +2477,12 @@ ErrorHandler:
             MessageBox.Show(ex.Message, "MwSt-Key Check")
             Return 9
 
+        Finally
+            objdbconn.Close()
+            objdbconn = Nothing
+            objlocdtMwSt = Nothing
+            objlocMySQLcmd = Nothing
+
         End Try
 
 
@@ -2539,7 +2494,6 @@ ErrorHandler:
                                               ByRef dblSubBrutto As Double,
                                               ByRef dblSubNetto As Double,
                                               ByRef dblSubMwSt As Double,
-                                              ByRef objdbconn As MySqlConnection,
                                               ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                               ByRef objFiPI As SBSXASLib.AXiPlFin,
                                               ByRef objFiBebu As SBSXASLib.AXiBeBu,
@@ -2641,8 +2595,7 @@ ErrorHandler:
 
                 'MwSt prüfen 01
                 If Not IsDBNull(subrow("strMwStKey")) And IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "null" Then
-                    intReturnValue = FcCheckMwSt(objdbconn,
-                                                 objFiBhg,
+                    intReturnValue = FcCheckMwSt(objFiBhg,
                                                  subrow("strMwStKey"),
                                                  IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")),
                                                  strStrStCodeSage200,
@@ -2861,7 +2814,7 @@ ErrorHandler:
                 If Mid(strBitLog, 2, 1) <> "0" Then
                     If Mid(strBitLog, 2, 1) = "2" Then
                         strStatusText = "Kto MwSt"
-                    ElseIf mid(strBitLog, 2, 1) = "5" Then
+                    ElseIf Mid(strBitLog, 2, 1) = "5" Then
                         strStatusText = "MwstK<3K"
                     ElseIf Mid(strBitLog, 2, 1) = "3" Then
                         strStatusText = "NoKST"
@@ -3084,8 +3037,7 @@ ErrorHandler:
                     subrow("strMwStKey") = Nothing
                 End If
                 If Not IsDBNull(subrow("strMwStKey")) Then
-                    intReturnValue = FcCheckMwSt(objdbconn,
-                                                 objFiBhg,
+                    intReturnValue = FcCheckMwSt(objFiBhg,
                                                  subrow("strMwStKey"),
                                                  subrow("dblMwStSatz"),
                                                  strStrStCodeSage200,
@@ -3459,16 +3411,17 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcGetPKNewFromRep(ByRef objdbconnZHDB02 As MySqlConnection,
-                                             ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                             ByVal intPKRefField As Int32,
+    Public Shared Function FcGetPKNewFromRep(ByVal intPKRefField As Int32,
                                              ByVal strMode As String) As Int32
 
         'Aus Tabelle Rep_Betriebe auf ZHDB02 auslesen 
         Dim objdtRepBetrieb As New DataTable
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objsqlcommandZHDB02 As New MySqlCommand
 
         Try
 
+            objsqlcommandZHDB02.Connection = objdbconnZHDB02
             objdbconnZHDB02.Open()
             objsqlcommandZHDB02.Connection = objdbconnZHDB02
             If strMode = "P" Then
@@ -3493,6 +3446,9 @@ ErrorHandler:
 
         Finally
             objdbconnZHDB02.Close()
+            objdtRepBetrieb = Nothing
+            objsqlcommandZHDB02 = Nothing
+            objdbconnZHDB02 = Nothing
 
         End Try
 
@@ -4095,8 +4051,7 @@ ErrorHandler:
                 'Bei PGV checken ob PGV-Startdatum in blockierter Periode
                 If row("booPGV") And intReturnValue = 0 Then
                     intReturnValue = FcCheckPGVDate(row("datPGVFrom"),
-                                                    intAccounting,
-                                                    objdbconnZHDB02)
+                                                    intAccounting)
                     If intReturnValue <> 0 Then
                         'Falls TP-Buchung in blockierter Periode dann probieren mit Valuta-Korrektur
                         If intPGVMonths = 1 And booValutaCoorect Then
@@ -4174,8 +4129,7 @@ ErrorHandler:
                 'intReturnValue = IIf(IsDBNull(row("strKredRef")), 1, 0)
                 'strBitLog += Trim(intReturnValue.ToString)
                 'interne Bank 13
-                intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
-                                                         intAccounting,
+                intReturnValue = Main.FcCheckDebiIntBank(intAccounting,
                                                          row("strKrediBankInt"),
                                                          intintBank)
                 row("intintBank") = intintBank
@@ -4199,7 +4153,7 @@ ErrorHandler:
                 End If
 
                 'Status-String auswerten
-                booPKPrivate = IIf(FcReadFromSettings(objdbconn, "Buchh_PKKrediTable", intAccounting) = "t_customer", True, False)
+                booPKPrivate = IIf(FcReadFromSettingsII("Buchh_PKKrediTable", intAccounting) = "t_customer", True, False)
                 'Kreditor 1
                 If Left(strBitLog, 1) <> "0" Then
                     strStatus += "Kred"
@@ -4807,8 +4761,7 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcNextPKNr(ByRef objdbconnZHDB02 As MySqlConnection,
-                                      ByVal intRepNr As Int32,
+    Public Shared Function FcNextPKNr(ByVal intRepNr As Int32,
                                       ByRef intNewPKNr As Int32,
                                       ByVal intAccounting As Int16,
                                       ByVal strMode As String) As Int16
@@ -4817,6 +4770,7 @@ ErrorHandler:
 
         'PK - Nummer soll der Funktion gegeben werden, Funktion sucht sich dann die PK_Gruppe 
         'Konzept: Tabelle füllen und dann durchsteppen
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
         Dim objsqlcommand As New MySqlCommand
         Dim objdtPKNr As New DataTable
         Dim intPKNrGuppenID As Int16
@@ -4829,9 +4783,7 @@ ErrorHandler:
         Try
 
             'Wo ist die RepBetriebe?
-            If objdbconnZHDB02.State = ConnectionState.Closed Then
-                objdbconnZHDB02.Open()
-            End If
+            objdbconnZHDB02.Open()
             If strMode = "D" Then
                 'objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buchh_PKTableConnection", intAccounting))
                 objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buch_TabRepConnection", intAccounting))
@@ -4839,9 +4791,8 @@ ErrorHandler:
                 objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buchh_PKKrediTableConnection", intAccounting))
             End If
 
-            If objdbconn.State = ConnectionState.Closed Then
-                objdbconn.Open()
-            End If
+            objdbconn.Open()
+
             objsqlcommand.Connection = objdbconn
             objsqlcommand.CommandText = "SELECT PKNrGruppeID FROM tab_repbetriebe WHERE Rep_Nr=" + intRepNr.ToString
             objdtPKNr.Load(objsqlcommand.ExecuteReader)
@@ -4907,13 +4858,14 @@ ErrorHandler:
             Return 9
 
         Finally
-            If objdbconnZHDB02.State = ConnectionState.Open Then
-                'objdbconnZHDB02.Close()
-            End If
-            objDAPKNbrs.Dispose()
-            objdsPKNbrs.Dispose()
+            objdbconnZHDB02.Close()
+            objdbconnZHDB02 = Nothing
+            objdbconn.Close()
+            objdbconn = Nothing
+            objDAPKNbrs = Nothing
+            objdsPKNbrs = Nothing
             objsqlcommand = Nothing
-            objdtPKNr.Dispose()
+            objdtPKNr = Nothing
 
         End Try
 
@@ -4973,8 +4925,7 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcGetIBANDetails(ByRef objdbconn As MySqlConnection,
-                                           ByVal strIBAN As String,
+    Public Shared Function FcGetIBANDetails(ByVal strIBAN As String,
                                            ByRef strBankName As String,
                                            ByRef strBankAddress1 As String,
                                            ByRef strBankAddress2 As String,
@@ -4982,6 +4933,7 @@ ErrorHandler:
                                            ByRef strBankCountry As String,
                                            ByRef strBankClearing As String) As Int16
 
+        Dim objdbconn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
         Dim objIBANReq As HttpWebRequest
         Dim objdtIBAN As New DataTable
         'Dim striBANURI As New Uri("https://rest.sepatools.eu/validate_iban_dummy/AL90208110080000001039531801")
@@ -5002,6 +4954,7 @@ ErrorHandler:
         Try
 
             'Zuerst prüfen ob IBAN nicht schon in der Tabelle der bekannten existiert
+            objdbconn.Open()
             objmysqlcom.Connection = objdbconn
             objmysqlcom.CommandText = "SELECT * FROM t_sage_tbliban WHERE strIBANNr='" + strIBAN + "'"
             objdtIBAN.Load(objmysqlcom.ExecuteReader)
@@ -5101,8 +5054,11 @@ ErrorHandler:
             Return 9
 
         Finally
-            objdtIBAN.Dispose()
-            objmysqlcom.Dispose()
+            objdbconn.Close()
+            objdbconn = Nothing
+            objmysqlcom = Nothing
+            objdtIBAN = Nothing
+            objmysqlcom = Nothing
             objXMLDoc = Nothing
             objResponse = Nothing
             objXMLNodeList = Nothing
@@ -5111,15 +5067,15 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcWriteNewDebToRepbetrieb(ByRef objdbconnZHDB02 As MySqlConnection,
-                                                     ByVal intRepNr As Int32,
-                                                     intNewDebNr As Int32,
-                                                     intAccounting As Int16,
-                                                     strMode As String) As Int16
+    Public Shared Function FcWriteNewDebToRepbetrieb(ByVal intRepNr As Int32,
+                                                     ByVal intNewDebNr As Int32,
+                                                     ByVal intAccounting As Int16,
+                                                     ByVal strMode As String) As Int16
 
         '0=Update ok, 1=Update hat nicht geklappt, 9=Error
 
         Dim strSQL As String
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
         Dim objmysqlcmd As New MySqlCommand
         Dim objdbconn As New MySqlConnection
         Dim intAffected As Int16
@@ -5127,19 +5083,15 @@ ErrorHandler:
         Try
 
             'Wo ist die Rep_Betriebe?
-            If objdbconnZHDB02.State = ConnectionState.Closed Then
-                objdbconnZHDB02.Open()
-            End If
+            objdbconnZHDB02.Open()
             If strMode = "D" Then
                 'objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buchh_PKTableConnection", intAccounting))
                 objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buch_TabRepConnection", intAccounting))
             Else
                 objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconnZHDB02, "Buchh_PKKrediTableConnection", intAccounting))
             End If
+            objdbconn.Open()
 
-            If objdbconn.State = ConnectionState.Closed Then
-                objdbconn.Open()
-            End If
             strSQL = "UPDATE tab_repbetriebe SET PKNr=" + intNewDebNr.ToString + " WHERE Rep_Nr=" + intRepNr.ToString
             objmysqlcmd.Connection = objdbconn
             objmysqlcmd.CommandText = strSQL
@@ -5156,33 +5108,29 @@ ErrorHandler:
             Return 9
 
         Finally
-            If objdbconnZHDB02.State = ConnectionState.Open Then
-                'objdbconnZHDB02.Close()
-            End If
-            If objdbconn.State = ConnectionState.Open Then
-                objdbconn.Close()
-            End If
-            objdbconn.Dispose()
+            objdbconnZHDB02.Close()
+            objdbconnZHDB02 = Nothing
+            objdbconn.Close()
+            objdbconn = Nothing
+            objmysqlcmd = Nothing
 
         End Try
 
     End Function
 
-    Public Shared Function FcCheckDebiIntBank(ByRef objdbconn As MySqlConnection,
-                                              ByVal intAccounting As Integer,
+    Public Shared Function FcCheckDebiIntBank(ByVal intAccounting As Integer,
                                               ByVal striBankS50 As String,
                                               ByRef intIBankS200 As String) As Int16
 
         '0=ok, 1=Sage50 iBank nicht gefunden, 2=Kein Standard gesetzt, 3=Nichts angegeben, auf Standard gesetzt, 9=Problem
 
+        Dim objdbconn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
         Dim objdbcommand As New MySqlCommand
         Dim objdtiBank As New DataTable
 
         Try
 
-            If objdbconn.State = ConnectionState.Closed Then
-                objdbconn.Open()
-            End If
+            objdbconn.Open()
             'wurde i Bank definiert?
             If striBankS50 <> "" Then
                 'Sage 50 - Bank suchen
@@ -5220,25 +5168,22 @@ ErrorHandler:
             Return 9
 
         Finally
-            If objdbconn.State = ConnectionState.Open Then
-                'objdbconn.Close()
-            End If
-            objdtiBank.Constraints.Clear()
-            objdtiBank.Clear()
-            objdtiBank.Dispose()
+            objdbconn.Close()
+            objdbconn = Nothing
+            objdtiBank = Nothing
 
         End Try
 
     End Function
 
-    Public Shared Function FcNextPrivatePKNr(ByRef objdbconnZHDB02 As MySqlConnection,
-                                             ByVal intPersNr As Int32,
+    Public Shared Function FcNextPrivatePKNr(ByVal intPersNr As Int32,
                                              ByRef intNewPKNr As Int32) As Int16
 
         '0=ok, 1=Rep - Nr. existiert nicht, 2=Bereich voll, 3=keine Bereichdefinition 9=Problem
 
         'PK - Nummer soll der Funktion gegeben werden, Funktion sucht sich dann die PK_Gruppe 
         'Konzept: Tabelle füllen und dann durchsteppen
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
         Dim objsqlcommand As New MySqlCommand
         Dim objdtPKNr As New DataTable
         Dim intPKNrGuppenID As Int16
@@ -5250,9 +5195,7 @@ ErrorHandler:
 
         Try
 
-            If objdbconnZHDB02.State = ConnectionState.Closed Then
-                objdbconnZHDB02.Open()
-            End If
+            objdbconnZHDB02.Open()
             objsqlcommand.Connection = objdbconnZHDB02
             objsqlcommand.CommandText = "SELECT PKNrGruppeID FROM t_customer WHERE ID=" + intPersNr.ToString
             objDAPersons.SelectCommand = objsqlcommand
@@ -5316,20 +5259,22 @@ ErrorHandler:
             Return 9
 
         Finally
-            If objdbconnZHDB02.State = ConnectionState.Open Then
-                objdbconnZHDB02.Close()
-            End If
-            objDAPKNbrs.Dispose()
-            objdsPKNbrs.Dispose()
+
+            objdbconnZHDB02.Close()
+            objdbconnZHDB02 = Nothing
+            objDAPKNbrs = Nothing
+            objdsPKNbrs = Nothing
             objsqlcommand = Nothing
-            objdtPKNr.Dispose()
+            objdtPKNr = Nothing
+            objdsPersons = Nothing
+            objDAPersons = Nothing
+            objDAPKNbrs = Nothing
 
         End Try
 
     End Function
 
-    Public Shared Function FcWriteNewPrivateDebToRepbetrieb(ByRef objdbconnZHDB02 As MySqlConnection,
-                                                            ByVal intPersNr As Int32,
+    Public Shared Function FcWriteNewPrivateDebToRepbetrieb(ByVal intPersNr As Int32,
                                                             intNewDebNr As Int32) As Int16
 
         '0=Update ok, 1=Update hat nicht geklappt, 9=Error
@@ -5337,6 +5282,7 @@ ErrorHandler:
         Dim strSQL As String
         Dim objmysqlcmd As New MySqlCommand
         Dim intAffected As Int16
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
 
         Try
 
@@ -5351,15 +5297,15 @@ ErrorHandler:
                 Return 0
             End If
 
-
         Catch ex As Exception
             MessageBox.Show(ex.Message)
             Return 9
 
         Finally
-            If objdbconnZHDB02.State = ConnectionState.Open Then
-                'objdbconnZHDB02.Close()
-            End If
+
+            objdbconnZHDB02.Close()
+            objdbconnZHDB02 = Nothing
+            objmysqlcmd = Nothing
 
         End Try
 

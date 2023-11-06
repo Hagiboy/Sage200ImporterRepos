@@ -127,45 +127,37 @@ Public Class MainKreditor
                     If strTableName <> "Tab_Repbetriebe" Then
                             'intPKNewField = objdtKreditor.Rows(0).Item(strKredNewField)
                             If strTableName = "t_customer" Then
-                                intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02,
-                                                                       objsqlcommandZHDB02,
-                                                                       IIf(IsDBNull(objdtKreditor.Rows(0).Item("ID")), 0, objdtKreditor.Rows(0).Item("ID")),
+                            intPKNewField = Main.FcGetPKNewFromRep(IIf(IsDBNull(objdtKreditor.Rows(0).Item("ID")), 0, objdtKreditor.Rows(0).Item("ID")),
                                                                        "P")
-                            Else
-                                intPKNewField = Main.FcGetPKNewFromRep(objdbconnZHDB02,
-                                                                        objsqlcommandZHDB02,
-                                                                        objdtKreditor.Rows(0).Item(strKredNewField),
+                        Else
+                            intPKNewField = Main.FcGetPKNewFromRep(objdtKreditor.Rows(0).Item(strKredNewField),
                                                                         "R") 'Rep_Nr
-                                Stop
+                            Stop
                             End If
 
                             If intPKNewField = 0 Then
                                 'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
                                 If strTableName = "t_customer" Then
-                                    intFunctionReturns = Main.FcNextPrivatePKNr(objdbconn,
-                                                                            objdtKreditor.Rows(0).Item("ID"),
+                                intFunctionReturns = Main.FcNextPrivatePKNr(objdtKreditor.Rows(0).Item("ID"),
                                                                             intKrediNew)
-                                    If intFunctionReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
-                                        intFunctionReturns = Main.FcWriteNewPrivateDebToRepbetrieb(objdbconn,
-                                                                                                   objdtKreditor.Rows(0).Item("ID"),
+                                If intFunctionReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
+                                    intFunctionReturns = Main.FcWriteNewPrivateDebToRepbetrieb(objdtKreditor.Rows(0).Item("ID"),
                                                                                                    intKrediNew)
-                                        If intFunctionReturns = 0 Then 'Schreiben hat geklappt
+                                    If intFunctionReturns = 0 Then 'Schreiben hat geklappt
                                             Return 1
                                         End If
                                     End If
                                 Else
-                                    intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02,
-                                                                         objdtKreditor.Rows(0).Item(strKredNewField),
+                                intFunctionReturns = Main.FcNextPKNr(objdtKreditor.Rows(0).Item(strKredNewField),
                                                                          intKrediNew,
                                                                          intAccounting,
                                                                          "C")
-                                    If intFunctionReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
-                                        intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconn,
-                                                                                           objdtKreditor.Rows(0).Item("Rep_Nr"),
+                                If intFunctionReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
+                                    intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdtKreditor.Rows(0).Item("Rep_Nr"),
                                                                                            intKrediNew,
                                                                                            intAccounting,
                                                                                            "C")
-                                        If intFunctionReturns = 0 Then 'Schreiben hat geklappt
+                                    If intFunctionReturns = 0 Then 'Schreiben hat geklappt
                                             Return 1
                                         End If
                                     End If
@@ -183,18 +175,16 @@ Public Class MainKreditor
                             If Not IsDBNull(objdtKreditor.Rows(0).Item(strKredNewField)) Then
                                 intKrediNew = objdtKreditor.Rows(0).Item(strKredNewField)
                             Else
-                                intFunctionReturns = Main.FcNextPKNr(objdbconnZHDB02,
-                                                                    objdtKreditor.Rows(0).Item("Rep_Nr"),
+                            intFunctionReturns = Main.FcNextPKNr(objdtKreditor.Rows(0).Item("Rep_Nr"),
                                                                     intKrediNew,
                                                                     intAccounting,
                                                                     "C")
-                                If intFunctionReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
-                                    intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdbconn,
-                                                                                       objdtKreditor.Rows(0).Item("Rep_Nr"),
+                            If intFunctionReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
+                                intFunctionReturns = Main.FcWriteNewDebToRepbetrieb(objdtKreditor.Rows(0).Item("Rep_Nr"),
                                                                                        intKrediNew,
                                                                                        intAccounting,
                                                                                        "C")
-                                    If intFunctionReturns = 0 Then 'Schreiben hat geklappt
+                                If intFunctionReturns = 0 Then 'Schreiben hat geklappt
                                         Return 1
                                     End If
                                 End If
@@ -363,8 +353,7 @@ Public Class MainKreditor
                     End If
 
                     'interne Bank
-                    intReturnValue = Main.FcCheckDebiIntBank(objdbconn,
-                                                             intAccounting,
+                    intReturnValue = Main.FcCheckDebiIntBank(intAccounting,
                                                              objdtKreditor.Rows(0).Item("BankIntern"),
                                                              intintBank)
 
@@ -443,8 +432,7 @@ Public Class MainKreditor
                     If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
                         intPayType = 9
                     End If
-                    intReturnValue = Main.FcGetIBANDetails(objdbconn,
-                                                      strIBANNr,
+                    intReturnValue = Main.FcGetIBANDetails(strIBANNr,
                                                       strBankName,
                                                       strBankAddress1,
                                                       strBankAddress2,
@@ -460,8 +448,7 @@ Public Class MainKreditor
                 'QR-IBAN
                 If intPayType = 10 And Len(strKrediBank) >= 21 Then
                     strIBANNr = strKrediBank
-                    intReturnValue = Main.FcGetIBANDetails(objdbconn,
-                                                      strIBANNr,
+                    intReturnValue = Main.FcGetIBANDetails(strIBANNr,
                                                       strBankName,
                                                       strBankAddress1,
                                                       strBankAddress2,
@@ -516,8 +503,7 @@ Public Class MainKreditor
                     'objsqlcommandZHDB02.CommandText = strSQL
                     'intAffected = objsqlcommandZHDB02.ExecuteNonQuery()
 
-                    intCreatable = MainDebitor.FcWriteDatetoPrivate(objdbconn,
-                                                             lngKrediNbr,
+                    intCreatable = MainDebitor.FcWriteDatetoPrivate(lngKrediNbr,
                                                              intAccounting,
                                                              1)
 
@@ -733,8 +719,7 @@ Public Class MainKreditor
                         If intPayType <> 9 Then 'Type nicht IBAN angegeben aber IBAN - Nr. erfasst
                             intPayType = 9
                         End If
-                        intReturnValue = Main.FcGetIBANDetails(objdbconn,
-                                                      strIBANNr,
+                        intReturnValue = Main.FcGetIBANDetails(strIBANNr,
                                                       strBankName,
                                                       strBankAddress1,
                                                       strBankAddress2,
@@ -750,8 +735,7 @@ Public Class MainKreditor
                     'QR-IBAN
                     If intPayType = 10 And Len(strKrediBank) >= 21 Then
                         strIBANNr = strKrediBank
-                        intReturnValue = Main.FcGetIBANDetails(objdbconn,
-                                                      strIBANNr,
+                        intReturnValue = Main.FcGetIBANDetails(strIBANNr,
                                                       strBankName,
                                                       strBankAddress1,
                                                       strBankAddress2,
@@ -1412,8 +1396,7 @@ Public Class MainKreditor
                 If Not booBankExists Then
                     'MessageBox.Show("Bankverbindung muss erstellt werden " + strIBAN)
 
-                    intReturnValue = Main.FcGetIBANDetails(objdbcon,
-                                                      strIBAN,
+                    intReturnValue = Main.FcGetIBANDetails(strIBAN,
                                                       strBankName,
                                                       strBankAddress1,
                                                       strBankAddress2,
