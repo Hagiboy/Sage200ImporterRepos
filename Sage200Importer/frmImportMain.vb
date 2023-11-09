@@ -412,10 +412,10 @@ Friend Class frmImportMain
             'End If
 
             'DGV Debitoren
-            dgvBookings.DataSource = Nothing
-            dgvBookings.Rows.Clear()
-            dgvBookings.Columns.Clear()
-            dgvBookings.Refresh()
+            'dgvBookings.DataSource = Nothing
+            'dgvBookings.Rows.Clear()
+            'dgvBookings.Columns.Clear()
+            'dgvBookings.Refresh()
             'dgvBookings.Rows.Clear()
             'dgvBookings.Columns.Clear()
             'dgvBookingSub.DataSource = Nothing
@@ -469,15 +469,30 @@ Friend Class frmImportMain
             'Gibt es eine Query auszuführen bevor dem Buchen?
             'Call MainDebitor.FcExecuteBeforeDebit(cmbBuha.SelectedValue, objdbConn)
 
+            'List View löschen
+            Me.LsVDebitoren.Clear()
+
             'Zuerst evtl. vorhandene DS löschen in Tabelle
             MySQLdaDebitoren.DeleteCommand.Connection.Open()
             MySQLdaDebitoren.DeleteCommand.ExecuteNonQuery()
             MySQLdaDebitoren.DeleteCommand.Connection.Close()
+            'In DS löschen
+            If dsDebitoren.Tables("tblDebiHeadsFromUser") IsNot Nothing Then
+                dsDebitoren.Tables("tblDebiHeadsFromUser").Constraints.Clear()
+                dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Clear()
+                dsDebitoren.Tables("tblDebiHeadsFromUser").Columns.Clear()
+            End If
             MySQLdaDebitoren.Fill(dsDebitoren, "tblDebiHeadsFromUser")
 
             MySQLdaDebitorenSub.DeleteCommand.Connection.Open()
             MySQLdaDebitorenSub.DeleteCommand.ExecuteNonQuery()
             MySQLdaDebitorenSub.DeleteCommand.Connection.Close()
+            'In DS löschen
+            If dsDebitoren.Tables("tblDebiSubsFromUser") IsNot Nothing Then
+                dsDebitoren.Tables("tblDebiSubsFromUser").Constraints.Clear()
+                dsDebitoren.Tables("tblDebiSubsFromUser").Rows.Clear()
+                dsDebitoren.Tables("tblDebiSubsFromUser").Columns.Clear()
+            End If
             MySQLdaDebitorenSub.Fill(dsDebitoren, "tblDebiSubsFromUser")
 
             'dsDebitorenHead.Tables("tblDebiHeadsFromUser").AcceptChanges()
@@ -485,10 +500,14 @@ Friend Class frmImportMain
 
             Call MainDebitor.FcFillDebit(cmbBuha.SelectedValue,
                                          dsDebitoren.Tables("tblDebiHeadsFromUser"),
-                                         dsDebitoren.Tables("tblDebiSubsFromUser"))
+                                         dsDebitoren.Tables("tblDebiSubsFromUser"),
+                                         objdbAccessConn,
+                                         objdbConn)
 
 
-            'dgvBookings.DataSource = dsDebitorenHead.Tables("tblDebiHeadsFromUser")
+            'If dgvBookings.DataSource Is Nothing Then
+            '    dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
+            'End If
             'Application.DoEvents()
 
 
@@ -625,8 +644,34 @@ Friend Class frmImportMain
             dsDebitoren.Tables("tblDebiSubsFromUser").Columns.Clear()
             MySQLdaDebitorenSub.Fill(dsDebitoren, "tblDebiSubsFromUser")
 
-            dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
-            dgvInfo.DataSource = dsDebitoren.Tables("tblDebitorenInfo")
+            'List View füllen
+            'Zuerst columns
+            'For Each dsColDeb As DataColumn In dsDebitoren.Tables("tblDebiHeadsFromUser").Columns
+            'Me.LsVDebitoren.Columns.Add(dsColDeb.ColumnName, 50, HorizontalAlignment.Center)
+            Me.LsVDebitoren.View = View.Details
+            Me.LsVDebitoren.GridLines = True
+            Me.LsVDebitoren.Columns.Add("RG-Nbr", 60, HorizontalAlignment.Left)
+            Me.LsVDebitoren.Columns.Add("Debitor", 60, HorizontalAlignment.Left)
+            Me.LsVDebitoren.Columns.Add("Bezeichnung", 150, HorizontalAlignment.Left)
+            Me.LsVDebitoren.Columns.Add("Konto", 60, HorizontalAlignment.Left)
+            Me.LsVDebitoren.Columns.Add("Bezeichnung", 150, HorizontalAlignment.Left)
+
+            Application.DoEvents()
+            'Next
+            'Dann Daten
+            For Each dsrowDeb As DataRow In dsDebitoren.Tables("tblDebiHeadsFromUser").Rows
+                Dim LsVItem As New ListViewItem
+                LsVItem.Text = dsrowDeb("strDebRGNbr")
+                LsVItem.SubItems.Add(dsrowDeb("lngDebNbr"))
+                LsVItem.SubItems.Add(dsrowDeb("strDebBez"))
+                LsVItem.SubItems.Add(dsrowDeb("lngDebKtoNbr"))
+                LsVItem.SubItems.Add(dsrowDeb("strDebKtoBez"))
+                Me.LsVDebitoren.Items.Add(LsVItem)
+            Next
+
+            'dgvBookings.Refresh()
+            'dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
+            'dgvInfo.DataSource = dsDebitoren.Tables("tblDebitorenInfo")
             Application.DoEvents()
 
 
@@ -1074,8 +1119,6 @@ Friend Class frmImportMain
             'objOracleConn.Open()
             objOracleCmd.Connection = objOracleConn
 
-
-
             'Comboxen
             objdtBuchhaltungen.Clear()
             objDABuchhaltungen.Fill(objdtBuchhaltungen)
@@ -1114,6 +1157,20 @@ Friend Class frmImportMain
             dsDebitoren.Tables("tblDebitorenInfo").Columns.Add(col2)
 
             dgvInfo.DataSource = dsDebitoren.Tables("tblDebitorenInfo")
+
+            Me.mysqlcongen.ConnectionString = "server=ZHDB02.sdlc.mssag.ch;uid=workbench;database=AHZ;Pwd=sesam;Convert Zero Datetime=True"
+            Me.mysqlcongen.Open()
+            Me.mysqlcongen.Close()
+
+            Main.FcInitAccessConnecation(objdbAccessConn, "NetAuction_data_Server.mdb")
+            objdbAccessConn.Open()
+            objdbAccessConn.Close()
+            'Main.FcInitAccessConnecation(objdbAccessConn, "Fleetservice_data_Server.mdb")
+            'objdbAccessConn.Open()
+            'objdbAccessConn.Close()
+
+            'dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
+
 
             'Subbuchungen ausblenden, kann für Testzwecke aktiviert werden
             'dgvBookingSub.DataSource = objdtDebitorenSub
@@ -3368,7 +3425,7 @@ Friend Class frmImportMain
 
 
 
-    Public Sub dgvBookings_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles dgvBookings.CellValueChanged
+    Public Sub dgvBookings_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs)
 
         MessageBox.Show("Cell Velue changed")
         Stop

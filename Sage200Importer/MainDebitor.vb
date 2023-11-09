@@ -14,15 +14,19 @@ Public Class MainDebitor
 
     Public Shared Function FcFillDebit(ByVal intAccounting As Integer,
                                        ByRef objdtHead As DataTable,
-                                       ByRef objdtSub As DataTable) As Integer
+                                       ByRef objdtSub As DataTable,
+                                       ByVal objdbaccessconn As OleDb.OleDbConnection,
+                                       ByVal objdbmysqlcon As MySqlConnection) As Integer
 
         Dim strSQL As String
         Dim strSQLSub As String
         Dim strRGTableType As String
         Dim objRGMySQLConn As New MySqlConnection
         Dim objlocMySQLcmd As New MySqlCommand
-        Dim objdbAccessConn As New OleDb.OleDbConnection
-        Dim objlocOLEdbcmd As New OleDb.OleDbCommand
+        Dim objdbAccessConnLoc As New OleDb.OleDbConnection
+        Dim objlocOLEdbcmdLoc As New OleDb.OleDbCommand
+        Dim strConnection As String
+        Dim objdtlocDebiSub As New DataTable
 
         'Dim objDTDebiHead As New DataTable
         'Dim objdrSub As DataRow
@@ -51,21 +55,34 @@ Public Class MainDebitor
             'objlocMySQLcmd.CommandText = strSQL
             If strRGTableType = "A" Then
                 'Access
-                Call Main.FcInitAccessConnecation(objdbAccessConn,
-                                                  strMDBName)
 
-                objlocOLEdbcmd.CommandText = strSQL
-                objlocOLEdbcmd.Connection = objdbAccessConn
-                objdbAccessConn.Open()
-                objdtHead.Load(objlocOLEdbcmd.ExecuteReader)
-                objdbAccessConn.Close()
+                'Call Main.FcInitAccessConnecation(objdbaccessconn,
+                '                                  strMDBName)
+
+                'objdbAccessConnLoc = objdbaccessconn
+                'objdbAccessConnLoc.Open()
+                objdbaccessconn.Open()
+                objlocOLEdbcmdLoc.CommandText = strSQL
+                'objlocOLEdbcmdLoc.Connection = objdbAccessConnLoc
+                objlocOLEdbcmdLoc.Connection = objdbaccessconn
+                objdtHead.Load(objlocOLEdbcmdLoc.ExecuteReader)
+                'objdbAccessConnLoc.Close()
+                objdbaccessconn.Close()
             ElseIf strRGTableType = "M" Then
-                objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                strConnection = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                objRGMySQLConn = objdbmysqlcon.Clone()
+                objRGMySQLConn.ConnectionString = strConnection
+                'frmImportMain.mysqlcongen.Open()
+                'frmImportMain.mysqlcongen.ChangeDatabase("AHZ")
+                'objRGMySQLConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
                 objlocMySQLcmd.Connection = objRGMySQLConn
                 objlocMySQLcmd.CommandText = strSQL
+                'frmImportMain.mysqlcmdgen.CommandText = strSQL
                 objRGMySQLConn.Open()
+                'frmImportMain.mysqlcongen.Open()
                 objdtHead.Load(objlocMySQLcmd.ExecuteReader)
                 objRGMySQLConn.Close()
+                'frmImportMain.mysqlcongen.Close()
             End If
             'objlocMySQLcmd.Connection = objdbconn
             'objDTDebiHead.Load(objlocMySQLcmd.ExecuteReader)
@@ -91,20 +108,29 @@ Public Class MainDebitor
                                                    objdtHead,
                                                    "D")
                 If strRGTableType = "A" Then
-                    objlocOLEdbcmd.CommandText = strSQLSub
-                    objdbAccessConn.Open()
-                    objdtSub.Load(objlocOLEdbcmd.ExecuteReader)
-                    objdbAccessConn.Close()
+                    'objdbAccessConnLoc.Open()
+                    objdbaccessconn.Open()
+                    objlocOLEdbcmdLoc.CommandText = strSQLSub
+                    objdtSub.Load(objlocOLEdbcmdLoc.ExecuteReader)
+                    'objdbAccessConnLoc.Close()
+                    objdbaccessconn.Close()
                 ElseIf strRGTableType = "M" Then
                     objlocMySQLcmd.CommandText = strSQLSub
+                    'frmImportMain.mysqlcmdgen.CommandText = strSQLSub
                     objRGMySQLConn.Open()
-                    objdtSub.Load(objlocMySQLcmd.ExecuteReader)
+                    'frmImportMain.mysqlcongen.Open()
+                    objdtlocDebiSub.Load(objlocMySQLcmd.ExecuteReader)
+                    'objdtSub.Load(objlocMySQLcmd.ExecuteReader)
                     objRGMySQLConn.Close()
+                    'frmImportMain.mysqlcongen.Close()
                 End If
 
                 Application.DoEvents()
 
             Next
+            'For Each drsub As DataRow In objdtlocDebiSub.Rows
+            '    objdtSub.ImportRow(drsub)
+            'Next
             'Tabellen runden
             'intFcReturns = FcRoundInTable(objdtHead, "dblDebNetto", 2)
             'intFcReturns = FcRoundInTable(objdtHead, "dblDebBrutto", 2)
@@ -118,17 +144,20 @@ Public Class MainDebitor
 
         Finally
 
-            If objdbAccessConn.State = ConnectionState.Open Then
-                objdbAccessConn.Close()
+            If objdbAccessConnLoc.State = ConnectionState.Open Then
+                objdbAccessConnLoc.Close()
             End If
             If objRGMySQLConn.State = ConnectionState.Open Then
                 objRGMySQLConn.Close()
             End If
+            If frmImportMain.mysqlcongen.State = ConnectionState.Open Then
+                frmImportMain.mysqlcongen.Close()
+            End If
 
             objRGMySQLConn = Nothing
-            objdbAccessConn = Nothing
+            objdbAccessConnLoc = Nothing
             objlocMySQLcmd = Nothing
-            objlocOLEdbcmd = Nothing
+            objlocOLEdbcmdLoc = Nothing
 
         End Try
 
