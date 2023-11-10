@@ -12,9 +12,7 @@ Imports System.Data.OleDb
 
 Public Class MainDebitor
 
-    Public Shared Function FcFillDebit(ByVal intAccounting As Integer,
-                                       ByRef objdtHead As DataTable,
-                                       ByRef objdtSub As DataTable,
+    Public Shared Function FcFillDebit(ByVal intAccounting As Int16,
                                        ByVal objdbaccessconn As OleDb.OleDbConnection,
                                        ByVal objdbmysqlcon As MySqlConnection) As Integer
 
@@ -27,15 +25,28 @@ Public Class MainDebitor
         Dim objlocOLEdbcmdLoc As New OleDb.OleDbCommand
         Dim strConnection As String
         Dim objdtlocDebiSub As New DataTable
+        Dim objmysqlcomdwritesub As New MySqlCommand
+        Dim objmysqlconZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim strmysqlSaveSub As String
+        Dim strIdentityName As String
+        Dim objdtLocDebiHead As New DataTable
+        Dim objmysqlcomdwritehead As New MySqlCommand
+        Dim strmysqlSaveHead As String
 
         'Dim objDTDebiHead As New DataTable
         'Dim objdrSub As DataRow
-        'Dim intFcReturns As Int16
+        Dim intFcReturns As Int16
         Dim strMDBName As String
         Dim strSQLToParse As String
 
 
         Try
+
+            'Für den Save der Records
+            strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
+            strIdentityName = Strings.Replace(strIdentityName, "\", "/")
+            objmysqlcomdwritesub.Connection = objmysqlconZHDB02
+            objmysqlcomdwritehead.Connection = objmysqlconZHDB02
 
             strMDBName = Main.FcReadFromSettingsII("Buchh_RGTableMDB",
                                                  intAccounting)
@@ -65,7 +76,8 @@ Public Class MainDebitor
                 objlocOLEdbcmdLoc.CommandText = strSQL
                 'objlocOLEdbcmdLoc.Connection = objdbAccessConnLoc
                 objlocOLEdbcmdLoc.Connection = objdbaccessconn
-                objdtHead.Load(objlocOLEdbcmdLoc.ExecuteReader)
+                'objdtHead.Load(objlocOLEdbcmdLoc.ExecuteReader)
+                objdtLocDebiHead.Load(objlocOLEdbcmdLoc.ExecuteReader)
                 'objdbAccessConnLoc.Close()
                 objdbaccessconn.Close()
             ElseIf strRGTableType = "M" Then
@@ -80,7 +92,8 @@ Public Class MainDebitor
                 'frmImportMain.mysqlcmdgen.CommandText = strSQL
                 objRGMySQLConn.Open()
                 'frmImportMain.mysqlcongen.Open()
-                objdtHead.Load(objlocMySQLcmd.ExecuteReader)
+                'objdtHead.Load(objlocMySQLcmd.ExecuteReader)
+                objdtLocDebiHead.Load(objlocMySQLcmd.ExecuteReader)
                 objRGMySQLConn.Close()
                 'frmImportMain.mysqlcongen.Close()
             End If
@@ -89,8 +102,37 @@ Public Class MainDebitor
             'Durch die Records steppen und Sub-Tabelle füllen
             strSQLToParse = Main.FcReadFromSettingsII("Buchh_SQLDetail",
                                                     intAccounting)
-            For Each row In objdtHead.Rows
-                'Debug.Print(strSQLSub)
+            intFcReturns = FcInitInsCmdDHeads(objmysqlcomdwritehead)
+            For Each row As DataRow In objdtLocDebiHead.Rows
+
+                objmysqlcomdwritehead.Connection.Open()
+                objmysqlcomdwritehead.Parameters("@IdentityName").Value = strIdentityName
+                objmysqlcomdwritehead.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id
+                objmysqlcomdwritehead.Parameters("@intBuchhaltung").Value = intAccounting
+                objmysqlcomdwritehead.Parameters("@strDebRGNbr").Value = row("strDebRGNbr")
+                objmysqlcomdwritehead.Parameters("@intBuchungsart").Value = row("intBuchungsart")
+                objmysqlcomdwritehead.Parameters("@intRGArt").Value = row("intRGArt")
+                objmysqlcomdwritehead.Parameters("@strRGArt").Value = row("strRGArt")
+                objmysqlcomdwritehead.Parameters("@booLinked").Value = False
+                objmysqlcomdwritehead.Parameters("@booLinkedPayed").Value = False
+                objmysqlcomdwritehead.Parameters("@strOPNr").Value = row("strOPNr")
+                objmysqlcomdwritehead.Parameters("@lngDebNbr").Value = row("lngDebNbr")
+                'objmysqlcomdwritehead.Parameters("@strDebBez").Value = ""
+                objmysqlcomdwritehead.Parameters("@lngDebKtoNbr").Value = row("lngDebKtoNbr")
+                'objmysqlcomdwritehead.Parameters("@strDebKtoBez").Value = ""
+                objmysqlcomdwritehead.Parameters("@dblDebNetto").Value = row("dblDebNetto")
+                objmysqlcomdwritehead.Parameters("@dblDebMwSt").Value = row("dblDebMwSt")
+                objmysqlcomdwritehead.Parameters("@dblDebBrutto").Value = row("dblDebBrutto")
+                objmysqlcomdwritehead.Parameters("@lngDebIdentNbr").Value = row("lngDebIdentNbr")
+                objmysqlcomdwritehead.Parameters("@strDebText").Value = row("strDebText")
+                objmysqlcomdwritehead.Parameters("@strDebreferenz").Value = row("strDebReferenz")
+                objmysqlcomdwritehead.Parameters("@datDebRGDatum").Value = row("datDebRGDatum")
+                objmysqlcomdwritehead.Parameters("@datDebValDatum").Value = row("datDebValDatum")
+                objmysqlcomdwritehead.Parameters("@strDebStatusBitLog").Value = ""
+                objmysqlcomdwritehead.Parameters("@strDebStatusText").Value = ""
+                objmysqlcomdwritehead.Parameters("@strDebBookStatus").Value = ""
+                objmysqlcomdwritehead.ExecuteNonQuery()
+                objmysqlcomdwritehead.Connection.Close()
                 'If row("intBuchungsart") = 1 Then
                 '    objdrSub = objdtSub.NewRow()
                 '    objdrSub("strRGNr") = row("strDebRGNbr")
@@ -105,13 +147,13 @@ Public Class MainDebitor
                 'If row("strDebRGNbr") = "" Then Stop
                 strSQLSub = MainDebitor.FcSQLParse(strSQLToParse,
                                                    row("strDebRGNbr"),
-                                                   objdtHead,
+                                                   objdtLocDebiHead,
                                                    "D")
                 If strRGTableType = "A" Then
                     'objdbAccessConnLoc.Open()
                     objdbaccessconn.Open()
                     objlocOLEdbcmdLoc.CommandText = strSQLSub
-                    objdtSub.Load(objlocOLEdbcmdLoc.ExecuteReader)
+                    objdtlocDebiSub.Load(objlocOLEdbcmdLoc.ExecuteReader)
                     'objdbAccessConnLoc.Close()
                     objdbaccessconn.Close()
                 ElseIf strRGTableType = "M" Then
@@ -125,12 +167,20 @@ Public Class MainDebitor
                     'frmImportMain.mysqlcongen.Close()
                 End If
 
-                Application.DoEvents()
+                'Application.DoEvents()
 
             Next
-            'For Each drsub As DataRow In objdtlocDebiSub.Rows
-            '    objdtSub.ImportRow(drsub)
-            'Next
+            For Each drsub As DataRow In objdtlocDebiSub.Rows
+                '    objdtSub.ImportRow(drsub)
+                strmysqlSaveSub = "INSERT INTO tbldebitorensub (IdentityName, ProcessID, strRGNr, intSollHaben, lngKto, lngKST, dblNetto, dblMwSt, dblBrutto) "
+                strmysqlSaveSub += " VALUES('"
+                strmysqlSaveSub += strIdentityName + "', " + Process.GetCurrentProcess().Id.ToString + ", '" + drsub("strRGNr") + "', " + drsub("intSollHaben").ToString + ", " + drsub("lngKto").ToString + ", " + drsub("lngKST").ToString + ", " + drsub("dblNetto").ToString + ", " + drsub("dblMwSt").ToString + ", " + drsub("dblBrutto").ToString + ")"
+                objmysqlcomdwritesub.CommandText = strmysqlSaveSub
+                objmysqlcomdwritesub.Connection.Open()
+                objmysqlcomdwritesub.ExecuteNonQuery()
+                objmysqlcomdwritesub.Connection.Close()
+
+            Next
             'Tabellen runden
             'intFcReturns = FcRoundInTable(objdtHead, "dblDebNetto", 2)
             'intFcReturns = FcRoundInTable(objdtHead, "dblDebBrutto", 2)
@@ -163,6 +213,162 @@ Public Class MainDebitor
 
     End Function
 
+
+    Public Shared Function FcWriteDebiHeads(ByVal tblHeads As DataTable,
+                                            ByVal intBuha As Int16) As Int16
+
+        Dim objmysqlconZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim strIdentityName As String
+        Dim objmysqlcomdwritehead As New MySqlCommand
+        Dim intFcReturns As Int16
+
+        Try
+
+            strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
+            strIdentityName = Strings.Replace(strIdentityName, "\", "/")
+            objmysqlcomdwritehead.Connection = objmysqlconZHDB02
+
+            intFcReturns = FcInitInsCmdDHeads(objmysqlcomdwritehead)
+
+            For Each row As DataRow In tblHeads.Rows
+
+                objmysqlcomdwritehead.Connection.Open()
+                objmysqlcomdwritehead.Parameters("@IdentityName").Value = strIdentityName
+                objmysqlcomdwritehead.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id
+                objmysqlcomdwritehead.Parameters("@intBuchhaltung").Value = intBuha
+                objmysqlcomdwritehead.Parameters("@strDebRGNbr").Value = row("strDebRGNbr")
+                objmysqlcomdwritehead.Parameters("@booLinked").Value = False
+                objmysqlcomdwritehead.Parameters("@booLinkedPayed").Value = False
+                objmysqlcomdwritehead.Parameters("@lngDebNbr").Value = row("lngDebNbr")
+                objmysqlcomdwritehead.Parameters("@strDebBez").Value = ""
+                objmysqlcomdwritehead.Parameters("@lngDebKtoNbr").Value = row("lngDebKtoNbr")
+                objmysqlcomdwritehead.Parameters("@strDebKtoBez").Value = ""
+                objmysqlcomdwritehead.Parameters("@datDebRGDatum").Value = row("datDebRGDatum")
+                objmysqlcomdwritehead.Parameters("@datDebValDatum").Value = row("datDebValDatum")
+                objmysqlcomdwritehead.Parameters("@strDebStatusBitLog").Value = ""
+                objmysqlcomdwritehead.Parameters("@strDebStatusText").Value = ""
+                objmysqlcomdwritehead.Parameters("@strDebBookStatus").Value = ""
+                objmysqlcomdwritehead.ExecuteNonQuery()
+                objmysqlcomdwritehead.Connection.Close()
+
+            Next
+            Return 0
+
+
+        Catch ex As Exception
+            MessageBox.Show("Error bei Schreiben DebiHeads to Table")
+            Return 1
+
+        End Try
+
+
+    End Function
+
+
+    Public Shared Function FcInitInsCmdDHeads(ByRef mysqlinscmd As MySqlCommand) As Int16
+
+        'Dim strIdentityName As String
+
+        'Debitoren - Head
+        Dim inscmdFields As String
+        Dim inscmdValues As String
+
+        Try
+
+            inscmdFields = "IdentityName"
+            inscmdValues = "@IdentityName"
+            inscmdFields += ", ProcessID"
+            inscmdValues += ", @ProcessID"
+            inscmdFields += ", intBuchhaltung"
+            inscmdValues += ", @intBuchhaltung"
+            inscmdFields += ", strDebRGNbr"
+            inscmdValues += ", @strDebRGNbr"
+            inscmdFields += ", intBuchungsart"
+            inscmdValues += ", @intBuchungsart"
+            inscmdFields += ", intRGArt"
+            inscmdValues += ", @intRGArt"
+            inscmdFields += ", strRGArt"
+            inscmdValues += ", @strRGArt"
+            inscmdFields += ", booLinked"
+            inscmdValues += ", @booLinked"
+            inscmdFields += ", booLinkedPayed"
+            inscmdValues += ", @booLinkedPayed"
+            inscmdFields += ", strOPNr"
+            inscmdValues += ", @strOPNr"
+            inscmdFields += ", lngDebNbr"
+            inscmdValues += ", @lngDebNbr"
+            'inscmdFields += ", strDebBez"
+            'inscmdValues += ", @strDebBez"
+            inscmdFields += ", lngDebKtoNbr"
+            inscmdValues += ", @lngDebKtoNbr"
+            'inscmdFields += ", strDebKtoBez"
+            'inscmdValues += ", @strDebKtoBez"
+            inscmdFields += ", dblDebNetto"
+            inscmdValues += ", @dblDebNetto"
+            inscmdFields += ", dblDebMwSt"
+            inscmdValues += ", @dblDebMwSt"
+            inscmdFields += ", dblDebBrutto"
+            inscmdValues += ", @dblDebBrutto"
+            inscmdFields += ", lngDebIdentNbr"
+            inscmdValues += ", @lngDebIdentNbr"
+            inscmdFields += ", strDebText"
+            inscmdValues += ", @strDebText"
+            inscmdFields += ", strDebReferenz"
+            inscmdValues += ", @strDebReferenz"
+            inscmdFields += ", datDebRGDatum"
+            inscmdValues += ", @datDebRGDatum"
+            inscmdFields += ", datDebValDatum"
+            inscmdValues += ", @datDebValDatum"
+            inscmdFields += ", strDebStatusBitLog"
+            inscmdValues += ", @strDebStatusBitLog"
+            inscmdFields += ", strDebStatusText"
+            inscmdValues += ", @strDebStatusText"
+            inscmdFields += ", strDebBookStatus"
+            inscmdValues += ", @strDebBookStatus"
+
+            'strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
+            'strIdentityName = Strings.Replace(strIdentityName, "\", "/")
+
+            'Dim daDebitorenHead As New MySqlDataAdapter()
+            'mysqlconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
+
+            'Ins cmd DebiHead
+            mysqlinscmd.CommandText = "INSERT INTO tbldebitorenjhead (" + inscmdFields + ") VALUES (" + inscmdValues + ")"
+            mysqlinscmd.Parameters.Add("@IdentityName", MySqlDbType.String).SourceColumn = "IdentityName"
+            mysqlinscmd.Parameters.Add("@ProcessID", MySqlDbType.Int16).SourceColumn = "ProcessID"
+            mysqlinscmd.Parameters.Add("@intBuchhaltung", MySqlDbType.Int16).SourceColumn = "intBuchhaltung"
+            mysqlinscmd.Parameters.Add("@strDebRGNbr", MySqlDbType.String).SourceColumn = "strDebRGNbr"
+            mysqlinscmd.Parameters.Add("@intBuchungsart", MySqlDbType.Int16).SourceColumn = "intBuchungsart"
+            mysqlinscmd.Parameters.Add("@intRGArt", MySqlDbType.Int16).SourceColumn = "intRGArt"
+            mysqlinscmd.Parameters.Add("@strRGArt", MySqlDbType.String).SourceColumn = "strRGArt"
+            mysqlinscmd.Parameters.Add("@booLinked", MySqlDbType.Byte).SourceColumn = "booLinked"
+            mysqlinscmd.Parameters.Add("@booLinkedPayed", MySqlDbType.Byte).SourceColumn = "booLinkedPayed"
+            mysqlinscmd.Parameters.Add("@strOPNr", MySqlDbType.String).SourceColumn = "strOPNr"
+            mysqlinscmd.Parameters.Add("@lngDebNbr", MySqlDbType.Int32).SourceColumn = "lngDebNbr"
+            'mysqlinscmd.Parameters.Add("@strDebBez", MySqlDbType.String).SourceColumn = "strDebBez"
+            mysqlinscmd.Parameters.Add("@lngDebKtoNbr", MySqlDbType.Int32).SourceColumn = "lngDebKtoNbr"
+            'mysqlinscmd.Parameters.Add("@strDebKtoBez", MySqlDbType.String).SourceColumn = "strDebKtoBez"
+            mysqlinscmd.Parameters.Add("@dblDebNetto", MySqlDbType.Decimal).SourceColumn = "dblDebNetto"
+            mysqlinscmd.Parameters.Add("@dblDebMwst", MySqlDbType.Decimal).SourceColumn = "dblDebMwSt"
+            mysqlinscmd.Parameters.Add("@dblDebBrutto", MySqlDbType.Decimal).SourceColumn = "dblDebBrutto"
+            mysqlinscmd.Parameters.Add("@strDebText", MySqlDbType.String).SourceColumn = "strDebText"
+            mysqlinscmd.Parameters.Add("@lngDebIdentNbr", MySqlDbType.Int32).SourceColumn = "lngDebIdentNbr"
+            mysqlinscmd.Parameters.Add("@strDebReferenz", MySqlDbType.String).SourceColumn = "strDebReferenz"
+            mysqlinscmd.Parameters.Add("@datDebRGDatum", MySqlDbType.Date).SourceColumn = "datDebRGDatum"
+            mysqlinscmd.Parameters.Add("@datDebValDatum", MySqlDbType.Date).SourceColumn = "datDebValDatum"
+            mysqlinscmd.Parameters.Add("@strDebStatusBitLog", MySqlDbType.String).SourceColumn = "strDebStatusBitLog"
+            mysqlinscmd.Parameters.Add("@strDebStatusText", MySqlDbType.String).SourceColumn = "strDebStatusText"
+            mysqlinscmd.Parameters.Add("@strDebBookStatus", MySqlDbType.String).SourceColumn = "strDebBookStatus"
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem HeadCommand Init", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Return 1
+
+        End Try
+
+    End Function
+
     Public Shared Function FcReadDebitorKName(ByRef objfiBuha As SBSXASLib.AXiFBhg,
                                               ByVal lngDebKtoNbr As Long) As String
 
@@ -183,7 +389,7 @@ Public Class MainDebitor
             End If
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Debitoren-Daten-Lesen Problem", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+
 
         Finally
             Application.DoEvents()
