@@ -230,6 +230,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApplicationEvents.vb" />
+    <Compile Include="ClassImport.vb" />
     <Compile Include="frmImportMain.vb">
       <SubType>Form</SubType>
     </Compile>

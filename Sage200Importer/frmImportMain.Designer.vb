@@ -52,13 +52,14 @@ Partial Class frmImportMain
         Me.mysqlcmdDebSubRead = New MySqlConnector.MySqlCommand()
         Me.mysqlcongen = New MySqlConnector.MySqlConnection()
         Me.mysqlcmdgen = New MySqlConnector.MySqlCommand()
-        Me.LsVDebitoren = New System.Windows.Forms.ListView()
         Me.dgvBookings = New System.Windows.Forms.DataGridView()
+        Me.dgvBookingSub = New System.Windows.Forms.DataGridView()
         Me.GroupBox1.SuspendLayout()
         Me.GroupBox2.SuspendLayout()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'cmbBuha
@@ -303,23 +304,21 @@ Partial Class frmImportMain
         Me.mysqlcmdgen.Transaction = Nothing
         Me.mysqlcmdgen.UpdatedRowSource = System.Data.UpdateRowSource.None
         '
-        'LsVDebitoren
-        '
-        Me.LsVDebitoren.CheckBoxes = True
-        Me.LsVDebitoren.HideSelection = False
-        Me.LsVDebitoren.Location = New System.Drawing.Point(8, 157)
-        Me.LsVDebitoren.Name = "LsVDebitoren"
-        Me.LsVDebitoren.Size = New System.Drawing.Size(1652, 468)
-        Me.LsVDebitoren.TabIndex = 20
-        Me.LsVDebitoren.UseCompatibleStateImageBehavior = False
-        '
         'dgvBookings
         '
         Me.dgvBookings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvBookings.Location = New System.Drawing.Point(559, 34)
+        Me.dgvBookings.Location = New System.Drawing.Point(8, 153)
         Me.dgvBookings.Name = "dgvBookings"
-        Me.dgvBookings.Size = New System.Drawing.Size(290, 86)
+        Me.dgvBookings.Size = New System.Drawing.Size(1652, 480)
         Me.dgvBookings.TabIndex = 21
+        '
+        'dgvBookingSub
+        '
+        Me.dgvBookingSub.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvBookingSub.Location = New System.Drawing.Point(314, 18)
+        Me.dgvBookingSub.Name = "dgvBookingSub"
+        Me.dgvBookingSub.Size = New System.Drawing.Size(744, 127)
+        Me.dgvBookingSub.TabIndex = 22
         '
         'frmImportMain
         '
@@ -327,8 +326,8 @@ Partial Class frmImportMain
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.AutoScroll = True
         Me.ClientSize = New System.Drawing.Size(1672, 637)
+        Me.Controls.Add(Me.dgvBookingSub)
         Me.Controls.Add(Me.dgvBookings)
-        Me.Controls.Add(Me.LsVDebitoren)
         Me.Controls.Add(Me.dgvInfo)
         Me.Controls.Add(Me.GroupBox2)
         Me.Controls.Add(Me.butDblDebis)
@@ -349,6 +348,7 @@ Partial Class frmImportMain
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -383,6 +383,6 @@ Partial Class frmImportMain
     Friend WithEvents mysqlcmdDebSubDel As MySqlConnector.MySqlCommand
     Public WithEvents mysqlcongen As MySqlConnector.MySqlConnection
     Public WithEvents mysqlcmdgen As MySqlConnector.MySqlCommand
-    Friend WithEvents LsVDebitoren As ListView
     Friend WithEvents dgvBookings As DataGridView
+    Friend WithEvents dgvBookingSub As DataGridView
 End Class

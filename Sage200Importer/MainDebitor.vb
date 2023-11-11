@@ -42,9 +42,6 @@ Public Class MainDebitor
 
         Try
 
-            'Für den Save der Records
-            strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
-            strIdentityName = Strings.Replace(strIdentityName, "\", "/")
             objmysqlcomdwritesub.Connection = objmysqlconZHDB02
             objmysqlcomdwritehead.Connection = objmysqlconZHDB02
 
