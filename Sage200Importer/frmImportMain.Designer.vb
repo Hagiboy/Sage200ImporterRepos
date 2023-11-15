@@ -28,13 +28,13 @@ Partial Class frmImportMain
         Me.butKreditoren = New System.Windows.Forms.Button()
         Me.butDblKredis = New System.Windows.Forms.Button()
         Me.butDebitoren = New System.Windows.Forms.Button()
+        Me.butDblDebis = New System.Windows.Forms.Button()
         Me.butImport = New System.Windows.Forms.Button()
         Me.txtNumber = New System.Windows.Forms.TextBox()
         Me.butImportK = New System.Windows.Forms.Button()
         Me.cmbPerioden = New System.Windows.Forms.ComboBox()
         Me.lblVersion = New System.Windows.Forms.Label()
         Me.butMail = New System.Windows.Forms.Button()
-        Me.butDblDebis = New System.Windows.Forms.Button()
         Me.chkValutaCorrect = New System.Windows.Forms.CheckBox()
         Me.dtpValutaCorrect = New System.Windows.Forms.DateTimePicker()
         Me.GroupBox2 = New System.Windows.Forms.GroupBox()
@@ -43,8 +43,8 @@ Partial Class frmImportMain
         Me.MySQLdaDebitoren = New MySqlConnector.MySqlDataAdapter()
         Me.mysqlcmdDebDel = New MySqlConnector.MySqlCommand()
         Me.mysqlconn = New MySqlConnector.MySqlConnection()
-        Me.mysqlcmdDebIns = New MySqlConnector.MySqlCommand()
         Me.mysqlcmdDebRead = New MySqlConnector.MySqlCommand()
+        Me.mysqlcmdDebIns = New MySqlConnector.MySqlCommand()
         Me.mysqlcmbld = New MySqlConnector.MySqlCommandBuilder()
         Me.MySQLdaDebitorenSub = New MySqlConnector.MySqlDataAdapter()
         Me.mysqlcmdDebSubDel = New MySqlConnector.MySqlCommand()
@@ -54,19 +54,22 @@ Partial Class frmImportMain
         Me.mysqlcmdgen = New MySqlConnector.MySqlCommand()
         Me.dgvBookings = New System.Windows.Forms.DataGridView()
         Me.dgvBookingSub = New System.Windows.Forms.DataGridView()
+        Me.ToolStripContainer1 = New System.Windows.Forms.ToolStripContainer()
         Me.GroupBox1.SuspendLayout()
         Me.GroupBox2.SuspendLayout()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.ToolStripContainer1.ContentPanel.SuspendLayout()
+        Me.ToolStripContainer1.SuspendLayout()
         Me.SuspendLayout()
         '
         'cmbBuha
         '
         Me.cmbBuha.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.cmbBuha.FormattingEnabled = True
-        Me.cmbBuha.Location = New System.Drawing.Point(23, 24)
+        Me.cmbBuha.Location = New System.Drawing.Point(15, 4)
         Me.cmbBuha.Name = "cmbBuha"
         Me.cmbBuha.Size = New System.Drawing.Size(270, 28)
         Me.cmbBuha.TabIndex = 0
@@ -76,7 +79,8 @@ Partial Class frmImportMain
         Me.GroupBox1.Controls.Add(Me.butKreditoren)
         Me.GroupBox1.Controls.Add(Me.butDblKredis)
         Me.GroupBox1.Controls.Add(Me.butDebitoren)
-        Me.GroupBox1.Location = New System.Drawing.Point(8, 85)
+        Me.GroupBox1.Controls.Add(Me.butDblDebis)
+        Me.GroupBox1.Location = New System.Drawing.Point(312, 4)
         Me.GroupBox1.Name = "GroupBox1"
         Me.GroupBox1.Size = New System.Drawing.Size(281, 62)
         Me.GroupBox1.TabIndex = 2
@@ -113,10 +117,21 @@ Partial Class frmImportMain
         Me.butDebitoren.Text = "&Debitoren"
         Me.butDebitoren.UseVisualStyleBackColor = True
         '
+        'butDblDebis
+        '
+        Me.butDblDebis.Location = New System.Drawing.Point(98, 0)
+        Me.butDblDebis.Name = "butDblDebis"
+        Me.butDblDebis.Size = New System.Drawing.Size(41, 22)
+        Me.butDblDebis.TabIndex = 13
+        Me.butDblDebis.Text = "DD"
+        Me.butDblDebis.UseVisualStyleBackColor = True
+        Me.butDblDebis.Visible = False
+        '
         'butImport
         '
+        Me.butImport.Enabled = False
         Me.butImport.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.butImport.Location = New System.Drawing.Point(1565, 69)
+        Me.butImport.Location = New System.Drawing.Point(1371, 21)
         Me.butImport.Name = "butImport"
         Me.butImport.Size = New System.Drawing.Size(103, 41)
         Me.butImport.TabIndex = 4
@@ -134,7 +149,7 @@ Partial Class frmImportMain
         'butImportK
         '
         Me.butImportK.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.butImportK.Location = New System.Drawing.Point(1565, 111)
+        Me.butImportK.Location = New System.Drawing.Point(1380, 63)
         Me.butImportK.Name = "butImportK"
         Me.butImportK.Size = New System.Drawing.Size(103, 41)
         Me.butImportK.TabIndex = 9
@@ -144,7 +159,7 @@ Partial Class frmImportMain
         'cmbPerioden
         '
         Me.cmbPerioden.FormattingEnabled = True
-        Me.cmbPerioden.Location = New System.Drawing.Point(23, 58)
+        Me.cmbPerioden.Location = New System.Drawing.Point(15, 39)
         Me.cmbPerioden.Name = "cmbPerioden"
         Me.cmbPerioden.Size = New System.Drawing.Size(92, 21)
         Me.cmbPerioden.TabIndex = 10
@@ -152,7 +167,7 @@ Partial Class frmImportMain
         'lblVersion
         '
         Me.lblVersion.AutoSize = True
-        Me.lblVersion.Location = New System.Drawing.Point(220, 63)
+        Me.lblVersion.Location = New System.Drawing.Point(139, 40)
         Me.lblVersion.Name = "lblVersion"
         Me.lblVersion.Size = New System.Drawing.Size(42, 13)
         Me.lblVersion.TabIndex = 11
@@ -166,16 +181,6 @@ Partial Class frmImportMain
         Me.butMail.TabIndex = 12
         Me.butMail.Text = "&Mail"
         Me.butMail.UseVisualStyleBackColor = True
-        '
-        'butDblDebis
-        '
-        Me.butDblDebis.Location = New System.Drawing.Point(12, 85)
-        Me.butDblDebis.Name = "butDblDebis"
-        Me.butDblDebis.Size = New System.Drawing.Size(41, 22)
-        Me.butDblDebis.TabIndex = 13
-        Me.butDblDebis.Text = "DD"
-        Me.butDblDebis.UseVisualStyleBackColor = True
-        Me.butDblDebis.Visible = False
         '
         'chkValutaCorrect
         '
@@ -201,9 +206,9 @@ Partial Class frmImportMain
         '
         Me.GroupBox2.Controls.Add(Me.chkValutaCorrect)
         Me.GroupBox2.Controls.Add(Me.dtpValutaCorrect)
-        Me.GroupBox2.Location = New System.Drawing.Point(1419, 18)
+        Me.GroupBox2.Location = New System.Drawing.Point(610, 4)
         Me.GroupBox2.Name = "GroupBox2"
-        Me.GroupBox2.Size = New System.Drawing.Size(140, 133)
+        Me.GroupBox2.Size = New System.Drawing.Size(140, 81)
         Me.GroupBox2.TabIndex = 17
         Me.GroupBox2.TabStop = False
         Me.GroupBox2.Text = "Optionen"
@@ -211,9 +216,9 @@ Partial Class frmImportMain
         'dgvInfo
         '
         Me.dgvInfo.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvInfo.Location = New System.Drawing.Point(1064, 16)
+        Me.dgvInfo.Location = New System.Drawing.Point(1210, 19)
         Me.dgvInfo.Name = "dgvInfo"
-        Me.dgvInfo.Size = New System.Drawing.Size(337, 131)
+        Me.dgvInfo.Size = New System.Drawing.Size(125, 36)
         Me.dgvInfo.TabIndex = 18
         '
         'dsDebitoren
@@ -223,8 +228,10 @@ Partial Class frmImportMain
         '
         'MySQLdaDebitoren
         '
+        Me.MySQLdaDebitoren.AcceptChangesDuringFill = False
+        Me.MySQLdaDebitoren.AcceptChangesDuringUpdate = False
         Me.MySQLdaDebitoren.DeleteCommand = Me.mysqlcmdDebDel
-        Me.MySQLdaDebitoren.InsertCommand = Me.mysqlcmdDebIns
+        Me.MySQLdaDebitoren.InsertCommand = Nothing
         Me.MySQLdaDebitoren.SelectCommand = Me.mysqlcmdDebRead
         Me.MySQLdaDebitoren.UpdateBatchSize = 0
         Me.MySQLdaDebitoren.UpdateCommand = Nothing
@@ -242,19 +249,19 @@ Partial Class frmImportMain
         Me.mysqlconn.ProvidePasswordCallback = Nothing
         Me.mysqlconn.RemoteCertificateValidationCallback = Nothing
         '
-        'mysqlcmdDebIns
-        '
-        Me.mysqlcmdDebIns.CommandTimeout = 30
-        Me.mysqlcmdDebIns.Connection = Me.mysqlconn
-        Me.mysqlcmdDebIns.Transaction = Nothing
-        Me.mysqlcmdDebIns.UpdatedRowSource = System.Data.UpdateRowSource.None
-        '
         'mysqlcmdDebRead
         '
         Me.mysqlcmdDebRead.CommandTimeout = 30
         Me.mysqlcmdDebRead.Connection = Me.mysqlconn
         Me.mysqlcmdDebRead.Transaction = Nothing
         Me.mysqlcmdDebRead.UpdatedRowSource = System.Data.UpdateRowSource.None
+        '
+        'mysqlcmdDebIns
+        '
+        Me.mysqlcmdDebIns.CommandTimeout = 30
+        Me.mysqlcmdDebIns.Connection = Me.mysqlconn
+        Me.mysqlcmdDebIns.Transaction = Nothing
+        Me.mysqlcmdDebIns.UpdatedRowSource = System.Data.UpdateRowSource.None
         '
         'mysqlcmbld
         '
@@ -307,39 +314,51 @@ Partial Class frmImportMain
         'dgvBookings
         '
         Me.dgvBookings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvBookings.Location = New System.Drawing.Point(8, 153)
+        Me.dgvBookings.Location = New System.Drawing.Point(838, 19)
         Me.dgvBookings.Name = "dgvBookings"
-        Me.dgvBookings.Size = New System.Drawing.Size(1652, 480)
+        Me.dgvBookings.Size = New System.Drawing.Size(237, 64)
         Me.dgvBookings.TabIndex = 21
         '
         'dgvBookingSub
         '
         Me.dgvBookingSub.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvBookingSub.Location = New System.Drawing.Point(314, 18)
+        Me.dgvBookingSub.Location = New System.Drawing.Point(1098, 23)
         Me.dgvBookingSub.Name = "dgvBookingSub"
-        Me.dgvBookingSub.Size = New System.Drawing.Size(744, 127)
+        Me.dgvBookingSub.Size = New System.Drawing.Size(73, 27)
         Me.dgvBookingSub.TabIndex = 22
+        '
+        'ToolStripContainer1
+        '
+        '
+        'ToolStripContainer1.ContentPanel
+        '
+        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.cmbPerioden)
+        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.cmbBuha)
+        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox2)
+        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.lblVersion)
+        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox1)
+        Me.ToolStripContainer1.ContentPanel.Size = New System.Drawing.Size(982, 78)
+        Me.ToolStripContainer1.Location = New System.Drawing.Point(2, 1)
+        Me.ToolStripContainer1.Name = "ToolStripContainer1"
+        Me.ToolStripContainer1.Size = New System.Drawing.Size(982, 103)
+        Me.ToolStripContainer1.TabIndex = 24
+        Me.ToolStripContainer1.Text = "ToolStripContainer1"
         '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.AutoScroll = True
-        Me.ClientSize = New System.Drawing.Size(1672, 637)
+        Me.ClientSize = New System.Drawing.Size(1672, 767)
+        Me.Controls.Add(Me.dgvInfo)
+        Me.Controls.Add(Me.ToolStripContainer1)
         Me.Controls.Add(Me.dgvBookingSub)
         Me.Controls.Add(Me.dgvBookings)
-        Me.Controls.Add(Me.dgvInfo)
-        Me.Controls.Add(Me.GroupBox2)
-        Me.Controls.Add(Me.butDblDebis)
         Me.Controls.Add(Me.butMail)
-        Me.Controls.Add(Me.lblVersion)
-        Me.Controls.Add(Me.cmbPerioden)
         Me.Controls.Add(Me.butImportK)
         Me.Controls.Add(Me.txtNumber)
         Me.Controls.Add(Me.butImport)
-        Me.Controls.Add(Me.GroupBox1)
-        Me.Controls.Add(Me.cmbBuha)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.IsMdiContainer = True
         Me.Name = "frmImportMain"
         Me.Text = "Sage200 - Importer"
         Me.GroupBox1.ResumeLayout(False)
@@ -349,6 +368,10 @@ Partial Class frmImportMain
         CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.ToolStripContainer1.ContentPanel.ResumeLayout(False)
+        Me.ToolStripContainer1.ContentPanel.PerformLayout()
+        Me.ToolStripContainer1.ResumeLayout(False)
+        Me.ToolStripContainer1.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -385,4 +408,5 @@ Partial Class frmImportMain
     Public WithEvents mysqlcmdgen As MySqlConnector.MySqlCommand
     Friend WithEvents dgvBookings As DataGridView
     Friend WithEvents dgvBookingSub As DataGridView
+    Friend WithEvents ToolStripContainer1 As ToolStripContainer
 End Class

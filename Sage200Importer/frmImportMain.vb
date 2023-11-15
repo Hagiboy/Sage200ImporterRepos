@@ -103,203 +103,34 @@ Friend Class frmImportMain
 
     Public Sub InitDB()
 
-        'Dim objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
         Dim strIdentityName As String
-        Dim intFunctionReturns As Int16
 
-        'Debitoren - Head
-        'Dim inscmdFields As String
-        'Dim inscmdValues As String
-        'inscmdFields = "IdentityName"
-        'inscmdValues = "@IdentityName"
-        'inscmdFields += ", ProcessID"
-        'inscmdValues += ", @ProcessID"
-        'inscmdFields += ", intBuchhaltung"
-        'inscmdValues += ", @intBuchhaltung"
-        'inscmdFields += ", strDebRGNbr"
-        'inscmdValues += ", @strDebRGNbr"
-        'inscmdFields += ", intBuchungsart"
-        'inscmdValues += ", @intBuchungsart"
-        'inscmdFields += ", intRGArt"
-        'inscmdValues += ", @intRGArt"
-        'inscmdFields += ", strRGArt"
-        'inscmdValues += ", @strRGArt"
-        'inscmdFields += ", booLinked"
-        'inscmdValues += ", @booLinked"
-        'inscmdFields += ", booLinkedPayed"
-        'inscmdValues += ", @booLinkedPayed"
-        'inscmdFields += ", strOPNr"
-        'inscmdValues += ", @strOPNr"
-        'inscmdFields += ", lngDebNbr"
-        'inscmdValues += ", @lngDebNbr"
-        'inscmdFields += ", strDebBez"
-        'inscmdValues += ", @strDebBez"
-        'inscmdFields += ", lngDebKtoNbr"
-        'inscmdValues += ", @lngDebKtoNbr"
-        'inscmdFields += ", strDebKtoBez"
-        'inscmdValues += ", @strDebKtoBez"
-        'inscmdFields += ", dblDebNetto"
-        'inscmdValues += ", @dblDebNetto"
-        'inscmdFields += ", dblDebMwSt"
-        'inscmdValues += ", @dblDebMwSt"
-        'inscmdFields += ", dblDebBrutto"
-        'inscmdValues += ", @dblDebBrutto"
-        'inscmdFields += ", intSubBookings"
-        'inscmdValues += ", @intSubBookings"
-        'inscmdFields += ", dblSumSubBookings"
-        'inscmdValues += ", @dblSumSubBookings"
-        'inscmdFields += ", lngDebIdentNbr"
-        'inscmdValues += ", @lngDebIdentNbr"
-        'inscmdFields += ", datDebRGDatum"
-        'inscmdValues += ", @datDebRGDatum"
-        'inscmdFields += ", datDebValDatum"
-        'inscmdValues += ", @datDebValDatum"
-        'inscmdFields += ", strDebStatusBitLog"
-        'inscmdValues += ", @strDebStatusBitLog"
-        'inscmdFields += ", strDebStatusText"
-        'inscmdValues += ", @strDebStatusText"
-        'inscmdFields += ", strDebBookStatus"
-        'inscmdValues += ", @strDebBookStatus"
+        Try
 
-        strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
-        strIdentityName = Strings.Replace(strIdentityName, "\", "/")
+            strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
+            strIdentityName = Strings.Replace(strIdentityName, "\", "/")
 
-        'Dim daDebitorenHead As New MySqlDataAdapter()
-        mysqlconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
-        'Read cmd DebiHead
-        mysqlcmdDebRead.CommandText = "SELECT * FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
+            'Dim daDebitorenHead As New MySqlDataAdapter()
+            mysqlconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
+            'Read cmd DebiHead
+            mysqlcmdDebRead.CommandText = "SELECT * FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
 
-        'Ins cmd DebiHead
-        'mysqlcmdDebIns.CommandText = "INSERT INTO tbldebitorenjhead (" + inscmdFields + ") VALUES (" + inscmdValues + ")"
-        'mysqlcmdDebIns.Parameters.Add("@IdentityName", DbType.String).SourceColumn = "IdentityName"
-        'mysqlcmdDebIns.Parameters.Add("@ProcessID", DbType.Int16).SourceColumn = "ProcessID"
-        'mysqlcmdDebIns.Parameters.Add("@intBuchhaltung", DbType.Int16).SourceColumn = "intBuchhaltung"
-        'mysqlcmdDebIns.Parameters.Add("@strDebRGNbr", DbType.String).SourceColumn = "strDebRGNbr"
-        'mysqlcmdDebIns.Parameters.Add("@intBuchungsart", DbType.Int16).SourceColumn = "intBuchungsart"
-        'mysqlcmdDebIns.Parameters.Add("@intRGArt", DbType.Int16).SourceColumn = "intRGArt"
-        'mysqlcmdDebIns.Parameters.Add("@strRGArt", DbType.String).SourceColumn = "strRGArt"
-        'mysqlcmdDebIns.Parameters.Add("@booLinked", DbType.Boolean).SourceColumn = "booLinked"
-        'mysqlcmdDebIns.Parameters.Add("@booLinkedPayed", DbType.Boolean).SourceColumn = "booLinkedPayed"
-        'mysqlcmdDebIns.Parameters.Add("@strOPNr", DbType.String).SourceColumn = "strOPNr"
-        'mysqlcmdDebIns.Parameters.Add("@lngDebNbr", DbType.Int32).SourceColumn = "lngDebNbr"
-        'mysqlcmdDebIns.Parameters.Add("@strDebBez", DbType.String).SourceColumn = "strDebBez"
-        'mysqlcmdDebIns.Parameters.Add("@lngDebKtoNbr", DbType.Int32).SourceColumn = "lngDebKtoNbr"
-        'mysqlcmdDebIns.Parameters.Add("@strDebKtoBez", DbType.String).SourceColumn = "strDebKtoBez"
-        'mysqlcmdDebIns.Parameters.Add("@dblDebNetto", DbType.Decimal).SourceColumn = "dblDebNetto"
-        'mysqlcmdDebIns.Parameters.Add("@dblDebMwSt", DbType.Decimal).SourceColumn = "dblDebMwSt"
-        'mysqlcmdDebIns.Parameters.Add("@dblDebBrutto", DbType.Decimal).SourceColumn = "dblDebBrutto"
-        'mysqlcmdDebIns.Parameters.Add("@intSubBookings", DbType.Int32).SourceColumn = "intSubBookings"
-        'mysqlcmdDebIns.Parameters.Add("@dblSumSubBookings", DbType.Decimal).SourceColumn = "dblSumSubBookings"
-        'mysqlcmdDebIns.Parameters.Add("@lngDebIdentNbr", DbType.Int32).SourceColumn = "lngDebIdentNbr"
-        'mysqlcmdDebIns.Parameters.Add("@datDebRGDatum", DbType.Date).SourceColumn = "datDebRGDatum"
-        'mysqlcmdDebIns.Parameters.Add("@datDebValDatum", DbType.Date).SourceColumn = "datDebValDatum"
-        'mysqlcmdDebIns.Parameters.Add("@strDebStatusBitLog", DbType.String).SourceColumn = "strDebStatusBitLog"
-        'mysqlcmdDebIns.Parameters.Add("@strDebStatusText", DbType.String).SourceColumn = "strDebStatusText"
-        'mysqlcmdDebIns.Parameters.Add("@strDebBookStatus", DbType.String).SourceColumn = "strDebBookStatus"
-
-        'Del cmd DebiHead
-        mysqlcmdDebDel.CommandText = "DELETE FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
-
-        'Debitoren Sub
-        'Read
-        mysqlcmdDebSubRead.CommandText = "Select * FROM tbldebitorensub WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
-        'Ins cmd
-        'inscmdFields = "IdentityName"
-        'inscmdValues = "@IdentityName"
-        'inscmdFields += ", ProcessID"
-        'inscmdValues += ", @ProcessID"
-        'inscmdFields += ", strRGNr"
-        'inscmdValues += ", @strRGNr"
-        'inscmdFields += ", intSollHaben"
-        'inscmdValues += ", @intSollHaben"
-        'inscmdFields += ", lngKto"
-        'inscmdValues += ", @lngKto"
-        'inscmdFields += ", strKtoBez"
-        'inscmdValues += ", @strKtoBez"
-        'inscmdFields += ", lngKST"
-        'inscmdValues += ", @lngKST"
-        'inscmdFields += ", strKstBez"
-        'inscmdValues += ", @strKstBez"
-        'inscmdFields += ", lngProj"
-        'inscmdValues += ", @lngProj"
-        'inscmdFields += ", strProjBez"
-        'inscmdValues += ", @strProjBez"
-        'inscmdFields += ", dblNetto"
-        'inscmdValues += ", @dblNetto"
-        'inscmdFields += ", dblMwSt"
-        'inscmdValues += ", @dblMwSt"
-        'inscmdFields += ", dblBrutto"
-        'inscmdValues += ", @dblBrutto"
-        'inscmdFields += ", dblMwStSatz"
-        'inscmdValues += ", @dblMwStSatz"
-        'inscmdFields += ", strMwStKey"
-        'inscmdValues += ", @strMwStKey"
-        'inscmdFields += ", strArtikel"
-        'inscmdValues += ", @strArtikel"
-        'inscmdFields += ", strDebSubText"
-        'inscmdValues += ", @strDebSubText"
-        'inscmdFields += ", strStatusUBBitLog"
-        'inscmdValues += ", @strStatusUBBitLog"
-        'inscmdFields += ", strStatusUBText"
-        'inscmdValues += ", @strStatusUBText"
-        'inscmdFields += ", strDebBookStatus"
-        'inscmdValues += ", @strDebBookStatus"
-        'mysqlcmdDebSubIns.CommandText = "INSERT INTO tbldebitorensub (" + inscmdFields + ") VALUES (" + inscmdValues + ")"
-        'mysqlcmdDebSubIns.Parameters.Add("@IdentityName", DbType.String).SourceColumn = "IdentityName"
-        'mysqlcmdDebSubIns.Parameters.Add("@ProcessID", DbType.Int16).SourceColumn = "ProcessID"
-        'mysqlcmdDebSubIns.Parameters.Add("@strRGNr", DbType.String).SourceColumn = "strRGNr"
-        'mysqlcmdDebSubIns.Parameters.Add("@intSollHaben", DbType.Byte).SourceColumn = "intSollHaben"
-        'mysqlcmdDebSubIns.Parameters.Add("@lngKto", DbType.Int32).SourceColumn = "lngKto"
-        'mysqlcmdDebSubIns.Parameters.Add("@strKtoBez", DbType.String).SourceColumn = "strKtoBez"
-        'mysqlcmdDebSubIns.Parameters.Add("@lngKST", DbType.Int32).SourceColumn = "lngKST"
-        'mysqlcmdDebSubIns.Parameters.Add("@strKSTBez", DbType.String).SourceColumn = "strKSTBez"
-        'mysqlcmdDebSubIns.Parameters.Add("@lngProj", DbType.Int32).SourceColumn = "lngProj"
-        'mysqlcmdDebSubIns.Parameters.Add("@strProjBez", DbType.String).SourceColumn = "strProjBez"
-        'mysqlcmdDebSubIns.Parameters.Add("@dblNetto", DbType.Decimal).SourceColumn = "dblNetto"
-        'mysqlcmdDebSubIns.Parameters.Add("@dblMwSt", DbType.Decimal).SourceColumn = "dblMwSt"
-        'mysqlcmdDebSubIns.Parameters.Add("@dblBrutto", DbType.Decimal).SourceColumn = "dblBrutto"
-        'mysqlcmdDebSubIns.Parameters.Add("@dblMwStSatz", DbType.Double).SourceColumn = "dblMwStSatz"
-        'mysqlcmdDebSubIns.Parameters.Add("@strMwStKey", DbType.String).SourceColumn = "strMwStKey"
-        'mysqlcmdDebSubIns.Parameters.Add("@strArtikel", DbType.String).SourceColumn = "strArtikel"
-        'mysqlcmdDebSubIns.Parameters.Add("@strDebSubText", DbType.String).SourceColumn = "strDebSubText"
-        'mysqlcmdDebSubIns.Parameters.Add("@strStatusUBBitLog", DbType.String).SourceColumn = "strStatusUBBitLog"
-        'mysqlcmdDebSubIns.Parameters.Add("@strStatusUBText", DbType.String).SourceColumn = "strStatusUBText"
-        'mysqlcmdDebSubIns.Parameters.Add("@strDebBookStatus", DbType.String).SourceColumn = "strDebBookStatus"
-
-        'Del cmd Debi Sub
-        mysqlcmdDebSubDel.CommandText = "DELETE FROM tbldebitorensub WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
+            'Del cmd DebiHead
+            mysqlcmdDebDel.CommandText = "DELETE FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
 
 
-        'MySQLdaDebitoren.SelectCommand.CommandText = "SELECT * FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
-        'MySQLdaDebitoren.SelectCommand.Connection.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
-        'MySQLdaDebitoren.DeleteCommand.CommandText = "DELETE FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
-        'MySQLdaDebitoren.DeleteCommand.Connection.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
-        'MySQLdaDebitoren.InsertCommand.CommandText = "INSERT INTO tbldebitorenjhead (" + inscmdFields + ") VALUES (" + inscmdValues + ")"
-        'MySQLdaDebitoren.InsertCommand.Connection.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
+            'Debitoren Sub
+            'Read
+            mysqlcmdDebSubRead.CommandText = "Select * FROM tbldebitorensub WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
 
-        'Dim dsDebitorenHead As New DataSet()
-        'daDebitorenHead.SelectCommand = daselDebitorenHead
-        'daDebitorenHead.DeleteCommand = dadelDebitorenHead
-        'daDebitorenHead.InsertCommand = dainsDebitorenHead
+            'Del cmd Debi Sub
+            mysqlcmdDebSubDel.CommandText = "DELETE FROM tbldebitorensub WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
 
-        'MySQLdaDebitoren.InsertCommand.Parameters.Add("@IdentityName", MySqlDbType.String).SourceColumn = "IdentityName"
-        'dainsDebitorenHead.Parameters.Add("@IdentityName", MySqlDbType.String).SourceColumn = "IdentityName"
-        'dainsDebitorenHead.Parameters.Add("@ProcessID", MySqlDbType.Int16).SourceColumn = "ProcessID"
-        'dainsDebitorenHead.Parameters.Add("@intBuchhaltung", MySqlDbType.Int16).SourceColumn = "intBuchhaltung"
-        'dainsDebitorenHead.Parameters.Add("@strDebRGNbr", MySqlDbType.String).SourceColumn = "strDebRGNbr"
-        'dainsDebitorenHead.Parameters.Add("@booLinked", MySqlDbType.UByte).SourceColumn = "booLinked"
-        'dainsDebitorenHead.Parameters.Add("@booLinkedPayed", MySqlDbType.UByte).SourceColumn = "booLinkedPayed"
-        'dainsDebitorenHead.Parameters.Add("@lngDebNbr", MySqlDbType.Int32).SourceColumn = "lngDebNbr"
-        'dainsDebitorenHead.Parameters.Add("@strDebBez", MySqlDbType.String).SourceColumn = "strDebBez"
-        'dainsDebitorenHead.Parameters.Add("@lngDebKtoNbr", MySqlDbType.Int32).SourceColumn = "lngDebKtoNbr"
-        'dainsDebitorenHead.Parameters.Add("@strDebKtoBez", MySqlDbType.String).SourceColumn = "strDebKtoBez"
-        'dainsDebitorenHead.Parameters.Add("@datDebRGDatum", MySqlDbType.Date).SourceColumn = "datDebRGDatum"
-        'dainsDebitorenHead.Parameters.Add("@datDebValDatum", MySqlDbType.Date).SourceColumn = "datDebValDatum"
-        'dainsDebitorenHead.Parameters.Add("@strDebStatusBitLog", MySqlDbType.String).SourceColumn = "strDebStatusBitLog"
-        'dainsDebitorenHead.Parameters.Add("@strDebStatusText", MySqlDbType.String).SourceColumn = "strDebStatusText"
-        'dainsDebitorenHead.Parameters.Add("@strDebBookStatus", MySqlDbType.String).SourceColumn = "strDebBookStatus"
+        Catch ex As Exception
 
-        'Dim cmbDebitorenHead As New MySqlCommandBuilder(daDebitorenHead)
+
+        End Try
+
 
 
     End Sub
@@ -307,168 +138,73 @@ Friend Class frmImportMain
     Public Sub butDebitoren_Click(sender As Object, e As EventArgs) Handles butDebitoren.Click
 
 
-        'Dim objdtDebitorenHead As New DataTable("tbliDebiHead")
-        'Dim objdtDebitorenHeadRead As New DataTable("tbliDebitorenHeadR")
-        'Dim objdtDebitorenSub As New DataTable("tbliDebiSub")
-
-        Dim strIncrBelNbr As String = String.Empty
-        Dim intFunctionReturns As Int16
-
-
-        Dim strIdentityName As String
-
-        ''Debitoren - Head
-        'Dim inscmdFields As String
-        'Dim inscmdValues As String
-        'inscmdFields = "IdentityName"
-        'inscmdValues = "@IdentityName"
-        'inscmdFields += ", ProcessID"
-        'inscmdValues += ", @ProcessID"
-        'inscmdFields += ", intBuchhaltung"
-        'inscmdValues += ", @intBuchhaltung"
-        'inscmdFields += ", strDebRGNbr"
-        'inscmdValues += ", @strDebRGNbr"
-        'inscmdFields += ", booLinked"
-        'inscmdValues += ", @booLinked"
-        'inscmdFields += ", booLinkedPayed"
-        'inscmdValues += ", @booLinkedPayed"
-        'inscmdFields += ", lngDebNbr"
-        'inscmdValues += ", @lngDebNbr"
-        'inscmdFields += ", strDebBez"
-        'inscmdValues += ", @strDebBez"
-        'inscmdFields += ", lngDebKtoNbr"
-        'inscmdValues += ", @lngDebKtoNbr"
-        'inscmdFields += ", strDebKtoBez"
-        'inscmdValues += ", @strDebKtoBez"
-        'inscmdFields += ", datDebRGDatum"
-        'inscmdValues += ", @datDebRGDatum"
-        'inscmdFields += ", datDebValDatum"
-        'inscmdValues += ", @datDebValDatum"
-        'inscmdFields += ", strDebStatusBitLog"
-        'inscmdValues += ", @strDebStatusBitLog"
-        'inscmdFields += ", strDebStatusText"
-        'inscmdValues += ", @strDebStatusText"
-        'inscmdFields += ", strDebBookStatus"
-        'inscmdValues += ", @strDebBookStatus"
-
-        strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
-        strIdentityName = Strings.Replace(strIdentityName, "\", "/")
-
-        'Dim daDebitorenHead As New MySqlDataAdapter()
-        'Dim daselDebitorenHead As New MySqlCommand("SELECT * FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
-        'Dim dadelDebitorenHead As New MySqlCommand("DELETE FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
-        'Dim dainsDebitorenHead As New MySqlCommand("INSERT INTO tbldebitorenjhead (" + inscmdFields + ") VALUES (" + inscmdValues + ")", objdbConn)
-        'Dim dsDebitorenHead As New DataSet()
-        'daDebitorenHead.SelectCommand = daselDebitorenHead
-        'daDebitorenHead.DeleteCommand = dadelDebitorenHead
-        'daDebitorenHead.InsertCommand = dainsDebitorenHead
-        'dainsDebitorenHead.Parameters.Add("@IdentityName", MySqlDbType.String).SourceColumn = "IdentityName"
-        'dainsDebitorenHead.Parameters.Add("@ProcessID", MySqlDbType.Int16).SourceColumn = "ProcessID"
-        'dainsDebitorenHead.Parameters.Add("@intBuchhaltung", MySqlDbType.Int16).SourceColumn = "intBuchhaltung"
-        'dainsDebitorenHead.Parameters.Add("@strDebRGNbr", MySqlDbType.String).SourceColumn = "strDebRGNbr"
-        'dainsDebitorenHead.Parameters.Add("@booLinked", MySqlDbType.UByte).SourceColumn = "booLinked"
-        'dainsDebitorenHead.Parameters.Add("@booLinkedPayed", MySqlDbType.UByte).SourceColumn = "booLinkedPayed"
-        'dainsDebitorenHead.Parameters.Add("@lngDebNbr", MySqlDbType.Int32).SourceColumn = "lngDebNbr"
-        'dainsDebitorenHead.Parameters.Add("@strDebBez", MySqlDbType.String).SourceColumn = "strDebBez"
-        'dainsDebitorenHead.Parameters.Add("@lngDebKtoNbr", MySqlDbType.Int32).SourceColumn = "lngDebKtoNbr"
-        'dainsDebitorenHead.Parameters.Add("@strDebKtoBez", MySqlDbType.String).SourceColumn = "strDebKtoBez"
-        'dainsDebitorenHead.Parameters.Add("@datDebRGDatum", MySqlDbType.Date).SourceColumn = "datDebRGDatum"
-        'dainsDebitorenHead.Parameters.Add("@datDebValDatum", MySqlDbType.Date).SourceColumn = "datDebValDatum"
-        'dainsDebitorenHead.Parameters.Add("@strDebStatusBitLog", MySqlDbType.String).SourceColumn = "strDebStatusBitLog"
-        'dainsDebitorenHead.Parameters.Add("@strDebStatusText", MySqlDbType.String).SourceColumn = "strDebStatusText"
-        'dainsDebitorenHead.Parameters.Add("@strDebBookStatus", MySqlDbType.String).SourceColumn = "strDebBookStatus"
-
-        'Dim cmbDebitorenHead As New MySqlCommandBuilder(daDebitorenHead)
-
-        'Debitoren - Sub
-        'Dim daDebitorenSub As New MySqlDataAdapter()
-        'Dim daselDebitorenSub As New MySqlCommand("Select * FROM tbldebitorensub WHERE IdentityName='" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
-        'Dim cmdDebitorenSub As New MySqlCommandBuilder(daDebitorenSub)
-        'Dim dadelDebitorenSub As New MySqlCommand("DELETE FROM tbldebitorensub WHERE IdentityName='" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
-        'Dim dsDebitorenSub As New DataSet()
-        'daDebitorenSub.SelectCommand = daselDebitorenSub
-        'daDebitorenSub.DeleteCommand = dadelDebitorenSub
+        'Dim strIncrBelNbr As String = String.Empty
 
         Try
 
-            'datagrid neu erstellen
-            'Me.dgvBookings.Hide()
-            'Me.dgvBookings.Parent = Nothing
-            'Me.dgvBookings = Nothing
-            'Me.Refresh()
+            'For Each frm As Form In Application.OpenForms()
+            '    If frm.Name = "frmDebDisp" Then
+            '        'Es existiert schon eine Instanz
+            '        frm.Dispose()
+            '    End If
+            'Next
 
-            'Dim dgvBookings As New DataGridView
-            'dgvBookings.Name = "dgvBookings"
-            'dgvBookings.Parent = Me
-            'dgvBookings.Left = 13
-            'dgvBookings.Top = 156
-            'dgvBookings.AutoSize = True
+            Dim frmDebDisp As New frmDebDisp
+            frmDebDisp.Text = "Debitor " + cmbBuha.Text
+            frmDebDisp.MdiParent = Me
+            frmDebDisp.Show()
+            frmDebDisp.Top = 95
+            frmDebDisp.FcDebiDisplay(cmbBuha.SelectedValue,
+                                     cmbPerioden.SelectedItem)
 
-            'dgvBookings.Show()
+            Application.DoEvents()
+
+            Exit Sub
+
+            'Form unloaden
+            frmDebDisp.Hide()
+            frmDebDisp = Nothing
+
 
             Me.Cursor = Cursors.WaitCursor
 
             intMode = 0
 
-            'objdtDebitorenHead = Nothing
-            'objdtDebitorenHeadRead = Nothing
-            'objdtDebitorenSub = Nothing
-            'objdtInfo = Nothing
-            'objdtDebitorenHead.Clear()
-            'objdtDebitorenHead.Constraints.Clear()
-            'objdtDebitorenHead.Dispose()
-            'objdtDebitorenHeadRead.Clear()
-            'objdtDebitorenHeadRead.Constraints.Clear()
-            'objdtDebitorenHeadRead.Dispose()
-            'objdtDebitorenSub.Clear()
-            'objdtDebitorenSub.Constraints.Clear()
-            'objdtDebitorenSub.Dispose()
-
-            'Tabelle Debi/ Kredi Head erstellen
-            'objdtDebitorenHead = Main.tblDebitorenHead()
-            'objdtDebitorenHeadRead = Main.tblDebitorenHead()
-
-
-            'Tabelle Debi/ Kredi Sub erstellen
-            'objdtDebitorenSub = Main.tblDebitorenSub()
-
-            'objdtInfo.Clear()
-            'objdtInfo.Constraints.Clear()
-            ''objdtInfo.Dispose()
-            'objdtInfo = Main.tblInfo()
-
-            'dgvBookings.Rows.Clear()
-            'If dgvBookings.Columns.Contains("intBuchungsart") Then
-            '    dgvBookings.Columns.Remove("intBuchungsart")
-            'End If
-
             'DGV Debitoren
             dgvBookings.DataSource = Nothing
-            'dgvBookings.Rows.Clear()
-            'dgvBookings.Columns.Clear()
-            'dgvBookings.Refresh()
-            'dgvBookings.Rows.Clear()
-            'dgvBookings.Columns.Clear()
             dgvBookingSub.DataSource = Nothing
-            'dgvBookingSub.Rows.Clear()
-            'dgvBookingSub.Columns.Clear()
-            'dgvInfo.DataSource = Nothing
-            'dgvInfo.Rows.Clear()
-            'dgvInfo.Columns.Clear()
-            'dgvInfo.Refresh()
-            'Info Tabelle Rows löschen
-            dsDebitoren.Tables("tblDebitorenInfo").Constraints.Clear()
-            dsDebitoren.Tables("tblDebitorenInfo").Rows.Clear()
-            dgvInfo.Refresh()
-            'dgvInfo.Rows.Clear()
-            'dgvInfo.Columns.Clear()
 
-            'dgvBookings.DataSource = objdtDebitorenHead
-            'dgvBookingSub.DataSource = objdtDebitorenSub
-            'objdbConn.Open()
-            'Call InitdgvDebitoren()
-            'Call InitdgvDebitorenSub()
-            'objdbConn.Close()
+            dsDebitoren.Reset()
+            'dsDebitoren.Clear()
+
+            'Zuerst evtl. vorhandene DS löschen in Tabelle
+            MySQLdaDebitoren.DeleteCommand.Connection.Open()
+            MySQLdaDebitoren.DeleteCommand.ExecuteNonQuery()
+            MySQLdaDebitoren.DeleteCommand.Connection.Close()
+
+            MySQLdaDebitorenSub.DeleteCommand.Connection.Open()
+            MySQLdaDebitorenSub.DeleteCommand.ExecuteNonQuery()
+            MySQLdaDebitorenSub.DeleteCommand.Connection.Close()
+
+            'Info neu erstellen
+            dsDebitoren.Tables.Add("tblDebitorenInfo")
+            Dim col1 As DataColumn = New DataColumn("strInfoT")
+            col1.DataType = System.Type.GetType("System.String")
+            col1.MaxLength = 50
+            col1.Caption = "Info-Titel"
+            dsDebitoren.Tables("tblDebitorenInfo").Columns.Add(col1)
+            Dim col2 As DataColumn = New DataColumn("strInfoV")
+            col2.DataType = System.Type.GetType("System.String")
+            col2.MaxLength = 50
+            col2.Caption = "Info-Wert"
+            dsDebitoren.Tables("tblDebitorenInfo").Columns.Add(col2)
+
+            dgvInfo.DataSource = dsDebitoren.Tables("tblDebitorenInfo")
+
+            'dsDebitoren.Tables("tblDebitorenInfo").Constraints.Clear()
+            'dsDebitoren.Tables("tblDebitorenInfo").Rows.Clear()
+
+            'dgvInfo.Refresh()
 
             Call InitVar()
 
@@ -500,31 +236,23 @@ Friend Class frmImportMain
             'Gibt es eine Query auszuführen bevor dem Buchen?
             'Call MainDebitor.FcExecuteBeforeDebit(cmbBuha.SelectedValue, objdbConn)
 
-            'Zuerst evtl. vorhandene DS löschen in Tabelle
-            MySQLdaDebitoren.DeleteCommand.Connection.Open()
-            MySQLdaDebitoren.DeleteCommand.ExecuteNonQuery()
-            MySQLdaDebitoren.DeleteCommand.Connection.Close()
+
             'In DS löschen
-            If dsDebitoren.Tables("tblDebiHeadsFromUser") IsNot Nothing Then
-                dsDebitoren.Tables("tblDebiHeadsFromUser").Constraints.Clear()
-                dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Clear()
-                dsDebitoren.Tables("tblDebiHeadsFromUser").Columns.Clear()
-            End If
+            'If dsDebitoren.Tables("tblDebiHeadsFromUser") IsNot Nothing Then
+            '    dsDebitoren.Tables("tblDebiHeadsFromUser").Constraints.Clear()
+            '    dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Clear()
+            '    dsDebitoren.Tables("tblDebiHeadsFromUser").Columns.Clear()
+            'End If
             'MySQLdaDebitoren.Fill(dsDebitoren, "tblDebiHeadsFromUser")
 
-            MySQLdaDebitorenSub.DeleteCommand.Connection.Open()
-            MySQLdaDebitorenSub.DeleteCommand.ExecuteNonQuery()
-            MySQLdaDebitorenSub.DeleteCommand.Connection.Close()
             'In DS löschen
-            If dsDebitoren.Tables("tblDebiSubsFromUser") IsNot Nothing Then
-                dsDebitoren.Tables("tblDebiSubsFromUser").Constraints.Clear()
-                dsDebitoren.Tables("tblDebiSubsFromUser").Rows.Clear()
-                dsDebitoren.Tables("tblDebiSubsFromUser").Columns.Clear()
-            End If
+            'If dsDebitoren.Tables("tblDebiSubsFromUser") IsNot Nothing Then
+            '    dsDebitoren.Tables("tblDebiSubsFromUser").Constraints.Clear()
+            '    dsDebitoren.Tables("tblDebiSubsFromUser").Rows.Clear()
+            '    dsDebitoren.Tables("tblDebiSubsFromUser").Columns.Clear()
+            'End If
             'MySQLdaDebitorenSub.Fill(dsDebitoren, "tblDebiSubsFromUser")
 
-            'dsDebitorenHead.Tables("tblDebiHeadsFromUser").AcceptChanges()
-            'daDebitorenHead.AcceptChangesDuringFill = False
 
             Dim clImp As New ClassImport
             clImp.FcDebitFill(cmbBuha.SelectedValue)
@@ -534,51 +262,6 @@ Friend Class frmImportMain
             '                             objdbAccessConn,
             '                             objdbConn)
 
-
-            'If dgvBookings.DataSource Is Nothing Then
-            '    dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
-            'End If
-            'Application.DoEvents()
-
-
-
-            'objdbConn.Open()
-            'Dim rowsHeadAdd As DataRow() = dsDebitorenHead.Tables("tblDebiHeadsFromUser").Select(vbNullString, vbNullString, DataViewRowState.CurrentRows)
-            'daDebitorenHead.InsertCommand.Parameters("@AppName").Value = System.Security.Principal.WindowsIdentity.GetCurrent().Name
-            'daDebitorenHead.InsertCommand.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id.ToString
-            'daDebitorenHead.InsertCommand.Parameters("@intBuchhaltung").Value = cmbBuha.SelectedValue.ToString
-            'daDebitorenHead.InsertCommand.ExecuteNonQuery()
-            'daDebitorenHead.InsertCommand.Parameters("@strDebRGNbr").Value = rowsHeadAdd("strDebRGNbr")
-            'intFunctionReturns = daDebitorenHead.Update(rowsHeadAdd)
-            'intFunctionReturns = daDebitorenHead.Update(dsDebitorenHead, "tblDebiHeadsFromUser")
-
-            'Zuerst DS von DB löschen
-            'objdbConn.Open()
-            'daDebitorenHead.DeleteCommand.ExecuteNonQuery()
-            'daDebitorenSub.DeleteCommand.ExecuteNonQuery()
-            'objdbConn.Close()
-
-            'Head in Tabelle schreiben
-            'intFunctionReturns = MainDebitor.FcWriteDebHeadToDB(objdtDebitorenHeadRead,
-            '                                                    cmbBuha.SelectedValue)
-            'Anzahl schreiben
-            'txtNumber.Text = objdtDebitorenHeadRead.Rows.Count.ToString
-
-            'objdtDebitorenHeadRead = Nothing
-
-            ''Sub in Tabelle schreiben
-            'intFunctionReturns = MainDebitor.FcWriteDebSubToDB(objdtDebitorenSub)
-
-            'objdtDebitorenSub = Nothing
-            'daDebitorenSub.Fill(dsDebitorenSub, "tblDebiSubsFromUser")
-            'dsDebitorenSub.Tables("tblDebiSubsFromUser").AcceptChanges()
-
-            'dgvBookingSub.DataSource = dsDebitorenSub.Tables("tblDebiSubsFromUser")
-
-            'Call Main.InsertDataTableColumnName(objdtDebitorenHeadRead,
-            '                                    objdtDebitorenHead)
-
-            'dsDebitorenHead.Tables("tblDebiHeadsFromUser").AcceptChanges()
             'Grid neu aufbauen
             MySQLdaDebitoren.Fill(dsDebitoren, "tblDebiHeadsFromUser")
             MySQLdaDebitorenSub.Fill(dsDebitoren, "tblDebiSubsFromUser")
@@ -590,15 +273,10 @@ Friend Class frmImportMain
             Call InitdgvDebitoren()
             Call InitdgvDebitorenSub()
 
-
             Me.Refresh()
 
-            'Application.DoEvents()
-            'dgvBookingSub.Update()
-            'dgvBookings.Update()
-            'dgvBookings.Refresh()
-
-            Call Main.FcCheckDebit(cmbBuha.SelectedValue,
+            Dim clCheck As New ClassCheck
+            clCheck.FcClCheckDebit(cmbBuha.SelectedValue,
                                    dsDebitoren,
                                    Finanz,
                                    FBhg,
@@ -617,124 +295,32 @@ Friend Class frmImportMain
                                    strPeriodStatus,
                                    chkValutaCorrect.Checked,
                                    dtpValutaCorrect.Value)
+            clCheck = Nothing
+
+            'Call Main.FcCheckDebit(cmbBuha.SelectedValue,
+            '                       dsDebitoren,
+            '                       Finanz,
+            '                       FBhg,
+            '                       DbBhg,
+            '                       PIFin,
+            '                       BeBu,
+            '                       dsDebitoren.Tables("tblDebitorenInfo"),
+            '                       cmbBuha.Text,
+            '                       intTeqNbr,
+            '                       intTeqNbrLY,
+            '                       intTeqNbrPLY,
+            '                       strYear,
+            '                       cmbPerioden.SelectedItem,
+            '                       datPeriodFrom,
+            '                       datPeriodTo,
+            '                       strPeriodStatus,
+            '                       chkValutaCorrect.Checked,
+            '                       dtpValutaCorrect.Value)
 
 
 
-            'Dim rowsHeadChgd As DataRow() = dsDebitorenHead.Tables("tblDebiHeadsFromUser").Select(vbNullString, vbNullString, DataViewRowState.ModifiedCurrent)
-            'daDebitorenHead.Update(rowsHeadChgd)
+            Application.DoEvents()
 
-            'Datagrid update
-            'dgvBookings.Refresh()
-            'dgvBookingSub.Refresh()
-
-            Me.Refresh()
-
-            'MySQLdaDebitoren.DeleteCommand.Connection.Open()
-            'MySQLdaDebitoren.DeleteCommand.ExecuteNonQuery()
-            'MySQLdaDebitoren.DeleteCommand.Connection.Close()
-
-
-            ''Head in DB schreiben
-            'For Each dsrow As DataRow In dsDebitoren.Tables("tblDebiHeadsFromUser").Rows
-            '    'objdbConn.Open()
-            '    MySQLdaDebitoren.InsertCommand.Connection.Open()
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@IdentityName").Value = strIdentityName
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id.ToString
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@intBuchhaltung").Value = cmbBuha.SelectedValue.ToString
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@strDebRGNbr").Value = dsrow("strDebRGNbr")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@intBuchungsart").Value = dsrow("intBuchungsart")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@intRGArt").Value = dsrow("intRGArt")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@strRGArt").Value = dsrow("strRGArt")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@booLinked").Value = IIf(IsDBNull(dsrow("booLinked")), 0, dsrow("booLinked"))
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@booLinkedPayed").Value = IIf(IsDBNull(dsrow("booLinkedPayed")), 0, dsrow("booLinkedPayed"))
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@strOPNr").Value = dsrow("strOPNr")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@lngDebNbr").Value = dsrow("lngDebNbr")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@strDebBez").Value = IIf(IsDBNull(dsrow("strDebBez")), "", dsrow("strDebBez"))
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@lngDebKtoNbr").Value = dsrow("lngDebKtoNbr")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@strDebKtoBez").Value = IIf(IsDBNull(dsrow("strDebKtoBez")), "", dsrow("strDebKtoBez"))
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@dblDebNetto").Value = dsrow("dblDebNetto")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@dblDebMwSt").Value = dsrow("dblDebMwSt")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@dblDebBrutto").Value = dsrow("dblDebBrutto")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@intSubBookings").Value = dsrow("intSubBookings")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@dblSumSubBookings").Value = dsrow("dblSumSubBookings")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@datDebRGDatum").Value = dsrow("datDebRGDatum")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@datDebValDatum").Value = dsrow("datDebValDatum")
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@strDebStatusBitLog").Value = IIf(IsDBNull(dsrow("strDebStatusBitLog")), "", dsrow("strDebStatusBitLog"))
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@strDebStatusText").Value = IIf(IsDBNull(dsrow("strDebStatusText")), "", dsrow("strDebStatusText"))
-            '    MySQLdaDebitoren.InsertCommand.Parameters("@strDebBookStatus").Value = IIf(IsDBNull(dsrow("strDebBookStatus")), "", dsrow("strDebBookStatus"))
-
-            '    MySQLdaDebitoren.InsertCommand.ExecuteNonQuery()
-            '    'objdbConn.Close()
-            '    MySQLdaDebitoren.InsertCommand.Connection.Close()
-            'Next
-
-            'dsDebitoren.Tables("tblDebiHeadsFromUser").Constraints.Clear()
-            'dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Clear()
-            'dsDebitoren.Tables("tblDebiHeadsFromUser").Columns.Clear()
-            'MySQLdaDebitoren.Fill(dsDebitoren, "tblDebiHeadsFromUser")
-
-            ''daDebitorenHead.Update(dsDebitorenHead, "tblDebiHeadsFromUser")
-            'MySQLdaDebitorenSub.DeleteCommand.Connection.Open()
-            'MySQLdaDebitorenSub.DeleteCommand.ExecuteNonQuery()
-            'MySQLdaDebitorenSub.DeleteCommand.Connection.Close()
-            ''Sub in DB schreiben
-            'For Each dssubrow As DataRow In dsDebitoren.Tables("tblDebiSubsFromUser").Rows
-            '    MySQLdaDebitorenSub.InsertCommand.Connection.Open()
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@IdentityName").Value = strIdentityName
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id.ToString
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@strRGNr").Value = dssubrow("strRGNr")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@intSollHaben").Value = dssubrow("intSollHaben")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@lngKto").Value = dssubrow("lngKto")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@strKtoBez").Value = IIf(IsDBNull(dssubrow("strKtobez")), "", dssubrow("strKtobez"))
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@lngKST").Value = dssubrow("lngKST")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@strKstBez").Value = dssubrow("strKstBez")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@lngProj").Value = dssubrow("lngProj")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@strProjBez").Value = dssubrow("strProjBez")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@dblNetto").Value = dssubrow("dblNetto")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@dblMwSt").Value = dssubrow("dblMwSt")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@dblBrutto").Value = dssubrow("dblBrutto")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@dblMwStSatz").Value = dssubrow("dblMwStSatz")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@strMwStKey").Value = dssubrow("strMwStKey")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@strArtikel").Value = dssubrow("strArtikel")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@strDebSubText").Value = dssubrow("strDebSubText")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@strStatusUBBitLog").Value = dssubrow("strStatusUBBitLog")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@strStatusUBText").Value = dssubrow("strStatusUBText")
-            '    MySQLdaDebitorenSub.InsertCommand.Parameters("@strDebBookStatus").Value = dssubrow("strDebBookStatus")
-            '    MySQLdaDebitorenSub.InsertCommand.ExecuteNonQuery()
-            '    MySQLdaDebitorenSub.InsertCommand.Connection.Close()
-            'Next
-
-            'dsDebitoren.Tables("tblDebiSubsFromUser").Constraints.Clear()
-            'dsDebitoren.Tables("tblDebiSubsFromUser").Rows.Clear()
-            'dsDebitoren.Tables("tblDebiSubsFromUser").Columns.Clear()
-            'MySQLdaDebitorenSub.Fill(dsDebitoren, "tblDebiSubsFromUser")
-
-
-            'dgvBookings.Refresh()
-            'dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
-            'dgvInfo.DataSource = dsDebitoren.Tables("tblDebitorenInfo")
-            'Application.DoEvents()
-
-
-            'Sub in Tabelle schreiben
-            'intFunctionReturns = MainDebitor.FcWriteDebSubToDB(objdtDebitorenSub)
-
-            'objdtDebitorenSub = Nothing
-            'daDebitorenSub.Fill(dsDebitorenSub, "tblDebiSubsFromUser")
-            'dsDebitorenSub.Tables("tblDebiSubsFromUser").AcceptChanges()
-
-            'Dim rowsSub As DataRow() = dsDebitorenSub.Tables("tblDebiSubsFromUser").Select(vbNullString, vbNullString, DataViewRowState.ModifiedCurrent)
-            'daDebitorenSub.Update(rowsSub)
-
-            'Versuch ob stabiler
-            'dgvBookings.DataSource = objdtDebitorenHead
-            'dgvBookingSub.DataSource = objdtDebitorenSub
-            'dgvInfo.DataSource = objdtInfo
-            'objdbConn.Open()
-            'Call InitdgvDebitoren()
-            'Call InitdgvDebitorenSub()
-            'Call InitdgvInfo()
-            'objdbConn.Close()
 
             'Anzahl schreiben
             txtNumber.Text = dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count.ToString
@@ -748,12 +334,6 @@ Friend Class frmImportMain
             MessageBox.Show(ex.Message, "Problem Debitorenauflistung", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
-
-            'dsDebitorenHead = Nothing
-            'dsDebitorenSub = Nothing
-
-            'objdtDebitorenHeadRead = Nothing
-            'objdtDebitorenSub = Nothing
 
             Me.Cursor = Cursors.Default
 
@@ -1152,7 +732,7 @@ Friend Class frmImportMain
         Dim strDKDef As String
         Dim objDABuchhaltungen As New MySqlDataAdapter("SELECT * FROM t_sage_buchhaltungen WHERE NOT Buchh200_Name IS NULL AND NOT Buchh_TableDeb IS NULL ORDER BY Buchh_Bez", objdbConn)
         Dim objdtBuchhaltungen As New DataTable("tbliBuchhaltungen")
-        Dim intFunctionReturns As Int16
+        'Dim intFunctionReturns As Int16
 
         Try
 
@@ -1188,25 +768,25 @@ Friend Class frmImportMain
 
             'Info - Tabelle erstellen
             'objdtInfo = Main.tblInfo()
-            dsDebitoren.Tables.Add("tblDebitorenInfo")
-            Dim col1 As DataColumn = New DataColumn("strInfoT")
-            col1.DataType = System.Type.GetType("System.String")
-            col1.MaxLength = 50
-            col1.Caption = "Info-Titel"
-            dsDebitoren.Tables("tblDebitorenInfo").Columns.Add(col1)
-            Dim col2 As DataColumn = New DataColumn("strInfoV")
-            col2.DataType = System.Type.GetType("System.String")
-            col2.MaxLength = 50
-            col2.Caption = "Info-Wert"
-            dsDebitoren.Tables("tblDebitorenInfo").Columns.Add(col2)
+            'dsDebitoren.Tables.Add("tblDebitorenInfo")
+            'Dim col1 As DataColumn = New DataColumn("strInfoT")
+            'col1.DataType = System.Type.GetType("System.String")
+            'col1.MaxLength = 50
+            'col1.Caption = "Info-Titel"
+            'dsDebitoren.Tables("tblDebitorenInfo").Columns.Add(col1)
+            'Dim col2 As DataColumn = New DataColumn("strInfoV")
+            'col2.DataType = System.Type.GetType("System.String")
+            'col2.MaxLength = 50
+            'col2.Caption = "Info-Wert"
+            'dsDebitoren.Tables("tblDebitorenInfo").Columns.Add(col2)
 
-            dgvInfo.DataSource = dsDebitoren.Tables("tblDebitorenInfo")
+            'dgvInfo.DataSource = dsDebitoren.Tables("tblDebitorenInfo")
 
-            Me.mysqlcongen.ConnectionString = "server=ZHDB02.sdlc.mssag.ch;uid=workbench;database=AHZ;Pwd=sesam;Convert Zero Datetime=True"
-            Me.mysqlcongen.Open()
-            Me.mysqlcongen.Close()
+            'Me.mysqlcongen.ConnectionString = "server=ZHDB02.sdlc.mssag.ch;uid=workbench;database=AHZ;Pwd=sesam;Convert Zero Datetime=True"
+            'Me.mysqlcongen.Open()
+            'Me.mysqlcongen.Close()
 
-            Main.FcInitAccessConnecation(objdbAccessConn, "NetAuction_data_Server.mdb")
+            'Main.FcInitAccessConnecation(objdbAccessConn, "NetAuction_data_Server.mdb")
             'objdbAccessConn.Open()
             'objdbAccessConn.Close()
             'Main.FcInitAccessConnecation(objdbAccessConn, "Fleetservice_data_Server.mdb")
@@ -1329,26 +909,26 @@ Friend Class frmImportMain
         Dim strErrMessage As String
 
         'Debitoren - Head
-        Dim daDebitorenHead As New MySqlDataAdapter()
-        Dim daselDebitorenHead As New MySqlCommand("SELECT * FROM tbldebitorenjhead WHERE IdentityName='" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
-        Dim cmbDebitorenHead As New MySqlCommandBuilder(daDebitorenHead)
+        'Dim daDebitorenHead As New MySqlDataAdapter()
+        'Dim daselDebitorenHead As New MySqlCommand("SELECT * FROM tbldebitorenjhead WHERE IdentityName='" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
+        'Dim cmbDebitorenHead As New MySqlCommandBuilder(daDebitorenHead)
         'Dim dadelDebitorenHead As New MySqlCommand("DELETE FROM tbldebitorenjhead WHERE IdentityName='" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
-        Dim dsDebitorenHead As New DataSet()
-        daDebitorenHead.SelectCommand = daselDebitorenHead
+        'Dim dsDebitorenHead As New DataSet()
+        'daDebitorenHead.SelectCommand = daselDebitorenHead
         'daDebitorenHead.DeleteCommand = dadelDebitorenHead
 
-        daDebitorenHead.Fill(dsDebitorenHead, "tblDebiHeadsFromUser")
+        'daDebitorenHead.Fill(dsDebitorenHead, "tblDebiHeadsFromUser")
 
         'Debitoren - Sub
-        Dim daDebitorenSub As New MySqlDataAdapter()
-        Dim daselDebitorenSub As New MySqlCommand("SELECT * FROM tbldebitorensub WHERE IdentityName='" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
-        Dim cmdDebitorenSub As New MySqlCommandBuilder(daDebitorenSub)
+        'Dim daDebitorenSub As New MySqlDataAdapter()
+        'Dim daselDebitorenSub As New MySqlCommand("SELECT * FROM tbldebitorensub WHERE IdentityName='" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
+        'Dim cmdDebitorenSub As New MySqlCommandBuilder(daDebitorenSub)
         'Dim dadelDebitorenSub As New MySqlCommand("DELETE FROM tbldebitorensub WHERE IdentityName='" + System.Security.Principal.WindowsIdentity.GetCurrent().Name + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString, objdbConn)
-        Dim dsDebitorenSub As New DataSet()
-        daDebitorenSub.SelectCommand = daselDebitorenSub
+        'Dim dsDebitorenSub As New DataSet()
+        'daDebitorenSub.SelectCommand = daselDebitorenSub
         'daDebitorenSub.DeleteCommand = dadelDebitorenSub
 
-        daDebitorenSub.Fill(dsDebitorenSub, "tblDebiSubsFromUser")
+        'daDebitorenSub.Fill(dsDebitorenSub, "tblDebiSubsFromUser")
 
         Try
 
@@ -1361,7 +941,7 @@ Friend Class frmImportMain
             intReturnValue = WFDBClass.FcWriteStartToSync(objdbConn,
                                                           cmbBuha.SelectedValue,
                                                           1,
-                                                          dsDebitorenHead.Tables(0).Rows.Count)
+                                                          dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count)
 
             'Setting soll erfasste OP als externe Beleg-Nr. genommen werden und lngDebIdentNbr als Beleg-Nr.
             objdbConn.Open()
@@ -1369,7 +949,7 @@ Friend Class frmImportMain
             objdbConn.Close()
 
             'Kopfbuchung
-            For Each row In dsDebitorenHead.Tables(0).Rows
+            For Each row In dsDebitoren.Tables("tblDebiHeadsFromUser").Rows
 
                 If IIf(IsDBNull(row("booDebBook")), False, row("booDebBook")) Then
 
@@ -1557,7 +1137,7 @@ Friend Class frmImportMain
 
                         End Try
 
-                        selDebiSub = dsDebitorenSub.Tables(0).Select("strRGNr='" + row("strDebRGNbr") + "'")
+                        selDebiSub = dsDebitoren.Tables("tblDebiSubsFromUser").Select("strRGNr='" + row("strDebRGNbr") + "'")
                         strRGNbr = row("strDebRGNbr")
 
                         For Each SubRow As DataRow In selDebiSub
@@ -1776,7 +1356,7 @@ Friend Class frmImportMain
                             dblKurs = 1.0#
                         End If
 
-                        selDebiSub = dsDebitorenSub.Tables(0).Select("strRGNr='" + row("strDebRGNbr") + "'")
+                        selDebiSub = dsDebitoren.Tables("tblDebiSubsFromUser").Select("strRGNr='" + row("strDebRGNbr") + "'")
                         strRGNbr = row("strDebRGNbr")
 
                         If selDebiSub.Length = 2 Then
@@ -2078,7 +1658,7 @@ Friend Class frmImportMain
                                                                    PIFin,
                                                                    BeBu,
                                                                    KrBhg,
-                                                                   dsDebitorenSub.Tables(0),
+                                                                   dsDebitoren.Tables("tblDebiSubsFromUser"),
                                                                    row("strDebRGNbr"),
                                                                    intDebBelegsNummer,
                                                                    row("strDebCur"),
@@ -2114,7 +1694,7 @@ Friend Class frmImportMain
                                                                    PIFin,
                                                                    BeBu,
                                                                    KrBhg,
-                                                                   dsDebitorenSub.Tables(0),
+                                                                   dsDebitoren.Tables("tblDebiSubsFromUser"),
                                                                    row("strDebRGNbr"),
                                                                    intDebBelegsNummer,
                                                                    row("strDebCur"),
@@ -2197,12 +1777,13 @@ Friend Class frmImportMain
 
         Finally
 
-            'Neu aufbauen
-            'butDebitoren_Click(butDebitoren, EventArgs.Empty)
+            Application.DoEvents()
+            'Grid neu aufbauen, Daten von Mandant einlesen
+            Call butDebitoren.PerformClick()
 
             Me.Cursor = Cursors.Default
-            'Me.butImport.Enabled = True
-            Application.Restart()
+            Me.butImport.Enabled = True
+            'Application.Restart()
 
         End Try
 
@@ -2301,6 +1882,20 @@ Friend Class frmImportMain
         Try
 
             Me.Cursor = Cursors.WaitCursor
+
+            Dim frmKredDisp As New frmKredDisp
+            frmKredDisp.Text = "Kreditor " + cmbBuha.Text
+            frmKredDisp.MdiParent = Me
+            frmKredDisp.Show()
+            frmKredDisp.Top = 100
+
+            frmKredDisp.FcKrediDisplay(cmbBuha.SelectedValue,
+                                     cmbPerioden.SelectedItem)
+
+
+            Application.DoEvents()
+
+            Exit Sub
 
             intMode = 1
 
@@ -3066,6 +2661,13 @@ Friend Class frmImportMain
 
         Try
 
+            'For Each frm As Form In Application.OpenForms()
+            '    If frm.Name = "frmDebDisp" Then
+            '        'Es existiert schon eine Instanz
+            '        frm.Dispose()
+            '    End If
+            'Next
+
             Call Main.FcReadPeriodsFromMandant(objdbConn,
                                            Finanz,
                                            cmbBuha.SelectedValue,
@@ -3469,4 +3071,17 @@ Friend Class frmImportMain
 
     End Sub
 
+    Private Sub frmImportMain_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+
+        'DS in tabelle löschen
+        MySQLdaDebitoren.DeleteCommand.Connection.Open()
+        MySQLdaDebitoren.DeleteCommand.ExecuteNonQuery()
+        MySQLdaDebitoren.DeleteCommand.Connection.Close()
+
+        MySQLdaDebitorenSub.DeleteCommand.Connection.Open()
+        MySQLdaDebitorenSub.DeleteCommand.ExecuteNonQuery()
+        MySQLdaDebitorenSub.DeleteCommand.Connection.Close()
+
+
+    End Sub
 End Class

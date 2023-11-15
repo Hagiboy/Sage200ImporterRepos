@@ -13,6 +13,157 @@ Friend Class ClassImport
     Dim objdbAccessConn As New OleDb.OleDbConnection
     Dim objOLEdbcmdLoc As New OleDb.OleDbCommand
 
+    Friend Function FcKreditFill(intAccounting As Int16) As Int16
+
+        Dim strIdentityName As String
+        Dim strMDBName As String
+        Dim strSQL As String
+        Dim strSQLSub As String
+        Dim strKRGTableType As String
+        Dim objmysqlcomdwritehead As New MySqlCommand
+        Dim intFcReturns As Int16
+        Dim objmysqlcomdwritesub As New MySqlCommand
+        Dim objdtLocKrediHead As New DataTable
+        Dim objdtLocKrediSubs As New DataTable
+        Dim strConnection As String
+        Dim objRGMySQLConn As New MySqlConnection
+        Dim objlocMySQLcmd As New MySqlCommand
+        Dim strSQLToParse As String
+
+        Try
+
+            objmysqlcomdwritehead.Connection = objdbConnZHDB02
+            objmysqlcomdwritesub.Connection = objdbConnZHDB02
+
+            'Für den Save der Records
+            strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
+            strIdentityName = Strings.Replace(strIdentityName, "\", "/")
+
+            strMDBName = FcReadFromSettingsII("Buchh_KRGTableMDB",
+                                              intAccounting)
+
+            strSQL = FcReadFromSettingsII("Buchh_SQLHeadKred",
+                                          intAccounting)
+
+            strKRGTableType = FcReadFromSettingsII("Buchh_KRGTableType",
+                                                   intAccounting)
+
+            If IsDBNull(strSQL) Then
+                Return 1
+
+            Else
+                If strKRGTableType = "A" Then
+
+                    'Access
+                    Call FcInitAccessConnecation(objdbAccessConn,
+                                                  strMDBName)
+                    objdbAccessConn.Open()
+                    objOLEdbcmdLoc.CommandText = strSQL
+                    objOLEdbcmdLoc.Connection = objdbAccessConn
+                    objdtLocKrediHead.Load(objOLEdbcmdLoc.ExecuteReader)
+                    objdbAccessConn.Close()
+                ElseIf strKRGTableType = "M" Then
+
+                    strConnection = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                    objRGMySQLConn.ConnectionString = strConnection
+                    objlocMySQLcmd.Connection = objRGMySQLConn
+                    objlocMySQLcmd.CommandText = strSQL
+                    objRGMySQLConn.Open()
+                    objdtLocKrediHead.Load(objlocMySQLcmd.ExecuteReader)
+                    objRGMySQLConn.Close()
+
+                End If
+
+                strSQLToParse = FcReadFromSettingsII("Buchh_SQLDetailKred",
+                                                    intAccounting)
+
+                intFcReturns = FcInitInsCmdKHeads(objmysqlcomdwritehead)
+
+                For Each row As DataRow In objdtLocKrediHead.Rows
+
+                    objmysqlcomdwritehead.Connection.Open()
+                    objmysqlcomdwritehead.Parameters("@IdentityName").Value = strIdentityName
+                    objmysqlcomdwritehead.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id
+                    objmysqlcomdwritehead.Parameters("@intBuchhaltung").Value = intAccounting
+                    objmysqlcomdwritehead.Parameters("@strKredRGNbr").Value = row("strKredRGNbr")
+                    objmysqlcomdwritehead.Parameters("@intBuchungsart").Value = row("intBuchungsart")
+                    objmysqlcomdwritehead.Parameters("@lngKredID").Value = row("lngKredID")
+                    objmysqlcomdwritehead.Parameters("@strOPNr").Value = row("strOPNr")
+                    objmysqlcomdwritehead.Parameters("@lngKredNbr").Value = row("lngKredNbr")
+                    objmysqlcomdwritehead.Parameters("@lngKredKtoNbr").Value = row("lngKredKtoNbr")
+                    objmysqlcomdwritehead.Parameters("@strKredCur").Value = row("strKredCur")
+                    objmysqlcomdwritehead.Parameters("@lngKrediKST").Value = row("lngKrediKST")
+                    objmysqlcomdwritehead.Parameters("@dblKredNetto").Value = row("dblKredNetto")
+                    objmysqlcomdwritehead.Parameters("@dblKredMwSt").Value = row("dblKredMwSt")
+                    objmysqlcomdwritehead.Parameters("@dblKredBrutto").Value = row("dblKredBrutto")
+                    objmysqlcomdwritehead.Parameters("@lngKredIdentNbr").Value = row("lngKredIdentNbr")
+                    objmysqlcomdwritehead.Parameters("@strKredText").Value = row("strKredText")
+                    objmysqlcomdwritehead.Parameters("@strKredRef").Value = row("strKredRef")
+                    objmysqlcomdwritehead.Parameters("@datKredRGDatum").Value = row("datKredRGDatum")
+                    objmysqlcomdwritehead.Parameters("@datKredValDatum").Value = row("datKredValDatum")
+                    objmysqlcomdwritehead.Parameters("@intPayType").Value = row("intPayType")
+                    objmysqlcomdwritehead.Parameters("@strKrediBank").Value = row("strKrediBank")
+                    objmysqlcomdwritehead.Parameters("@strKrediBankInt").Value = row("strKrediBankInt")
+                    objmysqlcomdwritehead.Parameters("@strRGName").Value = row("strRGName")
+                    objmysqlcomdwritehead.Parameters("@strRGBemerkung").Value = row("strRGBemerkung")
+                    objmysqlcomdwritehead.Parameters("@intZKond").Value = row("intZKond")
+                    objmysqlcomdwritehead.ExecuteNonQuery()
+                    objmysqlcomdwritehead.Connection.Close()
+
+                    'Subs einlesen
+                    strSQLSub = FcSQLParseKredi(strSQLToParse,
+                                                row("lngKredID"),
+                                                objdtLocKrediHead)
+
+                    If strKRGTableType = "A" Then
+                        objdbAccessConn.Open()
+                        objOLEdbcmdLoc.CommandText = strSQLSub
+                        objdtLocKrediSubs.Load(objOLEdbcmdLoc.ExecuteReader)
+                        objdbAccessConn.Close()
+                    ElseIf strKRGTableType = "M" Then
+                        objlocMySQLcmd.CommandText = strSQLSub
+                        objRGMySQLConn.Open()
+                        objdtLocKrediSubs.Load(objlocMySQLcmd.ExecuteReader)
+                        objRGMySQLConn.Close()
+                    End If
+
+                Next
+                'Subs schreiben
+                intFcReturns = FcInitInscmdKSubs(objmysqlcomdwritesub)
+                For Each drsub As DataRow In objdtLocKrediSubs.Rows
+
+                    objmysqlcomdwritesub.Connection.Open()
+                    objmysqlcomdwritesub.Parameters("@IdentityName").Value = strIdentityName
+                    objmysqlcomdwritesub.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id
+                    objmysqlcomdwritesub.Parameters("@lngKredID").Value = drsub("lngKredID")
+                    objmysqlcomdwritesub.Parameters("@lngKto").Value = drsub("lngKto")
+                    objmysqlcomdwritesub.Parameters("@lngKST").Value = drsub("lngKST")
+                    objmysqlcomdwritesub.Parameters("@dblNetto").Value = drsub("dblNetto")
+                    objmysqlcomdwritesub.Parameters("@dblMwSt").Value = drsub("dblMwSt")
+                    objmysqlcomdwritesub.Parameters("@dblBrutto").Value = drsub("dblBrutto")
+                    objmysqlcomdwritesub.Parameters("@dblMwStSatz").Value = drsub("dblMwStSatz")
+                    objmysqlcomdwritesub.Parameters("@strMwStKey").Value = drsub("strMwStKey")
+                    objmysqlcomdwritesub.Parameters("@intSollHaben").Value = drsub("intSollHaben")
+                    If objdtLocKrediSubs.Columns.Contains("strKredSubText") Then
+                        objmysqlcomdwritesub.Parameters("@strKredSubText").Value = drsub("strKredSubText")
+                    End If
+                    objmysqlcomdwritesub.Parameters("@booRebilling").Value = drsub("booRebilling")
+                    objmysqlcomdwritesub.ExecuteNonQuery()
+                    objmysqlcomdwritesub.Connection.Close()
+
+                Next
+
+            End If
+            Return 0
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Kreditoeren-Daten-Lesen Problem", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Return 1
+
+        End Try
+
+    End Function
 
     Friend Function FcDebitFill(intAccounting As Int16) As Int16
 
@@ -48,7 +199,7 @@ Friend Class ClassImport
             strSQL = FcReadFromSettingsII("Buchh_SQLHead",
                                              intAccounting)
 
-            strRGTableType = Main.FcReadFromSettingsII("Buchh_RGTableType",
+            strRGTableType = FcReadFromSettingsII("Buchh_RGTableType",
                                                      intAccounting)
 
             If strRGTableType = "A" Then
@@ -87,7 +238,9 @@ Friend Class ClassImport
                 objmysqlcomdwritehead.Parameters("@strDebRGNbr").Value = row("strDebRGNbr")
                 objmysqlcomdwritehead.Parameters("@intBuchungsart").Value = row("intBuchungsart")
                 objmysqlcomdwritehead.Parameters("@intRGArt").Value = row("intRGArt")
-                objmysqlcomdwritehead.Parameters("@strRGArt").Value = row("strRGArt")
+                If objdtLocDebiHead.Columns.Contains("strRGArt") Then
+                    objmysqlcomdwritehead.Parameters("@strRGArt").Value = row("strRGArt")
+                End If
                 objmysqlcomdwritehead.Parameters("@strOPNr").Value = row("strOPNr")
                 objmysqlcomdwritehead.Parameters("@lngDebNbr").Value = row("lngDebNbr")
                 objmysqlcomdwritehead.Parameters("@lngDebKtoNbr").Value = row("lngDebKtoNbr")
@@ -101,12 +254,16 @@ Friend Class ClassImport
                 objmysqlcomdwritehead.Parameters("@strDebreferenz").Value = row("strDebReferenz")
                 objmysqlcomdwritehead.Parameters("@datDebRGDatum").Value = row("datDebRGDatum")
                 objmysqlcomdwritehead.Parameters("@datDebValDatum").Value = row("datDebValDatum")
-                objmysqlcomdwritehead.Parameters("@datRGCreate").Value = row("datRGCreate")
+                If objdtLocDebiHead.Columns.Contains("@datRGCreate") Then
+                    objmysqlcomdwritehead.Parameters("@datRGCreate").Value = row("datRGCreate")
+                End If
                 objmysqlcomdwritehead.Parameters("@intPayType").Value = row("intPayType")
                 objmysqlcomdwritehead.Parameters("@strDebiBank").Value = row("strDebiBank")
                 objmysqlcomdwritehead.Parameters("@lngLinkedRG").Value = row("lngLinkedRG")
                 objmysqlcomdwritehead.Parameters("@strRGName").Value = row("strRGName")
-                objmysqlcomdwritehead.Parameters("@strDebIdentNbr2").Value = row("strDebIdentNbr2")
+                If objdtLocDebiHead.Columns.Contains("strDebIdentNbr2") Then
+                    objmysqlcomdwritehead.Parameters("@strDebIdentNbr2").Value = row("strDebIdentNbr2")
+                End If
                 If objdtLocDebiHead.Columns.Contains("booCrToInv") Then
                     objmysqlcomdwritehead.Parameters("@booCrToInv").Value = row("booCrToInv")
                 End If
@@ -147,7 +304,9 @@ Friend Class ClassImport
                 objmysqlcomdwritesub.Parameters("@dblMwStSatz").Value = drsub("dblMwStSatz")
                 objmysqlcomdwritesub.Parameters("@strMwStKey").Value = drsub("strMwStKey")
                 objmysqlcomdwritesub.Parameters("@intSollHaben").Value = drsub("intSollHaben")
-                objmysqlcomdwritesub.Parameters("@strArtikel").Value = drsub("strArtikel")
+                If objdtlocDebiSub.Columns.Contains("strArtikel") Then
+                    objmysqlcomdwritesub.Parameters("@strArtikel").Value = drsub("strArtikel")
+                End If
                 objmysqlcomdwritesub.ExecuteNonQuery()
                 objmysqlcomdwritesub.Connection.Close()
 
@@ -164,6 +323,76 @@ Friend Class ClassImport
 
 
     End Function
+
+    Friend Function FcSQLParseKredi(ByVal strSQLToParse As String,
+                                           ByVal lngKredID As Int32,
+                                           ByVal objdtKredi As DataTable) As String
+
+        'Funktion setzt in eingelesenem SQL wieder Variablen ein
+        Dim intPipePositionBegin, intPipePositionEnd As Integer
+        Dim strWork, strField As String
+        Dim RowKredi() As DataRow
+        Dim strFieldType As String
+
+        Try
+
+            'Zuerst Datensatz in Kredii-Head suchen
+            RowKredi = objdtKredi.Select("lngKredID=" + lngKredID.ToString)
+
+            '| suchen
+            If InStr(strSQLToParse, "|") > 0 Then
+                'Vorkommen gefunden
+                intPipePositionBegin = InStr(strSQLToParse, "|")
+                intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
+                Do Until intPipePositionBegin = 0
+                    strField = Mid(strSQLToParse, intPipePositionBegin + 1, intPipePositionEnd - intPipePositionBegin - 1)
+                    Select Case strField
+                        Case "rsKredi.Fields(""KrediID"")"
+                            strField = RowKredi(0).Item("lngKredID")
+                            strFieldType = "V"
+                        Case "rsKredi.Fields(""KrediRGNr"")"
+                            strField = RowKredi(0).Item("strKredRGNbr")
+                            strFieldType = "T"
+                            'Case "rsDebiTemp.Fields([strRGArt])"
+                            '    strField = rsDebiTemp.Fields("strRGArt")
+                            'Case "rsDebiTemp.Fields([strRGName])"
+                            '    strField = rsDebiTemp.Fields("strRGName")
+                            'Case "rsDebiTemp.Fields([strDebIdentNbr2])"
+                            '    strField = rsDebiTemp.Fields("strDebIdentNbr2")
+                            'Case "rsDebi.Fields([RGBemerkung])"
+                            '    strField = rsDebi.Fields("RGBemerkung")
+                            'Case "rsDebi.Fields([JornalNr])"
+                            '    strField = rsDebi.Fields("JornalNr")
+                            'Case "rsDebiTemp.Fields([strRGBemerkung])"
+                            '    strField = rsDebiTemp.Fields("strRGBemerkung")
+                            'Case "rsDebiTemp.Fields(""strDebRGNbr"")"
+                            '    strField = rsDebiTemp.Fields("strDebRGNbr")
+                            'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
+                            '    strField = rsDebiTemp.Fields("lngDebIdentNbr")
+                            'Case "rsDebiTemp.Fields([strDebText])"
+                            '    strField = rsDebiTemp.Fields("strDebText")
+                            'Case "KUNDENZEICHEN"
+                            '    strField = fcGetKundenzeichen(rsDebiTemp.Fields("lngDebIdentNbr"))
+                        Case Else
+                            strField = "unknown field"
+                    End Select
+                    strSQLToParse = Left(strSQLToParse, intPipePositionBegin - 1) + IIf(strFieldType = "T", "'", "") + strField + IIf(strFieldType = "T", "'", "") + Right(strSQLToParse, Len(strSQLToParse) - intPipePositionEnd)
+                    'Neuer Anfang suchen für evtl. weitere |
+                    intPipePositionBegin = InStr(strSQLToParse, "|")
+                    'intPipePositionBegin = InStr(intPipePositionEnd + 1, strSQLToParse, "|")
+                    intPipePositionEnd = InStr(intPipePositionBegin + 1, strSQLToParse, "|")
+                Loop
+            End If
+
+            Return strSQLToParse
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Fehler Parsing " + Err.Number.ToString)
+
+        End Try
+
+    End Function
+
 
     Friend Function FcSQLParse(ByVal strSQLToParse As String,
                                       ByVal strRGNbr As String,
@@ -350,6 +579,67 @@ Friend Class ClassImport
 
     End Function
 
+    Friend Function FcInitInscmdKSubs(ByRef mysqlinscmd As MySqlCommand) As Int16
+
+        'Debitoren - Head
+        Dim inscmdFields As String
+        Dim inscmdValues As String
+
+        Try
+
+            inscmdFields = "IdentityName"
+            inscmdValues = "@IdentityName"
+            inscmdFields += ", ProcessID"
+            inscmdValues += ", @ProcessID"
+            inscmdFields += ", lngKredID"
+            inscmdValues += ", @lngKredID"
+            inscmdFields += ", lngKto"
+            inscmdValues += ", @lngKto"
+            inscmdFields += ", lngKST"
+            inscmdValues += ", @lngKST"
+            inscmdFields += ", dblNetto"
+            inscmdValues += ", @dblNetto"
+            inscmdFields += ", dblMwSt"
+            inscmdValues += ", @dblMwSt"
+            inscmdFields += ", dblBrutto"
+            inscmdValues += ", @dblBrutto"
+            inscmdFields += ", dblMwStSatz"
+            inscmdValues += ", @dblMwStSatz"
+            inscmdFields += ", strMwStKey"
+            inscmdValues += ", @strMwStKey"
+            inscmdFields += ", intSollHaben"
+            inscmdValues += ", @intSollHaben"
+            inscmdFields += ", strKredSubText"
+            inscmdValues += ", @strKredSubText"
+            inscmdFields += ", booRebilling"
+            inscmdValues += ", @booRebilling"
+
+
+            'Ins cmd DebiSub
+            mysqlinscmd.CommandText = "INSERT INTO tblkreditorensub (" + inscmdFields + ") VALUES (" + inscmdValues + ")"
+            mysqlinscmd.Parameters.Add("@IdentityName", MySqlDbType.String).SourceColumn = "IdentityName"
+            mysqlinscmd.Parameters.Add("@ProcessID", MySqlDbType.Int16).SourceColumn = "ProcessID"
+            mysqlinscmd.Parameters.Add("@lngKredID", MySqlDbType.Int32).SourceColumn = "lngKredID"
+            mysqlinscmd.Parameters.Add("@lngKto", MySqlDbType.Int32).SourceColumn = "lngKto"
+            mysqlinscmd.Parameters.Add("@lngKST", MySqlDbType.Int32).SourceColumn = "lngKST"
+            mysqlinscmd.Parameters.Add("@dblNetto", MySqlDbType.Decimal).SourceColumn = "dblNetto"
+            mysqlinscmd.Parameters.Add("@dblMwst", MySqlDbType.Decimal).SourceColumn = "dblMwSt"
+            mysqlinscmd.Parameters.Add("@dblBrutto", MySqlDbType.Decimal).SourceColumn = "dblBrutto"
+            mysqlinscmd.Parameters.Add("@dblMwStSatz", MySqlDbType.Double).SourceColumn = "dblMwStSatz"
+            mysqlinscmd.Parameters.Add("@strMwStKey", MySqlDbType.String).SourceColumn = "strMwStKey"
+            mysqlinscmd.Parameters.Add("@intSollHaben", MySqlDbType.Int16).SourceColumn = "intSollHaben"
+            mysqlinscmd.Parameters.Add("@strKredSubText", MySqlDbType.String).SourceColumn = "strKredSubText"
+            mysqlinscmd.Parameters.Add("@booRebilling", MySqlDbType.Int16).SourceColumn = "booRebilling"
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem KSubCommand Init", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Return 1
+
+        End Try
+
+
+    End Function
+
 
     Friend Function FcInitInsCmdDHeads(ByRef mysqlinscmd As MySqlCommand) As Int16
 
@@ -452,6 +742,106 @@ Friend Class ClassImport
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Problem HeadCommand Init", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Return 1
+
+        End Try
+
+    End Function
+
+    Friend Function FcInitInsCmdKHeads(ByRef mysqlinscmd As MySqlCommand) As Int16
+
+        'Dim strIdentityName As String
+
+        'Kreditoren - Head
+        Dim inscmdFields As String
+        Dim inscmdValues As String
+
+        Try
+
+            inscmdFields = "IdentityName"
+            inscmdValues = "@IdentityName"
+            inscmdFields += ", ProcessID"
+            inscmdValues += ", @ProcessID"
+            inscmdFields += ", intBuchhaltung"
+            inscmdValues += ", @intBuchhaltung"
+            inscmdFields += ", lngKredID"
+            inscmdValues += ", @lngKredID"
+            inscmdFields += ", strKredRGNbr"
+            inscmdValues += ", @strKredRGNbr"
+            inscmdFields += ", intBuchungsart"
+            inscmdValues += ", @intBuchungsart"
+            inscmdFields += ", strOPNr"
+            inscmdValues += ", @strOPNr"
+            inscmdFields += ", lngKredNbr"
+            inscmdValues += ", @lngKredNbr"
+            inscmdFields += ", lngKredKtoNbr"
+            inscmdValues += ", @lngKredKtoNbr"
+            inscmdFields += ", strKredCur"
+            inscmdValues += ", @strKredCur"
+            inscmdFields += ", lngKrediKST"
+            inscmdValues += ", @lngKrediKST"
+            inscmdFields += ", dblKredNetto"
+            inscmdValues += ", @dblKredNetto"
+            inscmdFields += ", dblKredMwSt"
+            inscmdValues += ", @dblKredMwSt"
+            inscmdFields += ", dblKredBrutto"
+            inscmdValues += ", @dblKredBrutto"
+            inscmdFields += ", lngKredIdentNbr"
+            inscmdValues += ", @lngKredIdentNbr"
+            inscmdFields += ", strKredText"
+            inscmdValues += ", @strKredText"
+            inscmdFields += ", strKredRef"
+            inscmdValues += ", @strKredRef"
+            inscmdFields += ", datKredRGDatum"
+            inscmdValues += ", @datKredRGDatum"
+            inscmdFields += ", datKredValDatum"
+            inscmdValues += ", @datKredValDatum"
+            inscmdFields += ", intPayType"
+            inscmdValues += ", @intPayType"
+            inscmdFields += ", strKrediBank"
+            inscmdValues += ", @strKrediBank"
+            inscmdFields += ", strKrediBankInt"
+            inscmdValues += ", @strKrediBankInt"
+            inscmdFields += ", strRGBemerkung"
+            inscmdValues += ", @strRGBemerkung"
+            inscmdFields += ", strRGName"
+            inscmdValues += ", @strRGName"
+            inscmdFields += ", intZKond"
+            inscmdValues += ", @intZKond"
+
+
+            'Ins cmd KrediiHead
+            mysqlinscmd.CommandText = "INSERT INTO tblkreditorenhead (" + inscmdFields + ") VALUES (" + inscmdValues + ")"
+            mysqlinscmd.Parameters.Add("@IdentityName", MySqlDbType.String).SourceColumn = "IdentityName"
+            mysqlinscmd.Parameters.Add("@ProcessID", MySqlDbType.Int16).SourceColumn = "ProcessID"
+            mysqlinscmd.Parameters.Add("@intBuchhaltung", MySqlDbType.Int16).SourceColumn = "intBuchhaltung"
+            mysqlinscmd.Parameters.Add("@lngKredID", MySqlDbType.Int32).SourceColumn = "lngKredID"
+            mysqlinscmd.Parameters.Add("@strKredRGNbr", MySqlDbType.String).SourceColumn = "strKredRGNbr"
+            mysqlinscmd.Parameters.Add("@intBuchungsart", MySqlDbType.Int16).SourceColumn = "intBuchungsart"
+            mysqlinscmd.Parameters.Add("@strOPNr", MySqlDbType.String).SourceColumn = "strOPNr"
+            mysqlinscmd.Parameters.Add("@lngKredNbr", MySqlDbType.Int32).SourceColumn = "lngKredNbr"
+            mysqlinscmd.Parameters.Add("@lngKredKtoNbr", MySqlDbType.Int32).SourceColumn = "lngKredKtoNbr"
+            mysqlinscmd.Parameters.Add("@strKredCur", MySqlDbType.String).SourceColumn = "strKredCur"
+            mysqlinscmd.Parameters.Add("@lngKrediKST", MySqlDbType.Int32).SourceColumn = "lngKrediKST"
+            mysqlinscmd.Parameters.Add("@dblKredNetto", MySqlDbType.Decimal).SourceColumn = "dblKredNetto"
+            mysqlinscmd.Parameters.Add("@dblKredMwSt", MySqlDbType.Decimal).SourceColumn = "dblKredMwSt"
+            mysqlinscmd.Parameters.Add("@dblKredBrutto", MySqlDbType.Decimal).SourceColumn = "dblKredBrutto"
+            mysqlinscmd.Parameters.Add("@strKredText", MySqlDbType.String).SourceColumn = "strKredText"
+            mysqlinscmd.Parameters.Add("@lngKredIdentNbr", MySqlDbType.Int32).SourceColumn = "lngKredIdentNbr"
+            mysqlinscmd.Parameters.Add("@strKredRef", MySqlDbType.String).SourceColumn = "strKredRef"
+            mysqlinscmd.Parameters.Add("@datKredRGDatum", MySqlDbType.Date).SourceColumn = "datKredRGDatum"
+            mysqlinscmd.Parameters.Add("@datKredValDatum", MySqlDbType.Date).SourceColumn = "datKredValDatum"
+            mysqlinscmd.Parameters.Add("@intPayType", MySqlDbType.Int16).SourceColumn = "intPayType"
+            mysqlinscmd.Parameters.Add("@strKrediBank", MySqlDbType.String).SourceColumn = "strKrediBank"
+            mysqlinscmd.Parameters.Add("@strKrediBankInt", MySqlDbType.String).SourceColumn = "strKrediBankInt"
+            mysqlinscmd.Parameters.Add("@strRGName", MySqlDbType.String).SourceColumn = "strRGName"
+            mysqlinscmd.Parameters.Add("@strRGBemerkung", MySqlDbType.String).SourceColumn = "strRGBemerkung"
+            mysqlinscmd.Parameters.Add("@intZKond", MySqlDbType.Int16).SourceColumn = "intZKond"
+
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem KHeadCommand Init", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
             Return 1
 
         End Try

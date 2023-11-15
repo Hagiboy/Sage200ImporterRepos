@@ -1386,13 +1386,13 @@ Public Class MainDebitor
 
         objMySQLConn.Open()
 
-        strMDBName = Main.FcReadFromSettings(objMySQLConn, "Buchh_RGTableMDB", intMandant)
-        strRGTableType = Main.FcReadFromSettings(objMySQLConn, "Buchh_RGTableType", intMandant)
-        strNameRGTable = Main.FcReadFromSettings(objMySQLConn, "Buchh_TableDeb", intMandant)
-        strBelegNrName = Main.FcReadFromSettings(objMySQLConn, "Buchh_TableRGBelegNrName", intMandant)
-        strRGNbrFieldName = Main.FcReadFromSettings(objMySQLConn, "Buchh_TableRGNbrFieldName", intMandant)
-        strDebRGFieldName = Main.FcReadFromSettings(objMySQLConn, "Buchh_DRGDateField", intMandant)
-        strDebValFieldName = Main.FcReadFromSettings(objMySQLConn, "Buchh_DValDateField", intMandant)
+        strMDBName = Main.FcReadFromSettingsII("Buchh_RGTableMDB", intMandant)
+        strRGTableType = Main.FcReadFromSettingsII("Buchh_RGTableType", intMandant)
+        strNameRGTable = Main.FcReadFromSettingsII("Buchh_TableDeb", intMandant)
+        strBelegNrName = Main.FcReadFromSettingsII("Buchh_TableRGBelegNrName", intMandant)
+        strRGNbrFieldName = Main.FcReadFromSettingsII("Buchh_TableRGNbrFieldName", intMandant)
+        strDebRGFieldName = Main.FcReadFromSettingsII("Buchh_DRGDateField", intMandant)
+        strDebValFieldName = Main.FcReadFromSettingsII("Buchh_DValDateField", intMandant)
 
         Try
 
@@ -2220,6 +2220,8 @@ Public Class MainDebitor
             objdbSQLCmd.CommandText = "SELECT * FROM debibuchung WHERE teqnbr IN (" + intTeqNbr.ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString + ")" +
                                                                  " AND belnbr=" + lngRGNbr.ToString +
                                                                  " AND typ='R'"
+
+            objdbSQLCmd.Connection = objdbSQLConn
 
             tblDebiBuchung.Load(objdbSQLCmd.ExecuteReader)
 

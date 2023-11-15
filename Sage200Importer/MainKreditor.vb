@@ -44,14 +44,7 @@ Public Class MainKreditor
 
     End Function
 
-    Public Shared Function FcGetRefKrediNr(ByRef objdbconn As MySqlConnection,
-                                          ByRef objdbconnZHDB02 As MySqlConnection,
-                                          ByRef objsqlcommand As MySqlCommand,
-                                          ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                          ByRef objOrdbconn As OracleClient.OracleConnection,
-                                          ByRef objOrcommand As OracleClient.OracleCommand,
-                                          ByRef objdbAccessConn As OleDb.OleDbConnection,
-                                          ByVal lngKrediNbr As Int32,
+    Public Shared Function FcGetRefKrediNr(ByVal lngKrediNbr As Int32,
                                           ByVal intAccounting As Int32,
                                           ByRef intKrediNew As Int32) As Int16
 
@@ -64,24 +57,26 @@ Public Class MainKreditor
         Dim objdbConnKred As New MySqlConnection
         Dim objsqlCommKred As New MySqlCommand
 
+        Dim objdbAccessConn As OleDb.OleDbConnection
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
-        Dim strMDBName As String = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediTableConnection", intAccounting)
+        Dim strMDBName As String = Main.FcReadFromSettingsII("Buchh_PKKrediTableConnection", intAccounting)
+        Dim objOrcommand As OracleClient.OracleCommand
         Dim strSQL As String
         Dim intFunctionReturns As Int16
 
         Try
 
-            strTableName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediTable", intAccounting)
-            strTableType = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediTableType", intAccounting)
-            strKredFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediField", intAccounting)
-            strKredNewField = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediNewField", intAccounting)
-            strKredNewFieldType = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediNewFType", intAccounting)
-            'strCompFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediCompany", intAccounting)
-            'strStreetFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediStreet", intAccounting)
-            'strZIPFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediZIP", intAccounting)
-            'strTownFieldName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediTown", intAccounting)
-            'strSageName = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediSageName", intAccounting)
-            'strKredAccField = Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediAccount", intAccounting)
+            strTableName = Main.FcReadFromSettingsII("Buchh_PKKrediTable", intAccounting)
+            strTableType = Main.FcReadFromSettingsII("Buchh_PKKrediTableType", intAccounting)
+            strKredFieldName = Main.FcReadFromSettingsII("Buchh_PKKrediField", intAccounting)
+            strKredNewField = Main.FcReadFromSettingsII("Buchh_PKKrediNewField", intAccounting)
+            strKredNewFieldType = Main.FcReadFromSettingsII("Buchh_PKKrediNewFType", intAccounting)
+            'strCompFieldName = Main.FcReadFromSettingsII("Buchh_PKKrediCompany", intAccounting)
+            'strStreetFieldName = Main.FcReadFromSettingsII("Buchh_PKKrediStreet", intAccounting)
+            'strZIPFieldName = Main.FcReadFromSettingsII("Buchh_PKKrediZIP", intAccounting)
+            'strTownFieldName = Main.FcReadFromSettingsII("Buchh_PKKrediTown", intAccounting)
+            'strSageName = Main.FcReadFromSettingsII("Buchh_PKKrediSageName", intAccounting)
+            'strKredAccField = Main.FcReadFromSettingsII("Buchh_PKKrediAccount", intAccounting)
 
             strSQL = "SELECT * " + 'strKredFieldName + ", " + strKredNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strKredAccField +
                  " FROM " + strTableName + " WHERE " + strKredFieldName + "=" + lngKrediNbr.ToString
@@ -99,7 +94,7 @@ Public Class MainKreditor
                 ElseIf strTableType = "M" Then 'MySQL
                     intKrediNew = 0
                     'MySQL - Tabelle einlesen
-                    objdbConnKred.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediTableConnection", intAccounting))
+                    objdbConnKred.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettingsII("Buchh_PKKrediTableConnection", intAccounting))
                     objdbConnKred.Open()
                     objsqlCommKred.CommandText = strSQL
                     objsqlCommKred.Connection = objdbConnKred
@@ -125,29 +120,29 @@ Public Class MainKreditor
                     'Else
 
                     If strTableName <> "Tab_Repbetriebe" Then
-                            'intPKNewField = objdtKreditor.Rows(0).Item(strKredNewField)
-                            If strTableName = "t_customer" Then
+                        'intPKNewField = objdtKreditor.Rows(0).Item(strKredNewField)
+                        If strTableName = "t_customer" Then
                             intPKNewField = Main.FcGetPKNewFromRep(IIf(IsDBNull(objdtKreditor.Rows(0).Item("ID")), 0, objdtKreditor.Rows(0).Item("ID")),
                                                                        "P")
                         Else
                             intPKNewField = Main.FcGetPKNewFromRep(objdtKreditor.Rows(0).Item(strKredNewField),
                                                                         "R") 'Rep_Nr
                             Stop
-                            End If
+                        End If
 
-                            If intPKNewField = 0 Then
-                                'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
-                                If strTableName = "t_customer" Then
+                        If intPKNewField = 0 Then
+                            'PK wurde nicht vergeben => Eine neue erzeugen und in der Tabelle Rep_Betriebe 
+                            If strTableName = "t_customer" Then
                                 intFunctionReturns = Main.FcNextPrivatePKNr(objdtKreditor.Rows(0).Item("ID"),
                                                                             intKrediNew)
                                 If intFunctionReturns = 0 And intKrediNew > 0 Then 'Vergabe hat geklappt
                                     intFunctionReturns = Main.FcWriteNewPrivateDebToRepbetrieb(objdtKreditor.Rows(0).Item("ID"),
                                                                                                    intKrediNew)
                                     If intFunctionReturns = 0 Then 'Schreiben hat geklappt
-                                            Return 1
-                                        End If
+                                        Return 1
                                     End If
-                                Else
+                                End If
+                            Else
                                 intFunctionReturns = Main.FcNextPKNr(objdtKreditor.Rows(0).Item(strKredNewField),
                                                                          intKrediNew,
                                                                          intAccounting,
@@ -158,23 +153,23 @@ Public Class MainKreditor
                                                                                            intAccounting,
                                                                                            "C")
                                     If intFunctionReturns = 0 Then 'Schreiben hat geklappt
-                                            Return 1
-                                        End If
+                                        Return 1
                                     End If
-                                    Stop
                                 End If
-
-                                'intKrediNew = 0
-                                'Return 3
-                            Else
-                                intKrediNew = intPKNewField
-                                Return 0
+                                Stop
                             End If
-                        Else 'Wenn Angaben nicht von anderer Tabelle kommen
-                            'Prüfen ob Repbetrieb schon eine neue Nummer erhalten hat
-                            If Not IsDBNull(objdtKreditor.Rows(0).Item(strKredNewField)) Then
-                                intKrediNew = objdtKreditor.Rows(0).Item(strKredNewField)
-                            Else
+
+                            'intKrediNew = 0
+                            'Return 3
+                        Else
+                            intKrediNew = intPKNewField
+                            Return 0
+                        End If
+                    Else 'Wenn Angaben nicht von anderer Tabelle kommen
+                        'Prüfen ob Repbetrieb schon eine neue Nummer erhalten hat
+                        If Not IsDBNull(objdtKreditor.Rows(0).Item(strKredNewField)) Then
+                            intKrediNew = objdtKreditor.Rows(0).Item(strKredNewField)
+                        Else
                             intFunctionReturns = Main.FcNextPKNr(objdtKreditor.Rows(0).Item("Rep_Nr"),
                                                                     intKrediNew,
                                                                     intAccounting,
@@ -185,17 +180,17 @@ Public Class MainKreditor
                                                                                        intAccounting,
                                                                                        "C")
                                 If intFunctionReturns = 0 Then 'Schreiben hat geklappt
-                                        Return 1
-                                    End If
+                                    Return 1
                                 End If
                             End If
-                            Return 0
                         End If
+                        Return 0
                     End If
-                Else
-                    intKrediNew = 0
-                    Return 4
                 End If
+            Else
+                intKrediNew = 0
+                Return 4
+            End If
 
             'End If
 
@@ -216,10 +211,7 @@ Public Class MainKreditor
 
     End Function
 
-    Public Shared Function FcIsPrivateKreditorCreatable(ByRef objdbconn As MySqlConnection,
-                                                ByRef objdbconnZHDB02 As MySqlConnection,
-                                                ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                                ByVal lngKrediNbr As Long,
+    Public Shared Function FcIsPrivateKreditorCreatable(ByVal lngKrediNbr As Long,
                                                 ByRef objKrBhg As SBSXASLib.AXiKrBhg,
                                                 ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                                 ByRef intPayType As Int16,
@@ -258,11 +250,14 @@ Public Class MainKreditor
         Dim booReadAufwandsKono As Boolean
         Dim objdtSachB As New DataTable("dtbliSachB")
         Dim strSachB As String
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objsqlcommandZHDB02 As New MySqlCommand
+
 
         Try
 
             'Angaben einlesen
-            objdbconnKred.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediTableConnection", intAccounting))
+            objdbconnKred.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettingsII("Buchh_PKKrediTableConnection", intAccounting))
             If objdbconnKred.State = ConnectionState.Closed Then
                 objdbconnKred.Open()
             End If
@@ -319,10 +314,10 @@ Public Class MainKreditor
                                                        0,
                                                        True)
                     If intReturnValue <> 0 Then
-                        booReadAufwandsKono = Convert.ToBoolean(Convert.ToInt16(Main.FcReadFromSettings(objdbconn, "Buchh_KrediTakeAufwKto", intAccounting)))
+                        booReadAufwandsKono = Convert.ToBoolean(Convert.ToInt16(Main.FcReadFromSettingsII("Buchh_KrediTakeAufwKto", intAccounting)))
                         If booReadAufwandsKono Then
                             'Zu nehmendes Aufwandskonto einlesen
-                            intAufwandsKonto = Main.FcReadFromSettings(objdbconn, "Buchh_KrediAufwKto", intAccounting)
+                            intAufwandsKonto = Main.FcReadFromSettingsII("Buchh_KrediAufwKto", intAccounting)
                             objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto") = intAufwandsKonto
                             'Prüfen ob dieses Konto existiert
                             intReturnValue = Main.FcCheckKonto(objdtKreditor.Rows(0).Item("KrediAufwandskonto"),
@@ -358,10 +353,7 @@ Public Class MainKreditor
                                                              intintBank)
 
                     'Zahlungsbedingung suchen
-                    intReturnValue = FcGetKZkondFromCust(objdbconn,
-                                                         objdbconnZHDB02,
-                                                         objsqlcommandZHDB02,
-                                                         lngKrediNbr,
+                    intReturnValue = FcGetKZkondFromCust(lngKrediNbr,
                                                          intKredZB,
                                                          intAccounting)
 
@@ -530,10 +522,7 @@ Public Class MainKreditor
     End Function
 
 
-    Public Shared Function FcIsKreditorCreatable(ByRef objdbconn As MySqlConnection,
-                                                ByRef objdbconnZHDB02 As MySqlConnection,
-                                                ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                                ByVal lngKrediNbr As Long,
+    Public Shared Function FcIsKreditorCreatable(ByVal lngKrediNbr As Long,
                                                 ByRef objKrBhg As SBSXASLib.AXiKrBhg,
                                                 ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                                 ByVal strcmbBuha As String,
@@ -570,11 +559,13 @@ Public Class MainKreditor
         Dim objsqlConnKred As New MySqlCommand
         Dim intAufwandsKonto As Int32
         Dim booReadAufwandsKono As Boolean
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objsqlcommandZHDB02 As New MySqlCommand
 
         Try
 
             'Angaben einlesen
-            objdbconnKred.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettings(objdbconn, "Buchh_PKKrediTableConnection", intAccounting))
+            objdbconnKred.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(Main.FcReadFromSettingsII("Buchh_PKKrediTableConnection", intAccounting))
             If objdbconnKred.State = ConnectionState.Closed Then
                 objdbconnKred.Open()
             End If
@@ -630,10 +621,10 @@ Public Class MainKreditor
                                                        0,
                                                        True)
                     If intReturnValue <> 0 Then
-                        booReadAufwandsKono = Convert.ToBoolean(Convert.ToInt16(Main.FcReadFromSettings(objdbconn, "Buchh_KrediTakeAufwKto", intAccounting)))
+                        booReadAufwandsKono = Convert.ToBoolean(Convert.ToInt16(Main.FcReadFromSettingsII("Buchh_KrediTakeAufwKto", intAccounting)))
                         If booReadAufwandsKono Then
                             'Zu nehmendes Aufwandskonto einlesen
-                            intAufwandsKonto = Main.FcReadFromSettings(objdbconn, "Buchh_KrediAufwKto", intAccounting)
+                            intAufwandsKonto = Main.FcReadFromSettingsII("Buchh_KrediAufwKto", intAccounting)
                             objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto") = intAufwandsKonto
                             'Prüfen ob dieses Konto existiert
                             intReturnValue = Main.FcCheckKonto(objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto"),
@@ -1246,15 +1237,14 @@ Public Class MainKreditor
 
     End Function
 
-    Public Shared Function FcGetKZkondFromCust(ByRef objdbconn As MySqlConnection,
-                                              ByRef objdbconnZHDB02 As MySqlConnection,
-                                              ByRef objsqlcommandZHDB02 As MySqlCommand,
-                                              ByVal lngKrediiNbr As Long,
+    Public Shared Function FcGetKZkondFromCust(ByVal lngKrediiNbr As Long,
                                               ByRef intDZkond As Int16,
                                               ByVal intAccounting As Int16) As Int16
 
         'Returns 0=ok, 1=Repbetrieb nicht gefunden, 9=Problem; intDZKond wird abgefüllt
 
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objsqlcommandZHDB02 As New MySqlCommand
         Dim intDZKondDefault As Int16
 
         Dim objdsDebitor As New DataSet
@@ -1344,9 +1334,7 @@ Public Class MainKreditor
     End Function
 
 
-    Public Shared Function FcCheckKreditBank(ByRef objdbcon As MySqlConnection,
-                                         ByRef objdbconnZHDB02 As MySqlConnection,
-                                         ByVal objKrBhg As SBSXASLib.AXiKrBhg,
+    Public Shared Function FcCheckKreditBank(ByVal objKrBhg As SBSXASLib.AXiKrBhg,
                                          ByVal intKreditor As Int32,
                                          ByVal intPayType As Int16,
                                          ByVal strIBAN As String,

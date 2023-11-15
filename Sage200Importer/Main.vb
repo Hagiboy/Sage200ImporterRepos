@@ -3759,14 +3759,7 @@ ErrorHandler:
 
                 'Status-String erstellen
                 'Kreditor 01
-                intReturnValue = MainKreditor.FcGetRefKrediNr(objdbconn,
-                                                 objdbconnZHDB02,
-                                                 objsqlcommand,
-                                                 objsqlcommandZHDB02,
-                                                 objOrdbconn,
-                                                 objOrcommand,
-                                                 objdbAccessConn,
-                                                 IIf(IsDBNull(row("lngKredNbr")), 0, row("lngKredNbr")),
+                intReturnValue = MainKreditor.FcGetRefKrediNr(IIf(IsDBNull(row("lngKredNbr")), 0, row("lngKredNbr")),
                                                  intAccounting,
                                                  intKreditorNew)
 
@@ -4159,10 +4152,7 @@ ErrorHandler:
                     strStatus += "Kred"
                     If Left(strBitLog, 1) <> "2" Then
                         If booPKPrivate Then
-                            intReturnValue = MainKreditor.FcIsPrivateKreditorCreatable(objdbconn,
-                                                                                        objdbconnZHDB02,
-                                                                                        objsqlcommandZHDB02,
-                                                                                        intKreditorNew,
+                            intReturnValue = MainKreditor.FcIsPrivateKreditorCreatable(intKreditorNew,
                                                                                         objKrBuha,
                                                                                         objfiBuha,
                                                                                         IIf(IsDBNull(row("intPayType")), 3, row("intPayType")),
@@ -4172,10 +4162,7 @@ ErrorHandler:
                                                                                         strcmbBuha,
                                                                                         intAccounting)
                         Else
-                            intReturnValue = MainKreditor.FcIsKreditorCreatable(objdbconn,
-                                                                            objdbconnZHDB02,
-                                                                            objsqlcommandZHDB02,
-                                                                            intKreditorNew,
+                            intReturnValue = MainKreditor.FcIsKreditorCreatable(intKreditorNew,
                                                                             objKrBuha,
                                                                             objfiBuha,
                                                                             strcmbBuha,
@@ -4215,15 +4202,12 @@ ErrorHandler:
                         strIBANToPass = IIf(IsDBNull(row("strKrediBank")), "", row("strKrediBank"))
                     End If
                     If (row("intPayType") = 9 Or row("intPayType") = 10) And Len(strIBANToPass) > 0 Then
-                        intReturnValue = MainKreditor.FcCheckKreditBank(objdbconn,
-                                                       objdbconnZHDB02,
-                                                       objKrBuha,
-                                                       intKreditorNew,
-                                                       IIf(IsDBNull(row("intPayType")), 9, row("intPayType")),
-                                                       strIBANToPass,
-                                                       IIf(IsDBNull(row("strKrediBank")), "", row("strKrediBank")),
-                                                       row("strKredCur"),
-                                                       row("intEBank"))
+                        'intReturnValue = MainKreditor.FcCheckKreditBank(intKreditorNew,
+                        '                               IIf(IsDBNull(row("intPayType")), 9, row("intPayType")),
+                        '                               strIBANToPass,
+                        '                               IIf(IsDBNull(row("strKrediBank")), "", row("strKrediBank")),
+                        '                               row("strKredCur"),
+                        '                               row("intEBank"))
                     End If
                 End If
                 'Konto 2
