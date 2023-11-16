@@ -389,7 +389,7 @@ Public Class MainDebitor
 
 
         Finally
-            Application.DoEvents()
+            'Application.DoEvents()
 
         End Try
 
@@ -422,7 +422,7 @@ Public Class MainDebitor
             MessageBox.Show(ex.Message, "Debitoren-Daten-Lesen Problem", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
-            Application.DoEvents()
+            'Application.DoEvents()
 
         End Try
 
@@ -1756,7 +1756,7 @@ Public Class MainDebitor
 
         Finally
             RowBooking = Nothing
-            Application.DoEvents()
+            'Application.DoEvents()
 
         End Try
 
@@ -2450,7 +2450,7 @@ Public Class MainDebitor
                         intITY = 0
                     ElseIf strPGVType = "RV" Then
                         'Damit die Periodenbuchung auf den ersten gebucht wird.
-                        datPGVStart = "2023-01-01"
+                        datPGVStart = "2024-01-01"
                         datValuta = datValutaSave
                         intITY = 1
                         intINY = 0
@@ -2461,7 +2461,7 @@ Public Class MainDebitor
                 'Evtl. Aufteilen auf 2 Jahre
                 For intYearLooper As Int16 = Year(datValuta) To Year(datPGVEnd)
 
-                    If intYearLooper = 2022 Then
+                    If intYearLooper = 2023 Then
                         dblNettoBetrag = drDSubrow("dblNetto") * -1 / intITotal * intITY
                         intHabenKonto = intAcctTY
                     Else
@@ -2474,7 +2474,7 @@ Public Class MainDebitor
                         strBelegDatum = Format(datValuta, "yyyyMMdd").ToString
 
                         If intITotal = 1 Then
-                            If Year(datValuta) = 2022 Then
+                            If Year(datValuta) = 2023 Then
                                 strDebiTextHaben = drDSubrow("strDebSubText") + ", TA"
                             Else
                                 strDebiTextHaben = drDSubrow("strDebSubText") + ", TA Auflösung"
@@ -2490,9 +2490,9 @@ Public Class MainDebitor
                         If intITotal = 1 Then
                             strDebiTextSoll = strDebiTextHaben
                             If strPGVType = "VR" Then
-                                'Valuta - Datum auf 01.01.23 legen, Achtung provisorisch
-                                strValutaDatum = "20230101"
-                                strBelegDatum = "20230101"
+                                'Valuta - Datum auf 01.01.24 legen, Achtung provisorisch
+                                strValutaDatum = "20240101"
+                                strBelegDatum = "20240101"
                             Else
                                 'strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                                 strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
@@ -2531,37 +2531,11 @@ Public Class MainDebitor
 
                         End If
 
-                        If Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                        If Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
                             'Zuerst Info-Table löschen
                             objdtInfo.Clear()
-                            Application.DoEvents()
+                            'Application.DoEvents()
                             'Im 2022 anmelden
-                            intReturnValue = Main.FcLoginSage2(objdbcon,
-                                                          objsqlcon,
-                                                          objsqlcmd,
-                                                          objFinanz,
-                                                          objFBhg,
-                                                          objDbBhg,
-                                                          objPiFin,
-                                                          objBebu,
-                                                          objKrBhg,
-                                                          intAccounting,
-                                                          objdtInfo,
-                                                          "2022",
-                                                          strYear,
-                                                          intTeqNbr,
-                                                          intTeqNbrLY,
-                                                          intTeqNbrPLY,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus)
-                            Application.DoEvents()
-
-                        ElseIf Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then
-                            'Zuerst Info-Table löschen
-                            objdtInfo.Clear()
-                            Application.DoEvents()
-                            'Im 2023 anmelden
                             intReturnValue = Main.FcLoginSage2(objdbcon,
                                                           objsqlcon,
                                                           objsqlcmd,
@@ -2581,7 +2555,33 @@ Public Class MainDebitor
                                                           datPeriodFrom,
                                                           datPeriodTo,
                                                           strPeriodStatus)
-                            Application.DoEvents()
+                            ''Application.DoEvents()
+
+                        ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strYear) Then
+                            'Zuerst Info-Table löschen
+                            objdtInfo.Clear()
+                            'Application.DoEvents()
+                            'Im 2023 anmelden
+                            intReturnValue = Main.FcLoginSage2(objdbcon,
+                                                          objsqlcon,
+                                                          objsqlcmd,
+                                                          objFinanz,
+                                                          objFBhg,
+                                                          objDbBhg,
+                                                          objPiFin,
+                                                          objBebu,
+                                                          objKrBhg,
+                                                          intAccounting,
+                                                          objdtInfo,
+                                                          "2024",
+                                                          strYear,
+                                                          intTeqNbr,
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
+                            'Application.DoEvents()
 
                         End If
 
@@ -2632,7 +2632,7 @@ Public Class MainDebitor
                     If Year(datPGVEnd) <> Val(Strings.Left(strPeriodenInfo, 4)) Then
                         'Zuerst Info-Table löschen
                         objdtInfo.Clear()
-                        Application.DoEvents()
+                        'Application.DoEvents()
                         'Login ins FJ
                         intReturnValue = Main.FcLoginSage2(objdbcon,
                                                           objsqlcon,
@@ -2654,10 +2654,10 @@ Public Class MainDebitor
                                                           datPeriodTo,
                                                           strPeriodStatus)
 
-                        Application.DoEvents()
+                        'Application.DoEvents()
 
                         '2311 -> 2312
-                        datValuta = "2023-01-01" 'Achtung provisorisch
+                        datValuta = "2024-01-01" 'Achtung provisorisch
                         strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                         strBelegDatum = strValutaDatum
                         intHabenKonto = intAcctTY
@@ -2711,7 +2711,7 @@ Public Class MainDebitor
                     strBelegDatum = strValutaDatum
                     intHabenKonto = drDSubrow("lngKto")
                     If intITotal = 1 Then
-                        If Year(datValuta) = 2022 Then
+                        If Year(datValuta) = 2023 Then
                             strDebiTextHaben = drDSubrow("strDebSubText") + ", TA"
                         Else
                             strDebiTextHaben = drDSubrow("strDebSubText") + ", TA Auflösung"
@@ -2737,37 +2737,11 @@ Public Class MainDebitor
                         strBebuEintragSoll = Nothing
                     End If
 
-                    If Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                    If Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
                         'Zuerst Info-Table löschen
                         objdtInfo.Clear()
-                        Application.DoEvents()
+                        'Application.DoEvents()
                         'Im 2022 anmelden
-                        intReturnValue = Main.FcLoginSage2(objdbcon,
-                                                          objsqlcon,
-                                                          objsqlcmd,
-                                                          objFinanz,
-                                                          objFBhg,
-                                                          objDbBhg,
-                                                          objPiFin,
-                                                          objBebu,
-                                                          objKrBhg,
-                                                          intAccounting,
-                                                          objdtInfo,
-                                                          "2022",
-                                                          strYear,
-                                                          intTeqNbr,
-                                                          intTeqNbrLY,
-                                                          intTeqNbrPLY,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus)
-                        Application.DoEvents()
-
-                    ElseIf Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then
-                        'Zuerst Info-Table löschen
-                        objdtInfo.Clear()
-                        Application.DoEvents()
-                        'Im 2023 anmelden
                         intReturnValue = Main.FcLoginSage2(objdbcon,
                                                           objsqlcon,
                                                           objsqlcmd,
@@ -2787,7 +2761,34 @@ Public Class MainDebitor
                                                           datPeriodFrom,
                                                           datPeriodTo,
                                                           strPeriodStatus)
-                        Application.DoEvents()
+                        'Application.DoEvents()
+
+                    ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strYear) Then
+                        'Zuerst Info-Table löschen
+                        objdtInfo.Clear()
+                        'Application.DoEvents()
+                        'Im 2023 anmelden
+                        intReturnValue = Main.FcLoginSage2(objdbcon,
+                                                          objsqlcon,
+                                                          objsqlcmd,
+                                                          objFinanz,
+                                                          objFBhg,
+                                                          objDbBhg,
+                                                          objPiFin,
+                                                          objBebu,
+                                                          objKrBhg,
+                                                          intAccounting,
+                                                          objdtInfo,
+                                                          "2024",
+                                                          strYear,
+                                                          intTeqNbr,
+                                                          intTeqNbrLY,
+                                                          intTeqNbrPLY,
+                                                          datPeriodFrom,
+                                                          datPeriodTo,
+                                                          strPeriodStatus)
+                        'Application.DoEvents()
+
 
                     End If
 
@@ -2826,7 +2827,7 @@ Public Class MainDebitor
             If strYear <> strActualYear Then
                 'Zuerst Info-Table löschen
                 objdtInfo.Clear()
-                Application.DoEvents()
+                'Application.DoEvents()
                 'Im Aufrufjahr anmelden
                 intReturnValue = Main.FcLoginSage2(objdbcon,
                                                   objsqlcon,
@@ -2847,7 +2848,7 @@ Public Class MainDebitor
                                                   datPeriodFrom,
                                                   datPeriodTo,
                                                   strPeriodStatus)
-                Application.DoEvents()
+                'Application.DoEvents()
             End If
             Return 0
 
@@ -2931,7 +2932,7 @@ Public Class MainDebitor
 
                 datValuta = datValutaSave
                 If strPGVType = "RV" Then
-                    datPGVStart = "2023-01-01"
+                    datPGVStart = "2024-01-01"
                 End If
 
                 'Evtl. Aufteilen auf 2 Jahre
@@ -3025,7 +3026,7 @@ Public Class MainDebitor
                     If Year(datPGVEnd) <> Val(Strings.Left(strPeriodenInfo, 4)) Then
                         'Zuerst Info-Table löschen
                         objdtInfo.Clear()
-                        Application.DoEvents()
+                        'Application.DoEvents()
                         'Login ins FJ
                         intReturnValue = Main.FcLoginSage2(objdbcon,
                                                       objsqlcon,
@@ -3047,10 +3048,10 @@ Public Class MainDebitor
                                                       datPeriodTo,
                                                       strPeriodStatus)
 
-                        Application.DoEvents()
+                        'Application.DoEvents()
 
                         '2311 -> 2312
-                        datValuta = "2023-01-01" 'Achtung provisorisch
+                        datValuta = "2024-01-01" 'Achtung provisorisch
                         strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                         strBelegDatum = strValutaDatum
                         intHabenKonto = intAcctTY
@@ -3113,36 +3114,10 @@ Public Class MainDebitor
                         strBebuEintragSoll = Nothing
                     End If
 
-                    If Year(datValuta) = 2022 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                    If Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
                         'Zuerst Info-Table löschen
                         objdtInfo.Clear()
-                        Application.DoEvents()
-                        'Im 2022 anmelden
-                        intReturnValue = Main.FcLoginSage2(objdbcon,
-                                                      objsqlcon,
-                                                      objsqlcmd,
-                                                      objFinanz,
-                                                      objFBhg,
-                                                      objDbBhg,
-                                                      objPiFin,
-                                                      objBebu,
-                                                      objKrBhg,
-                                                      intAccounting,
-                                                      objdtInfo,
-                                                      "2022",
-                                                      strYear,
-                                                      intTeqNbr,
-                                                      intTeqNbrLY,
-                                                      intTeqNbrPLY,
-                                                      datPeriodFrom,
-                                                      datPeriodTo,
-                                                      strPeriodStatus)
-                        Application.DoEvents()
-
-                    ElseIf Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then
-                        'Zuerst Info-Table löschen
-                        objdtInfo.Clear()
-                        Application.DoEvents()
+                        'Application.DoEvents()
                         'Im 2023 anmelden
                         intReturnValue = Main.FcLoginSage2(objdbcon,
                                                       objsqlcon,
@@ -3163,7 +3138,33 @@ Public Class MainDebitor
                                                       datPeriodFrom,
                                                       datPeriodTo,
                                                       strPeriodStatus)
-                        Application.DoEvents()
+                        'Application.DoEvents()
+
+                    ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strYear) Then
+                        'Zuerst Info-Table löschen
+                        objdtInfo.Clear()
+                        'Application.DoEvents()
+                        'Im 2023 anmelden
+                        intReturnValue = Main.FcLoginSage2(objdbcon,
+                                                      objsqlcon,
+                                                      objsqlcmd,
+                                                      objFinanz,
+                                                      objFBhg,
+                                                      objDbBhg,
+                                                      objPiFin,
+                                                      objBebu,
+                                                      objKrBhg,
+                                                      intAccounting,
+                                                      objdtInfo,
+                                                      "2024",
+                                                      strYear,
+                                                      intTeqNbr,
+                                                      intTeqNbrLY,
+                                                      intTeqNbrPLY,
+                                                      datPeriodFrom,
+                                                      datPeriodTo,
+                                                      strPeriodStatus)
+                        'Application.DoEvents()
 
                     End If
 
@@ -3198,7 +3199,7 @@ Public Class MainDebitor
             If strYear <> strActualYear Then
                 'Zuerst Info-Table löschen
                 objdtInfo.Clear()
-                Application.DoEvents()
+                'Application.DoEvents()
                 'Im Aufrufjahr anmelden
                 intReturnValue = Main.FcLoginSage2(objdbcon,
                                               objsqlcon,
@@ -3219,7 +3220,7 @@ Public Class MainDebitor
                                               datPeriodFrom,
                                               datPeriodTo,
                                               strPeriodStatus)
-                Application.DoEvents()
+                'Application.DoEvents()
             End If
             Return 0
 

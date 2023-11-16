@@ -29,16 +29,11 @@ Partial Class frmImportMain
         Me.butDblKredis = New System.Windows.Forms.Button()
         Me.butDebitoren = New System.Windows.Forms.Button()
         Me.butDblDebis = New System.Windows.Forms.Button()
-        Me.butImport = New System.Windows.Forms.Button()
-        Me.txtNumber = New System.Windows.Forms.TextBox()
-        Me.butImportK = New System.Windows.Forms.Button()
         Me.cmbPerioden = New System.Windows.Forms.ComboBox()
         Me.lblVersion = New System.Windows.Forms.Label()
-        Me.butMail = New System.Windows.Forms.Button()
         Me.chkValutaCorrect = New System.Windows.Forms.CheckBox()
         Me.dtpValutaCorrect = New System.Windows.Forms.DateTimePicker()
         Me.GroupBox2 = New System.Windows.Forms.GroupBox()
-        Me.dgvInfo = New System.Windows.Forms.DataGridView()
         Me.dsDebitoren = New System.Data.DataSet()
         Me.MySQLdaDebitoren = New MySqlConnector.MySqlDataAdapter()
         Me.mysqlcmdDebDel = New MySqlConnector.MySqlCommand()
@@ -52,15 +47,10 @@ Partial Class frmImportMain
         Me.mysqlcmdDebSubRead = New MySqlConnector.MySqlCommand()
         Me.mysqlcongen = New MySqlConnector.MySqlConnection()
         Me.mysqlcmdgen = New MySqlConnector.MySqlCommand()
-        Me.dgvBookings = New System.Windows.Forms.DataGridView()
-        Me.dgvBookingSub = New System.Windows.Forms.DataGridView()
         Me.ToolStripContainer1 = New System.Windows.Forms.ToolStripContainer()
         Me.GroupBox1.SuspendLayout()
         Me.GroupBox2.SuspendLayout()
-        CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.ToolStripContainer1.ContentPanel.SuspendLayout()
         Me.ToolStripContainer1.SuspendLayout()
         Me.SuspendLayout()
@@ -127,35 +117,6 @@ Partial Class frmImportMain
         Me.butDblDebis.UseVisualStyleBackColor = True
         Me.butDblDebis.Visible = False
         '
-        'butImport
-        '
-        Me.butImport.Enabled = False
-        Me.butImport.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.butImport.Location = New System.Drawing.Point(1371, 21)
-        Me.butImport.Name = "butImport"
-        Me.butImport.Size = New System.Drawing.Size(103, 41)
-        Me.butImport.TabIndex = 4
-        Me.butImport.Text = "&Import D"
-        Me.butImport.UseVisualStyleBackColor = True
-        '
-        'txtNumber
-        '
-        Me.txtNumber.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.txtNumber.Location = New System.Drawing.Point(1608, 21)
-        Me.txtNumber.Name = "txtNumber"
-        Me.txtNumber.Size = New System.Drawing.Size(60, 29)
-        Me.txtNumber.TabIndex = 8
-        '
-        'butImportK
-        '
-        Me.butImportK.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.butImportK.Location = New System.Drawing.Point(1380, 63)
-        Me.butImportK.Name = "butImportK"
-        Me.butImportK.Size = New System.Drawing.Size(103, 41)
-        Me.butImportK.TabIndex = 9
-        Me.butImportK.Text = "&Import K"
-        Me.butImportK.UseVisualStyleBackColor = True
-        '
         'cmbPerioden
         '
         Me.cmbPerioden.FormattingEnabled = True
@@ -172,15 +133,6 @@ Partial Class frmImportMain
         Me.lblVersion.Size = New System.Drawing.Size(42, 13)
         Me.lblVersion.TabIndex = 11
         Me.lblVersion.Text = "Version"
-        '
-        'butMail
-        '
-        Me.butMail.Location = New System.Drawing.Point(1565, 19)
-        Me.butMail.Name = "butMail"
-        Me.butMail.Size = New System.Drawing.Size(42, 26)
-        Me.butMail.TabIndex = 12
-        Me.butMail.Text = "&Mail"
-        Me.butMail.UseVisualStyleBackColor = True
         '
         'chkValutaCorrect
         '
@@ -208,18 +160,10 @@ Partial Class frmImportMain
         Me.GroupBox2.Controls.Add(Me.dtpValutaCorrect)
         Me.GroupBox2.Location = New System.Drawing.Point(610, 4)
         Me.GroupBox2.Name = "GroupBox2"
-        Me.GroupBox2.Size = New System.Drawing.Size(140, 81)
+        Me.GroupBox2.Size = New System.Drawing.Size(140, 69)
         Me.GroupBox2.TabIndex = 17
         Me.GroupBox2.TabStop = False
         Me.GroupBox2.Text = "Optionen"
-        '
-        'dgvInfo
-        '
-        Me.dgvInfo.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvInfo.Location = New System.Drawing.Point(1210, 19)
-        Me.dgvInfo.Name = "dgvInfo"
-        Me.dgvInfo.Size = New System.Drawing.Size(125, 36)
-        Me.dgvInfo.TabIndex = 18
         '
         'dsDebitoren
         '
@@ -311,22 +255,6 @@ Partial Class frmImportMain
         Me.mysqlcmdgen.Transaction = Nothing
         Me.mysqlcmdgen.UpdatedRowSource = System.Data.UpdateRowSource.None
         '
-        'dgvBookings
-        '
-        Me.dgvBookings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvBookings.Location = New System.Drawing.Point(838, 19)
-        Me.dgvBookings.Name = "dgvBookings"
-        Me.dgvBookings.Size = New System.Drawing.Size(237, 64)
-        Me.dgvBookings.TabIndex = 21
-        '
-        'dgvBookingSub
-        '
-        Me.dgvBookingSub.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvBookingSub.Location = New System.Drawing.Point(1098, 23)
-        Me.dgvBookingSub.Name = "dgvBookingSub"
-        Me.dgvBookingSub.Size = New System.Drawing.Size(73, 27)
-        Me.dgvBookingSub.TabIndex = 22
-        '
         'ToolStripContainer1
         '
         '
@@ -337,10 +265,10 @@ Partial Class frmImportMain
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox2)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.lblVersion)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox1)
-        Me.ToolStripContainer1.ContentPanel.Size = New System.Drawing.Size(982, 78)
+        Me.ToolStripContainer1.ContentPanel.Size = New System.Drawing.Size(1671, 80)
         Me.ToolStripContainer1.Location = New System.Drawing.Point(2, 1)
         Me.ToolStripContainer1.Name = "ToolStripContainer1"
-        Me.ToolStripContainer1.Size = New System.Drawing.Size(982, 103)
+        Me.ToolStripContainer1.Size = New System.Drawing.Size(1671, 105)
         Me.ToolStripContainer1.TabIndex = 24
         Me.ToolStripContainer1.Text = "ToolStripContainer1"
         '
@@ -349,14 +277,7 @@ Partial Class frmImportMain
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1672, 767)
-        Me.Controls.Add(Me.dgvInfo)
         Me.Controls.Add(Me.ToolStripContainer1)
-        Me.Controls.Add(Me.dgvBookingSub)
-        Me.Controls.Add(Me.dgvBookings)
-        Me.Controls.Add(Me.butMail)
-        Me.Controls.Add(Me.butImportK)
-        Me.Controls.Add(Me.txtNumber)
-        Me.Controls.Add(Me.butImport)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.IsMdiContainer = True
         Me.Name = "frmImportMain"
@@ -364,16 +285,12 @@ Partial Class frmImportMain
         Me.GroupBox1.ResumeLayout(False)
         Me.GroupBox2.ResumeLayout(False)
         Me.GroupBox2.PerformLayout()
-        CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ToolStripContainer1.ContentPanel.ResumeLayout(False)
         Me.ToolStripContainer1.ContentPanel.PerformLayout()
         Me.ToolStripContainer1.ResumeLayout(False)
         Me.ToolStripContainer1.PerformLayout()
         Me.ResumeLayout(False)
-        Me.PerformLayout()
 
     End Sub
 
@@ -381,18 +298,13 @@ Partial Class frmImportMain
     Friend WithEvents GroupBox1 As GroupBox
     Friend WithEvents butKreditoren As Button
     Friend WithEvents butDebitoren As Button
-    Friend WithEvents butImport As Button
-    Friend WithEvents txtNumber As TextBox
-    Friend WithEvents butImportK As Button
     Friend WithEvents cmbPerioden As ComboBox
     Friend WithEvents lblVersion As Label
-    Friend WithEvents butMail As Button
     Friend WithEvents butDblDebis As Button
     Friend WithEvents butDblKredis As Button
     Friend WithEvents chkValutaCorrect As CheckBox
     Friend WithEvents dtpValutaCorrect As DateTimePicker
     Friend WithEvents GroupBox2 As GroupBox
-    Friend WithEvents dgvInfo As DataGridView
     Public WithEvents MySQLdaDebitoren As MySqlConnector.MySqlDataAdapter
     Public WithEvents dsDebitoren As DataSet
     Public WithEvents mysqlconn As MySqlConnector.MySqlConnection
@@ -406,7 +318,5 @@ Partial Class frmImportMain
     Friend WithEvents mysqlcmdDebSubDel As MySqlConnector.MySqlCommand
     Public WithEvents mysqlcongen As MySqlConnector.MySqlConnection
     Public WithEvents mysqlcmdgen As MySqlConnector.MySqlCommand
-    Friend WithEvents dgvBookings As DataGridView
-    Friend WithEvents dgvBookingSub As DataGridView
     Friend WithEvents ToolStripContainer1 As ToolStripContainer
 End Class

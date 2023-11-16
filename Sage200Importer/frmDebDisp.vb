@@ -156,6 +156,9 @@ Public Class frmDebDisp
         clImp.FcDebitFill(intMandant)
         clImp = Nothing
 
+        'Tabellentyp darstellen
+        Me.lblDB.Text = Main.FcReadFromSettingsII("Buchh_RGTableType", intMandant)
+
         'Grid neu aufbauen
         MySQLdaDebitoren.Fill(dsDebitoren, "tblDebiHeadsFromUser")
         MySQLdaDebitorenSub.Fill(dsDebitoren, "tblDebiSubsFromUser")
@@ -167,7 +170,7 @@ Public Class frmDebDisp
         intFcReturns = FcInitdgvBookings(dgvBookings)
         intFcReturns = FcInitdgvDebiSub(dgvBookingSub)
 
-        Application.DoEvents()
+        'Application.DoEvents()
 
         Dim clCheck As New ClassCheck
         clCheck.FcClCheckDebit(intMandant,
@@ -658,7 +661,7 @@ Public Class frmDebDisp
                                                      "",
                                                      intEigeneBank.ToString)
 
-                            Application.DoEvents()
+                            'Application.DoEvents()
 
                         Catch ex As Exception
                             strErrMessage = "Problem " + (Err.Number And 65535).ToString + " Belegkopf zu" + intDebBelegsNummer.ToString + vbCrLf
@@ -747,7 +750,7 @@ Public Class frmDebDisp
                                                          strSteuerFeld,
                                                          strBeBuEintrag)
 
-                                Application.DoEvents()
+                                'Application.DoEvents()
 
                             Catch ex As Exception
                                 strErrMessage = "Problem " + (Err.Number And 65535).ToString + " Verteilung " + intDebBelegsNummer.ToString + vbCrLf
@@ -771,7 +774,7 @@ Public Class frmDebDisp
                             strBeBuEintrag = Nothing
 
                             'Status Sub schreiben
-                            Application.DoEvents()
+                            'Application.DoEvents()
 
                         Next
 
@@ -818,7 +821,7 @@ Public Class frmDebDisp
                                                           row("strDebCur"),
                                                           ,
                                                           row("lngDebIdentNbr").ToString + ", TZ " + row("strDebRGNbr").ToString)
-                                        Application.DoEvents()
+                                        'Application.DoEvents()
 
                                         Call DbBhg.WriteTeilzahlung4(intLaufNbr.ToString,
                                                                  row("lngDebIdentNbr").ToString + ", TZ " + row("strDebRGNbr").ToString,
@@ -828,7 +831,7 @@ Public Class frmDebDisp
                                                                  "NOT_SET",
                                                                  "Default",
                                                                  "Default")
-                                        Application.DoEvents()
+                                        'Application.DoEvents()
 
                                     End If
 
@@ -962,7 +965,7 @@ Public Class frmDebDisp
                                     MsgBox("Nicht definierter Wert Sub-Buchungs-SollHaben: " + SubRow("intSollHaben").ToString)
 
                                 End If
-                                Application.DoEvents()
+                                'Application.DoEvents()
 
                             Next
 
@@ -1000,7 +1003,7 @@ Public Class frmDebDisp
                                                    strBeBuEintragHaben,
                                                    strValutaDatum)
 
-                                Application.DoEvents()
+                                'Application.DoEvents()
 
                             Catch ex As Exception
                                 MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
@@ -1156,7 +1159,7 @@ Public Class frmDebDisp
                                                             strBeBuEintragHaben,
                                                             strErfassungsDatum)
 
-                                    Application.DoEvents()
+                                    'Application.DoEvents()
 
                                 End If
 
@@ -1268,7 +1271,7 @@ Public Class frmDebDisp
                         row("booBooked") = True
                         row("datBooked") = Now()
                         row("lngBelegNr") = intDebBelegsNummer
-                        Application.DoEvents()
+                        'Application.DoEvents()
 
                         'Status in File RG-Tabelle schreiben
                         intReturnValue = MainDebitor.FcWriteToRGTable(frmImportMain.cmbBuha.SelectedValue,
@@ -1314,7 +1317,7 @@ Public Class frmDebDisp
 
         Finally
 
-            Application.DoEvents()
+            'Application.DoEvents()
             'Grid neu aufbauen, Daten von Mandant einlesen
             'Call butDebitoren.PerformClick()
 
@@ -1355,25 +1358,23 @@ Public Class frmDebDisp
 
         Try
 
-            intDecidiveCell = 2
 
-            If e.ColumnIndex = intDecidiveCell And e.RowIndex >= 0 Then
+            If dgvBookings.Columns(e.ColumnIndex).HeaderText = "ok" And e.RowIndex >= 0 Then
 
+                If IIf(IsDBNull(dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value), False, dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value) Then
 
-                If dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value Then
-
-                        'MsgBox("Geändert zu checked " + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + ", " + dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value.ToString + Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value).ToString)
-                        'Zulassen? = keine Fehler
-                        If Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 0 And Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 10000 Then
-                            If Val(Strings.Mid(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value, 13, 1)) = 1 Then
-                                MsgBox("Erst - RG Splitt-Bill ist nicht auffindbar. Wird trotzdem gebucht, wird nur die Zweit-RG gebucht.", vbOKOnly + vbExclamation, "Splitt-Bill No RG 1")
-                            Else
-                                MsgBox("Debi-Rechnung ist nicht buchbar.", vbOKOnly + vbExclamation, "Nicht buchbar")
-                                dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value = False
-                            End If
+                    'MsgBox("Geändert zu checked " + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + ", " + dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value.ToString + Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value).ToString)
+                    'Zulassen? = keine Fehler
+                    If Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 0 And Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 10000 Then
+                        If Val(Strings.Mid(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value, 13, 1)) = 1 Then
+                            MsgBox("Erst - RG Splitt-Bill ist nicht auffindbar. Wird trotzdem gebucht, wird nur die Zweit-RG gebucht.", vbOKOnly + vbExclamation, "Splitt-Bill No RG 1")
+                        Else
+                            MsgBox("Debi-Rechnung ist nicht buchbar.", vbOKOnly + vbExclamation, "Nicht buchbar")
+                            dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value = False
                         End If
-
                     End If
+
+                End If
 
             End If
 

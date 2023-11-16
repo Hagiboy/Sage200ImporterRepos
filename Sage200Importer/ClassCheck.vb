@@ -124,7 +124,7 @@ Friend Class ClassCheck
                     intReturnValue = 2
                 End If
                 strBitLog = Trim(intReturnValue.ToString)
-                Application.DoEvents()
+                'Application.DoEvents()
 
                 'Kto 02
                 'intReturnValue = FcCheckKonto(row("lngDebKtoNbr"), objfiBuha, row("dblDebMwSt"), 0)
@@ -134,7 +134,7 @@ Friend Class ClassCheck
                 'Currency 03
                 intReturnValue = FcCheckCurrency(row("strDebCur"), objfiBuha)
                 strBitLog += Trim(intReturnValue.ToString)
-                Application.DoEvents()
+                'Application.DoEvents()
 
                 'Sub 04
                 If booSplittBill And IIf(IsDBNull(row("intRGArt")), 0, row("intRGArt")) = 10 Then
@@ -406,7 +406,7 @@ Friend Class ClassCheck
 
                 booDateChanged = False
                 'Jahresübergreifend RG- / Valuta-Datum
-                If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) And Year(row("datDebValDatum")) >= 2022 Then
+                If Year(row("datDebRGDatum")) <> Year(row("datDebValDatum")) And Year(row("datDebValDatum")) >= 2023 Then
                     'Not IsDBNull(row("datPGVFrom")) Then
                     row("booPGV") = True
                     'datValutaPGV = row("datDebValDatum")
@@ -422,7 +422,7 @@ Friend Class ClassCheck
                         If row("strPGVType") = "VR" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
-                            row("datDebValDatum") = "2023-01-01"
+                            row("datDebValDatum") = "2024-01-01"
                             booDateChanged = True
                         ElseIf row("strPGVType") = "RV" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
@@ -837,7 +837,7 @@ Friend Class ClassCheck
                 dblSubMwSt = 0
                 intDZKond = 0
 
-                Application.DoEvents()
+                'Application.DoEvents()
 
             Next
             Return 0
@@ -975,7 +975,7 @@ Friend Class ClassCheck
             Return 9
 
         Finally
-            Application.DoEvents()
+            'Application.DoEvents()
 
         End Try
 
@@ -1021,7 +1021,7 @@ Friend Class ClassCheck
             Return 9
 
         Finally
-            Application.DoEvents()
+            'Application.DoEvents()
 
         End Try
 
@@ -1244,7 +1244,7 @@ Friend Class ClassCheck
                     booFoundCurrency = True
                 End If
                 strReturn = objfiBuha.GetWhgZeile()
-                Application.DoEvents()
+                'Application.DoEvents()
             Loop
 
             If booFoundCurrency Then
@@ -1617,7 +1617,7 @@ Friend Class ClassCheck
                 strStatusText = String.Empty
 
                 strStatusOverAll = strStatusOverAll Or strBitLog
-                Application.DoEvents()
+                'Application.DoEvents()
 
             Next
 
@@ -2167,7 +2167,7 @@ Friend Class ClassCheck
                                                                    strKredTyp)
                 strBitLog += Trim(intReturnValue.ToString)
 
-                Application.DoEvents()
+                'Application.DoEvents()
 
                 'PGV => Prüfung vor Valuta-Datum da Valuta-Datum verändert wird. PGV soll nur möglich sein wenn rebilled
                 If Not IsDBNull(row("datPGVFrom")) And MainKreditor.FcIsAllKrediRebilled(objdtKredits.Tables("tblKrediSubsFromUser"), row("lngKredID")) = 0 Then
@@ -2189,7 +2189,7 @@ Friend Class ClassCheck
                 End If
 
                 'Jahresübergreifend RG- / Valuta-Datum
-                If Year(row("datKredRGDatum")) <> Year(row("datKredValDatum")) And Year(row("datKredValDatum")) >= 2022 Then
+                If Year(row("datKredRGDatum")) <> Year(row("datKredValDatum")) And Year(row("datKredValDatum")) >= 2023 Then
 
                     row("booPGV") = True
                     'datValutaPGV = row("datKredValDatum")
@@ -2205,7 +2205,7 @@ Friend Class ClassCheck
                         If row("strPGVType") = "VR" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
-                            row("datKredValDatum") = "2023-01-01" ' Year(row("datKredRGDatum")).ToString + "-01-01"
+                            row("datKredValDatum") = "2024-01-01" ' Year(row("datKredRGDatum")).ToString + "-01-01"
                         ElseIf row("strPGVType") = "RV" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
@@ -2601,7 +2601,7 @@ Friend Class ClassCheck
                 dblSubMwSt = 0
                 intKreditorNew = 0
 
-                Application.DoEvents()
+                'Application.DoEvents()
 
             Next
 
@@ -2662,7 +2662,7 @@ Friend Class ClassCheck
 
             For Each subrow As DataRow In selsubrow
 
-                Application.DoEvents()
+                'Application.DoEvents()
 
                 strBitLog = String.Empty
                 'Runden
@@ -2958,7 +2958,7 @@ Friend Class ClassCheck
 
                 strStatusOverAll = strStatusOverAll Or strBitLog
                 strStatusText = String.Empty
-                Application.DoEvents()
+                'Application.DoEvents()
 
             Next
 

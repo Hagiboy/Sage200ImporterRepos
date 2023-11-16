@@ -471,7 +471,7 @@ Friend Class ClassImport
 
         Finally
             RowBooking = Nothing
-            Application.DoEvents()
+            'Application.DoEvents()
 
         End Try
 

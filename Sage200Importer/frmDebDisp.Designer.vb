@@ -35,6 +35,7 @@ Partial Class frmDebDisp
         Me.dsDebitoren = New System.Data.DataSet()
         Me.butImport = New System.Windows.Forms.Button()
         Me.txtNumber = New System.Windows.Forms.TextBox()
+        Me.lblDB = New System.Windows.Forms.Label()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -139,11 +140,21 @@ Partial Class frmDebDisp
         Me.txtNumber.Size = New System.Drawing.Size(60, 29)
         Me.txtNumber.TabIndex = 9
         '
+        'lblDB
+        '
+        Me.lblDB.AutoSize = True
+        Me.lblDB.Location = New System.Drawing.Point(1530, 35)
+        Me.lblDB.Name = "lblDB"
+        Me.lblDB.Size = New System.Drawing.Size(22, 13)
+        Me.lblDB.TabIndex = 10
+        Me.lblDB.Text = "DB"
+        '
         'frmDebDisp
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1581, 623)
+        Me.Controls.Add(Me.lblDB)
         Me.Controls.Add(Me.txtNumber)
         Me.Controls.Add(Me.butImport)
         Me.Controls.Add(Me.dgvInfo)
@@ -173,4 +184,5 @@ Partial Class frmDebDisp
     Public WithEvents dsDebitoren As DataSet
     Friend WithEvents butImport As Button
     Friend WithEvents txtNumber As TextBox
+    Friend WithEvents lblDB As Label
 End Class
