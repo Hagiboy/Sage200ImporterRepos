@@ -1333,11 +1333,14 @@ Public Class frmDebDisp
 
     Private Sub dgvBookings_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvBookings.CellContentClick
 
+        Dim intFctReturns As Int16
+
         Try
 
             If e.RowIndex >= 0 Then
 
                 dgvBookingSub.DataSource = dsDebitoren.Tables("tblDebiSubsFromUser").Select("strRGNr='" + dgvBookings.Rows(e.RowIndex).Cells("strDebRGNbr").Value + "'").CopyToDataTable
+                intFctReturns = FcInitdgvDebiSub(dgvBookingSub)
 
             End If
 

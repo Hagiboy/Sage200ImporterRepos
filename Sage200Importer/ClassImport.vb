@@ -251,10 +251,12 @@ Friend Class ClassImport
                 objmysqlcomdwritehead.Parameters("@dblDebBrutto").Value = row("dblDebBrutto")
                 objmysqlcomdwritehead.Parameters("@lngDebIdentNbr").Value = row("lngDebIdentNbr")
                 objmysqlcomdwritehead.Parameters("@strDebText").Value = row("strDebText")
-                objmysqlcomdwritehead.Parameters("@strDebreferenz").Value = row("strDebReferenz")
+                If objdtLocDebiHead.Columns.Contains("strDebReferenz") Then
+                    objmysqlcomdwritehead.Parameters("@strDebreferenz").Value = row("strDebReferenz")
+                End If
                 objmysqlcomdwritehead.Parameters("@datDebRGDatum").Value = row("datDebRGDatum")
                 objmysqlcomdwritehead.Parameters("@datDebValDatum").Value = row("datDebValDatum")
-                If objdtLocDebiHead.Columns.Contains("@datRGCreate") Then
+                If objdtLocDebiHead.Columns.Contains("datRGCreate") Then
                     objmysqlcomdwritehead.Parameters("@datRGCreate").Value = row("datRGCreate")
                 End If
                 objmysqlcomdwritehead.Parameters("@intPayType").Value = row("intPayType")

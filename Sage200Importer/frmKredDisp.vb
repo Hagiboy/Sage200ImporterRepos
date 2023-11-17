@@ -358,8 +358,8 @@ Public Class frmKredDisp
             dgvBookingSub.Columns("lngKredID").DisplayIndex = 0
             dgvBookingSub.Columns("lngKredID").Width = 60
             dgvBookingSub.Columns("lngKredID").HeaderText = "Kred-ID"
-            dgvBookingSub.Columns("intSollHaben").Width = 30
             dgvBookingSub.Columns("intSollHaben").DisplayIndex = 1
+            dgvBookingSub.Columns("intSollHaben").Width = 30
             dgvBookingSub.Columns("intSollHaben").HeaderText = "S/H"
             dgvBookingSub.Columns("lngKto").DisplayIndex = 2
             dgvBookingSub.Columns("lngKto").Width = 50
@@ -432,11 +432,14 @@ Public Class frmKredDisp
 
     Private Sub dgvBookings_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvBookings.CellContentClick
 
+        Dim intFctReturns As Int16
+
         Try
 
             If e.RowIndex >= 0 Then
 
-                dgvBookingSub.DataSource = dsKreditoren.Tables("tblKrediHeadsFromUser").Select("lngKredID=" + dgvBookings.Rows(e.RowIndex).Cells("lngKredID").Value.ToString).CopyToDataTable
+                dgvBookingSub.DataSource = dsKreditoren.Tables("tblKrediSubsFromUser").Select("lngKredID=" + dgvBookings.Rows(e.RowIndex).Cells("lngKredID").Value.ToString).CopyToDataTable
+                intFctReturns = FcInitdgvKrediSub(dgvBookingSub)
 
             End If
 

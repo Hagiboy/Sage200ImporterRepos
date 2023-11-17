@@ -139,15 +139,10 @@ Friend Class frmImportMain
 
 
         'Dim strIncrBelNbr As String = String.Empty
+        Dim intNbrDebiForms As Int16
 
         Try
 
-            'For Each frm As Form In Application.OpenForms()
-            '    If frm.Name = "frmDebDisp" Then
-            '        'Es existiert schon eine Instanz
-            '        frm.Dispose()
-            '    End If
-            'Next
 
             Dim frmDebDisp As New frmDebDisp
             frmDebDisp.Cursor = Cursors.WaitCursor
@@ -155,8 +150,17 @@ Friend Class frmImportMain
             frmDebDisp.MdiParent = Me
             frmDebDisp.Show()
             frmDebDisp.Top = 100
+            For Each frm As Form In Application.OpenForms()
+                If frm.Name = "frmDebDisp" Then
+                    'Es existiert schon eine Instanz
+                    intNbrDebiForms += 1
+                End If
+            Next
+            'Je nach Anzahl von Links her verschieben
+            frmDebDisp.Left = intNbrDebiForms * 15
             frmDebDisp.FcDebiDisplay(cmbBuha.SelectedValue,
                                      cmbPerioden.SelectedItem)
+
 
             frmDebDisp.Cursor = Cursors.Default
             'Application.DoEvents()
