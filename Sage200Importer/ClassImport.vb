@@ -271,6 +271,7 @@ Friend Class ClassImport
                 End If
                 objmysqlcomdwritehead.ExecuteNonQuery()
                 objmysqlcomdwritehead.Connection.Close()
+                objdtLocDebiHead.AcceptChanges()
 
                 'Subs einlesen
                 strSQLSub = FcSQLParse(strSQLToParse,
@@ -311,6 +312,8 @@ Friend Class ClassImport
                 End If
                 objmysqlcomdwritesub.ExecuteNonQuery()
                 objmysqlcomdwritesub.Connection.Close()
+
+                objdtlocDebiSub.AcceptChanges()
 
             Next
 

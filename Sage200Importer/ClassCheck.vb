@@ -160,6 +160,8 @@ Friend Class ClassCheck
                                                     booCashSollCorrect,
                                                     booSplittBill)
 
+                objdtDebits.Tables("tblDebiSubsFromUser").AcceptChanges()
+
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Gibt es eine Bezahlbuchung zu erstellen? 
@@ -187,6 +189,8 @@ Friend Class ClassCheck
                     drPaymentBuchung = Nothing
                     'Summe der Sub-Buchungen anpassen
                     dblSubBrutto = Decimal.Round(dblSubBrutto + row("dblDebBrutto"), 2, MidpointRounding.AwayFromZero)
+
+                    objdtDebits.Tables("tblDebiSubsFromUser").AcceptChanges()
 
                 End If
 
@@ -265,6 +269,9 @@ Friend Class ClassCheck
                             End If
                             objdtDebits.Tables("tblDebiSubsFromUser").Rows.Add(objdrDebiSub)
                             objdrDebiSub = Nothing
+
+                            objdtDebits.Tables("tblDebiSubsFromUser").AcceptChanges()
+
                             'Summe der Sub-Buchungen anpassen
                             dblSubBrutto = Decimal.Round(dblSubBrutto - dblRDiffBrutto, 2, MidpointRounding.AwayFromZero)
                             If Math.Abs(dblRDiffBrutto) > 6 Then
@@ -609,6 +616,8 @@ Friend Class ClassCheck
                     objdtDebits.Tables("tblDebiSubsFromUser").Rows.Add(drSBBuchung)
                     drSBBuchung = Nothing
 
+                    objdtDebits.Tables("tblDebiSubsFromUser").AcceptChanges()
+
                 Else
                     intReturnValue = 0
                 End If
@@ -838,6 +847,7 @@ Friend Class ClassCheck
                 intDZKond = 0
 
                 'Application.DoEvents()
+                objdtDebits.Tables("tblDebiHeadsFromUser").AcceptChanges()
 
             Next
             Return 0
@@ -2108,6 +2118,9 @@ Friend Class ClassCheck
                                 objdrKrediSub("strStatusUBText") = "ok"
                             End If
                             objdtKredits.Tables("tblKrediSubsFromUser").Rows.Add(objdrKrediSub)
+
+                            objdtKredits.Tables("tblKrediSubsFromUser").AcceptChanges()
+
                             'Summe SubBuchung anpassen
                             dblSubBrutto = Decimal.Round(dblSubBrutto + dblRDiffBrutto, 2, MidpointRounding.AwayFromZero)
                             If Math.Abs(dblRDiffBrutto) > 1 Then
@@ -2602,6 +2615,7 @@ Friend Class ClassCheck
                 intKreditorNew = 0
 
                 'Application.DoEvents()
+                objdtKredits.Tables("tblKrediHeadsFromUser").AcceptChanges()
 
             Next
 

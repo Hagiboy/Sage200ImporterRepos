@@ -30,7 +30,6 @@ Partial Class frmImportMain
         Me.butDebitoren = New System.Windows.Forms.Button()
         Me.butDblDebis = New System.Windows.Forms.Button()
         Me.cmbPerioden = New System.Windows.Forms.ComboBox()
-        Me.lblVersion = New System.Windows.Forms.Label()
         Me.chkValutaCorrect = New System.Windows.Forms.CheckBox()
         Me.dtpValutaCorrect = New System.Windows.Forms.DateTimePicker()
         Me.GroupBox2 = New System.Windows.Forms.GroupBox()
@@ -48,6 +47,9 @@ Partial Class frmImportMain
         Me.mysqlcongen = New MySqlConnector.MySqlConnection()
         Me.mysqlcmdgen = New MySqlConnector.MySqlCommand()
         Me.ToolStripContainer1 = New System.Windows.Forms.ToolStripContainer()
+        Me.LblVersion = New System.Windows.Forms.Label()
+        Me.LblIdentity = New System.Windows.Forms.Label()
+        Me.LblTaskID = New System.Windows.Forms.Label()
         Me.GroupBox1.SuspendLayout()
         Me.GroupBox2.SuspendLayout()
         CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -124,15 +126,6 @@ Partial Class frmImportMain
         Me.cmbPerioden.Name = "cmbPerioden"
         Me.cmbPerioden.Size = New System.Drawing.Size(92, 21)
         Me.cmbPerioden.TabIndex = 10
-        '
-        'lblVersion
-        '
-        Me.lblVersion.AutoSize = True
-        Me.lblVersion.Location = New System.Drawing.Point(139, 40)
-        Me.lblVersion.Name = "lblVersion"
-        Me.lblVersion.Size = New System.Drawing.Size(42, 13)
-        Me.lblVersion.TabIndex = 11
-        Me.lblVersion.Text = "Version"
         '
         'chkValutaCorrect
         '
@@ -257,13 +250,17 @@ Partial Class frmImportMain
         '
         'ToolStripContainer1
         '
+        Me.ToolStripContainer1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         '
         'ToolStripContainer1.ContentPanel
         '
+        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.LblTaskID)
+        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.LblIdentity)
+        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.LblVersion)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.cmbPerioden)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.cmbBuha)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox2)
-        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.lblVersion)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox1)
         Me.ToolStripContainer1.ContentPanel.Size = New System.Drawing.Size(1671, 80)
         Me.ToolStripContainer1.Location = New System.Drawing.Point(2, 1)
@@ -271,6 +268,33 @@ Partial Class frmImportMain
         Me.ToolStripContainer1.Size = New System.Drawing.Size(1671, 105)
         Me.ToolStripContainer1.TabIndex = 24
         Me.ToolStripContainer1.Text = "ToolStripContainer1"
+        '
+        'LblVersion
+        '
+        Me.LblVersion.AutoSize = True
+        Me.LblVersion.Location = New System.Drawing.Point(1271, 27)
+        Me.LblVersion.Name = "LblVersion"
+        Me.LblVersion.Size = New System.Drawing.Size(14, 13)
+        Me.LblVersion.TabIndex = 18
+        Me.LblVersion.Text = "V"
+        '
+        'LblIdentity
+        '
+        Me.LblIdentity.AutoSize = True
+        Me.LblIdentity.Location = New System.Drawing.Point(1333, 27)
+        Me.LblIdentity.Name = "LblIdentity"
+        Me.LblIdentity.Size = New System.Drawing.Size(41, 13)
+        Me.LblIdentity.TabIndex = 19
+        Me.LblIdentity.Text = "Identity"
+        '
+        'LblTaskID
+        '
+        Me.LblTaskID.AutoSize = True
+        Me.LblTaskID.Location = New System.Drawing.Point(1447, 27)
+        Me.LblTaskID.Name = "LblTaskID"
+        Me.LblTaskID.Size = New System.Drawing.Size(42, 13)
+        Me.LblTaskID.TabIndex = 20
+        Me.LblTaskID.Text = "TaskID"
         '
         'frmImportMain
         '
@@ -299,7 +323,6 @@ Partial Class frmImportMain
     Friend WithEvents butKreditoren As Button
     Friend WithEvents butDebitoren As Button
     Friend WithEvents cmbPerioden As ComboBox
-    Friend WithEvents lblVersion As Label
     Friend WithEvents butDblDebis As Button
     Friend WithEvents butDblKredis As Button
     Friend WithEvents chkValutaCorrect As CheckBox
@@ -319,4 +342,7 @@ Partial Class frmImportMain
     Public WithEvents mysqlcongen As MySqlConnector.MySqlConnection
     Public WithEvents mysqlcmdgen As MySqlConnector.MySqlCommand
     Friend WithEvents ToolStripContainer1 As ToolStripContainer
+    Friend WithEvents LblTaskID As Label
+    Friend WithEvents LblIdentity As Label
+    Friend WithEvents LblVersion As Label
 End Class

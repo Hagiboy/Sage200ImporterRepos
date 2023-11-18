@@ -55,6 +55,9 @@ Public Class frmKredDisp
             strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
             strIdentityName = Strings.Replace(strIdentityName, "\", "/")
 
+            frmImportMain.LblIdentity.Text = strIdentityName
+            frmImportMain.LblTaskID.Text = Process.GetCurrentProcess().Id.ToString
+
             'Dim daDebitorenHead As New MySqlDataAdapter()
             mysqlconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
             'Read cmd DebiHead
@@ -152,16 +155,10 @@ Public Class frmKredDisp
         'Tabellentyp darstellen
         Me.lblDB.Text = Main.FcReadFromSettingsII("Buchh_KRGTableType", intMandant)
 
-        'Grid neu aufbauen
+
         MySQLdaKreditoren.Fill(dsKreditoren, "tblKrediHeadsFromUser")
         MySQLdaKreditorenSub.Fill(dsKreditoren, "tblKrediSubsFromUser")
 
-        dgvBookings.DataSource = dsKreditoren.Tables("tblKrediHeadsFromUser")
-        dgvBookingSub.DataSource = dsKreditoren.Tables("tblKrediSubsFromUser")
-
-        intFcReturns = FcInitdgvInfo(dgvInfo)
-        intFcReturns = FcInitdgvKreditoren(dgvBookings)
-        intFcReturns = FcInitdgvKrediSub(dgvBookingSub)
 
         'Application.DoEvents()
 
@@ -183,6 +180,15 @@ Public Class frmKredDisp
                               frmImportMain.dtpValutaCorrect.Value)
 
         clCheck = Nothing
+
+        'Grid neu aufbauen
+        dgvBookings.DataSource = dsKreditoren.Tables("tblKrediHeadsFromUser")
+        dgvBookingSub.DataSource = dsKreditoren.Tables("tblKrediSubsFromUser")
+
+        intFcReturns = FcInitdgvInfo(dgvInfo)
+        intFcReturns = FcInitdgvKreditoren(dgvBookings)
+        intFcReturns = FcInitdgvKrediSub(dgvBookingSub)
+
 
         'Anzahl schreiben
         txtNumber.Text = Me.dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count.ToString
@@ -569,7 +575,7 @@ Public Class frmKredDisp
             'intTeqNbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
 
             'Kopfbuchung
-            For Each row As DataRow In dsKreditoren.Tables("tblKrediHeadsFromUser").Rows
+            For Each row As DataRow In Me.dsKreditoren.Tables("tblKrediHeadsFromUser").Rows
 
                 If IIf(IsDBNull(row("booKredBook")), False, row("booKredBook")) Then
 
@@ -1056,6 +1062,8 @@ Public Class frmKredDisp
                         row("booBooked") = True
                         row("datBooked") = Now()
                         row("lngBelegNr") = intKredBelegsNummer
+
+                        dsKreditoren.Tables("tblKrediHeadsFromUser").AcceptChanges()
                         'strKRGReferTo = "lngKredID"
                         'strKRGReferTo = "strKredRGNbr"
                         If objdbConn.State = ConnectionState.Closed Then

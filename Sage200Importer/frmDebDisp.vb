@@ -50,8 +50,13 @@ Public Class frmDebDisp
 
         Try
 
+
+
             strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
             strIdentityName = Strings.Replace(strIdentityName, "\", "/")
+
+            frmImportMain.LblIdentity.Text = strIdentityName
+            frmImportMain.LblTaskID.Text = Process.GetCurrentProcess().Id.ToString
 
             'Dim daDebitorenHead As New MySqlDataAdapter()
             mysqlconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
@@ -159,16 +164,9 @@ Public Class frmDebDisp
         'Tabellentyp darstellen
         Me.lblDB.Text = Main.FcReadFromSettingsII("Buchh_RGTableType", intMandant)
 
-        'Grid neu aufbauen
+
         MySQLdaDebitoren.Fill(dsDebitoren, "tblDebiHeadsFromUser")
         MySQLdaDebitorenSub.Fill(dsDebitoren, "tblDebiSubsFromUser")
-
-        dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
-        dgvBookingSub.DataSource = dsDebitoren.Tables("tblDebiSubsFromUser")
-
-        intFcReturns = FcInitdgvInfo(dgvInfo)
-        intFcReturns = FcInitdgvBookings(dgvBookings)
-        intFcReturns = FcInitdgvDebiSub(dgvBookingSub)
 
         'Application.DoEvents()
 
@@ -194,6 +192,13 @@ Public Class frmDebDisp
                                    frmImportMain.dtpValutaCorrect.Value)
         clCheck = Nothing
 
+        'Grid neu aufbauen
+        dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
+        dgvBookingSub.DataSource = dsDebitoren.Tables("tblDebiSubsFromUser")
+
+        intFcReturns = FcInitdgvInfo(dgvInfo)
+        intFcReturns = FcInitdgvBookings(dgvBookings)
+        intFcReturns = FcInitdgvDebiSub(dgvBookingSub)
 
         'Anzahl schreiben
         txtNumber.Text = Me.dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count.ToString
@@ -1272,6 +1277,7 @@ Public Class frmDebDisp
                         row("datBooked") = Now()
                         row("lngBelegNr") = intDebBelegsNummer
                         'Application.DoEvents()
+                        dsDebitoren.Tables("tblDebiHeadsFromUser").AcceptChanges()
 
                         'Status in File RG-Tabelle schreiben
                         intReturnValue = MainDebitor.FcWriteToRGTable(frmImportMain.cmbBuha.SelectedValue,
