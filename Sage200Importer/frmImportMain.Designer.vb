@@ -47,9 +47,9 @@ Partial Class frmImportMain
         Me.mysqlcongen = New MySqlConnector.MySqlConnection()
         Me.mysqlcmdgen = New MySqlConnector.MySqlCommand()
         Me.ToolStripContainer1 = New System.Windows.Forms.ToolStripContainer()
-        Me.LblVersion = New System.Windows.Forms.Label()
-        Me.LblIdentity = New System.Windows.Forms.Label()
         Me.LblTaskID = New System.Windows.Forms.Label()
+        Me.LblIdentity = New System.Windows.Forms.Label()
+        Me.LblVersion = New System.Windows.Forms.Label()
         Me.GroupBox1.SuspendLayout()
         Me.GroupBox2.SuspendLayout()
         CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -262,30 +262,12 @@ Partial Class frmImportMain
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.cmbBuha)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox2)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox1)
-        Me.ToolStripContainer1.ContentPanel.Size = New System.Drawing.Size(1671, 80)
+        Me.ToolStripContainer1.ContentPanel.Size = New System.Drawing.Size(1688, 80)
         Me.ToolStripContainer1.Location = New System.Drawing.Point(2, 1)
         Me.ToolStripContainer1.Name = "ToolStripContainer1"
-        Me.ToolStripContainer1.Size = New System.Drawing.Size(1671, 105)
+        Me.ToolStripContainer1.Size = New System.Drawing.Size(1688, 105)
         Me.ToolStripContainer1.TabIndex = 24
         Me.ToolStripContainer1.Text = "ToolStripContainer1"
-        '
-        'LblVersion
-        '
-        Me.LblVersion.AutoSize = True
-        Me.LblVersion.Location = New System.Drawing.Point(1271, 27)
-        Me.LblVersion.Name = "LblVersion"
-        Me.LblVersion.Size = New System.Drawing.Size(14, 13)
-        Me.LblVersion.TabIndex = 18
-        Me.LblVersion.Text = "V"
-        '
-        'LblIdentity
-        '
-        Me.LblIdentity.AutoSize = True
-        Me.LblIdentity.Location = New System.Drawing.Point(1333, 27)
-        Me.LblIdentity.Name = "LblIdentity"
-        Me.LblIdentity.Size = New System.Drawing.Size(41, 13)
-        Me.LblIdentity.TabIndex = 19
-        Me.LblIdentity.Text = "Identity"
         '
         'LblTaskID
         '
@@ -296,11 +278,29 @@ Partial Class frmImportMain
         Me.LblTaskID.TabIndex = 20
         Me.LblTaskID.Text = "TaskID"
         '
+        'LblIdentity
+        '
+        Me.LblIdentity.AutoSize = True
+        Me.LblIdentity.Location = New System.Drawing.Point(1333, 27)
+        Me.LblIdentity.Name = "LblIdentity"
+        Me.LblIdentity.Size = New System.Drawing.Size(41, 13)
+        Me.LblIdentity.TabIndex = 19
+        Me.LblIdentity.Text = "Identity"
+        '
+        'LblVersion
+        '
+        Me.LblVersion.AutoSize = True
+        Me.LblVersion.Location = New System.Drawing.Point(1271, 27)
+        Me.LblVersion.Name = "LblVersion"
+        Me.LblVersion.Size = New System.Drawing.Size(14, 13)
+        Me.LblVersion.TabIndex = 18
+        Me.LblVersion.Text = "V"
+        '
         'frmImportMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1672, 767)
+        Me.ClientSize = New System.Drawing.Size(1689, 795)
         Me.Controls.Add(Me.ToolStripContainer1)
         Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
         Me.IsMdiContainer = True

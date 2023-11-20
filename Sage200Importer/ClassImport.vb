@@ -107,6 +107,13 @@ Friend Class ClassImport
                     objmysqlcomdwritehead.Parameters("@strRGName").Value = row("strRGName")
                     objmysqlcomdwritehead.Parameters("@strRGBemerkung").Value = row("strRGBemerkung")
                     objmysqlcomdwritehead.Parameters("@intZKond").Value = row("intZKond")
+                    If objdtLocKrediHead.Columns.Contains("datPGVFrom") Then
+                        objmysqlcomdwritehead.Parameters("@datPGVFrom").Value = row("datPGVFrom")
+                    End If
+                    If objdtLocKrediHead.Columns.Contains("datPGVTo") Then
+                        objmysqlcomdwritehead.Parameters("@datPGVTo").Value = row("datPGVTo")
+                    End If
+
                     objmysqlcomdwritehead.ExecuteNonQuery()
                     objmysqlcomdwritehead.Connection.Close()
 
@@ -268,6 +275,12 @@ Friend Class ClassImport
                 End If
                 If objdtLocDebiHead.Columns.Contains("booCrToInv") Then
                     objmysqlcomdwritehead.Parameters("@booCrToInv").Value = row("booCrToInv")
+                End If
+                If objdtLocDebiHead.Columns.Contains("datPGVFrom") Then
+                    objmysqlcomdwritehead.Parameters("@datPGVFrom").Value = row("datPGVFrom")
+                End If
+                If objdtLocDebiHead.Columns.Contains("bdatPGVTo") Then
+                    objmysqlcomdwritehead.Parameters("@datPGVTo").Value = row("datPGVTo")
                 End If
                 objmysqlcomdwritehead.ExecuteNonQuery()
                 objmysqlcomdwritehead.Connection.Close()
@@ -710,7 +723,10 @@ Friend Class ClassImport
             inscmdValues += ", @strDebIdentNbr2"
             inscmdFields += ", booCrToInv"
             inscmdValues += ", @booCrToInv"
-
+            inscmdFields += ", datPGVFrom"
+            inscmdValues += ", @datPGVFrom"
+            inscmdFields += ", datPGVTo"
+            inscmdValues += ", @datPGVTo"
 
 
             'Ins cmd DebiHead
@@ -742,6 +758,8 @@ Friend Class ClassImport
             mysqlinscmd.Parameters.Add("@strRGName", MySqlDbType.String).SourceColumn = "strRGName"
             mysqlinscmd.Parameters.Add("@strDebIdentNbr2", MySqlDbType.String).SourceColumn = "strDebIdentNbr2"
             mysqlinscmd.Parameters.Add("@booCrToInv", MySqlDbType.Int16).SourceColumn = "booCrToInv"
+            mysqlinscmd.Parameters.Add("@datPGVFrom", MySqlDbType.Date).SourceColumn = "datPGVFrom"
+            mysqlinscmd.Parameters.Add("@datPGVTo", MySqlDbType.Date).SourceColumn = "datPGVTo"
 
             Return 0
 
@@ -813,6 +831,11 @@ Friend Class ClassImport
             inscmdValues += ", @strRGName"
             inscmdFields += ", intZKond"
             inscmdValues += ", @intZKond"
+            inscmdFields += ", datPGVFrom"
+            inscmdValues += ", @datPGVFrom"
+            inscmdFields += ", datPGVTo"
+            inscmdValues += ", @datPGVTo"
+
 
 
             'Ins cmd KrediiHead
@@ -842,6 +865,8 @@ Friend Class ClassImport
             mysqlinscmd.Parameters.Add("@strRGName", MySqlDbType.String).SourceColumn = "strRGName"
             mysqlinscmd.Parameters.Add("@strRGBemerkung", MySqlDbType.String).SourceColumn = "strRGBemerkung"
             mysqlinscmd.Parameters.Add("@intZKond", MySqlDbType.Int16).SourceColumn = "intZKond"
+            mysqlinscmd.Parameters.Add("@datPGVFrom", MySqlDbType.Date).SourceColumn = "datPGVFrom"
+            mysqlinscmd.Parameters.Add("@datPGVTo", MySqlDbType.Date).SourceColumn = "datPGVTo"
 
             Return 0
 

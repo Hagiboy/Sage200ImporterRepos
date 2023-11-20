@@ -58,8 +58,20 @@ Public Class frmKredDisp
             frmImportMain.LblIdentity.Text = strIdentityName
             frmImportMain.LblTaskID.Text = Process.GetCurrentProcess().Id.ToString
 
-            'Dim daDebitorenHead As New MySqlDataAdapter()
             mysqlconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
+
+            'Zuert alle evtl. vorhandenen DS des Users löschen
+            mysqlcmdKredDel.CommandText = "DELETE FROM tblkreditorenhead WHERE IdentityName='" + strIdentityName + "'"
+            mysqlcmdKredDel.Connection.Open()
+            mysqlcmdKredDel.ExecuteNonQuery()
+            mysqlcmdKredDel.Connection.Close()
+
+            mysqlcmdKredSubDel.CommandText = "DELETE FROM tblkreditorensub WHERE IdentityName='" + strIdentityName + "'"
+            mysqlcmdKredSubDel.Connection.Open()
+            mysqlcmdKredSubDel.ExecuteNonQuery()
+            mysqlcmdKredSubDel.Connection.Close()
+
+
             'Read cmd DebiHead
             mysqlcmdKredRead.CommandText = "SELECT * FROM tblkreditorenhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
 
@@ -1113,6 +1125,12 @@ Public Class frmKredDisp
 
         End Try
 
+
+    End Sub
+
+    Private Sub dsKreditoren_MergeFailed(sender As Object, e As MergeFailedEventArgs) Handles dsKreditoren.MergeFailed
+
+        MessageBox.Show("dsKreditoren_MergeFailed")
 
     End Sub
 End Class

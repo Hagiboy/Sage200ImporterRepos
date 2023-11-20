@@ -50,16 +50,26 @@ Public Class frmDebDisp
 
         Try
 
-
-
             strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
             strIdentityName = Strings.Replace(strIdentityName, "\", "/")
 
             frmImportMain.LblIdentity.Text = strIdentityName
             frmImportMain.LblTaskID.Text = Process.GetCurrentProcess().Id.ToString
 
-            'Dim daDebitorenHead As New MySqlDataAdapter()
             mysqlconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
+
+            'Zuerst alle evtl. vorhandene DS des Users löschen
+            mysqlcmdDebDel.CommandText = "DELETE FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "'"
+            mysqlcmdDebDel.Connection.Open()
+            mysqlcmdDebDel.ExecuteNonQuery()
+            mysqlcmdDebDel.Connection.Close()
+
+            mysqlcmdDebSubDel.CommandText = "DELETE FROM tbldebitorensub WHERE IdentityName='" + strIdentityName + "'"
+            mysqlcmdDebSubDel.Connection.Open()
+            mysqlcmdDebSubDel.ExecuteNonQuery()
+            mysqlcmdDebSubDel.Connection.Close()
+
+            'setzen für weiteren Gebraucht mit Process ID
             'Read cmd DebiHead
             mysqlcmdDebRead.CommandText = "SELECT * FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
 

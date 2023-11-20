@@ -4732,7 +4732,7 @@ ErrorHandler:
 
             dbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
             dbSource = "Data Source="
-            dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;Persist Security Info=False;"
+            dbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;Persist Security Info=False;Connect Timeout=300;"
             objaccesscon.ConnectionString = dbProvider + dbSource + dbPathAndFile
             Return 0
 
