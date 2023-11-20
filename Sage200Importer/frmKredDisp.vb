@@ -182,7 +182,7 @@ Public Class frmKredDisp
                               KrBhg,
                               PIFin,
                               dsKreditoren.Tables("tblKreditorenInfo"),
-                              frmImportMain.cmbBuha.Text,
+                              frmImportMain.lstBoxMandant.Text,
                               strYear,
                               strPeriode,
                               datPeriodFrom,
@@ -580,7 +580,7 @@ Public Class frmKredDisp
 
             'Start in Sync schreiben
             intReturnValue = WFDBClass.FcWriteStartToSync(objdbConn,
-                                                          frmImportMain.cmbBuha.SelectedValue,
+                                                          frmImportMain.lstBoxMandant.SelectedValue,
                                                           2,
                                                           dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count)
 
@@ -871,8 +871,8 @@ Public Class frmKredDisp
                             intReturnValue = FBhg.doesBelegExist(intKredBelegsNummer,
                                                                  "NOT_SET",
                                                                  "NOT_SET",
-                                                                 Strings.Left(frmImportMain.cmbPerioden.SelectedItem, 4) + "0101",
-                                                                 Strings.Left(frmImportMain.cmbPerioden.SelectedItem, 4) + "1231")
+                                                                 Strings.Left(frmImportMain.lstBoxPerioden.Text, 4) + "0101",
+                                                                 Strings.Left(frmImportMain.lstBoxPerioden.Text, 4) + "1231")
                             If intReturnValue <> 0 Then
                                 intKredBelegsNummer += 1
                             End If
@@ -1011,11 +1011,11 @@ Public Class frmKredDisp
                                                                        row("intPGVMthsNY"),
                                                                        2311,
                                                                        2312,
-                                                                       frmImportMain.cmbPerioden.SelectedItem,
+                                                                       frmImportMain.lstBoxPerioden.Text,
                                                                        objdbConn,
                                                                        objdbMSSQLConn,
                                                                        objdbSQLcommand,
-                                                                       frmImportMain.cmbBuha.SelectedValue,
+                                                                       frmImportMain.lstBoxMandant.SelectedValue,
                                                                        dsKreditoren.Tables("tblKreditorenInfo"),
                                                                        strYear,
                                                                        intTeqNbr,
@@ -1048,11 +1048,11 @@ Public Class frmKredDisp
                                                                        row("intPGVMthsNY"),
                                                                        2311,
                                                                        2312,
-                                                                       frmImportMain.cmbPerioden.SelectedItem,
+                                                                       frmImportMain.lstBoxPerioden.Text,
                                                                        objdbConn,
                                                                        objdbMSSQLConn,
                                                                        objdbSQLcommand,
-                                                                       frmImportMain.cmbBuha.SelectedValue,
+                                                                       frmImportMain.lstBoxMandant.SelectedValue,
                                                                        dsKreditoren.Tables("tblKreditorenInfo"),
                                                                        strYear,
                                                                        intTeqNbr,
@@ -1081,12 +1081,12 @@ Public Class frmKredDisp
                         If objdbConn.State = ConnectionState.Closed Then
                             objdbConn.Open()
                         End If
-                        strKRGReferTo = Main.FcReadFromSettings(objdbConn, "Buchh_TableKRGReferTo", frmImportMain.cmbBuha.SelectedValue)
+                        strKRGReferTo = Main.FcReadFromSettings(objdbConn, "Buchh_TableKRGReferTo", frmImportMain.lstBoxMandant.SelectedValue)
                         If objdbConn.State = ConnectionState.Open Then
                             objdbConn.Close()
                         End If
                         'Status in File RG-Tabelle schreiben
-                        intReturnValue = MainKreditor.FcWriteToKrediRGTable(frmImportMain.cmbBuha.SelectedValue,
+                        intReturnValue = MainKreditor.FcWriteToKrediRGTable(frmImportMain.lstBoxMandant.SelectedValue,
                                                                         row(strKRGReferTo),
                                                                         row("datBooked"),
                                                                         row("lngBelegNr"),
@@ -1106,7 +1106,7 @@ Public Class frmKredDisp
 
             'In sync-Tabelle schreiben
             intReturnValue = WFDBClass.FcWriteEndToSync(objdbConn,
-                                                        frmImportMain.cmbBuha.SelectedValue,
+                                                        frmImportMain.lstBoxMandant.SelectedValue,
                                                         2,
                                                         0,
                                                         IIf(booBookingok, "ok", "Probleme"))

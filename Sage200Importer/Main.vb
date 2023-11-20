@@ -987,6 +987,65 @@ ErrorHandler:
 
     End Function
 
+    Public Shared Function FcReadPeriodsFromMandantLst(ByRef objdbconn As MySqlConnection,
+                                                    ByRef objFinanz As SBSXASLib.AXFinanz,
+                                                    ByVal intAccounting As Int16,
+                                                    ByRef lstBoxPeriods As ListBox) As Int16
+
+
+
+        Dim strMandant As String
+        Dim booAccOk As Int16
+        Dim intLbNbr As Int16
+        Dim strPeriodenListe As String = String.Empty
+        Dim strPeriodeAr() As String
+        Dim intLooper As Int16
+
+
+        Try
+
+            objFinanz = Nothing
+            objFinanz = New SBSXASLib.AXFinanz
+
+            'Login
+            Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
+
+            objdbconn.Open()
+            strMandant = FcReadFromSettings(objdbconn, "Buchh200_Name", intAccounting)
+            objdbconn.Close()
+            booAccOk = objFinanz.CheckMandant(strMandant)
+
+            'ListBox leeren
+            lstBoxPeriods.Items.Clear()
+
+            'GJ einlesen
+            intLbNbr = objFinanz.ReadPeri(strMandant, "")
+            Do Until strPeriodenListe = "EOF"
+                strPeriodenListe = objFinanz.GetPeriListe(intLooper)
+                strPeriodeAr = Split(strPeriodenListe, "{>}")
+                If strPeriodenListe <> "EOF" Then
+                    lstBoxPeriods.Items.Add(strPeriodeAr(0))
+                End If
+                intLooper += 1
+            Loop
+
+            'Auf aktuelles Jahr gehen
+            'Bei Jahresanfang
+            'cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year("2022-12-31")).ToString)
+            lstBoxPeriods.SelectedIndex = lstBoxPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now())).ToString)
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Periodendefinition lesen")
+
+        End Try
+
+
+    End Function
+
+
     Public Shared Function FcReadPeriodenDef(ByRef objSQLConnection As SqlClient.SqlConnection,
                                              ByRef objSQLCommand As SqlClient.SqlCommand,
                                              ByVal intPeriodenNr As Int32,

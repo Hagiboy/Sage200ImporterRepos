@@ -266,7 +266,9 @@ Friend Class ClassImport
                 If objdtLocDebiHead.Columns.Contains("datRGCreate") Then
                     objmysqlcomdwritehead.Parameters("@datRGCreate").Value = row("datRGCreate")
                 End If
-                objmysqlcomdwritehead.Parameters("@intPayType").Value = row("intPayType")
+                If objdtLocDebiHead.Columns.Contains("intPayType") Then
+                    objmysqlcomdwritehead.Parameters("@intPayType").Value = row("intPayType")
+                End If
                 objmysqlcomdwritehead.Parameters("@strDebiBank").Value = row("strDebiBank")
                 objmysqlcomdwritehead.Parameters("@lngLinkedRG").Value = row("lngLinkedRG")
                 objmysqlcomdwritehead.Parameters("@strRGName").Value = row("strRGName")

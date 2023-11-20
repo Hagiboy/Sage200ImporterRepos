@@ -189,7 +189,7 @@ Public Class frmDebDisp
                                    PIFin,
                                    BeBu,
                                    dsDebitoren.Tables("tblDebitorenInfo"),
-                                   frmImportMain.cmbBuha.Text,
+                                   frmImportMain.lstBoxMandant.Text,
                                    intTeqNbr,
                                    intTeqNbrLY,
                                    intTeqNbrPLY,
@@ -494,13 +494,13 @@ Public Class frmDebDisp
 
             'Start in Sync schreiben
             intReturnValue = WFDBClass.FcWriteStartToSync(objdbConn,
-                                                          frmImportMain.cmbBuha.SelectedValue,
+                                                          frmImportMain.lstBoxMandant.SelectedValue,
                                                           1,
                                                           dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count)
 
             'Setting soll erfasste OP als externe Beleg-Nr. genommen werden und lngDebIdentNbr als Beleg-Nr.
             objdbConn.Open()
-            booErfOPExt = Convert.ToBoolean(Convert.ToInt16(Main.FcReadFromSettings(objdbConn, "Buchh_ErfOPExt", frmImportMain.cmbBuha.SelectedValue)))
+            booErfOPExt = Convert.ToBoolean(Convert.ToInt16(Main.FcReadFromSettings(objdbConn, "Buchh_ErfOPExt", frmImportMain.lstBoxMandant.SelectedValue)))
             objdbConn.Close()
 
             'Kopfbuchung
@@ -886,8 +886,8 @@ Public Class frmDebDisp
                                 intReturnValue = FBhg.doesBelegExist(intDebBelegsNummer,
                                                                      "NOT_SET",
                                                                      "NOT_SET",
-                                                                     String.Concat(Microsoft.VisualBasic.Left(frmImportMain.cmbPerioden.SelectedItem, 4) - 1, "0101"),
-                                                                     String.Concat(Microsoft.VisualBasic.Left(frmImportMain.cmbPerioden.SelectedItem, 4), "1231"))
+                                                                     String.Concat(Microsoft.VisualBasic.Left(frmImportMain.lstBoxPerioden.Text, 4) - 1, "0101"),
+                                                                     String.Concat(Microsoft.VisualBasic.Left(frmImportMain.lstBoxPerioden.Text, 4), "1231"))
                                 If intReturnValue <> 0 Then
                                     intDebBelegsNummer += 1
                                 End If
@@ -1226,11 +1226,11 @@ Public Class frmDebDisp
                                                                    row("intPGVMthsNY"),
                                                                    1311,
                                                                    1312,
-                                                                   frmImportMain.cmbPerioden.SelectedItem,
+                                                                   frmImportMain.lstBoxPerioden.Text,
                                                                    objdbConn,
                                                                    objdbMSSQLConn,
                                                                    objdbSQLcommand,
-                                                                   frmImportMain.cmbBuha.SelectedValue,
+                                                                   frmImportMain.lstBoxMandant.SelectedValue,
                                                                    dsDebitoren.Tables("tblDebitorenInfo"),
                                                                    strYear,
                                                                    intTeqNbr,
@@ -1262,11 +1262,11 @@ Public Class frmDebDisp
                                                                    row("intPGVMthsNY"),
                                                                    1311,
                                                                    1312,
-                                                                   frmImportMain.cmbPerioden.SelectedItem,
+                                                                   frmImportMain.lstBoxPerioden.Text,
                                                                    objdbConn,
                                                                    objdbMSSQLConn,
                                                                    objdbSQLcommand,
-                                                                   frmImportMain.cmbBuha.SelectedValue,
+                                                                   frmImportMain.lstBoxMandant.SelectedValue,
                                                                    dsDebitoren.Tables("tblDebitorenInfo"),
                                                                    strYear,
                                                                    intTeqNbr,
@@ -1290,7 +1290,7 @@ Public Class frmDebDisp
                         dsDebitoren.Tables("tblDebiHeadsFromUser").AcceptChanges()
 
                         'Status in File RG-Tabelle schreiben
-                        intReturnValue = MainDebitor.FcWriteToRGTable(frmImportMain.cmbBuha.SelectedValue,
+                        intReturnValue = MainDebitor.FcWriteToRGTable(frmImportMain.lstBoxMandant.SelectedValue,
                                                                       row("strDebRGNbr"),
                                                                       row("datBooked"),
                                                                       row("lngBelegNr"),
@@ -1305,7 +1305,7 @@ Public Class frmDebDisp
                         End If
 
                         'Evtl. Query nach Buchung ausführen
-                        Call MainDebitor.FcExecuteAfterDebit(frmImportMain.cmbBuha.SelectedValue, objdbConn)
+                        Call MainDebitor.FcExecuteAfterDebit(frmImportMain.lstBoxMandant.SelectedValue, objdbConn)
                     End If
 
                 End If
@@ -1320,7 +1320,7 @@ Public Class frmDebDisp
             '                                              IIf(booBooingok, "ok", "Probleme"))
 
             intReturnValue = WFDBClass.FcWriteEndToSync(objdbConn,
-                                                        frmImportMain.cmbBuha.SelectedValue,
+                                                        frmImportMain.lstBoxMandant.SelectedValue,
                                                         1,
                                                         0,
                                                         IIf(booBooingok, "ok", "Probleme"))

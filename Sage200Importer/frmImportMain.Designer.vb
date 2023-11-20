@@ -23,13 +23,11 @@ Partial Class frmImportMain
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmImportMain))
-        Me.cmbBuha = New System.Windows.Forms.ComboBox()
         Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.butKreditoren = New System.Windows.Forms.Button()
         Me.butDblKredis = New System.Windows.Forms.Button()
         Me.butDebitoren = New System.Windows.Forms.Button()
         Me.butDblDebis = New System.Windows.Forms.Button()
-        Me.cmbPerioden = New System.Windows.Forms.ComboBox()
         Me.chkValutaCorrect = New System.Windows.Forms.CheckBox()
         Me.dtpValutaCorrect = New System.Windows.Forms.DateTimePicker()
         Me.GroupBox2 = New System.Windows.Forms.GroupBox()
@@ -47,6 +45,8 @@ Partial Class frmImportMain
         Me.mysqlcongen = New MySqlConnector.MySqlConnection()
         Me.mysqlcmdgen = New MySqlConnector.MySqlCommand()
         Me.ToolStripContainer1 = New System.Windows.Forms.ToolStripContainer()
+        Me.lstBoxPerioden = New System.Windows.Forms.ListBox()
+        Me.lstBoxMandant = New System.Windows.Forms.ListBox()
         Me.LblTaskID = New System.Windows.Forms.Label()
         Me.LblIdentity = New System.Windows.Forms.Label()
         Me.LblVersion = New System.Windows.Forms.Label()
@@ -57,22 +57,13 @@ Partial Class frmImportMain
         Me.ToolStripContainer1.SuspendLayout()
         Me.SuspendLayout()
         '
-        'cmbBuha
-        '
-        Me.cmbBuha.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.cmbBuha.FormattingEnabled = True
-        Me.cmbBuha.Location = New System.Drawing.Point(15, 4)
-        Me.cmbBuha.Name = "cmbBuha"
-        Me.cmbBuha.Size = New System.Drawing.Size(270, 28)
-        Me.cmbBuha.TabIndex = 0
-        '
         'GroupBox1
         '
         Me.GroupBox1.Controls.Add(Me.butKreditoren)
         Me.GroupBox1.Controls.Add(Me.butDblKredis)
         Me.GroupBox1.Controls.Add(Me.butDebitoren)
         Me.GroupBox1.Controls.Add(Me.butDblDebis)
-        Me.GroupBox1.Location = New System.Drawing.Point(312, 4)
+        Me.GroupBox1.Location = New System.Drawing.Point(458, 4)
         Me.GroupBox1.Name = "GroupBox1"
         Me.GroupBox1.Size = New System.Drawing.Size(281, 62)
         Me.GroupBox1.TabIndex = 2
@@ -119,14 +110,6 @@ Partial Class frmImportMain
         Me.butDblDebis.UseVisualStyleBackColor = True
         Me.butDblDebis.Visible = False
         '
-        'cmbPerioden
-        '
-        Me.cmbPerioden.FormattingEnabled = True
-        Me.cmbPerioden.Location = New System.Drawing.Point(15, 39)
-        Me.cmbPerioden.Name = "cmbPerioden"
-        Me.cmbPerioden.Size = New System.Drawing.Size(92, 21)
-        Me.cmbPerioden.TabIndex = 10
-        '
         'chkValutaCorrect
         '
         Me.chkValutaCorrect.AutoSize = True
@@ -151,7 +134,7 @@ Partial Class frmImportMain
         '
         Me.GroupBox2.Controls.Add(Me.chkValutaCorrect)
         Me.GroupBox2.Controls.Add(Me.dtpValutaCorrect)
-        Me.GroupBox2.Location = New System.Drawing.Point(610, 4)
+        Me.GroupBox2.Location = New System.Drawing.Point(756, 4)
         Me.GroupBox2.Name = "GroupBox2"
         Me.GroupBox2.Size = New System.Drawing.Size(140, 69)
         Me.GroupBox2.TabIndex = 17
@@ -255,11 +238,11 @@ Partial Class frmImportMain
         '
         'ToolStripContainer1.ContentPanel
         '
+        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.lstBoxPerioden)
+        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.lstBoxMandant)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.LblTaskID)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.LblIdentity)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.LblVersion)
-        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.cmbPerioden)
-        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.cmbBuha)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox2)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox1)
         Me.ToolStripContainer1.ContentPanel.Size = New System.Drawing.Size(1688, 80)
@@ -268,6 +251,23 @@ Partial Class frmImportMain
         Me.ToolStripContainer1.Size = New System.Drawing.Size(1688, 105)
         Me.ToolStripContainer1.TabIndex = 24
         Me.ToolStripContainer1.Text = "ToolStripContainer1"
+        '
+        'lstBoxPerioden
+        '
+        Me.lstBoxPerioden.FormattingEnabled = True
+        Me.lstBoxPerioden.Location = New System.Drawing.Point(278, 4)
+        Me.lstBoxPerioden.Name = "lstBoxPerioden"
+        Me.lstBoxPerioden.Size = New System.Drawing.Size(127, 69)
+        Me.lstBoxPerioden.TabIndex = 22
+        '
+        'lstBoxMandant
+        '
+        Me.lstBoxMandant.AllowDrop = True
+        Me.lstBoxMandant.FormattingEnabled = True
+        Me.lstBoxMandant.Location = New System.Drawing.Point(10, 4)
+        Me.lstBoxMandant.Name = "lstBoxMandant"
+        Me.lstBoxMandant.Size = New System.Drawing.Size(262, 69)
+        Me.lstBoxMandant.TabIndex = 21
         '
         'LblTaskID
         '
@@ -317,12 +317,9 @@ Partial Class frmImportMain
         Me.ResumeLayout(False)
 
     End Sub
-
-    Friend WithEvents cmbBuha As ComboBox
     Friend WithEvents GroupBox1 As GroupBox
     Friend WithEvents butKreditoren As Button
     Friend WithEvents butDebitoren As Button
-    Friend WithEvents cmbPerioden As ComboBox
     Friend WithEvents butDblDebis As Button
     Friend WithEvents butDblKredis As Button
     Friend WithEvents chkValutaCorrect As CheckBox
@@ -345,4 +342,6 @@ Partial Class frmImportMain
     Friend WithEvents LblTaskID As Label
     Friend WithEvents LblIdentity As Label
     Friend WithEvents LblVersion As Label
+    Friend WithEvents lstBoxMandant As ListBox
+    Friend WithEvents lstBoxPerioden As ListBox
 End Class

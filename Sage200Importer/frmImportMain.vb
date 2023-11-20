@@ -147,7 +147,7 @@ Friend Class frmImportMain
 
             Dim frmDebDisp As New frmDebDisp
             frmDebDisp.Cursor = Cursors.WaitCursor
-            frmDebDisp.Text = "Debitor " + cmbBuha.Text
+            frmDebDisp.Text = "Debitor " + lstBoxMandant.Text
             frmDebDisp.MdiParent = Me
             frmDebDisp.Show()
             frmDebDisp.Top = 100
@@ -159,8 +159,8 @@ Friend Class frmImportMain
             Next
             'Je nach Anzahl von Links her verschieben
             frmDebDisp.Left = intNbrDebiForms * 15
-            frmDebDisp.FcDebiDisplay(cmbBuha.SelectedValue,
-                                     cmbPerioden.SelectedItem)
+            frmDebDisp.FcDebiDisplay(lstBoxMandant.SelectedValue,
+                                     lstBoxPerioden.Text)
 
 
             frmDebDisp.Cursor = Cursors.Default
@@ -764,11 +764,15 @@ Friend Class frmImportMain
                 drBuha("Buchh_Bez") += strDKDef
             Next
             'cmbMarken.Sorted = True
-            cmbBuha.DataSource = objdtBuchhaltungen
-            cmbBuha.DisplayMember = "Buchh_Bez"
-            cmbBuha.ValueMember = "Buchh_Nr"
+            'cmbBuha.DataSource = objdtBuchhaltungen
+            'cmbBuha.DisplayMember = "Buchh_Bez"
+            'cmbBuha.ValueMember = "Buchh_Nr"
 
-            cmbBuha.DropDownWidth = 330
+            'cmbBuha.DropDownWidth = 330
+
+            lstBoxMandant.DataSource = objdtBuchhaltungen
+            lstBoxMandant.DisplayMember = "Buchh_Bez"
+            lstBoxMandant.ValueMember = "Buchh_Nr"
 
             'Tabelle Debi/ Kredi Head erstellen
             'objdtDebitorenHead = Main.tblDebitorenHead()
@@ -825,7 +829,7 @@ Friend Class frmImportMain
 
             'Version
             'Debug.Print("1 " + System.Reflection.Assembly.GetExecutingAssembly().GetName.Version.ToString)
-            lblVersion.Text = "V " + System.Reflection.Assembly.GetExecutingAssembly().GetName.Version.ToString
+            LblVersion.Text = "V " + System.Reflection.Assembly.GetExecutingAssembly().GetName.Version.ToString
             'Debug.Print("2 " + My.Application.Info.Version.ToString)
             'Debug.Print("3 " + Application.ProductVersion.ToString)
 
@@ -1897,13 +1901,13 @@ Friend Class frmImportMain
 
             Dim frmKredDisp As New frmKredDisp
             frmKredDisp.Cursor = Cursors.WaitCursor
-            frmKredDisp.Text = "Kreditor " + cmbBuha.Text
+            frmKredDisp.Text = "Kreditor " + lstBoxMandant.Text
             frmKredDisp.MdiParent = Me
             frmKredDisp.Show()
             frmKredDisp.Top = 105
 
-            frmKredDisp.FcKrediDisplay(cmbBuha.SelectedValue,
-                                     cmbPerioden.SelectedItem)
+            frmKredDisp.FcKrediDisplay(lstBoxMandant.SelectedValue,
+                                     lstBoxPerioden.Text)
 
             frmKredDisp.Cursor = Cursors.Default
             'Application.DoEvents()
@@ -2668,29 +2672,6 @@ Friend Class frmImportMain
 
     End Sub
 
-    Private Sub cmbBuha_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles cmbBuha.SelectionChangeCommitted
-
-        Try
-
-            '    'For Each frm As Form In Application.OpenForms()
-            '    '    If frm.Name = "frmDebDisp" Then
-            '    '        'Es existiert schon eine Instanz
-            '    '        frm.Dispose()
-            '    '    End If
-            '    'Next
-
-            Call Main.FcReadPeriodsFromMandant(objdbConn,
-                                           Finanz,
-                                           cmbBuha.SelectedValue,
-                                           cmbPerioden)
-
-        Catch ex As Exception
-            MessageBox.Show(ex.Message, "Problem " + Err.Number.ToString)
-
-        End Try
-
-
-    End Sub
 
     Private Sub butMail_Click(sender As Object, e As EventArgs)
 
@@ -3035,7 +3016,7 @@ Friend Class frmImportMain
 
     End Sub
 
-    Private Sub cmbPerioden_SelectionChangeCommitted(sender As Object, e As EventArgs) Handles cmbPerioden.SelectionChangeCommitted
+    Private Sub cmbPerioden_SelectionChangeCommitted(sender As Object, e As EventArgs)
 
         Try
 
@@ -3093,6 +3074,24 @@ Friend Class frmImportMain
         MySQLdaDebitorenSub.DeleteCommand.ExecuteNonQuery()
         MySQLdaDebitorenSub.DeleteCommand.Connection.Close()
 
+
+    End Sub
+
+
+    Private Sub lstBoxMandant_MouseClick(sender As Object, e As MouseEventArgs) Handles lstBoxMandant.MouseClick
+
+        Try
+
+
+            Call Main.FcReadPeriodsFromMandantLst(objdbConn,
+                                           Finanz,
+                                           lstBoxMandant.SelectedValue,
+                                           lstBoxPerioden)
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem " + Err.Number.ToString)
+
+        End Try
 
     End Sub
 End Class
