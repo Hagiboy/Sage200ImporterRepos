@@ -147,7 +147,28 @@ Public Class frmDebDisp
 
         dgvInfo.DataSource = dsDebitoren.Tables("tblDebitorenInfo")
 
-        Call Main.FcLoginSage2(objdbConn,
+        'Datums-Tabelle erstellen
+        dsDebitoren.Tables.Add("tblDebitorenDates")
+        Dim col3 As DataColumn = New DataColumn("strDatType")
+        col3.DataType = System.Type.GetType("System.String")
+        col3.MaxLength = 50
+        col3.Caption = "Datum-Typ"
+        dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col3)
+        Dim col4 As DataColumn = New DataColumn("datFrom")
+        col4.DataType = System.Type.GetType("System.DateTime")
+        col4.Caption = "Von"
+        dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col4)
+        Dim col5 As DataColumn = New DataColumn("datTo")
+        col5.DataType = System.Type.GetType("System.DateTime")
+        col5.Caption = "Bis"
+        dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col5)
+        Dim col6 As DataColumn = New DataColumn("strStatus")
+        col6.DataType = System.Type.GetType("System.String")
+        col6.Caption = "S"
+        dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col6)
+        dgvDates.DataSource = dsDebitoren.Tables("tblDebitorenDates")
+
+        Call Main.FcLoginSage3(objdbConn,
                                   objdbMSSQLConn,
                                   objdbSQLcommand,
                                   Finanz,
@@ -158,6 +179,7 @@ Public Class frmDebDisp
                                   KrBhg,
                                   intMandant,
                                   dsDebitoren.Tables("tblDebitorenInfo"),
+                                  dsDebitoren.Tables("tblDebitorenDates"),
                                   strPeriode,
                                   strYear,
                                   intTeqNbr,
@@ -209,6 +231,7 @@ Public Class frmDebDisp
         intFcReturns = FcInitdgvInfo(dgvInfo)
         intFcReturns = FcInitdgvBookings(dgvBookings)
         intFcReturns = FcInitdgvDebiSub(dgvBookingSub)
+        intFcReturns = FcInitdgvDate(dgvDates)
 
         'Anzahl schreiben
         txtNumber.Text = Me.dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count.ToString
@@ -218,6 +241,27 @@ Public Class frmDebDisp
 
 
     End Function
+
+    Friend Function FcInitdgvDate(ByRef dgvDate As DataGridView) As Int16
+
+        'DGV - Info
+        'dgvInfo.DataSource = objdtInfo
+        dgvDate.AllowUserToAddRows = False
+        dgvDate.AllowUserToDeleteRows = False
+        'dgvInfo.Enabled = False
+        dgvDate.RowHeadersVisible = False
+        dgvDate.Columns("strDatType").HeaderText = "Type"
+        dgvDate.Columns("strDatType").Width = 100
+        dgvDate.Columns("datFrom").HeaderText = "Von"
+        dgvDate.Columns("datFrom").Width = 80
+        dgvDate.Columns("datto").HeaderText = "Bis"
+        dgvDate.Columns("datTo").Width = 80
+        dgvDate.Columns("strStatus").HeaderText = "S"
+        dgvDate.Columns("strStatus").Width = 30
+        Return 0
+
+    End Function
+
 
     Friend Function FcInitdgvInfo(ByRef dgvInfo As DataGridView) As Int16
 

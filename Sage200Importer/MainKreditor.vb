@@ -947,7 +947,7 @@ Public Class MainKreditor
                 End If
             End If
 
-            If intPayDefault = 10 Then 'QR - IBAN
+            If intPayDefault = 10 And Strings.Len(strZVIBAN) > 0 Then 'QR - IBAN
 
                 Call objKrBhg.SetZahlungsverbindung("Q",
                                                     strZVIBAN,

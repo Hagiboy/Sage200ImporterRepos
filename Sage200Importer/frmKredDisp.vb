@@ -180,7 +180,7 @@ Public Class frmKredDisp
                               Finanz,
                               FBhg,
                               KrBhg,
-                              PIFin,
+                              BeBu,
                               dsKreditoren.Tables("tblKreditorenInfo"),
                               frmImportMain.lstBoxMandant.Text,
                               strYear,

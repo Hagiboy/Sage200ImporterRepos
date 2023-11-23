@@ -36,10 +36,13 @@ Partial Class frmDebDisp
         Me.butImport = New System.Windows.Forms.Button()
         Me.txtNumber = New System.Windows.Forms.TextBox()
         Me.lblDB = New System.Windows.Forms.Label()
+        Me.BgWLoadDebi = New System.ComponentModel.BackgroundWorker()
+        Me.dgvDates = New System.Windows.Forms.DataGridView()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvDates, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'dgvBookings
@@ -55,15 +58,15 @@ Partial Class frmDebDisp
         Me.dgvBookingSub.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvBookingSub.Location = New System.Drawing.Point(12, 12)
         Me.dgvBookingSub.Name = "dgvBookingSub"
-        Me.dgvBookingSub.Size = New System.Drawing.Size(964, 119)
+        Me.dgvBookingSub.Size = New System.Drawing.Size(830, 119)
         Me.dgvBookingSub.TabIndex = 1
         '
         'dgvInfo
         '
         Me.dgvInfo.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.dgvInfo.Location = New System.Drawing.Point(982, 12)
+        Me.dgvInfo.Location = New System.Drawing.Point(848, 12)
         Me.dgvInfo.Name = "dgvInfo"
-        Me.dgvInfo.Size = New System.Drawing.Size(391, 119)
+        Me.dgvInfo.Size = New System.Drawing.Size(322, 119)
         Me.dgvInfo.TabIndex = 2
         '
         'MySQLdaDebitoren
@@ -125,7 +128,7 @@ Partial Class frmDebDisp
         '
         'butImport
         '
-        Me.butImport.Location = New System.Drawing.Point(1449, 59)
+        Me.butImport.Location = New System.Drawing.Point(1474, 59)
         Me.butImport.Name = "butImport"
         Me.butImport.Size = New System.Drawing.Size(86, 53)
         Me.butImport.TabIndex = 3
@@ -135,7 +138,7 @@ Partial Class frmDebDisp
         'txtNumber
         '
         Me.txtNumber.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.txtNumber.Location = New System.Drawing.Point(1464, 24)
+        Me.txtNumber.Location = New System.Drawing.Point(1489, 24)
         Me.txtNumber.Name = "txtNumber"
         Me.txtNumber.Size = New System.Drawing.Size(60, 29)
         Me.txtNumber.TabIndex = 9
@@ -143,17 +146,26 @@ Partial Class frmDebDisp
         'lblDB
         '
         Me.lblDB.AutoSize = True
-        Me.lblDB.Location = New System.Drawing.Point(1530, 35)
+        Me.lblDB.Location = New System.Drawing.Point(1555, 35)
         Me.lblDB.Name = "lblDB"
         Me.lblDB.Size = New System.Drawing.Size(22, 13)
         Me.lblDB.TabIndex = 10
         Me.lblDB.Text = "DB"
+        '
+        'dgvDates
+        '
+        Me.dgvDates.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvDates.Location = New System.Drawing.Point(1176, 12)
+        Me.dgvDates.Name = "dgvDates"
+        Me.dgvDates.Size = New System.Drawing.Size(292, 118)
+        Me.dgvDates.TabIndex = 11
         '
         'frmDebDisp
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1581, 623)
+        Me.Controls.Add(Me.dgvDates)
         Me.Controls.Add(Me.lblDB)
         Me.Controls.Add(Me.txtNumber)
         Me.Controls.Add(Me.butImport)
@@ -166,6 +178,7 @@ Partial Class frmDebDisp
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvDates, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -185,4 +198,6 @@ Partial Class frmDebDisp
     Friend WithEvents butImport As Button
     Friend WithEvents txtNumber As TextBox
     Friend WithEvents lblDB As Label
+    Friend WithEvents BgWLoadDebi As System.ComponentModel.BackgroundWorker
+    Friend WithEvents dgvDates As DataGridView
 End Class

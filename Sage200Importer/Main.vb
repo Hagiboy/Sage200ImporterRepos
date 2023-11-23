@@ -618,6 +618,183 @@ Friend NotInheritable Class Main
 
     End Function
 
+    Shared Function FcLoginSage3(ByRef objdbconn As MySqlConnection,
+                                       ByRef objsqlConn As SqlClient.SqlConnection,
+                                       ByRef objsqlCom As SqlClient.SqlCommand,
+                                       ByRef objFinanz As SBSXASLib.AXFinanz,
+                                       ByRef objfiBuha As SBSXASLib.AXiFBhg,
+                                       ByRef objdbBuha As SBSXASLib.AXiDbBhg,
+                                       ByRef objdbPIFb As SBSXASLib.AXiPlFin,
+                                       ByRef objFiBebu As SBSXASLib.AXiBeBu,
+                                       ByRef objkrBuha As SBSXASLib.AXiKrBhg,
+                                       ByVal intAccounting As Int16,
+                                       ByRef objdtInfo As DataTable,
+                                       ByRef objdtDates As DataTable,
+                                       ByVal strPeriod As String,
+                                       ByRef strYear As String,
+                                       ByRef intTeqNbr As Int16,
+                                       ByRef intTeqNbrLY As Int16,
+                                       ByRef intTeqNbrPLY As Int16,
+                                       ByRef datPeriodFrom As Date,
+                                       ByRef datPeriodTo As Date,
+                                       ByRef strPeriodStatus As String) As Int16
+
+        '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
+        Dim booAccOk As Boolean
+        Dim strMandant As String
+        Dim strLogonInfo() As String
+        Dim strPeriode() As String
+        Dim FcReturns As Int16
+        Dim intPeriodenNr As Int16
+        Dim strPeriodenInfo As String
+        Dim objdtPeriodeLY As New DataTable
+        Dim strPeriodeLY As String
+        Dim strPeriodePLY As String
+        Dim objdbcmd As New MySqlCommand
+        Dim dtPeriods As New DataTable
+
+
+        Try
+
+            objFinanz = Nothing
+            objFinanz = New SBSXASLib.AXFinanz
+
+            'Application.DoEvents()
+
+            'Login
+            Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
+
+            objdbconn.Open()
+            strMandant = FcReadFromSettingsII("Buchh200_Name",
+                                            intAccounting)
+            objdbconn.Close()
+            booAccOk = objFinanz.CheckMandant(strMandant)
+
+            'Open Mandantg
+            objFinanz.OpenMandant(strMandant, strPeriod)
+
+            'Von Login aktuelle Periode auslesen
+            strLogonInfo = Split(objFinanz.GetLogonInfo(), "{>}")
+            objdtInfo.Rows.Add("Man/Periode", strMandant + "/" + strLogonInfo(7) + ", " + intAccounting.ToString)
+
+            'Check Periode
+            intPeriodenNr = objFinanz.ReadPeri(strMandant, strLogonInfo(7))
+            strPeriodenInfo = objFinanz.GetPeriListe(0)
+
+            strPeriode = Split(strPeriodenInfo, "{>}")
+
+            'Teq-Nr von Vorjar lesen um in Suche nutzen zu können
+            objdtPeriodeLY.Rows.Clear()
+            strPeriodeLY = (Val(Left(strPeriode(4), 4)) - 1).ToString + Right(strPeriode(4), 4)
+            objsqlCom.CommandText = "SELECT teqnbr FROM periode WHERE mandid='" + strMandant + "' AND dtebis='" + strPeriodeLY + "'"
+            objsqlCom.Connection = objsqlConn
+            objsqlConn.Open()
+            objdtPeriodeLY.Load(objsqlCom.ExecuteReader)
+            objsqlConn.Close()
+            If objdtPeriodeLY.Rows.Count > 0 Then
+                intTeqNbrLY = objdtPeriodeLY.Rows(0).Item("teqnbr")
+            Else
+                intTeqNbrLY = 0
+            End If
+            'Teq-Nr vom Vorvorjahr
+            objdtPeriodeLY.Rows.Clear()
+            strPeriodePLY = (Val(Left(strPeriode(4), 4)) - 2).ToString + Right(strPeriode(4), 4)
+            objsqlCom.CommandText = "SELECT teqnbr FROM periode WHERE mandid='" + strMandant + "' AND dtebis='" + strPeriodePLY + "'"
+            objsqlCom.Connection = objsqlConn
+            objsqlConn.Open()
+            objdtPeriodeLY.Load(objsqlCom.ExecuteReader)
+            objsqlConn.Close()
+            If objdtPeriodeLY.Rows.Count > 0 Then
+                intTeqNbrPLY = objdtPeriodeLY.Rows(0).Item("teqnbr")
+            Else
+                intTeqNbrPLY = 0
+            End If
+
+            intTeqNbr = strPeriode(8)
+            objdtInfo.Rows.Add("GeschäftsJ", strPeriode(3) + "-" + strPeriode(4) + ", teq: " + strPeriode(8).ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString)
+            objdtDates.Rows.Add("GJ Mandant", Date.ParseExact(strPeriode(3), "yyyyMMdd", System.Globalization.CultureInfo.CurrentCulture), Date.ParseExact(strPeriode(4), "yyyyMMdd", System.Globalization.CultureInfo.CurrentCulture), "O")
+            objdtInfo.Rows.Add("Buchungen/ Status", strPeriode(5) + "-" + strPeriode(6) + "/ " + strPeriode(2))
+            objdtDates.Rows.Add("Buchungen", Date.ParseExact(strPeriode(5), "yyyyMMdd", System.Globalization.CultureInfo.CurrentCulture), Date.ParseExact(strPeriode(6), "yyyyMMdd", System.Globalization.CultureInfo.CurrentCulture), strPeriode(2))
+            strYear = Strings.Left(strPeriode(4), 4)
+
+            FcReturns = FcReadPeriodenDef2(objsqlConn,
+                                      objsqlCom,
+                                      strPeriode(8),
+                                      objdtInfo,
+                                      objdtDates,
+                                      strYear)
+
+            'Perioden-Definition vom Tool einlesen
+            'In einer ersten Phase nur erster DS einlesen
+            objdbcmd.Connection = objdbconn
+            objdbconn.Open()
+            objdbcmd.CommandText = "SELECT * FROM t_sage_buchhaltungen_periods WHERE year=" + strYear + " AND refMandant=" + intAccounting.ToString
+            dtPeriods.Load(objdbcmd.ExecuteReader)
+            objdbconn.Close()
+            If dtPeriods.Rows.Count > 0 Then
+                datPeriodFrom = dtPeriods.Rows(0).Item("periodFrom")
+                datPeriodTo = dtPeriods.Rows(0).Item("periodTo")
+                strPeriodStatus = dtPeriods.Rows(0).Item("status")
+            Else
+                datPeriodFrom = Convert.ToDateTime(strYear + "-01-01 00:00:01")
+                datPeriodTo = Convert.ToDateTime(strYear + "-12-31 23:59:59")
+                strPeriodStatus = "O"
+            End If
+            objdtInfo.Rows.Add("Perioden", Format(datPeriodFrom, "dd.MM.yyyy hh:mm:ss") + " - " + Format(datPeriodTo, "dd.MM.yyyy hh:mm:ss") + "/ " + strPeriodStatus)
+
+            'In Dates-Tabelle schreiben
+            For Each dtperrow As DataRow In dtPeriods.Rows
+                objdtDates.Rows.Add("MSS Per " + Convert.ToString(dtperrow(2)), dtperrow(3), dtperrow(4), dtperrow(5))
+            Next
+
+            'Finanz Buha öffnen
+            If Not IsNothing(objfiBuha) Then
+                objfiBuha = Nothing
+            End If
+            objfiBuha = New SBSXASLib.AXiFBhg
+            objfiBuha = objFinanz.GetFibuObj()
+            'Debitor öffnen
+            If Not IsNothing(objdbBuha) Then
+                objdbBuha = Nothing
+            End If
+            objdbBuha = New SBSXASLib.AXiDbBhg
+            objdbBuha = objFinanz.GetDebiObj()
+            If Not IsNothing(objdbPIFb) Then
+                objdbPIFb = Nothing
+            End If
+            objdbPIFb = New SBSXASLib.AXiPlFin
+            objdbPIFb = objfiBuha.GetCheckObj()
+            If Not IsNothing(objFiBebu) Then
+                objFiBebu = Nothing
+            End If
+            objFiBebu = New SBSXASLib.AXiBeBu
+            objFiBebu = objFinanz.GetBeBuObj()
+            'Kreditor
+            If Not IsNothing(objkrBuha) Then
+                objkrBuha = Nothing
+            End If
+            objkrBuha = New SBSXASLib.AXiKrBhg
+            objkrBuha = objFinanz.GetKrediObj
+
+            'Application.DoEvents()
+
+        Catch ex As Exception
+            MsgBox("OpenMandant:" + vbCrLf + "Error" + vbCrLf + "Error # " + Str(Err.Number) + " was generated by " + Err.Source + vbCrLf + Err.Description + " Fehlernummer" & Str(Err.Number And 65535))
+            Err.Clear()
+            End
+
+        Finally
+            objdtPeriodeLY.Dispose()
+            dtPeriods.Dispose()
+
+        End Try
+
+    End Function
+
+
     Public Shared Function FcLoginSage2(ByRef objdbconn As MySqlConnection,
                                        ByRef objsqlConn As SqlClient.SqlConnection,
                                        ByRef objsqlCom As SqlClient.SqlCommand,
@@ -1042,6 +1219,71 @@ ErrorHandler:
 
         End Try
 
+
+    End Function
+
+    Shared Function FcReadPeriodenDef2(ByRef objSQLConnection As SqlClient.SqlConnection,
+                                             ByRef objSQLCommand As SqlClient.SqlCommand,
+                                             ByVal intPeriodenNr As Int32,
+                                             ByRef objdtInfo As DataTable,
+                                             ByRef objdtDates As DataTable,
+                                             ByVal strYear As String) As Int16
+
+        'Returns 0=definiert, 1=nicht defeniert, 9=Problem
+        Dim objlocdtPeriDef As New DataTable
+        Dim strPeriodenDef(4) As String
+
+
+        Try
+
+            objSQLConnection.Open()
+            objSQLCommand.CommandText = "SELECT * FROM peridef WHERE teqnbr=" + intPeriodenNr.ToString
+            objSQLCommand.Connection = objSQLConnection
+            objlocdtPeriDef.Load(objSQLCommand.ExecuteReader)
+
+            'info befüllen
+            If objlocdtPeriDef.Rows.Count > 0 Then 'Perioden-Definition vorhanden
+
+                strPeriodenDef(0) = objlocdtPeriDef.Rows(0).Item(2) 'Bezeichnung
+                strPeriodenDef(1) = objlocdtPeriDef.Rows(0).Item(3).ToString  'Von
+                strPeriodenDef(2) = objlocdtPeriDef.Rows(0).Item(4).ToString  'Bis
+                strPeriodenDef(3) = objlocdtPeriDef.Rows(0).Item(5)  'Status
+
+                objdtInfo.Rows.Add("Perioden S200", strPeriodenDef(0))
+                objdtInfo.Rows.Add("Von - Bis/ Status", Format(Convert.ToDateTime(strPeriodenDef(1)), "dd.MM.yyyy hh:mm:ss") + " - " + Format(Convert.ToDateTime(strPeriodenDef(2)), "dd.MM.yyyy hh:mm:ss") + "/ " + strPeriodenDef(3))
+
+                'Return 0
+            Else
+
+                objdtInfo.Rows.Add("Perioden S200", "keine")
+                objdtInfo.Rows.Add("Von - Bis/ Status", Format(Convert.ToDateTime("01.01." + strYear + " 00:00:00"), "dd.MM.yyyy hh:mm:ss") + " - " + Format(Convert.ToDateTime("31.12." + strYear + " 23:59:59"), "dd.MM.yyyy hh:mm:ss") + "/ " + "O")
+
+                Return 1
+
+            End If
+
+            'date Tabelle befüllen
+            If objlocdtPeriDef.Rows.Count > 0 Then
+
+                For Each perirow As DataRow In objlocdtPeriDef.Rows
+                    objdtDates.Rows.Add("PD " + perirow(2), perirow(3), perirow(4), perirow(5))
+                Next
+
+            End If
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Periodendefinition lesen")
+            Return 9
+
+        Finally
+            objSQLConnection.Close()
+            objlocdtPeriDef.Constraints.Clear()
+            objlocdtPeriDef.Clear()
+            objlocdtPeriDef.Dispose()
+            strPeriodenDef = Nothing
+
+        End Try
 
     End Function
 

@@ -1478,7 +1478,7 @@ Friend Class ClassCheck
                 If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
                     intReturnValue = FcCheckKstKtr(IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")),
                                                    objFiBhg,
-                                                   objFiPI,
+                                                   objFiBebu,
                                                    subrow("lngKto"),
                                                    strKstKtrSage200)
                     If intReturnValue = 0 Then
@@ -1718,7 +1718,7 @@ Friend Class ClassCheck
 
     Friend Function FcCheckKstKtr(ByVal lngKST As Long,
                                          ByRef objFiBhg As SBSXASLib.AXiFBhg,
-                                         ByRef objFiPI As SBSXASLib.AXiPlFin,
+                                         ByRef objBebu As SBSXASLib.AXiBeBu,
                                          ByVal lngKonto As Long,
                                          ByRef strKstKtrSage200 As String) As Int16
 
@@ -1728,10 +1728,9 @@ Friend Class ClassCheck
         Dim strReturnAr() As String
         Dim booKstKAok As Boolean
         Dim strKst, strKA As String
+        Dim strKAZeile As String
 
         booKstKAok = False
-        objFiPI = Nothing
-        objFiPI = objFiBhg.GetCheckObj
 
         Try
             'If CInt(Left(lngKonto.ToString, 1)) >= 3 Then
@@ -1739,12 +1738,20 @@ Friend Class ClassCheck
             If strReturn = "EOF" Then
                 Return 2
             Else
-                strReturnAr = Split(strReturn, "{>}")
-                strKstKtrSage200 = strReturnAr(1)
-                strKst = Convert.ToString(lngKST)
-                strKA = Convert.ToString(lngKonto)
-                'Ist Kst auf Kostenbart definiert?
-                booKstKAok = objFiPI.CheckKstKtr(strKst, strKA)
+                Call objBebu.ReadKaLnk(lngKST.ToString)
+                Do Until strKAZeile = "EOF"
+                    strKAZeile = objBebu.GetKaLnkLine
+                    strReturnAr = Split(strKAZeile, "{>}")
+                    strKA = strReturnAr(0)
+                    If strKA = Convert.ToString(lngKonto) Then
+                        booKstKAok = True
+                    End If
+                    'strKst = Convert.ToString(lngKST)
+                    'strKA = Convert.ToString(lngKonto)
+                    'Ist Kst auf Kostenbart definiert?
+                Loop
+
+                'booKstKAok = objFiPI.CheckKstKtr(strKst, strKA)
 
                 If booKstKAok Then
                     Return 0
@@ -1930,7 +1937,7 @@ Friend Class ClassCheck
                                         ByRef objFinanz As SBSXASLib.AXFinanz,
                                         ByRef objfiBuha As SBSXASLib.AXiFBhg,
                                         ByRef objKrBuha As SBSXASLib.AXiKrBhg,
-                                        ByRef objdbPIFb As SBSXASLib.AXiPlFin,
+                                        ByRef objBebu As SBSXASLib.AXiBeBu,
                                         ByRef objdtInfo As DataTable,
                                         ByVal strcmbBuha As String,
                                         ByVal strYear As String,
@@ -2033,7 +2040,7 @@ Friend Class ClassCheck
                                                          dblSubNetto,
                                                          dblSubMwSt,
                                                          objfiBuha,
-                                                         objdbPIFb,
+                                                         objBebu,
                                                          row("intBuchungsart"),
                                                          booAutoCorrect,
                                                          booCpyKSTToSub,
@@ -2636,7 +2643,7 @@ Friend Class ClassCheck
                                               ByRef dblSubNetto As Double,
                                               ByRef dblSubMwSt As Double,
                                               ByRef objFiBhg As SBSXASLib.AXiFBhg,
-                                              ByRef objFiPI As SBSXASLib.AXiPlFin,
+                                              ByRef objBebu As SBSXASLib.AXiBeBu,
                                               ByVal intBuchungsArt As Int32,
                                               ByVal booAutoCorrect As Boolean,
                                               ByVal booCpyKSTToSub As Boolean,
@@ -2852,7 +2859,11 @@ Friend Class ClassCheck
 
                 'Kst/Ktr prüfen
                 If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
-                    intReturnValue = FcCheckKstKtr(subrow("lngKST"), objFiBhg, objFiPI, subrow("lngKto"), strKstKtrSage200)
+                    intReturnValue = FcCheckKstKtr(subrow("lngKST"),
+                                                   objFiBhg,
+                                                   objBebu,
+                                                   subrow("lngKto"),
+                                                   strKstKtrSage200)
                     If intReturnValue = 0 Then
                         subrow("strKstBez") = strKstKtrSage200
                     ElseIf intReturnValue = 1 Then
