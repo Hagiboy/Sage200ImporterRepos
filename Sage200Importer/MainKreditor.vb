@@ -987,7 +987,6 @@ Public Class MainKreditor
                                                  ByVal strKredID As String,
                                                  ByVal datDate As Date,
                                                  ByVal intBelegNr As Int32,
-                                                 ByRef objdbAccessConn As OleDb.OleDbConnection,
                                                  ByRef objOracleConn As OracleConnection,
                                                  ByRef objMySQLConn As MySqlConnection) As Int16
 
@@ -995,6 +994,7 @@ Public Class MainKreditor
 
         Dim strSQL As String
         Dim intAffected As Int16
+        Dim objdbAccessConn As New OleDb.OleDbConnection
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
         Dim objlocOracmd As New OracleCommand
         Dim objlocMySQLRGConn As New MySqlConnection
@@ -1021,12 +1021,13 @@ Public Class MainKreditor
             If strKRGTableType = "A" Then
                 'Access
                 Call Main.FcInitAccessConnecation(objdbAccessConn, strMDBName)
+                'objdbAccessConn.Open()
                 strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + IIf(strKRGNbrFieldType = "T", "'", "") + strKredID + IIf(strKRGNbrFieldType = "T", "'", "")
-
-                objdbAccessConn.Open()
                 objlocOLEdbcmd.CommandText = strSQL
                 objlocOLEdbcmd.Connection = objdbAccessConn
+                objlocOLEdbcmd.Connection.Open()
                 intAffected = objlocOLEdbcmd.ExecuteNonQuery()
+                objlocOLEdbcmd.Connection.Close()
 
             ElseIf strKRGTableType = "M" Then
                 'MySQL
@@ -1055,9 +1056,9 @@ Public Class MainKreditor
             Return 1
 
         Finally
-            If objdbAccessConn.State = ConnectionState.Open Then
-                objdbAccessConn.Close()
-            End If
+            'If objdbAccessConn.State = ConnectionState.Open Then
+            ' objdbAccessConn.Close()
+            'End If
 
             If objlocMySQLRGConn.State = ConnectionState.Open Then
                 objlocMySQLRGConn.Close()

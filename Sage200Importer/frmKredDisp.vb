@@ -1090,7 +1090,6 @@ Public Class frmKredDisp
                                                                         row(strKRGReferTo),
                                                                         row("datBooked"),
                                                                         row("lngBelegNr"),
-                                                                        objdbAccessConn,
                                                                         objOracleConn,
                                                                         objdbConn)
                         If intReturnValue <> 0 Then

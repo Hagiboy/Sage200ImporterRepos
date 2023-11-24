@@ -160,7 +160,7 @@ Friend Class frmImportMain
             'Je nach Anzahl von Links her verschieben
             frmDebDisp.Left = intNbrDebiForms * 15
             frmDebDisp.FcDebiDisplay(lstBoxMandant.SelectedValue,
-                                     lstBoxPerioden.Text)
+                                     lstBoxPerioden)
 
 
             frmDebDisp.Cursor = Cursors.Default

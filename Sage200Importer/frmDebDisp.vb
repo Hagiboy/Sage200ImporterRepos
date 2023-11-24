@@ -105,10 +105,10 @@ Public Class frmDebDisp
     End Sub
 
     Friend Function FcDebiDisplay(intMandant As Int16,
-                                  strPeriode As String) As Int16
+                                  LstBPerioden As ListBox) As Int16
 
         Dim intFcReturns As Int16
-
+        Dim strPeriode As String
 
         Me.Cursor = Cursors.WaitCursor
 
@@ -149,6 +149,10 @@ Public Class frmDebDisp
 
         'Datums-Tabelle erstellen
         dsDebitoren.Tables.Add("tblDebitorenDates")
+        Dim col7 As DataColumn = New DataColumn("intYear")
+        col7.DataType = System.Type.GetType("System.Int16")
+        col7.Caption = "Year"
+        dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col7)
         Dim col3 As DataColumn = New DataColumn("strDatType")
         col3.DataType = System.Type.GetType("System.String")
         col3.MaxLength = 50
@@ -167,6 +171,8 @@ Public Class frmDebDisp
         col6.Caption = "S"
         dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col6)
         dgvDates.DataSource = dsDebitoren.Tables("tblDebitorenDates")
+
+        strPeriode = LstBPerioden.GetItemText(LstBPerioden.SelectedItem)
 
         Call Main.FcLoginSage3(objdbConn,
                                   objdbMSSQLConn,
@@ -188,6 +194,30 @@ Public Class frmDebDisp
                                   datPeriodFrom,
                                   datPeriodTo,
                                   strPeriodStatus)
+
+        'Gibt es mehr als ein Jahr?
+        If LstBPerioden.Items.Count > 1 Then
+
+            'Gibt es ein Vorjahr?
+            If LstBPerioden.SelectedIndex > 1 Then
+                strPeriode = LstBPerioden.Items(LstBPerioden.SelectedIndex - 1)
+                'Peeriodendef holen
+                Call Main.FcLoginSage4(intMandant,
+                                       dsDebitoren.Tables("tblDebitorenDates"),
+                                       strPeriode)
+            End If
+
+            'Gibt es ein Folgehahr?
+            If LstBPerioden.SelectedIndex < LstBPerioden.Items.Count Then
+                strPeriode = LstBPerioden.Items(LstBPerioden.SelectedIndex + 1)
+                'Peeriodendef holen
+                Call Main.FcLoginSage4(intMandant,
+                                       dsDebitoren.Tables("tblDebitorenDates"),
+                                       strPeriode)
+            End If
+
+        End If
+
 
         Dim clImp As New ClassImport
         clImp.FcDebitFill(intMandant)
@@ -250,12 +280,14 @@ Public Class frmDebDisp
         dgvDate.AllowUserToDeleteRows = False
         'dgvInfo.Enabled = False
         dgvDate.RowHeadersVisible = False
+        dgvDate.Columns("intYear").HeaderText = "Jahr"
+        dgvDate.Columns("intYear").Width = 35
         dgvDate.Columns("strDatType").HeaderText = "Type"
-        dgvDate.Columns("strDatType").Width = 100
+        dgvDate.Columns("strDatType").Width = 80
         dgvDate.Columns("datFrom").HeaderText = "Von"
-        dgvDate.Columns("datFrom").Width = 80
+        dgvDate.Columns("datFrom").Width = 70
         dgvDate.Columns("datto").HeaderText = "Bis"
-        dgvDate.Columns("datTo").Width = 80
+        dgvDate.Columns("datTo").Width = 70
         dgvDate.Columns("strStatus").HeaderText = "S"
         dgvDate.Columns("strStatus").Width = 30
         Return 0
