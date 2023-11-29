@@ -1907,7 +1907,7 @@ Friend Class frmImportMain
             frmKredDisp.Top = 105
 
             frmKredDisp.FcKrediDisplay(lstBoxMandant.SelectedValue,
-                                     lstBoxPerioden.Text)
+                                     lstBoxPerioden)
 
             frmKredDisp.Cursor = Cursors.Default
             'Application.DoEvents()

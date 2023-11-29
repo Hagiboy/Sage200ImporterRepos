@@ -536,7 +536,7 @@ Public Class MainDebitor
                             intPKNewField = Main.FcGetPKNewFromRep(IIf(IsDBNull(objdtDebitor.Rows(0).Item(strDebNewField)), 0, objdtDebitor.Rows(0).Item(strDebNewField)),
                                                            "R")
 
-                            Stop
+                            'Stop
                         End If
 
                         If intPKNewField = 0 Then
@@ -1191,6 +1191,16 @@ Public Class MainDebitor
         strText = IIf(strGruppe = "", "", "Gruppe: " + strGruppe) + IIf(strVertretung = "" Or "0", "", strText + vbCrLf + "Vertretung: " + strVertretung)
         strTelefon1 = IIf(strTel = "" Or strTel = "0", "", strTel)
         strTelefax = IIf(strFax = "" Or strFax = "0", "", strFax)
+
+        'Evtl. falsch gesetztes Sammelkonto ändern
+        If strCurrency <> "CHF" Then
+            If strCurrency = "EUR" And intDebSammelKto <> 1105 Then
+                intDebSammelKto = 1105
+            End If
+            If strCurrency = "USD" And intDebSammelKto <> 1102 Then
+                intDebSammelKto = 1102
+            End If
+        End If
 
         'Debitor erstellen
 

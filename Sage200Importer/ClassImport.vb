@@ -107,10 +107,10 @@ Friend Class ClassImport
                     objmysqlcomdwritehead.Parameters("@strRGName").Value = row("strRGName")
                     objmysqlcomdwritehead.Parameters("@strRGBemerkung").Value = row("strRGBemerkung")
                     objmysqlcomdwritehead.Parameters("@intZKond").Value = row("intZKond")
-                    If objdtLocKrediHead.Columns.Contains("datPGVFrom") Then
+                    If row.Table.Columns.Contains("datPGVFrom") Then
                         objmysqlcomdwritehead.Parameters("@datPGVFrom").Value = row("datPGVFrom")
                     End If
-                    If objdtLocKrediHead.Columns.Contains("datPGVTo") Then
+                    If row.Table.Columns.Contains("datPGVTo") Then
                         objmysqlcomdwritehead.Parameters("@datPGVTo").Value = row("datPGVTo")
                     End If
 
@@ -192,6 +192,7 @@ Friend Class ClassImport
 
 
         Try
+
 
             objmysqlcomdwritehead.Connection = objdbConnZHDB02
             objmysqlcomdwritesub.Connection = objdbConnZHDB02
@@ -281,7 +282,7 @@ Friend Class ClassImport
                 If objdtLocDebiHead.Columns.Contains("datPGVFrom") Then
                     objmysqlcomdwritehead.Parameters("@datPGVFrom").Value = row("datPGVFrom")
                 End If
-                If objdtLocDebiHead.Columns.Contains("bdatPGVTo") Then
+                If objdtLocDebiHead.Columns.Contains("datPGVTo") Then
                     objmysqlcomdwritehead.Parameters("@datPGVTo").Value = row("datPGVTo")
                 End If
                 objmysqlcomdwritehead.ExecuteNonQuery()
@@ -659,7 +660,6 @@ Friend Class ClassImport
 
 
     End Function
-
 
     Friend Function FcInitInsCmdDHeads(ByRef mysqlinscmd As MySqlCommand) As Int16
 

@@ -7,25 +7,26 @@ Imports System.Data.SqlClient
 
 Friend Class ClassCheck
 
-    Friend Function FcClCheckDebit(ByVal intAccounting As Integer,
-                                        ByRef objdtDebits As DataSet,
-                                        ByRef objFinanz As SBSXASLib.AXFinanz,
-                                        ByRef objfiBuha As SBSXASLib.AXiFBhg,
-                                        ByRef objdbBuha As SBSXASLib.AXiDbBhg,
-                                        ByRef objdbPIFb As SBSXASLib.AXiPlFin,
-                                        ByRef objFiBebu As SBSXASLib.AXiBeBu,
-                                        ByRef objdtInfo As DataTable,
-                                        ByVal strcmbBuha As String,
-                                        ByVal intTeqNbr As Int16,
-                                        ByVal intTeqNbrLY As Int16,
-                                        ByVal intTeqNbrPLY As Int16,
-                                        ByVal strYear As String,
-                                        ByVal strPeriode As String,
-                                        ByVal datPeriodFrom As Date,
-                                        ByVal datPeriodTo As Date,
-                                        ByVal strPeriodStatus As String,
-                                        ByVal booValutaCorrect As Boolean,
-                                        ByVal datValutaCorrect As Date) As Int16
+    Friend Function FcClCheckDebit(intAccounting As Integer,
+                                   ByRef objdtDebits As DataSet,
+                                   ByRef objFinanz As SBSXASLib.AXFinanz,
+                                   ByRef objfiBuha As SBSXASLib.AXiFBhg,
+                                   ByRef objdbBuha As SBSXASLib.AXiDbBhg,
+                                   ByRef objdbPIFb As SBSXASLib.AXiPlFin,
+                                   ByRef objFiBebu As SBSXASLib.AXiBeBu,
+                                   ByRef objdtInfo As DataTable,
+                                   objdtDates As DataTable,
+                                   strcmbBuha As String,
+                                   intTeqNbr As Int16,
+                                   intTeqNbrLY As Int16,
+                                   intTeqNbrPLY As Int16,
+                                   strYear As String,
+                                   strPeriode As String,
+                                   datPeriodFrom As Date,
+                                   datPeriodTo As Date,
+                                   strPeriodStatus As String,
+                                   booValutaCorrect As Boolean,
+                                   datValutaCorrect As Date) As Int16
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
         Dim strBitLog As String = String.Empty
@@ -466,91 +467,130 @@ Friend Class ClassCheck
                 End If
 
                 'Valuta - Datum 10
-                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
-                                              objdtInfo,
-                                              datPeriodFrom,
-                                              datPeriodTo,
-                                              strPeriodStatus,
-                                              True)
-                'Falls Problem versuchen mit Valuta-Datum-Anpassung
-                If intReturnValue <> 0 And booValutaCorrect Then
-                    row("datDebValDatum") = Format(datValutaCorrect, "Short Date")
-                    booDateChanged = True
-                    intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
-                                              objdtInfo,
-                                              datPeriodFrom,
-                                              datPeriodTo,
-                                              strPeriodStatus,
-                                              True)
-                    If intReturnValue = 0 Then
-                        'Korrektur hat funktioniert Wert auf 2 setzen
-                        intReturnValue = 2
-                    Else
-                        intReturnValue = 3
-                    End If
+                'intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
+                '                              objdtInfo,
+                '                              datPeriodFrom,
+                '                              datPeriodTo,
+                '                              strPeriodStatus,
+                '                              True)
+                intReturnValue = FcCheckDate2(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
+                                              strYear,
+                                              objdtDates,
+                                              False)
 
-                End If
+                ''Falls Problem versuchen mit Valuta-Datum-Anpassung
+                'If intReturnValue <> 0 And booValutaCorrect Then
+                '    row("datDebValDatum") = Format(datValutaCorrect, "Short Date")
+                '    booDateChanged = True
+                '    intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
+                '                              objdtInfo,
+                '                              datPeriodFrom,
+                '                              datPeriodTo,
+                '                              strPeriodStatus,
+                '                              True)
+                '    If intReturnValue = 0 Then
+                '        'Korrektur hat funktioniert Wert auf 2 setzen
+                '        intReturnValue = 2
+                '    Else
+                '        intReturnValue = 3
+                '    End If
+
+                'End If
+
                 'Bei PGV checken ob PGV-Startdatum in blockierter Periode
                 If row("booPGV") And intReturnValue = 0 Then
-                    intReturnValue = FcCheckPGVDate(row("datPGVFrom"),
-                                                    intAccounting)
-                    If intReturnValue <> 0 Then
-                        'Falls TA-Buchung in blockierter Periode probieren mit Valuta-Korrektur
-                        If intPGVMonths = 1 And booValutaCorrect Then
-                            row("datDebValDatum") = Format(datValutaCorrect, "Short Date")
-                            booDateChanged = True
-                            intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
-                                              objdtInfo,
-                                              datPeriodFrom,
-                                              datPeriodTo,
-                                              strPeriodStatus,
-                                              True)
-                            If intReturnValue = 0 Then
-                                'PGV - Flag entfernen
-                                row("booPGV") = False
-                                intReturnValue = 5
-                            Else
-                                intReturnValue = 3
-                            End If
-                        Else
+                    'Ist TA ?
+                    If intMonthsAJ + intMonthsNJ = 1 Then
+                        'Ist Differenz Jahre grösser 1?
+                        If Math.Abs(Convert.ToInt16(strYear) - Year(row("datPGVTo"))) > 1 Then
                             intReturnValue = 4
+                        Else
+                            intReturnValue = FcCheckDate2(row("datPGVTo"),
+                                                      strYear,
+                                                      objdtDates,
+                                                      True)
                         End If
+                    Else
+                        'mehrere Monate PGV
+                        For intMonthCounter = 0 To intPGVMonths - 1
+                            'Ist Differenz Jahre grösser 1?
+                            If Math.Abs(Convert.ToInt16(strYear) - Year(row("datPGVFrom"))) > 1 Then
+                                intReturnValue = 4
+                            Else
+                                intReturnValue = FcCheckDate2(DateAndTime.DateAdd(DateInterval.Month, intMonthCounter, row("datPGVFrom")),
+                                                          strYear,
+                                                          objdtDates,
+                                                          True)
+                            End If
+                            If intReturnValue <> 0 Then
+                                Exit For
+                            End If
+                        Next
                     End If
+                    'intReturnValue = FcCheckPGVDate(row("datPGVFrom"),
+                    '                                intAccounting)
+                    'If intReturnValue <> 0 Then
+                    '    'Falls TA-Buchung in blockierter Periode probieren mit Valuta-Korrektur
+                    '    If intPGVMonths = 1 And booValutaCorrect Then
+                    '        row("datDebValDatum") = Format(datValutaCorrect, "Short Date")
+                    '        booDateChanged = True
+                    '        intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
+                    '                          objdtInfo,
+                    '                          datPeriodFrom,
+                    '                          datPeriodTo,
+                    '                          strPeriodStatus,
+                    '                          True)
+                    '        If intReturnValue = 0 Then
+                    '            'PGV - Flag entfernen
+                    '            row("booPGV") = False
+                    '            intReturnValue = 5
+                    '        Else
+                    '            intReturnValue = 3
+                    '        End If
+                    '    Else
+                    '        intReturnValue = 4
+                    '    End If
+                    'End If
 
                 End If
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'RG - Datum 11
-                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebRGDatum")), #1789-09-17#, row("datDebRGDatum")),
-                                              objdtInfo,
-                                              datPeriodFrom,
-                                              datPeriodTo,
-                                              strPeriodStatus,
-                                              True)
+                intReturnValue = FcCheckDate2(IIf(IsDBNull(row("datDebRGDatum")), #1789-09-17#, row("datDebRGDatum")),
+                                              strYear,
+                                              objdtDates,
+                                              False)
 
-                'Falls Problem versuchen mit Valuta-Datum-Anpassung
-                If intReturnValue <> 0 And booValutaCorrect Then
-                    row("datDebRGDatum") = datValutaCorrect
-                    booDateChanged = True
-                    intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebRGDatum")), #1789-09-17#, row("datDebRGDatum")),
-                                              objdtInfo,
-                                              datPeriodFrom,
-                                              datPeriodTo,
-                                              strPeriodStatus,
-                                              True)
-                    If intReturnValue = 0 Then
-                        'Korrektur hat funktioniert Wert auf 2 setzen
-                        intReturnValue = 2
-                    Else
-                        intReturnValue = 3
-                    End If
+                'intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebRGDatum")), #1789-09-17#, row("datDebRGDatum")),
+                '                              objdtInfo,
+                '                              datPeriodFrom,
+                '                              datPeriodTo,
+                '                              strPeriodStatus,
+                '                              True)
 
-                End If
+                ''Falls Problem versuchen mit Valuta-Datum-Anpassung
+                'If intReturnValue <> 0 And booValutaCorrect Then
+                '    row("datDebRGDatum") = datValutaCorrect
+                '    booDateChanged = True
+                '    intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebRGDatum")), #1789-09-17#, row("datDebRGDatum")),
+                '                              objdtInfo,
+                '                              datPeriodFrom,
+                '                              datPeriodTo,
+                '                              strPeriodStatus,
+                '                              True)
+                '    If intReturnValue = 0 Then
+                '        'Korrektur hat funktioniert Wert auf 2 setzen
+                '        intReturnValue = 2
+                '    Else
+                '        intReturnValue = 3
+                '    End If
+
+                'End If
                 strBitLog += Trim(intReturnValue.ToString)
                 'Falls ein Datum geändert wurde dann Flag setzen
-                If booDateChanged Then
-                    row("booDatChanged") = True
-                End If
+                'If booDateChanged Then
+                '    row("booDatChanged") = True
+                'End If
 
                 'Interne Bank 12
                 'If row.Table.Columns("intPayType") Is Nothing Then
@@ -742,17 +782,17 @@ Friend Class ClassCheck
                     If Mid(strBitLog, 10, 1) = "1" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValD"
                     ElseIf Mid(strBitLog, 10, 1) = "2" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "VDCor"
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "VDBlck"
                         'Korrektur hat geklappt, Wert wieder auf 0 setzen
-                        strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
+                        'strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
                     ElseIf Mid(strBitLog, 10, 1) = "3" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "VDCorNok"
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVBlck"
                     ElseIf Mid(strBitLog, 10, 1) = "4" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblckVD"
-                    ElseIf Mid(strBitLog, 10, 1) = "5" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVVDCor"
-                        'Korrektur hat geklappt, Wert wieder auf 0 setzen
-                        strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVYear>1"
+                        'ElseIf Mid(strBitLog, 10, 1) = "5" Then
+                        '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVVDCor"
+                        '    'Korrektur hat geklappt, Wert wieder auf 0 setzen
+                        '    strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
                     End If
                 End If
                 'RG Datum 
@@ -760,13 +800,13 @@ Friend Class ClassCheck
                     If Mid(strBitLog, 11, 1) = "1" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgD"
                     ElseIf Mid(strBitLog, 11, 1) = "2" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDCor"
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDBlck"
                         'Korrektur hat geklappt, Wert wieder auf 0 setzen
-                        strBitLog = Left(strBitLog, 10) + "0" + Right(strBitLog, Len(strBitLog) - 11)
-                    ElseIf Mid(strBitLog, 11, 1) = "3" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDCorNok"
-                    ElseIf Mid(strBitLog, 11, 1) = "4" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblckRD"
+                        'strBitLog = Left(strBitLog, 10) + "0" + Right(strBitLog, Len(strBitLog) - 11)
+                        'ElseIf Mid(strBitLog, 11, 1) = "3" Then
+                        '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDCorNok"
+                        'ElseIf Mid(strBitLog, 11, 1) = "4" Then
+                        '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblckRD"
                     End If
                 End If
                 'interne Bank
@@ -915,6 +955,71 @@ Friend Class ClassCheck
             tblPeriods = Nothing
 
         End Try
+
+    End Function
+
+    Friend Function FcCheckDate2(datDateToCheck As Date,
+                                 strSelYear As String,
+                                 tblDates As DataTable,
+                                 booYChngAllowed As Boolean) As Int16
+
+        '0=ok, 1=Jahr <> Sel Jahr, 2=Blockiert, 9=Problem
+
+        Dim selrelDates() As DataRow
+        Dim booIsDateOk As Boolean
+
+        Try
+
+            If Not booYChngAllowed Then
+                'Entspricht Jahr im Dateum dem selektierten Jahr?
+                If DateAndTime.Year(datDateToCheck) <> Conversion.Val(strSelYear) Then
+                    Return 1
+                Else
+                    'Ist etwas blockiert?
+                    selrelDates = tblDates.Select("intYear=" + strSelYear)
+                    booIsDateOk = True
+                    For Each drselrelDates In selrelDates
+                        If datDateToCheck >= drselrelDates("datFrom") And datDateToCheck <= drselrelDates("datTo") Then
+                            'Ist Status <> O
+                            If drselrelDates("strStatus") <> "O" Then
+                                booIsDateOk = False
+                            End If
+                        End If
+                    Next
+                    If Not booIsDateOk Then
+                        Return 2
+                    Else
+                        Return 0
+                    End If
+                End If
+
+            Else
+                selrelDates = tblDates.Select("intYear=" + Convert.ToString(DateAndTime.Year(datDateToCheck)))
+                'Ist etwas blockiert?
+                booIsDateOk = True
+                For Each drselrelDates In selrelDates
+                    If datDateToCheck >= drselrelDates("datFrom") And datDateToCheck <= drselrelDates("datTo") Then
+                        'Ist Status <> O
+                        If drselrelDates("strStatus") <> "O" Then
+                            booIsDateOk = False
+                        End If
+                    End If
+                Next
+                If Not booIsDateOk Then
+                    Return 3
+                Else
+                    Return 0
+                End If
+
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "PGV-Datumscheck")
+            Return 9
+
+        End Try
+
 
     End Function
 
@@ -1181,7 +1286,11 @@ Friend Class ClassCheck
             objlocMySQLcmd.Connection = objdbconn
             objlocdtBank.Load(objlocMySQLcmd.ExecuteReader)
 
-            Return objlocdtBank.Rows(0).Item(0).ToString
+            If objlocdtBank.Rows.Count = 0 Then
+                Return "0"
+            Else
+                Return objlocdtBank.Rows(0).Item(0).ToString
+            End If
 
 
         Catch ex As Exception
@@ -1932,21 +2041,22 @@ Friend Class ClassCheck
 
     End Function
 
-    Friend Function FcCheckKredit(ByVal intAccounting As Integer,
-                                        ByRef objdtKredits As DataSet,
-                                        ByRef objFinanz As SBSXASLib.AXFinanz,
-                                        ByRef objfiBuha As SBSXASLib.AXiFBhg,
-                                        ByRef objKrBuha As SBSXASLib.AXiKrBhg,
-                                        ByRef objBebu As SBSXASLib.AXiBeBu,
-                                        ByRef objdtInfo As DataTable,
-                                        ByVal strcmbBuha As String,
-                                        ByVal strYear As String,
-                                        ByVal strPeriode As String,
-                                        ByVal datPeriodFrom As Date,
-                                        ByVal datPeriodTo As Date,
-                                        ByVal strPeriodStatus As String,
-                                        ByVal booValutaCoorect As Boolean,
-                                        ByVal datValutaCorrect As Date) As Integer
+    Friend Function FcCheckKredit(intAccounting As Integer,
+                                  ByRef objdtKredits As DataSet,
+                                  ByRef objFinanz As SBSXASLib.AXFinanz,
+                                  ByRef objfiBuha As SBSXASLib.AXiFBhg,
+                                  ByRef objKrBuha As SBSXASLib.AXiKrBhg,
+                                  ByRef objBebu As SBSXASLib.AXiBeBu,
+                                  ByRef objdtInfo As DataTable,
+                                  objdtDates As DataTable,
+                                  strcmbBuha As String,
+                                  strYear As String,
+                                  strPeriode As String,
+                                  datPeriodFrom As Date,
+                                  datPeriodTo As Date,
+                                  strPeriodStatus As String,
+                                  booValutaCoorect As Boolean,
+                                  datValutaCorrect As Date) As Integer
 
         'DebiBitLog 1=PK, 2=Konto, 3=Währung, 4=interne Bank, 5=OP Kopf, 6=RG-Datum, 7=Valuta Datum, 8=Subs, 9=OP doppelt
         Dim strBitLog As String = String.Empty
@@ -2264,110 +2374,182 @@ Friend Class ClassCheck
                 If IsDBNull(row("datKredValDatum")) Then
                     row("datKredValDatum") = row("datKredRGDatum")
                 End If
-                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), row("datKredRGDatum"), row("datKredValDatum")),
-                                              objdtInfo,
-                                              datPeriodFrom,
-                                              datPeriodTo,
-                                              strPeriodStatus,
-                                              True)
+                'intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), row("datKredRGDatum"), row("datKredValDatum")),
+                '                              objdtInfo,
+                '                              datPeriodFrom,
+                '                              datPeriodTo,
+                '                              strPeriodStatus,
+                '                              True)
+                intReturnValue = FcCheckDate2(IIf(IsDBNull(row("datKredValDatum")), row("datKredRGDatum"), row("datKredValDatum")),
+                                              strYear,
+                                              objdtDates,
+                                              False)
 
-                'Falls Problem versuchen mit Valuta-Datum-Anpassung
-                If intReturnValue <> 0 And booValutaCoorect Then
-                    row("datKredValDatum") = Format(datValutaCorrect, "Short Date")
-                    intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), #1789-09-17#, row("datKredValDatum")),
-                                                  objdtInfo,
-                                                  datPeriodFrom,
-                                                  datPeriodTo,
-                                                  strPeriodStatus,
-                                                  True)
-                    If intReturnValue = 0 Then
-                        intReturnValue = 2
-                    Else
-                        intReturnValue = 3
-                    End If
+                ''Falls Problem versuchen mit Valuta-Datum-Anpassung
+                'If intReturnValue <> 0 And booValutaCoorect Then
+                '    row("datKredValDatum") = Format(datValutaCorrect, "Short Date")
+                '    intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), #1789-09-17#, row("datKredValDatum")),
+                '                                  objdtInfo,
+                '                                  datPeriodFrom,
+                '                                  datPeriodTo,
+                '                                  strPeriodStatus,
+                '                                  True)
+                '    If intReturnValue = 0 Then
+                '        intReturnValue = 2
+                '    Else
+                '        intReturnValue = 3
+                '    End If
 
-                End If
+                'End If
 
                 'Bei PGV checken ob PGV-Startdatum in blockierter Periode
+                'Bei PGV checken ob PGV-Startdatum in blockierter Periode
                 If row("booPGV") And intReturnValue = 0 Then
-                    intReturnValue = FcCheckPGVDate(row("datPGVFrom"),
-                                                    intAccounting)
-                    If intReturnValue <> 0 Then
-                        'Falls TP-Buchung in blockierter Periode dann probieren mit Valuta-Korrektur
-                        If intPGVMonths = 1 And booValutaCoorect Then
-                            row("datKredValDatum") = Format(datValutaCorrect, "Short Date")
-                            intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), #1789-09-17#, row("datKredValDatum")),
-                                                          objdtInfo,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus,
-                                                          True)
-                            If intReturnValue = 0 Then
-                                'PGV - Flag entfernen
-                                row("booPGV") = False
-                                intReturnValue = 5
-                            Else
-                                intReturnValue = 3
-                            End If
-                        Else
+                    'Ist TP ?
+                    If intMonthsAJ + intMonthsNJ = 1 Then
+                        'Ist Differenz Jahre grösser 1?
+                        If Math.Abs(Convert.ToInt16(strYear) - Year(row("datPGVTo"))) > 1 Then
                             intReturnValue = 4
+                        Else
+                            intReturnValue = FcCheckDate2(row("datPGVTo"),
+                                                      strYear,
+                                                      objdtDates,
+                                                      True)
                         End If
+                    Else
+                        'mehrere Monate PGV
+                        For intMonthCounter = 0 To intPGVMonths - 1
+                            'Ist Differenz Jahre grösser 1?
+                            If Math.Abs(Convert.ToInt16(strYear) - Year(row("datPGVFrom"))) > 1 Then
+                                intReturnValue = 4
+                            Else
+                                intReturnValue = FcCheckDate2(DateAndTime.DateAdd(DateInterval.Month, intMonthCounter, row("datPGVFrom")),
+                                                          strYear,
+                                                          objdtDates,
+                                                          True)
+                            End If
+                            If intReturnValue <> 0 Then
+                                Exit For
+                            End If
+                        Next
                     End If
+                    'intReturnValue = FcCheckPGVDate(row("datPGVFrom"),
+                    '                                intAccounting)
+                    'If intReturnValue <> 0 Then
+                    '    'Falls TA-Buchung in blockierter Periode probieren mit Valuta-Korrektur
+                    '    If intPGVMonths = 1 And booValutaCorrect Then
+                    '        row("datDebValDatum") = Format(datValutaCorrect, "Short Date")
+                    '        booDateChanged = True
+                    '        intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datDebValDatum")), #1789-09-17#, row("datDebValDatum")),
+                    '                          objdtInfo,
+                    '                          datPeriodFrom,
+                    '                          datPeriodTo,
+                    '                          strPeriodStatus,
+                    '                          True)
+                    '        If intReturnValue = 0 Then
+                    '            'PGV - Flag entfernen
+                    '            row("booPGV") = False
+                    '            intReturnValue = 5
+                    '        Else
+                    '            intReturnValue = 3
+                    '        End If
+                    '    Else
+                    '        intReturnValue = 4
+                    '    End If
+                    'End If
 
                 End If
                 strBitLog += Trim(intReturnValue.ToString)
 
+
+                'If row("booPGV") And intReturnValue = 0 Then
+                '    intReturnValue = FcCheckPGVDate(row("datPGVFrom"),
+                '                                    intAccounting)
+                '    If intReturnValue <> 0 Then
+                '        'Falls TP-Buchung in blockierter Periode dann probieren mit Valuta-Korrektur
+                '        If intPGVMonths = 1 And booValutaCoorect Then
+                '            row("datKredValDatum") = Format(datValutaCorrect, "Short Date")
+                '            intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredValDatum")), #1789-09-17#, row("datKredValDatum")),
+                '                                          objdtInfo,
+                '                                          datPeriodFrom,
+                '                                          datPeriodTo,
+                '                                          strPeriodStatus,
+                '                                          True)
+                '            If intReturnValue = 0 Then
+                '                'PGV - Flag entfernen
+                '                row("booPGV") = False
+                '                intReturnValue = 5
+                '            Else
+                '                intReturnValue = 3
+                '            End If
+                '        Else
+                '            intReturnValue = 4
+                '        End If
+                '    End If
+
+                'End If
+
+                'strBitLog += Trim(intReturnValue.ToString)
+
                 'RG - Datum 11
-                intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredRGDatum")), #1789-09-17#, row("datKredRGDatum")),
-                                              objdtInfo,
-                                              datPeriodFrom,
-                                              datPeriodTo,
-                                              strPeriodStatus,
-                                              True)
+                'intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredRGDatum")), #1789-09-17#, row("datKredRGDatum")),
+                '                              objdtInfo,
+                '                              datPeriodFrom,
+                '                              datPeriodTo,
+                '                              strPeriodStatus,
+                '                              True)
+
+                intReturnValue = FcCheckDate2(IIf(IsDBNull(row("datKredRGDatum")), #1789-09-17#, row("datKredRGDatum")),
+                                              strYear,
+                                              objdtDates,
+                                              False)
+
 
                 'Falls Problem versuchen mit Valuta-Datum-Anpassung
-                If intReturnValue <> 0 And booValutaCoorect Then
-                    row("datKredRGDatum") = Format(datValutaCorrect, "Short Date")
-                    intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredRGDatum")), #1789-09-17#, row("datKredRGDatum")),
-                                                  objdtInfo,
-                                                  datPeriodFrom,
-                                                  datPeriodTo,
-                                                  strPeriodStatus,
-                                                  True)
-                    If intReturnValue = 0 Then
-                        'Korrektur hat funktioniert, Wert auf 2 setzen
-                        intReturnValue = 2
-                    Else
-                        intReturnValue = 3
-                    End If
-                End If
+                'If intReturnValue <> 0 And booValutaCoorect Then
+                '    row("datKredRGDatum") = Format(datValutaCorrect, "Short Date")
+                '    intReturnValue = FcChCeckDate(IIf(IsDBNull(row("datKredRGDatum")), #1789-09-17#, row("datKredRGDatum")),
+                '                                  objdtInfo,
+                '                                  datPeriodFrom,
+                '                                  datPeriodTo,
+                '                                  strPeriodStatus,
+                '                                  True)
+                '    If intReturnValue = 0 Then
+                '        'Korrektur hat funktioniert, Wert auf 2 setzen
+                '        intReturnValue = 2
+                '    Else
+                '        intReturnValue = 3
+                '    End If
+                'End If
                 strBitLog += Trim(intReturnValue.ToString)
 
                 ''Referenz 12
                 If IsDBNull(row("strKredRef")) Then
                     row("strKredRef") = ""
-                    strBitLog += "1"
+                    intReturnValue = 1
                 Else
                     If (Not String.IsNullOrEmpty(row("strKredRef"))) And (row("intPayType") = 3 Or row("intPayType") = 10) Then
                         If Val(Left(row("strKredRef"), Len(row("strKredRef")) - 1)) > 0 Then
 
+                            'Prüfziffer korrekt?
                             If Right(row("strKredRef"), 1) <> Main.FcModulo10(Left(row("strKredRef"), Len(row("strKredRef")) - 1)) Then
-                                strBitLog += "1"
+                                intReturnValue = 2
                             Else
-                                strBitLog += "0"
+                                intReturnValue = 0
                             End If
 
                         Else
-                            strBitLog += "1"
+                            intReturnValue = 3
                         End If
                     Else
-                        strBitLog += "0"
+                        intReturnValue = 0
                     End If
 
                 End If
                 'Debug.Print("Erfasste Prüfziffer " + Right(row("strKredRef"), 1) + ", kalkuliert " + Main.FcModulo10(Left(row("strKredRef"), Len(row("strKredRef")) - 1)).ToString)
                 'intReturnValue = IIf(IsDBNull(row("strKredRef")), 1, 0)
-                'strBitLog += Trim(intReturnValue.ToString)
+                strBitLog += Trim(intReturnValue.ToString)
+
                 'interne Bank 13
                 intReturnValue = Main.FcCheckDebiIntBank(intAccounting,
                                                          row("strKrediBankInt"),
@@ -2510,17 +2692,17 @@ Friend Class ClassCheck
                     If Mid(strBitLog, 10, 1) = "1" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValD"
                     ElseIf Mid(strBitLog, 10, 1) = "2" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "VDCor"
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "VDBlck"
                         'Korrektur hat geklappt, Wert wieder auf 0 setzen
-                        strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
+                        'strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
                     ElseIf Mid(strBitLog, 10, 1) = "3" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "VDCorNok"
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVBlck"
                     ElseIf Mid(strBitLog, 10, 1) = "4" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblck"
-                    ElseIf Mid(strBitLog, 10, 1) = "5" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVVDCor"
-                        'Korrektur hat geklappt, Wert wieder auf 0 setzen
-                        strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVYear>1"
+                        'ElseIf Mid(strBitLog, 10, 1) = "5" Then
+                        '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVVDCor"
+                        '    'Korrektur hat geklappt, Wert wieder auf 0 setzen
+                        '    strBitLog = Left(strBitLog, 9) + "0" + Right(strBitLog, Len(strBitLog) - 10)
                     End If
                 End If
                 'RG Datum 11
@@ -2528,18 +2710,24 @@ Friend Class ClassCheck
                     If Mid(strBitLog, 11, 1) = "1" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgD"
                     ElseIf Mid(strBitLog, 11, 1) = "2" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDCor"
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgBlck"
                         'Korrektur hat geklappt, Wert wieder auf 0 setzen
-                        strBitLog = Left(strBitLog, 10) + "0" + Right(strBitLog, Len(strBitLog) - 11)
-                    ElseIf Mid(strBitLog, 11, 1) = "3" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDCorNok"
-                    ElseIf Mid(strBitLog, 11, 1) = "4" Then
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblck"
+                        'strBitLog = Left(strBitLog, 10) + "0" + Right(strBitLog, Len(strBitLog) - 11)
+                        'ElseIf Mid(strBitLog, 11, 1) = "3" Then
+                        '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDCorNok"
+                        'ElseIf Mid(strBitLog, 11, 1) = "4" Then
+                        '    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PGVDblck"
                     End If
                 End If
                 'Referenz 12
                 If Mid(strBitLog, 12, 1) <> "0" Then
-                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Ref "
+                    If Mid(strBitLog, 12, 1) = "1" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "NoRef "
+                    ElseIf Mid(strBitLog, 12, 1) = "2" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RefChkD "
+                    ElseIf Mid(strBitLog, 12, 1) = "3" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "Ref "
+                    End If
                 End If
                 'Int Bank 13
                 If Mid(strBitLog, 13, 1) <> "0" Then

@@ -152,6 +152,9 @@ Partial Class frmDebDisp
         Me.lblDB.TabIndex = 10
         Me.lblDB.Text = "DB"
         '
+        'BgWLoadDebi
+        '
+        '
         'dgvDates
         '
         Me.dgvDates.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize

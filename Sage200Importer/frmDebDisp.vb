@@ -4,6 +4,7 @@ Option Explicit On
 Imports MySql.Data.MySqlClient
 Imports System.Data.OracleClient
 Imports System.Data.SqlClient
+Imports Microsoft.VisualBasic.ApplicationServices
 Imports CLClassSage200.WFSage200Import
 Imports System.IO
 
@@ -104,77 +105,80 @@ Public Class frmDebDisp
 
     End Sub
 
-    Friend Function FcDebiDisplay(intMandant As Int16,
+    Friend Function FcDebiDisplay(intMandant As Int32,
                                   LstBPerioden As ListBox) As Int16
 
         Dim intFcReturns As Int16
         Dim strPeriode As String
+        Dim strYearCh As String
 
-        Me.Cursor = Cursors.WaitCursor
+        Try
 
-        'intMode = 0
+            Me.Cursor = Cursors.WaitCursor
 
-        Me.butImport.Enabled = False
+            'intMode = 0
 
-        'DGV Debitoren
-        'dgvBookings.DataSource = Nothing
-        'dgvBookingSub.DataSource = Nothing
+            Me.butImport.Enabled = False
 
-        'dsDebitoren.Reset()
-        'dsDebitoren.Clear()
+            'DGV Debitoren
+            'dgvBookings.DataSource = Nothing
+            'dgvBookingSub.DataSource = Nothing
 
-        'Zuerst evtl. vorhandene DS löschen in Tabelle
-        MySQLdaDebitoren.DeleteCommand.Connection.Open()
-        MySQLdaDebitoren.DeleteCommand.ExecuteNonQuery()
-        MySQLdaDebitoren.DeleteCommand.Connection.Close()
+            'dsDebitoren.Reset()
+            'dsDebitoren.Clear()
 
-        MySQLdaDebitorenSub.DeleteCommand.Connection.Open()
-        MySQLdaDebitorenSub.DeleteCommand.ExecuteNonQuery()
-        MySQLdaDebitorenSub.DeleteCommand.Connection.Close()
+            'Zuerst evtl. vorhandene DS löschen in Tabelle
+            MySQLdaDebitoren.DeleteCommand.Connection.Open()
+            MySQLdaDebitoren.DeleteCommand.ExecuteNonQuery()
+            MySQLdaDebitoren.DeleteCommand.Connection.Close()
 
-        'Info neu erstellen
-        dsDebitoren.Tables.Add("tblDebitorenInfo")
-        Dim col1 As DataColumn = New DataColumn("strInfoT")
-        col1.DataType = System.Type.GetType("System.String")
-        col1.MaxLength = 50
-        col1.Caption = "Info-Titel"
-        dsDebitoren.Tables("tblDebitorenInfo").Columns.Add(col1)
-        Dim col2 As DataColumn = New DataColumn("strInfoV")
-        col2.DataType = System.Type.GetType("System.String")
-        col2.MaxLength = 50
-        col2.Caption = "Info-Wert"
-        dsDebitoren.Tables("tblDebitorenInfo").Columns.Add(col2)
+            MySQLdaDebitorenSub.DeleteCommand.Connection.Open()
+            MySQLdaDebitorenSub.DeleteCommand.ExecuteNonQuery()
+            MySQLdaDebitorenSub.DeleteCommand.Connection.Close()
 
-        dgvInfo.DataSource = dsDebitoren.Tables("tblDebitorenInfo")
+            'Info neu erstellen
+            dsDebitoren.Tables.Add("tblDebitorenInfo")
+            Dim col1 As DataColumn = New DataColumn("strInfoT")
+            col1.DataType = System.Type.GetType("System.String")
+            col1.MaxLength = 50
+            col1.Caption = "Info-Titel"
+            dsDebitoren.Tables("tblDebitorenInfo").Columns.Add(col1)
+            Dim col2 As DataColumn = New DataColumn("strInfoV")
+            col2.DataType = System.Type.GetType("System.String")
+            col2.MaxLength = 50
+            col2.Caption = "Info-Wert"
+            dsDebitoren.Tables("tblDebitorenInfo").Columns.Add(col2)
 
-        'Datums-Tabelle erstellen
-        dsDebitoren.Tables.Add("tblDebitorenDates")
-        Dim col7 As DataColumn = New DataColumn("intYear")
-        col7.DataType = System.Type.GetType("System.Int16")
-        col7.Caption = "Year"
-        dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col7)
-        Dim col3 As DataColumn = New DataColumn("strDatType")
-        col3.DataType = System.Type.GetType("System.String")
-        col3.MaxLength = 50
-        col3.Caption = "Datum-Typ"
-        dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col3)
-        Dim col4 As DataColumn = New DataColumn("datFrom")
-        col4.DataType = System.Type.GetType("System.DateTime")
-        col4.Caption = "Von"
-        dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col4)
-        Dim col5 As DataColumn = New DataColumn("datTo")
-        col5.DataType = System.Type.GetType("System.DateTime")
-        col5.Caption = "Bis"
-        dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col5)
-        Dim col6 As DataColumn = New DataColumn("strStatus")
-        col6.DataType = System.Type.GetType("System.String")
-        col6.Caption = "S"
-        dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col6)
-        dgvDates.DataSource = dsDebitoren.Tables("tblDebitorenDates")
+            dgvInfo.DataSource = dsDebitoren.Tables("tblDebitorenInfo")
 
-        strPeriode = LstBPerioden.GetItemText(LstBPerioden.SelectedItem)
+            'Datums-Tabelle erstellen
+            dsDebitoren.Tables.Add("tblDebitorenDates")
+            Dim col7 As DataColumn = New DataColumn("intYear")
+            col7.DataType = System.Type.GetType("System.Int16")
+            col7.Caption = "Year"
+            dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col7)
+            Dim col3 As DataColumn = New DataColumn("strDatType")
+            col3.DataType = System.Type.GetType("System.String")
+            col3.MaxLength = 50
+            col3.Caption = "Datum-Typ"
+            dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col3)
+            Dim col4 As DataColumn = New DataColumn("datFrom")
+            col4.DataType = System.Type.GetType("System.DateTime")
+            col4.Caption = "Von"
+            dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col4)
+            Dim col5 As DataColumn = New DataColumn("datTo")
+            col5.DataType = System.Type.GetType("System.DateTime")
+            col5.Caption = "Bis"
+            dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col5)
+            Dim col6 As DataColumn = New DataColumn("strStatus")
+            col6.DataType = System.Type.GetType("System.String")
+            col6.Caption = "S"
+            dsDebitoren.Tables("tblDebitorenDates").Columns.Add(col6)
+            dgvDates.DataSource = dsDebitoren.Tables("tblDebitorenDates")
 
-        Call Main.FcLoginSage3(objdbConn,
+            strPeriode = LstBPerioden.GetItemText(LstBPerioden.SelectedItem)
+
+            Call Main.FcLoginSage3(objdbConn,
                                   objdbMSSQLConn,
                                   objdbSQLcommand,
                                   Finanz,
@@ -195,45 +199,71 @@ Public Class frmDebDisp
                                   datPeriodTo,
                                   strPeriodStatus)
 
-        'Gibt es mehr als ein Jahr?
-        If LstBPerioden.Items.Count > 1 Then
+            'Gibt es mehr als ein Jahr?
+            If LstBPerioden.Items.Count > 1 Then
 
-            'Gibt es ein Vorjahr?
-            If LstBPerioden.SelectedIndex > 1 Then
-                strPeriode = LstBPerioden.Items(LstBPerioden.SelectedIndex - 1)
-                'Peeriodendef holen
+                'Gibt es ein Vorjahr?
+                If LstBPerioden.SelectedIndex + 1 > 1 Then
+                    strPeriode = LstBPerioden.Items(LstBPerioden.SelectedIndex - 1)
+                    'Peeriodendef holen
+                    Call Main.FcLoginSage4(intMandant,
+                                       dsDebitoren.Tables("tblDebitorenDates"),
+                                       strPeriode)
+                Else
+                    'Periode ezreugen und auf N stellen
+                    strYearCh = Convert.ToString(Val(strYear) - 1)
+                    dsDebitoren.Tables("tblDebitorenDates").Rows.Add(strYearCh, "GJ n/a", DateSerial(Convert.ToUInt16(strYearCh), 1, 1), DateSerial(Convert.ToUInt16(strYearCh), 12, 31), "N")
+                End If
+
+                'Gibt es ein Folgehahr?
+                If LstBPerioden.SelectedIndex + 1 < LstBPerioden.Items.Count Then
+                    strPeriode = LstBPerioden.Items(LstBPerioden.SelectedIndex + 1)
+                    'Peeriodendef holen
+                    Call Main.FcLoginSage4(intMandant,
+                                       dsDebitoren.Tables("tblDebitorenDates"),
+                                       strPeriode)
+                Else
+                    'Periode ezreugen und auf N stellen
+                    strYearCh = Convert.ToString(Val(strYear) + 1)
+                    dsDebitoren.Tables("tblDebitorenDates").Rows.Add(strYearCh, "GJ n/a", DateSerial(Convert.ToUInt16(strYearCh), 1, 1), DateSerial(Convert.ToUInt16(strYearCh), 12, 31), "N")
+                End If
+            ElseIf LstBPerioden.Items.Count = 1 Then 'es gibt genau 1 Jahr
+                'gewähltes Jahr checken
                 Call Main.FcLoginSage4(intMandant,
                                        dsDebitoren.Tables("tblDebitorenDates"),
                                        strPeriode)
+                'VJ erzeugen
+                strYearCh = Convert.ToString(Val(strYear) - 1)
+                dsDebitoren.Tables("tblDebitorenDates").Rows.Add(strYearCh, "GJ n/a", DateSerial(Convert.ToUInt16(strYearCh), 1, 1), DateSerial(Convert.ToUInt16(strYearCh), 12, 31), "N")
+
+                'FJ erzeugen
+                strYearCh = Convert.ToString(Val(strYear) + 1)
+                dsDebitoren.Tables("tblDebitorenDates").Rows.Add(strYearCh, "GJ n/a", DateSerial(Convert.ToUInt16(strYearCh), 1, 1), DateSerial(Convert.ToUInt16(strYearCh), 12, 31), "N")
+
             End If
 
-            'Gibt es ein Folgehahr?
-            If LstBPerioden.SelectedIndex < LstBPerioden.Items.Count Then
-                strPeriode = LstBPerioden.Items(LstBPerioden.SelectedIndex + 1)
-                'Peeriodendef holen
-                Call Main.FcLoginSage4(intMandant,
-                                       dsDebitoren.Tables("tblDebitorenDates"),
-                                       strPeriode)
-            End If
 
-        End If
+            'Dim clImp As New ClassImport
+            'clImp.FcDebitFill(intMandant)
+            'clImp = Nothing
 
+            BgWLoadDebi.RunWorkerAsync(intMandant)
 
-        Dim clImp As New ClassImport
-        clImp.FcDebitFill(intMandant)
-        clImp = Nothing
+            Do While BgWLoadDebi.IsBusy
+                Application.DoEvents()
+            Loop
 
-        'Tabellentyp darstellen
-        Me.lblDB.Text = Main.FcReadFromSettingsII("Buchh_RGTableType", intMandant)
+            'Tabellentyp darstellen
+            Me.lblDB.Text = Main.FcReadFromSettingsII("Buchh_RGTableType", intMandant)
 
 
-        MySQLdaDebitoren.Fill(dsDebitoren, "tblDebiHeadsFromUser")
-        MySQLdaDebitorenSub.Fill(dsDebitoren, "tblDebiSubsFromUser")
+            MySQLdaDebitoren.Fill(dsDebitoren, "tblDebiHeadsFromUser")
+            MySQLdaDebitorenSub.Fill(dsDebitoren, "tblDebiSubsFromUser")
 
-        'Application.DoEvents()
+            'Application.DoEvents()
 
-        Dim clCheck As New ClassCheck
-        clCheck.FcClCheckDebit(intMandant,
+            Dim clCheck As New ClassCheck
+            clCheck.FcClCheckDebit(intMandant,
                                    dsDebitoren,
                                    Finanz,
                                    FBhg,
@@ -241,6 +271,7 @@ Public Class frmDebDisp
                                    PIFin,
                                    BeBu,
                                    dsDebitoren.Tables("tblDebitorenInfo"),
+                                   dsDebitoren.Tables("tblDebitorenDates"),
                                    frmImportMain.lstBoxMandant.Text,
                                    intTeqNbr,
                                    intTeqNbrLY,
@@ -252,22 +283,31 @@ Public Class frmDebDisp
                                    strPeriodStatus,
                                    frmImportMain.chkValutaCorrect.Checked,
                                    frmImportMain.dtpValutaCorrect.Value)
-        clCheck = Nothing
+            clCheck = Nothing
 
-        'Grid neu aufbauen
-        dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
-        dgvBookingSub.DataSource = dsDebitoren.Tables("tblDebiSubsFromUser")
+            'Grid neu aufbauen
+            dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
+            dgvBookingSub.DataSource = dsDebitoren.Tables("tblDebiSubsFromUser")
 
-        intFcReturns = FcInitdgvInfo(dgvInfo)
-        intFcReturns = FcInitdgvBookings(dgvBookings)
-        intFcReturns = FcInitdgvDebiSub(dgvBookingSub)
-        intFcReturns = FcInitdgvDate(dgvDates)
+            intFcReturns = FcInitdgvInfo(dgvInfo)
+            intFcReturns = FcInitdgvBookings(dgvBookings)
+            intFcReturns = FcInitdgvDebiSub(dgvBookingSub)
+            intFcReturns = FcInitdgvDate(dgvDates)
 
-        'Anzahl schreiben
-        txtNumber.Text = Me.dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count.ToString
-        Me.Cursor = Cursors.Default
+            'Anzahl schreiben
+            txtNumber.Text = Me.dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count.ToString
+            Me.Cursor = Cursors.Default
 
-        Me.butImport.Enabled = True
+            Me.butImport.Enabled = True
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Generelles Problem " + Convert.ToString(Err.Number) + "Check Debitoren", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Err.Clear()
+            Return 1
+
+        End Try
+
 
 
     End Function
@@ -896,7 +936,7 @@ Public Class frmDebDisp
                                         'Ausbuchen?, wohin mit dem Betrag?
                                     Else
 
-                                        'Welcher Betrag wurde schon bezahlt?
+                                        'Betrag von RG 10 auf RG1 als TZ buchen
                                         dblSplitPayed = dblBetrag
 
                                         'Teilzahlung buchen
@@ -1479,6 +1519,256 @@ Public Class frmDebDisp
 
         End Try
 
+
+    End Sub
+
+    Private Sub BgWLoadDebi_DoWork(sender As Object, e As System.ComponentModel.DoWorkEventArgs) Handles BgWLoadDebi.DoWork
+
+
+
+        Dim strIdentityName As String
+        Dim strMDBName As String
+        Dim strSQL As String
+        Dim strSQLSub As String
+        Dim strRGTableType As String
+        Dim objdtLocDebiHead As New DataTable
+        Dim objdtlocDebiSub As New DataTable
+        Dim objdaolelocDebiSubs As New OleDb.OleDbDataAdapter
+        Dim objdaolelocDebiHeads As New OleDb.OleDbDataAdapter
+        Dim objdaolesubsselcomd As New OleDb.OleDbCommand
+        Dim objdaoleheadselcomd As New OleDb.OleDbCommand
+        Dim objdalocDebiSubs As New MySqlDataAdapter
+        Dim objdalocDebiHeads As New MySqlDataAdapter
+        Dim objdasubselcomd As New MySqlCommand
+        Dim objdaheadselcomd As New MySqlCommand
+        Dim objdslocdebisub As New DataSet
+        Dim objdslocdebihead As New DataSet
+        Dim strConnection As String
+        Dim objRGMySQLConn As New MySqlConnection
+        Dim objlocMySQLcmd As New MySqlCommand
+        Dim strSQLToParse As String
+        Dim objmysqlcomdwritehead As New MySqlCommand
+        Dim intFcReturns As Int16
+        Dim strmysqlSaveSub As String
+        Dim objmysqlcomdwritesub As New MySqlCommand
+        Dim intAccounting As Int16 = CInt(e.Argument)
+        Dim objdbConnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objdbAccessConn As New OleDb.OleDbConnection
+        Dim objOLEdbcmdLoc As New OleDb.OleDbCommand
+
+
+        Try
+
+            Debug.Print("BW Start " + Convert.ToString(intAccounting))
+            objmysqlcomdwritehead.Connection = objdbConnZHDB02
+            objmysqlcomdwritesub.Connection = objdbConnZHDB02
+
+            'Für den Save der Records
+            strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
+            strIdentityName = Strings.Replace(strIdentityName, "\", "/")
+
+            strMDBName = Main.FcReadFromSettingsII("Buchh_RGTableMDB",
+                                                    intAccounting)
+
+            strSQL = Main.FcReadFromSettingsII("Buchh_SQLHead",
+                                             intAccounting)
+
+            strRGTableType = Main.FcReadFromSettingsII("Buchh_RGTableType",
+                                                     intAccounting)
+            objdslocdebihead.EnforceConstraints = False
+            objdslocdebihead.AcceptChanges()
+
+            Debug.Print("BW Before Read Head " + Convert.ToString(intAccounting))
+            If strRGTableType = "A" Then
+
+                'Access
+                Call Main.FcInitAccessConnecation(objdbAccessConn,
+                                              strMDBName)
+                objdaoleheadselcomd.Connection = objdbAccessConn
+                objdaoleheadselcomd.CommandText = strSQL
+                objdaolelocDebiHeads.SelectCommand = objdaoleheadselcomd
+                objdaolelocDebiHeads.SelectCommand.Connection.Open()
+                objdaolelocDebiHeads.Fill(objdslocdebihead, "tbldebihead")
+                objdaolelocDebiHeads.SelectCommand.Connection.Close()
+                'objdbAccessConn.Open()
+                'objOLEdbcmdLoc.CommandText = strSQL
+                'objOLEdbcmdLoc.Connection = objdbAccessConn
+                'objdtLocDebiHead.Load(objOLEdbcmdLoc.ExecuteReader)
+                'objdbAccessConn.Close()
+            ElseIf strRGTableType = "M" Then
+
+                strConnection = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                objRGMySQLConn.ConnectionString = strConnection
+                objdaheadselcomd.Connection = objRGMySQLConn
+                objdaheadselcomd.CommandText = strSQL
+                objdalocDebiHeads.SelectCommand = objdaheadselcomd
+                objdalocDebiHeads.SelectCommand.Connection.Open()
+                objdalocDebiHeads.Fill(objdslocdebihead, "tbldebihead")
+                objdalocDebiHeads.SelectCommand.Connection.Close()
+                'objlocMySQLcmd.Connection = objRGMySQLConn
+                'objlocMySQLcmd.CommandText = strSQL
+                'objRGMySQLConn.Open()
+                'objdtLocDebiHead.Load(objlocMySQLcmd.ExecuteReader)
+                'objRGMySQLConn.Close()
+
+            Else
+                MessageBox.Show("Tabletype not A or M")
+                Exit Sub
+            End If
+
+            objdslocdebisub.EnforceConstraints = False
+            objdslocdebisub.AcceptChanges()
+
+            strSQLToParse = Main.FcReadFromSettingsII("Buchh_SQLDetail",
+                                                    intAccounting)
+
+            intFcReturns = Main.FcInitInsCmdDHeads(objmysqlcomdwritehead)
+
+            Debug.Print("BW Write Heads " + Convert.ToString(intAccounting))
+            For Each row As DataRow In objdslocdebihead.Tables("tbldebihead").Rows
+
+                objmysqlcomdwritehead.Connection.Open()
+                objmysqlcomdwritehead.Parameters("@IdentityName").Value = strIdentityName
+                objmysqlcomdwritehead.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id
+                objmysqlcomdwritehead.Parameters("@intBuchhaltung").Value = intAccounting
+                objmysqlcomdwritehead.Parameters("@strDebRGNbr").Value = row("strDebRGNbr")
+                objmysqlcomdwritehead.Parameters("@intBuchungsart").Value = row("intBuchungsart")
+                objmysqlcomdwritehead.Parameters("@intRGArt").Value = row("intRGArt")
+                If row.Table.Columns.Contains("strRGArt") Then
+                    objmysqlcomdwritehead.Parameters("@strRGArt").Value = row("strRGArt")
+                End If
+                objmysqlcomdwritehead.Parameters("@strOPNr").Value = row("strOPNr")
+                objmysqlcomdwritehead.Parameters("@lngDebNbr").Value = row("lngDebNbr")
+                objmysqlcomdwritehead.Parameters("@lngDebKtoNbr").Value = row("lngDebKtoNbr")
+                objmysqlcomdwritehead.Parameters("@strDebCur").Value = row("strDebCur")
+                objmysqlcomdwritehead.Parameters("@lngDebiKST").Value = row("lngDebiKST")
+                objmysqlcomdwritehead.Parameters("@dblDebNetto").Value = row("dblDebNetto")
+                objmysqlcomdwritehead.Parameters("@dblDebMwSt").Value = row("dblDebMwSt")
+                objmysqlcomdwritehead.Parameters("@dblDebBrutto").Value = row("dblDebBrutto")
+                objmysqlcomdwritehead.Parameters("@lngDebIdentNbr").Value = row("lngDebIdentNbr")
+                objmysqlcomdwritehead.Parameters("@strDebText").Value = row("strDebText")
+                If row.Table.Columns.Contains("strDebReferenz") Then
+                    objmysqlcomdwritehead.Parameters("@strDebreferenz").Value = row("strDebReferenz")
+                End If
+                objmysqlcomdwritehead.Parameters("@datDebRGDatum").Value = row("datDebRGDatum")
+                objmysqlcomdwritehead.Parameters("@datDebValDatum").Value = row("datDebValDatum")
+                If row.Table.Columns.Contains("datRGCreate") Then
+                    objmysqlcomdwritehead.Parameters("@datRGCreate").Value = row("datRGCreate")
+                End If
+                If row.Table.Columns.Contains("intPayType") Then
+                    objmysqlcomdwritehead.Parameters("@intPayType").Value = row("intPayType")
+                End If
+                objmysqlcomdwritehead.Parameters("@strDebiBank").Value = row("strDebiBank")
+                objmysqlcomdwritehead.Parameters("@lngLinkedRG").Value = row("lngLinkedRG")
+                objmysqlcomdwritehead.Parameters("@strRGName").Value = row("strRGName")
+                If row.Table.Columns.Contains("strDebIdentNbr2") Then
+                    objmysqlcomdwritehead.Parameters("@strDebIdentNbr2").Value = row("strDebIdentNbr2")
+                End If
+                If row.Table.Columns.Contains("booCrToInv") Then
+                    objmysqlcomdwritehead.Parameters("@booCrToInv").Value = row("booCrToInv")
+                End If
+                If row.Table.Columns.Contains("datPGVFrom") Then
+                    objmysqlcomdwritehead.Parameters("@datPGVFrom").Value = row("datPGVFrom")
+                End If
+                If row.Table.Columns.Contains("datPGVTo") Then
+                    objmysqlcomdwritehead.Parameters("@datPGVTo").Value = row("datPGVTo")
+                End If
+                objmysqlcomdwritehead.ExecuteNonQuery()
+                objmysqlcomdwritehead.Connection.Close()
+                objdtLocDebiHead.AcceptChanges()
+
+                'Subs einlesen
+                'Es muss der Weg über das DS genommen werden wegen den constraint-Verlethzungen
+                strSQLSub = Main.FcSQLParse2(strSQLToParse,
+                                                   row("strDebRGNbr"),
+                                                   objdslocdebihead.Tables("tbldebihead"),
+                                                   "D")
+
+                If strRGTableType = "A" Then
+                    objdaolesubsselcomd.CommandText = strSQLSub
+                    objdaolesubsselcomd.Connection = objdbAccessConn
+                    objdaolelocDebiSubs.SelectCommand = objdaolesubsselcomd
+                    objdaolelocDebiSubs.SelectCommand.Connection.Open()
+                    objdaolelocDebiSubs.Fill(objdslocdebisub, "tbldebisubs")
+                    objdaolelocDebiSubs.SelectCommand.Connection.Close()
+                    'objdbAccessConn.Open()
+                    'objOLEdbcmdLoc.CommandText = strSQLSub
+                    'objdtlocDebiSub.Load(objOLEdbcmdLoc.ExecuteReader)
+                    'objdbAccessConn.Close()
+                ElseIf strRGTableType = "M" Then
+                    objdasubselcomd.CommandText = strSQLSub
+                    objdasubselcomd.Connection = objRGMySQLConn
+                    objdalocDebiSubs.SelectCommand = objdasubselcomd
+                    'objdalocDebiSubs.SelectCommand.Connection = objRGMySQLConn
+                    'objdalocDebiSubs.SelectCommand.CommandText = strSQLSub
+                    objdalocDebiSubs.SelectCommand.Connection.Open()
+                    objdalocDebiSubs.Fill(objdslocdebisub, "tbldebisubs")
+                    objdalocDebiSubs.SelectCommand.Connection.Close()
+                    'objRGMySQLConn.Open()
+                    'objdtlocDebiSub.Load(objlocMySQLcmd.ExecuteReader)
+                    'objRGMySQLConn.Close()
+                End If
+
+
+
+            Next
+            If Not IsNothing(objdslocdebisub.Tables("tbldebisubs")) Then
+
+                Debug.Print("BW Write Subs")
+                'Subs schreiben
+                intFcReturns = Main.FcInitInscmdSubs(objmysqlcomdwritesub)
+                'For Each drsub As DataRow In objdtlocDebiSub.Rows
+                For Each drsub As DataRow In objdslocdebisub.Tables("tbldebisubs").Rows
+
+                    objmysqlcomdwritesub.Connection.Open()
+                    objmysqlcomdwritesub.Parameters("@IdentityName").Value = strIdentityName
+                    objmysqlcomdwritesub.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id
+                    objmysqlcomdwritesub.Parameters("@strRGNr").Value = drsub("strRGNr")
+                    objmysqlcomdwritesub.Parameters("@lngKto").Value = drsub("lngKto")
+                    objmysqlcomdwritesub.Parameters("@lngKST").Value = drsub("lngKST")
+                    objmysqlcomdwritesub.Parameters("@dblNetto").Value = drsub("dblNetto")
+                    objmysqlcomdwritesub.Parameters("@dblMwSt").Value = drsub("dblMwSt")
+                    objmysqlcomdwritesub.Parameters("@dblBrutto").Value = drsub("dblBrutto")
+                    objmysqlcomdwritesub.Parameters("@dblMwStSatz").Value = drsub("dblMwStSatz")
+                    objmysqlcomdwritesub.Parameters("@strMwStKey").Value = drsub("strMwStKey")
+                    objmysqlcomdwritesub.Parameters("@intSollHaben").Value = drsub("intSollHaben")
+                    If objdtlocDebiSub.Columns.Contains("strArtikel") Then
+                        objmysqlcomdwritesub.Parameters("@strArtikel").Value = drsub("strArtikel")
+                    End If
+                    objmysqlcomdwritesub.ExecuteNonQuery()
+                    objmysqlcomdwritesub.Connection.Close()
+
+                    objdtlocDebiSub.AcceptChanges()
+
+                Next
+
+            End If
+
+
+            'Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Debitoren-Daten-Lesen Problem", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            'Return 1
+
+        Finally
+            objdslocdebihead = Nothing
+            objdslocdebisub = Nothing
+
+            objdalocDebiSubs = Nothing
+            objdalocDebiHeads = Nothing
+
+            objdaolelocDebiSubs = Nothing
+            objdaolelocDebiHeads = Nothing
+
+            objdaoleheadselcomd = Nothing
+            objdaheadselcomd = Nothing
+            objdaolesubsselcomd = Nothing
+            objdasubselcomd = Nothing
+
+            Debug.Print("BW finsih " + Convert.ToString(intAccounting))
+
+        End Try
 
     End Sub
 

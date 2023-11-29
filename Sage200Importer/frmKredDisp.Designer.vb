@@ -45,10 +45,12 @@ Partial Class frmKredDisp
         Me.butImport = New System.Windows.Forms.Button()
         Me.txtNumber = New System.Windows.Forms.TextBox()
         Me.lblDB = New System.Windows.Forms.Label()
+        Me.dgvDates = New System.Windows.Forms.DataGridView()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dsKreditoren, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgvDates, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'dgvInfo
@@ -70,7 +72,7 @@ Partial Class frmKredDisp
         DataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText
         DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
         Me.dgvInfo.DefaultCellStyle = DataGridViewCellStyle2
-        Me.dgvInfo.Location = New System.Drawing.Point(1021, 2)
+        Me.dgvInfo.Location = New System.Drawing.Point(915, 2)
         Me.dgvInfo.Name = "dgvInfo"
         DataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
         DataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control
@@ -80,7 +82,7 @@ Partial Class frmKredDisp
         DataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText
         DataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
         Me.dgvInfo.RowHeadersDefaultCellStyle = DataGridViewCellStyle3
-        Me.dgvInfo.Size = New System.Drawing.Size(391, 119)
+        Me.dgvInfo.Size = New System.Drawing.Size(308, 119)
         Me.dgvInfo.TabIndex = 5
         '
         'dgvBookingSub
@@ -112,7 +114,7 @@ Partial Class frmKredDisp
         DataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText
         DataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
         Me.dgvBookingSub.RowHeadersDefaultCellStyle = DataGridViewCellStyle6
-        Me.dgvBookingSub.Size = New System.Drawing.Size(1003, 119)
+        Me.dgvBookingSub.Size = New System.Drawing.Size(897, 119)
         Me.dgvBookingSub.TabIndex = 4
         '
         'dgvBookings
@@ -144,7 +146,7 @@ Partial Class frmKredDisp
         DataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText
         DataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
         Me.dgvBookings.RowHeadersDefaultCellStyle = DataGridViewCellStyle9
-        Me.dgvBookings.Size = New System.Drawing.Size(1553, 479)
+        Me.dgvBookings.Size = New System.Drawing.Size(1611, 479)
         Me.dgvBookings.TabIndex = 3
         '
         'MySQLdaKreditoren
@@ -206,7 +208,7 @@ Partial Class frmKredDisp
         '
         'butImport
         '
-        Me.butImport.Location = New System.Drawing.Point(1447, 51)
+        Me.butImport.Location = New System.Drawing.Point(1527, 51)
         Me.butImport.Name = "butImport"
         Me.butImport.Size = New System.Drawing.Size(86, 53)
         Me.butImport.TabIndex = 6
@@ -216,7 +218,7 @@ Partial Class frmKredDisp
         'txtNumber
         '
         Me.txtNumber.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.txtNumber.Location = New System.Drawing.Point(1460, 16)
+        Me.txtNumber.Location = New System.Drawing.Point(1540, 16)
         Me.txtNumber.Name = "txtNumber"
         Me.txtNumber.Size = New System.Drawing.Size(60, 29)
         Me.txtNumber.TabIndex = 10
@@ -224,17 +226,26 @@ Partial Class frmKredDisp
         'lblDB
         '
         Me.lblDB.AutoSize = True
-        Me.lblDB.Location = New System.Drawing.Point(1526, 27)
+        Me.lblDB.Location = New System.Drawing.Point(1606, 27)
         Me.lblDB.Name = "lblDB"
         Me.lblDB.Size = New System.Drawing.Size(22, 13)
         Me.lblDB.TabIndex = 11
         Me.lblDB.Text = "DB"
         '
+        'dgvDates
+        '
+        Me.dgvDates.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgvDates.Location = New System.Drawing.Point(1229, 1)
+        Me.dgvDates.Name = "dgvDates"
+        Me.dgvDates.Size = New System.Drawing.Size(292, 120)
+        Me.dgvDates.TabIndex = 12
+        '
         'frmKredDisp
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1577, 609)
+        Me.ClientSize = New System.Drawing.Size(1628, 609)
+        Me.Controls.Add(Me.dgvDates)
         Me.Controls.Add(Me.lblDB)
         Me.Controls.Add(Me.txtNumber)
         Me.Controls.Add(Me.butImport)
@@ -247,6 +258,7 @@ Partial Class frmKredDisp
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dsKreditoren, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.dgvDates, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -266,4 +278,5 @@ Partial Class frmKredDisp
     Friend WithEvents butImport As Button
     Friend WithEvents txtNumber As TextBox
     Friend WithEvents lblDB As Label
+    Friend WithEvents dgvDates As DataGridView
 End Class

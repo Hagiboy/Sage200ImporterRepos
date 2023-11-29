@@ -107,40 +107,71 @@ Public Class frmKredDisp
     End Sub
 
 
-    Friend Function FcKrediDisplay(intMandant As Int16,
-                                  strPeriode As String) As Int16
+    Friend Function FcKrediDisplay(intMandant As Int32,
+                                  LstBPerioden As ListBox) As Int16
 
         Dim intFcReturns As Int16
+        Dim strPeriode As String
+        Dim strYearCh As String
 
-        Me.Cursor = Cursors.WaitCursor
+        Try
 
-        Me.butImport.Enabled = False
+            Me.Cursor = Cursors.WaitCursor
 
-        'Zuerst evtl. vorhandene DS löschen in Tabelle
-        MySQLdaKreditoren.DeleteCommand.Connection.Open()
-        MySQLdaKreditoren.DeleteCommand.ExecuteNonQuery()
-        MySQLdaKreditoren.DeleteCommand.Connection.Close()
+            Me.butImport.Enabled = False
 
-        MySQLdaKreditorenSub.DeleteCommand.Connection.Open()
-        MySQLdaKreditorenSub.DeleteCommand.ExecuteNonQuery()
-        MySQLdaKreditorenSub.DeleteCommand.Connection.Close()
+            'Zuerst evtl. vorhandene DS löschen in Tabelle
+            MySQLdaKreditoren.DeleteCommand.Connection.Open()
+            MySQLdaKreditoren.DeleteCommand.ExecuteNonQuery()
+            MySQLdaKreditoren.DeleteCommand.Connection.Close()
 
-        'Info neu erstellen
-        dsKreditoren.Tables.Add("tblKreditorenInfo")
-        Dim col1 As DataColumn = New DataColumn("strInfoT")
-        col1.DataType = System.Type.GetType("System.String")
-        col1.MaxLength = 50
-        col1.Caption = "Info-Titel"
-        dsKreditoren.Tables("tblKreditorenInfo").Columns.Add(col1)
-        Dim col2 As DataColumn = New DataColumn("strInfoV")
-        col2.DataType = System.Type.GetType("System.String")
-        col2.MaxLength = 50
-        col2.Caption = "Info-Wert"
-        dsKreditoren.Tables("tblKreditorenInfo").Columns.Add(col2)
+            MySQLdaKreditorenSub.DeleteCommand.Connection.Open()
+            MySQLdaKreditorenSub.DeleteCommand.ExecuteNonQuery()
+            MySQLdaKreditorenSub.DeleteCommand.Connection.Close()
 
-        dgvInfo.DataSource = dsKreditoren.Tables("tblKreditorenInfo")
+            'Info neu erstellen
+            dsKreditoren.Tables.Add("tblKreditorenInfo")
+            Dim col1 As DataColumn = New DataColumn("strInfoT")
+            col1.DataType = System.Type.GetType("System.String")
+            col1.MaxLength = 50
+            col1.Caption = "Info-Titel"
+            dsKreditoren.Tables("tblKreditorenInfo").Columns.Add(col1)
+            Dim col2 As DataColumn = New DataColumn("strInfoV")
+            col2.DataType = System.Type.GetType("System.String")
+            col2.MaxLength = 50
+            col2.Caption = "Info-Wert"
+            dsKreditoren.Tables("tblKreditorenInfo").Columns.Add(col2)
 
-        Call Main.FcLoginSage2(objdbConn,
+            dgvInfo.DataSource = dsKreditoren.Tables("tblKreditorenInfo")
+
+            'Datums-Tabelle erstellen
+            dsKreditoren.Tables.Add("tblDebitorenDates")
+            Dim col7 As DataColumn = New DataColumn("intYear")
+            col7.DataType = System.Type.GetType("System.Int16")
+            col7.Caption = "Year"
+            dsKreditoren.Tables("tblDebitorenDates").Columns.Add(col7)
+            Dim col3 As DataColumn = New DataColumn("strDatType")
+            col3.DataType = System.Type.GetType("System.String")
+            col3.MaxLength = 50
+            col3.Caption = "Datum-Typ"
+            dsKreditoren.Tables("tblDebitorenDates").Columns.Add(col3)
+            Dim col4 As DataColumn = New DataColumn("datFrom")
+            col4.DataType = System.Type.GetType("System.DateTime")
+            col4.Caption = "Von"
+            dsKreditoren.Tables("tblDebitorenDates").Columns.Add(col4)
+            Dim col5 As DataColumn = New DataColumn("datTo")
+            col5.DataType = System.Type.GetType("System.DateTime")
+            col5.Caption = "Bis"
+            dsKreditoren.Tables("tblDebitorenDates").Columns.Add(col5)
+            Dim col6 As DataColumn = New DataColumn("strStatus")
+            col6.DataType = System.Type.GetType("System.String")
+            col6.Caption = "S"
+            dsKreditoren.Tables("tblDebitorenDates").Columns.Add(col6)
+            dgvDates.DataSource = dsKreditoren.Tables("tblDebitorenDates")
+
+            strPeriode = LstBPerioden.GetItemText(LstBPerioden.SelectedItem)
+
+            Call Main.FcLoginSage3(objdbConn,
                                   objdbMSSQLConn,
                                   objdbSQLcommand,
                                   Finanz,
@@ -151,6 +182,7 @@ Public Class frmKredDisp
                                   KrBhg,
                                   intMandant,
                                   dsKreditoren.Tables("tblKreditorenInfo"),
+                                  dsKreditoren.Tables("tblDebitorenDates"),
                                   strPeriode,
                                   strYear,
                                   intTeqNbr,
@@ -160,28 +192,73 @@ Public Class frmKredDisp
                                   datPeriodTo,
                                   strPeriodStatus)
 
-        Dim clImp As New ClassImport
-        clImp.FcKreditFill(intMandant)
-        clImp = Nothing
+            'Gibt es mehr als ein Jahr?
+            If LstBPerioden.Items.Count > 1 Then
 
-        'Tabellentyp darstellen
-        Me.lblDB.Text = Main.FcReadFromSettingsII("Buchh_KRGTableType", intMandant)
+                'Gibt es ein Vorjahr?
+                If LstBPerioden.SelectedIndex + 1 > 1 Then
+                    strPeriode = LstBPerioden.Items(LstBPerioden.SelectedIndex - 1)
+                    'Peeriodendef holen
+                    Call Main.FcLoginSage4(intMandant,
+                                       dsKreditoren.Tables("tblDebitorenDates"),
+                                       strPeriode)
+                Else
+                    'Periode ezreugen und auf N stellen
+                    strYearCh = Convert.ToString(Val(strYear) - 1)
+                    dsKreditoren.Tables("tblDebitorenDates").Rows.Add(strYearCh, "GJ n/a", DateSerial(Convert.ToUInt16(strYearCh), 1, 1), DateSerial(Convert.ToUInt16(strYearCh), 12, 31), "N")
+                End If
+
+                'Gibt es ein Folgehahr?
+                If LstBPerioden.SelectedIndex + 1 < LstBPerioden.Items.Count Then
+                    strPeriode = LstBPerioden.Items(LstBPerioden.SelectedIndex + 1)
+                    'Peeriodendef holen
+                    Call Main.FcLoginSage4(intMandant,
+                                       dsKreditoren.Tables("tblDebitorenDates"),
+                                       strPeriode)
+                Else
+                    'Periode ezreugen und auf N stellen
+                    strYearCh = Convert.ToString(Val(strYear) + 1)
+                    dsKreditoren.Tables("tblDebitorenDates").Rows.Add(strYearCh, "GJ n/a", DateSerial(Convert.ToUInt16(strYearCh), 1, 1), DateSerial(Convert.ToUInt16(strYearCh), 12, 31), "N")
+                End If
+            ElseIf LstBPerioden.Items.Count = 1 Then 'es gibt genau 1 Jahr
+                'gewähltes Jahr checken
+                Call Main.FcLoginSage4(intMandant,
+                                       dsKreditoren.Tables("tblDebitorenDates"),
+                                       strPeriode)
+                'VJ erzeugen
+                strYearCh = Convert.ToString(Val(strYear) - 1)
+                dsKreditoren.Tables("tblDebitorenDates").Rows.Add(strYearCh, "GJ n/a", DateSerial(Convert.ToUInt16(strYearCh), 1, 1), DateSerial(Convert.ToUInt16(strYearCh), 12, 31), "N")
+
+                'FJ erzeugen
+                strYearCh = Convert.ToString(Val(strYear) + 1)
+                dsKreditoren.Tables("tblDebitorenDates").Rows.Add(strYearCh, "GJ n/a", DateSerial(Convert.ToUInt16(strYearCh), 1, 1), DateSerial(Convert.ToUInt16(strYearCh), 12, 31), "N")
+
+            End If
 
 
-        MySQLdaKreditoren.Fill(dsKreditoren, "tblKrediHeadsFromUser")
-        MySQLdaKreditorenSub.Fill(dsKreditoren, "tblKrediSubsFromUser")
+            Dim clImp As New ClassImport
+            clImp.FcKreditFill(intMandant)
+            clImp = Nothing
+
+            'Tabellentyp darstellen
+            Me.lblDB.Text = Main.FcReadFromSettingsII("Buchh_KRGTableType", intMandant)
 
 
-        'Application.DoEvents()
+            MySQLdaKreditoren.Fill(dsKreditoren, "tblKrediHeadsFromUser")
+            MySQLdaKreditorenSub.Fill(dsKreditoren, "tblKrediSubsFromUser")
 
-        Dim clCheck As New ClassCheck
-        clCheck.FcCheckKredit(intMandant,
+
+            'Application.DoEvents()
+
+            Dim clCheck As New ClassCheck
+            clCheck.FcCheckKredit(intMandant,
                               dsKreditoren,
                               Finanz,
                               FBhg,
                               KrBhg,
                               BeBu,
                               dsKreditoren.Tables("tblKreditorenInfo"),
+                              dsKreditoren.Tables("tblDebitorenDates"),
                               frmImportMain.lstBoxMandant.Text,
                               strYear,
                               strPeriode,
@@ -191,27 +268,57 @@ Public Class frmKredDisp
                               frmImportMain.chkValutaCorrect.Checked,
                               frmImportMain.dtpValutaCorrect.Value)
 
-        clCheck = Nothing
+            clCheck = Nothing
 
-        'Grid neu aufbauen
-        dgvBookings.DataSource = dsKreditoren.Tables("tblKrediHeadsFromUser")
-        dgvBookingSub.DataSource = dsKreditoren.Tables("tblKrediSubsFromUser")
+            'Grid neu aufbauen
+            dgvBookings.DataSource = dsKreditoren.Tables("tblKrediHeadsFromUser")
+            dgvBookingSub.DataSource = dsKreditoren.Tables("tblKrediSubsFromUser")
 
-        intFcReturns = FcInitdgvInfo(dgvInfo)
-        intFcReturns = FcInitdgvKreditoren(dgvBookings)
-        intFcReturns = FcInitdgvKrediSub(dgvBookingSub)
+            intFcReturns = FcInitdgvInfo(dgvInfo)
+            intFcReturns = FcInitdgvKreditoren(dgvBookings)
+            intFcReturns = FcInitdgvKrediSub(dgvBookingSub)
+            intFcReturns = FcInitdgvDate(dgvDates)
 
 
-        'Anzahl schreiben
-        txtNumber.Text = Me.dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count.ToString
+            'Anzahl schreiben
+            txtNumber.Text = Me.dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count.ToString
 
-        Me.Cursor = Cursors.Default
+            Me.Cursor = Cursors.Default
 
-        Me.butImport.Enabled = True
+            Me.butImport.Enabled = True
+            Return 0
 
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Generelles Problem Kredi-Check" + Err.Number.ToString)
+            Return 1
+
+        End Try
 
 
     End Function
+
+    Friend Function FcInitdgvDate(ByRef dgvDate As DataGridView) As Int16
+
+        'DGV - Info
+        'dgvInfo.DataSource = objdtInfo
+        dgvDate.AllowUserToAddRows = False
+        dgvDate.AllowUserToDeleteRows = False
+        'dgvInfo.Enabled = False
+        dgvDate.RowHeadersVisible = False
+        dgvDate.Columns("intYear").HeaderText = "Jahr"
+        dgvDate.Columns("intYear").Width = 35
+        dgvDate.Columns("strDatType").HeaderText = "Type"
+        dgvDate.Columns("strDatType").Width = 80
+        dgvDate.Columns("datFrom").HeaderText = "Von"
+        dgvDate.Columns("datFrom").Width = 70
+        dgvDate.Columns("datto").HeaderText = "Bis"
+        dgvDate.Columns("datTo").Width = 70
+        dgvDate.Columns("strStatus").HeaderText = "S"
+        dgvDate.Columns("strStatus").Width = 30
+        Return 0
+
+    End Function
+
 
     Friend Function FcInitdgvInfo(ByRef dgvInfo As DataGridView) As Int16
 
