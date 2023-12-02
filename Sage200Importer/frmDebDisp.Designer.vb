@@ -38,6 +38,7 @@ Partial Class frmDebDisp
         Me.lblDB = New System.Windows.Forms.Label()
         Me.BgWLoadDebi = New System.ComponentModel.BackgroundWorker()
         Me.dgvDates = New System.Windows.Forms.DataGridView()
+        Me.BgWCheckDebi = New System.ComponentModel.BackgroundWorker()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -163,6 +164,9 @@ Partial Class frmDebDisp
         Me.dgvDates.Size = New System.Drawing.Size(292, 118)
         Me.dgvDates.TabIndex = 11
         '
+        'BgWCheckDebi
+        '
+        '
         'frmDebDisp
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -203,4 +207,5 @@ Partial Class frmDebDisp
     Friend WithEvents lblDB As Label
     Friend WithEvents BgWLoadDebi As System.ComponentModel.BackgroundWorker
     Friend WithEvents dgvDates As DataGridView
+    Friend WithEvents BgWCheckDebi As System.ComponentModel.BackgroundWorker
 End Class

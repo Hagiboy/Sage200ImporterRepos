@@ -144,6 +144,7 @@ Friend Class frmImportMain
 
         Try
 
+            System.GC.Collect()
 
             Dim frmDebDisp As New frmDebDisp
             frmDebDisp.Cursor = Cursors.WaitCursor

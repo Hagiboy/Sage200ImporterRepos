@@ -156,4 +156,7 @@
   <metadata name="BgWLoadDebi.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>374, 47</value>
   </metadata>
+  <metadata name="BgWCheckDebi.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>503, 47</value>
+  </metadata>
 </root>

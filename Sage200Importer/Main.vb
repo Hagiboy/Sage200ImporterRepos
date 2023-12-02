@@ -2490,6 +2490,71 @@ ErrorHandler:
 
     End Function
 
+    Friend Shared Function FcCheckDate2(datDateToCheck As Date,
+                                 strSelYear As String,
+                                 tblDates As DataTable,
+                                 booYChngAllowed As Boolean) As Int16
+
+        '0=ok, 1=Jahr <> Sel Jahr, 2=Blockiert, 9=Problem
+
+        Dim selrelDates() As DataRow
+        Dim booIsDateOk As Boolean
+
+        Try
+
+            If Not booYChngAllowed Then
+                'Entspricht Jahr im Dateum dem selektierten Jahr?
+                If DateAndTime.Year(datDateToCheck) <> Conversion.Val(strSelYear) Then
+                    Return 1
+                Else
+                    'Ist etwas blockiert?
+                    selrelDates = tblDates.Select("intYear=" + strSelYear)
+                    booIsDateOk = True
+                    For Each drselrelDates In selrelDates
+                        If datDateToCheck >= drselrelDates("datFrom") And datDateToCheck <= drselrelDates("datTo") Then
+                            'Ist Status <> O
+                            If drselrelDates("strStatus") <> "O" Then
+                                booIsDateOk = False
+                            End If
+                        End If
+                    Next
+                    If Not booIsDateOk Then
+                        Return 2
+                    Else
+                        Return 0
+                    End If
+                End If
+
+            Else
+                selrelDates = tblDates.Select("intYear=" + Convert.ToString(DateAndTime.Year(datDateToCheck)))
+                'Ist etwas blockiert?
+                booIsDateOk = True
+                For Each drselrelDates In selrelDates
+                    If datDateToCheck >= drselrelDates("datFrom") And datDateToCheck <= drselrelDates("datTo") Then
+                        'Ist Status <> O
+                        If drselrelDates("strStatus") <> "O" Then
+                            booIsDateOk = False
+                        End If
+                    End If
+                Next
+                If Not booIsDateOk Then
+                    Return 3
+                Else
+                    Return 0
+                End If
+
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "PGV-Datumscheck")
+            Return 9
+
+        End Try
+
+    End Function
+
+
     Public Shared Function FcChCeckDate(ByVal datDateToCheck As Date,
                                         ByRef objdtInfo As DataTable,
                                         ByVal datPeriodFrom As Date,

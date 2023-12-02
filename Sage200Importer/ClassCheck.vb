@@ -7,7 +7,7 @@ Imports System.Data.SqlClient
 
 Friend Class ClassCheck
 
-    Friend Function FcClCheckDebit(intAccounting As Integer,
+    Friend Function FcClCheckDebit(intAccounting As Int32,
                                    ByRef objdtDebits As DataSet,
                                    ByRef objFinanz As SBSXASLib.AXFinanz,
                                    ByRef objfiBuha As SBSXASLib.AXiFBhg,
@@ -21,10 +21,6 @@ Friend Class ClassCheck
                                    intTeqNbrLY As Int16,
                                    intTeqNbrPLY As Int16,
                                    strYear As String,
-                                   strPeriode As String,
-                                   datPeriodFrom As Date,
-                                   datPeriodTo As Date,
-                                   strPeriodStatus As String,
                                    booValutaCorrect As Boolean,
                                    datValutaCorrect As Date) As Int16
 
@@ -85,6 +81,8 @@ Friend Class ClassCheck
             booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(Main.FcReadFromSettingsII("Buchh_CashSollKontoKorr", intAccounting)))
             booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(Main.FcReadFromSettingsII("Buchh_GeneratePaymentBooking", intAccounting)))
 
+
+            Debug.Print("Start Check " + Convert.ToString(intAccounting))
             For Each row As DataRow In objdtDebits.Tables("tblDebiHeadsFromUser").Rows
 
                 'If row("strDebRGNbr") = "101261" Then Stop
@@ -900,6 +898,7 @@ Friend Class ClassCheck
         Finally
             selsubrow = Nothing
             selSBrows = Nothing
+            Debug.Print("End Check " + Convert.ToString(intAccounting))
 
         End Try
 
@@ -1776,6 +1775,8 @@ Friend Class ClassCheck
 
         Finally
             selsubrow = Nothing
+            strSteuer = Nothing
+            System.GC.Collect()
 
         End Try
 
