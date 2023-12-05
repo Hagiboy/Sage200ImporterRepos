@@ -674,30 +674,28 @@ Public Class frmDebDisp
                                     DbBhg.IncrBelNbr = "J"
                                     'Belegsnummer abholen
                                     intDebBelegsNummer = DbBhg.GetNextBelNbr("G")
-                                    'Prüfen ob wirklich frei und falls nicht hochzählen
-                                    intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
+                                'Prüfen ob wirklich frei und falls nicht hochzählen
+                                intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
                                                                                       objdbSQLcommand,
                                                                                       intDebBelegsNummer,
                                                                                       "G",
-                                                                                      intTeqNbr,
-                                                                                      intTeqNbrLY,
-                                                                                      intTeqNbrPLY)
+                                                                                      intTeqNbr)
 
 
-                                    'intReturnValue = 10
-                                    'Do Until intReturnValue = 0
+                                'intReturnValue = 10
+                                'Do Until intReturnValue = 0
 
-                                    '    intReturnValue = DbBhg.doesBelegExist(row("lngDebNbr").ToString,
-                                    '                                      row("strDebCur"),
-                                    '                                      intDebBelegsNummer.ToString,
-                                    '                                      "NOT_SET",
-                                    '                                      "G",
-                                    '                                      "NOT_SET")
-                                    '    If intReturnValue <> 0 Then
-                                    '        intDebBelegsNummer += 1
-                                    '    End If
-                                    'Loop
-                                    strExtBelegNbr = row("strOPNr")
+                                '    intReturnValue = DbBhg.doesBelegExist(row("lngDebNbr").ToString,
+                                '                                      row("strDebCur"),
+                                '                                      intDebBelegsNummer.ToString,
+                                '                                      "NOT_SET",
+                                '                                      "G",
+                                '                                      "NOT_SET")
+                                '    If intReturnValue <> 0 Then
+                                '        intDebBelegsNummer += 1
+                                '    End If
+                                'Loop
+                                strExtBelegNbr = row("strOPNr")
                                 End If
 
                                 'Beträge drehen
@@ -716,27 +714,23 @@ Public Class frmDebDisp
                                     DbBhg.IncrBelNbr = "J"
                                     'Belegsnummer abholen
                                     intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
-                                    intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
+                                intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
                                                                                       objdbSQLcommand,
                                                                                       intDebBelegsNummer,
                                                                                       "R",
-                                                                                      intTeqNbr,
-                                                                                      intTeqNbrLY,
-                                                                                      intTeqNbrPLY)
-                                Else
+                                                                                      intTeqNbr)
+                            Else
                                     If Strings.Len(Main.FcCleanRGNrStrict(row("strOPNr"))) > 9 Then
                                         'Zahl zu gross
                                         DbBhg.IncrBelNbr = "J"
                                         'Belegsnummer abholen
                                         intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
-                                        intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
+                                    intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
                                                                                           objdbSQLcommand,
                                                                                           intDebBelegsNummer,
                                                                                           "R",
-                                                                                          intTeqNbr,
-                                                                                          intTeqNbrLY,
-                                                                                          intTeqNbrPLY)
-                                        strExtBelegNbr = row("strOPNr")
+                                                                                          intTeqNbr)
+                                    strExtBelegNbr = row("strOPNr")
                                     Else
                                         'Beleg-Nummerierung abschalten
                                         DbBhg.IncrBelNbr = "N"
@@ -2329,9 +2323,9 @@ Public Class frmDebDisp
                     intDebitorNew = MainDebitor.FcGetDebitorFromLinkedRG(IIf(IsDBNull(row("lngLinkedRG")), 0, row("lngLinkedRG")),
                                                                          BgWCheckDebiArgsInProc.intMandant,
                                                                          intLinkedDebitor,
-                                                                         intTeqNbr,
-                                                                         intTeqNbrLY,
-                                                                         intTeqNbrPLY)
+                                                                         BgWCheckDebiArgsInProc.intTeqNbr,
+                                                                         BgWCheckDebiArgsInProc.intTeqNbrLY,
+                                                                         BgWCheckDebiArgsInProc.intTeqNbrPLY)
                     row("lngLinkedDeb") = intLinkedDebitor
 
                     intReturnValue = MainDebitor.FcCheckLinkedRG(objdbBuha,
@@ -2593,6 +2587,188 @@ Public Class frmDebDisp
 
         End Try
 
+
+    End Sub
+
+    Private Sub BgWImportDebi_DoWork(sender As Object, e As System.ComponentModel.DoWorkEventArgs) Handles BgWImportDebi.DoWork
+
+        Dim intReturnValue As Int32
+        Dim objdbConnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim booErfOPExt As Boolean
+        Dim strMandant As String
+        Dim booAccOk As Boolean
+        Dim strPeriode As String = frmImportMain.lstBoxPerioden.GetItemText(frmImportMain.lstBoxPerioden.SelectedItem)
+        Dim intDebBelegsNummer As Int32
+        Dim strExtBelegNbr As String = String.Empty
+        Dim strBuchType As String
+        Dim strDebiLine As String
+        Dim strDebitor() As String
+        Dim strSachBID As String
+        Dim intDebitorNbr As Int32
+        Dim strValutaDatum As String
+        Dim strBelegDatum As String
+        Dim strVerfallDatum As String
+        Dim strReferenz As String
+        Dim strMahnerlaubnis As String
+        Dim dblBetrag As Double
+        Dim strDebiText As String
+
+        Dim objFinanz As New SBSXASLib.AXFinanz
+        Dim objdbBuha As New SBSXASLib.AXiDbBhg
+
+        Try
+
+            Me.Cursor = Cursors.WaitCursor
+            'Button deaktivieren
+            Me.butImport.Enabled = False
+
+            'Finanz-Obj init
+            'Login
+            Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
+
+            strMandant = Main.FcReadFromSettingsII("Buchh200_Name",
+                                            frmImportMain.lstBoxMandant.SelectedValue)
+
+            booAccOk = objFinanz.CheckMandant(strMandant)
+            'Open Mandantg
+            objFinanz.OpenMandant(strMandant, strPeriode)
+            objdbBuha = objFinanz.GetDebiObj()
+
+
+            'Start in Sync schreiben
+            intReturnValue = WFDBClass.FcWriteStartToSync(objdbConnZHDB02,
+                                                          frmImportMain.lstBoxMandant.SelectedValue,
+                                                          1,
+                                                          dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count)
+
+            'Setting soll erfasste OP als externe Beleg-Nr. genommen werden und lngDebIdentNbr als Beleg-Nr.
+            booErfOPExt = Convert.ToBoolean(Convert.ToInt16(Main.FcReadFromSettingsII("Buchh_ErfOPExt", frmImportMain.lstBoxMandant.SelectedValue)))
+
+            'Kopfbuchung
+            For Each row In Me.dsDebitoren.Tables("tblDebiHeadsFromUser").Rows
+
+                If IIf(IsDBNull(row("booDebBook")), False, row("booDebBook")) Then
+
+                    'Test ob OP - Buchung
+                    If row("intBuchungsart") = 1 Then
+
+                        'Verdopplung interne BelegsNummer verhindern
+                        DbBhg.CheckDoubleIntBelNbr = "J"
+
+                        If row("dblDebBrutto") < 0 Then
+                            'Gutschrift
+                            'Falls booGSToInv (Gutschrift zu Rechnung) dann OP-Nummer vorgeben, sonst hochzählen lassen
+                            If row("booCrToInv") Then
+                                'Beleg-Nummerierung desaktivieren
+                                DbBhg.IncrBelNbr = "N"
+                                'Eingelesene OP-Nummer (=Verknüpfte OP-Nr.) = interne Beleg-Nummer
+                                intDebBelegsNummer = Main.FcCleanRGNrStrict(row("strOPNr"))
+                                strExtBelegNbr = row("strDebRGNbr")
+                            Else
+                                'Zuerst Beleg-Nummerieungung aktivieren
+                                DbBhg.IncrBelNbr = "J"
+                                'Belegsnummer abholen
+                                intDebBelegsNummer = DbBhg.GetNextBelNbr("G")
+                                'Prüfen ob wirklich frei und falls nicht hochzählen
+                                intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
+                                                                                      objdbSQLcommand,
+                                                                                      intDebBelegsNummer,
+                                                                                      "G",
+                                                                                      intTeqNbr)
+
+                                strExtBelegNbr = row("strOPNr")
+                            End If
+
+                            'Beträge drehen
+                            row("dblDebBrutto") = row("dblDebBrutto") * -1
+                            row("dblDebMwSt") = row("dblDebMwSt") * -1
+                            row("dblDebNetto") = row("dblDebNetto") * -1
+
+                            strBuchType = "G"
+
+                        Else 'RG - Buchung
+
+                            If String.IsNullOrEmpty(row("strOPNr")) Then
+                                'strExtBelegNbr = row("strOPNr")
+
+                                'Zuerst Beleg-Nummerieungung aktivieren
+                                DbBhg.IncrBelNbr = "J"
+                                'Belegsnummer abholen
+                                intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                                intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
+                                                                                      objdbSQLcommand,
+                                                                                      intDebBelegsNummer,
+                                                                                      "R",
+                                                                                      intTeqNbr)
+                            Else
+                                If Strings.Len(Main.FcCleanRGNrStrict(row("strOPNr"))) > 9 Then
+                                    'Zahl zu gross
+                                    DbBhg.IncrBelNbr = "J"
+                                    'Belegsnummer abholen
+                                    intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+                                    intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
+                                                                                          objdbSQLcommand,
+                                                                                          intDebBelegsNummer,
+                                                                                          "R",
+                                                                                          intTeqNbr)
+                                    strExtBelegNbr = row("strOPNr")
+                                Else
+                                    'Beleg-Nummerierung abschalten
+                                    DbBhg.IncrBelNbr = "N"
+                                    'Gemäss Setting Erfasste OP-Nr. Nummern vergeben
+                                    If Not booErfOPExt Then
+                                        intDebBelegsNummer = Main.FcCleanRGNrStrict(row("strOPNr"))
+                                        strExtBelegNbr = row("strOPNr")
+                                    Else
+                                        'bei t_debi: IdentNbr wird genommen da dort die RG-Nr. drin ist. RgNr = ID
+                                        intDebBelegsNummer = row("lngDebIdentNbr")
+                                        strExtBelegNbr = row("strOPNr")
+                                    End If
+
+                                End If
+
+                            End If
+
+                            strBuchType = "R"
+
+                        End If
+
+                        'Variablen zuweisen
+                        'Sachbearbeiter aus Debitor auslesen
+                        strDebiLine = DbBhg.ReadDebitor3(row("lngDebNbr") * -1, "")
+                        strDebitor = Split(strDebiLine, "{>}")
+                        strSachBID = strDebitor(30)
+                        intDebitorNbr = row("lngDebNbr")
+                        strValutaDatum = Format(row("datDebValDatum"), "yyyyMMdd").ToString
+                        strBelegDatum = Format(row("datDebRGDatum"), "yyyyMMdd").ToString
+                        If IsDBNull(row("datDebDue")) Then
+                            strVerfallDatum = String.Empty
+                        Else
+                            strVerfallDatum = Format(row("datDebDue"), "yyyyMMdd").ToString
+                        End If
+                        strReferenz = row("strDebReferenz")
+                        strMahnerlaubnis = String.Empty
+                        dblBetrag = row("dblDebBrutto")
+
+
+                    Else 'keine OP - Buchung
+
+
+                    End If
+
+
+                End If
+
+            Next
+
+        Catch ex As Exception
+
+        Finally
+
+        End Try
 
     End Sub
 End Class

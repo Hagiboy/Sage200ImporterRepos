@@ -3248,9 +3248,7 @@ Public Class MainDebitor
                                                  ByRef objdbMSSQLCmd As SqlCommand,
                                                  ByRef intBelegNbr As Int32,
                                                  ByVal strTyp As String,
-                                                 ByVal intTeqNr As Int32,
-                                                 ByVal intTeqNrLY As Int32,
-                                                 ByVal intTeqNrPLY As Int32) As Int16
+                                                 ByVal intTeqNr As Int32) As Int16
 
         '0=ok, 1=Beleg existierte schon, 9=Problem
 

@@ -146,23 +146,36 @@ Friend Class frmImportMain
 
             System.GC.Collect()
 
-            Dim frmDebDisp As New frmDebDisp
-            frmDebDisp.Cursor = Cursors.WaitCursor
-            frmDebDisp.Text = "Debitor " + lstBoxMandant.Text
-            frmDebDisp.MdiParent = Me
-            frmDebDisp.Show()
-            frmDebDisp.Top = 100
+            'Zuerst prüfen ob schon eine Insstanz für Mandant existiert
             For Each frm As Form In Application.OpenForms()
-                If frm.Name = "frmDebDisp" Then
+                If frm.Text = "Debitor " + lstBoxMandant.Text Then
                     'Es existiert schon eine Instanz
                     intNbrDebiForms += 1
                 End If
             Next
-            'Je nach Anzahl von Links her verschieben
-            frmDebDisp.Left = intNbrDebiForms * 15
-            frmDebDisp.FcDebiDisplay(lstBoxMandant.SelectedValue,
+            If intNbrDebiForms > 0 Then
+                MessageBox.Show("Es ist schone ein Formular für " + "Debitor " + lstBoxMandant.Text + " geöffnet.", "Pro Mandant nur 1 Formular möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Else
+                intNbrDebiForms = 0
+                Dim frmDebDisp As New frmDebDisp
+                frmDebDisp.Cursor = Cursors.WaitCursor
+                frmDebDisp.Text = "Debitor " + lstBoxMandant.Text
+                frmDebDisp.MdiParent = Me
+                frmDebDisp.Show()
+                frmDebDisp.Top = 100
+                'Für korrekte Plazierung
+                For Each frm As Form In Application.OpenForms()
+                    If frm.Name = "frmDebDisp" Then
+                        'Es existiert schon eine Instanz
+                        intNbrDebiForms += 1
+                    End If
+                Next
+                'Je nach Anzahl von Links her verschieben
+                frmDebDisp.Left = intNbrDebiForms * 15
+                frmDebDisp.FcDebiDisplay(lstBoxMandant.SelectedValue,
                                      lstBoxPerioden)
 
+            End If
 
             frmDebDisp.Cursor = Cursors.Default
             'Application.DoEvents()
@@ -1893,22 +1906,42 @@ Friend Class frmImportMain
 
     Private Sub butKreditoren_Click(sender As Object, e As EventArgs) Handles butKreditoren.Click
 
-        Dim intReturnValue As Int16
-
+        'Dim intReturnValue As Int16
+        Dim intNbrKrediForms As Int16
 
         Try
 
             Me.Cursor = Cursors.WaitCursor
+            System.GC.Collect()
 
-            Dim frmKredDisp As New frmKredDisp
-            frmKredDisp.Cursor = Cursors.WaitCursor
-            frmKredDisp.Text = "Kreditor " + lstBoxMandant.Text
-            frmKredDisp.MdiParent = Me
-            frmKredDisp.Show()
-            frmKredDisp.Top = 105
-
-            frmKredDisp.FcKrediDisplay(lstBoxMandant.SelectedValue,
+            'Zuerst überprüfen, ob schon eine Instanz für mandant existiert
+            For Each frm As Form In Application.OpenForms()
+                If frm.Text = "Kreditor " + lstBoxMandant.Text Then
+                    intNbrKrediForms += 1
+                End If
+            Next
+            If intNbrKrediForms > 0 Then
+                MessageBox.Show("Es ist schone ein Formular für " + "Kredtor " + lstBoxMandant.Text + " geöffnet.", "Pro Mandant nur 1 Formular möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Else
+                intNbrKrediForms = 0
+                Dim frmKredDisp As New frmKredDisp
+                frmKredDisp.Cursor = Cursors.WaitCursor
+                frmKredDisp.Text = "Kreditor " + lstBoxMandant.Text
+                frmKredDisp.MdiParent = Me
+                frmKredDisp.Show()
+                frmKredDisp.Top = 105
+                'Für korrekte Plazierung
+                For Each frm As Form In Application.OpenForms()
+                    If frm.Name = "frmKredDisp" Then
+                        intNbrKrediForms += 1
+                    End If
+                Next
+                'Je nach Anzahl von Links her verschieben
+                frmKredDisp.Left = intNbrKrediForms * 20
+                frmKredDisp.FcKrediDisplay(lstBoxMandant.SelectedValue,
                                      lstBoxPerioden)
+
+            End If
 
             frmKredDisp.Cursor = Cursors.Default
             'Application.DoEvents()

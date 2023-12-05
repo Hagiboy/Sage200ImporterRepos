@@ -39,6 +39,7 @@ Partial Class frmDebDisp
         Me.BgWLoadDebi = New System.ComponentModel.BackgroundWorker()
         Me.dgvDates = New System.Windows.Forms.DataGridView()
         Me.BgWCheckDebi = New System.ComponentModel.BackgroundWorker()
+        Me.BgWImportDebi = New System.ComponentModel.BackgroundWorker()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -167,6 +168,9 @@ Partial Class frmDebDisp
         'BgWCheckDebi
         '
         '
+        'BgWImportDebi
+        '
+        '
         'frmDebDisp
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -208,4 +212,5 @@ Partial Class frmDebDisp
     Friend WithEvents BgWLoadDebi As System.ComponentModel.BackgroundWorker
     Friend WithEvents dgvDates As DataGridView
     Friend WithEvents BgWCheckDebi As System.ComponentModel.BackgroundWorker
+    Friend WithEvents BgWImportDebi As System.ComponentModel.BackgroundWorker
 End Class
