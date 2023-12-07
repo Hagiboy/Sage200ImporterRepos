@@ -144,8 +144,6 @@ Friend Class frmImportMain
 
         Try
 
-            System.GC.Collect()
-
             'Zuerst prüfen ob schon eine Insstanz für Mandant existiert
             For Each frm As Form In Application.OpenForms()
                 If frm.Text = "Debitor " + lstBoxMandant.Text Then
@@ -354,7 +352,7 @@ Friend Class frmImportMain
             MessageBox.Show(ex.Message, "Problem Debitorenauflistung", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
-
+            System.GC.Collect()
             Me.Cursor = Cursors.Default
 
         End Try
@@ -758,9 +756,23 @@ Friend Class frmImportMain
                         + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
                         + "User Id=cis;Password=sugus;")
         Dim objOracleCmd As New OracleCommand()
+        Dim intParaCount As Int16
+        Dim strPara() As String
 
 
         Try
+            'Debug.Print("Process " + My.Application.Info.DirectoryPath + "\" + My.Application.Info.AssemblyName + ".exe")
+
+            intParaCount = 0
+            'Parameter auslesen
+            For Each para As String In My.Application.CommandLineArgs
+
+                strPara(intParaCount) = para
+                MessageBox.Show("Paramter " + strPara(intParaCount))
+
+                intParaCount += 1
+
+            Next
 
             'MySQL - Connection öffnen
             'objdbConn.Open()
@@ -3128,4 +3140,19 @@ Friend Class frmImportMain
         End Try
 
     End Sub
+
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+
+        Me.Close()
+        Me.Dispose()
+        'Debug.Print("Command Line " + Environment.CommandLine)
+        Application.Restart()
+        'Dim p As New Process
+        'p.StartInfo.FileName = My.Application.Info.DirectoryPath + "\" + My.Application.Info.AssemblyName + ".exe"
+        'p.StartInfo.Arguments = "1"
+        'p.Start()
+        'Me.Close()
+        'Me.Dispose()
+    End Sub
+
 End Class
