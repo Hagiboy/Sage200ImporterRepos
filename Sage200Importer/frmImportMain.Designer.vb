@@ -45,7 +45,6 @@ Partial Class frmImportMain
         Me.mysqlcongen = New MySqlConnector.MySqlConnection()
         Me.mysqlcmdgen = New MySqlConnector.MySqlCommand()
         Me.ToolStripContainer1 = New System.Windows.Forms.ToolStripContainer()
-        Me.Button1 = New System.Windows.Forms.Button()
         Me.lstBoxPerioden = New System.Windows.Forms.ListBox()
         Me.lstBoxMandant = New System.Windows.Forms.ListBox()
         Me.LblTaskID = New System.Windows.Forms.Label()
@@ -239,7 +238,6 @@ Partial Class frmImportMain
         '
         'ToolStripContainer1.ContentPanel
         '
-        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.Button1)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.lstBoxPerioden)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.lstBoxMandant)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.LblTaskID)
@@ -253,15 +251,6 @@ Partial Class frmImportMain
         Me.ToolStripContainer1.Size = New System.Drawing.Size(1688, 105)
         Me.ToolStripContainer1.TabIndex = 24
         Me.ToolStripContainer1.Text = "ToolStripContainer1"
-        '
-        'Button1
-        '
-        Me.Button1.Location = New System.Drawing.Point(970, 23)
-        Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(62, 21)
-        Me.Button1.TabIndex = 23
-        Me.Button1.Text = "Button1"
-        Me.Button1.UseVisualStyleBackColor = True
         '
         'lstBoxPerioden
         '
@@ -355,5 +344,4 @@ Partial Class frmImportMain
     Friend WithEvents LblVersion As Label
     Friend WithEvents lstBoxMandant As ListBox
     Friend WithEvents lstBoxPerioden As ListBox
-    Friend WithEvents Button1 As Button
 End Class

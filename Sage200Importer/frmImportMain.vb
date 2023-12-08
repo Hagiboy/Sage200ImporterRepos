@@ -171,7 +171,8 @@ Friend Class frmImportMain
                 'Je nach Anzahl von Links her verschieben
                 frmDebDisp.Left = intNbrDebiForms * 15
                 frmDebDisp.FcDebiDisplay(lstBoxMandant.SelectedValue,
-                                     lstBoxPerioden)
+                                         lstBoxMandant,
+                                         lstBoxPerioden)
 
             End If
 
@@ -751,35 +752,18 @@ Friend Class frmImportMain
         Dim objDABuchhaltungen As New MySqlDataAdapter("SELECT * FROM t_sage_buchhaltungen WHERE NOT Buchh200_Name IS NULL AND NOT Buchh_TableDeb IS NULL ORDER BY Buchh_Bez", objdbConn)
         Dim objdtBuchhaltungen As New DataTable("tbliBuchhaltungen")
         'Dim intFunctionReturns As Int16
-        Dim objOracleConn As New OracleConnection("Data Source=(DESCRIPTION=" _
-                        + "(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.0.29)(PORT=1521))" _
-                        + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
-                        + "User Id=cis;Password=sugus;")
-        Dim objOracleCmd As New OracleCommand()
-        Dim intParaCount As Int16
-        Dim strPara() As String
-
+        'Dim objOracleConn As New OracleConnection("Data Source=(DESCRIPTION=" _
+        '                + "(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.0.29)(PORT=1521))" _
+        '                + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
+        '                + "User Id=cis;Password=sugus;")
+        'Dim objOracleCmd As New OracleCommand()
+        Dim objdbtaskscmd As New MySqlCommand
+        Dim objdttaksd As New DataTable
+        Dim strIdentityName As String
 
         Try
-            'Debug.Print("Process " + My.Application.Info.DirectoryPath + "\" + My.Application.Info.AssemblyName + ".exe")
 
-            intParaCount = 0
-            'Parameter auslesen
-            For Each para As String In My.Application.CommandLineArgs
-
-                strPara(intParaCount) = para
-                MessageBox.Show("Paramter " + strPara(intParaCount))
-
-                intParaCount += 1
-
-            Next
-
-            'MySQL - Connection öffnen
-            'objdbConn.Open()
-            'Oracle - Connection öffnen
-            'objOracleConn.ConnectionString = strOraDB
-            'objOracleConn.Open()
-            objOracleCmd.Connection = objOracleConn
+            'objOracleCmd.Connection = objOracleConn
 
             'Comboxen
             objdtBuchhaltungen.Clear()
@@ -799,6 +783,7 @@ Friend Class frmImportMain
             lstBoxMandant.DataSource = objdtBuchhaltungen
             lstBoxMandant.DisplayMember = "Buchh_Bez"
             lstBoxMandant.ValueMember = "Buchh_Nr"
+
 
             'Tabelle Debi/ Kredi Head erstellen
             'objdtDebitorenHead = Main.tblDebitorenHead()
@@ -870,6 +855,20 @@ Friend Class frmImportMain
             'objdbConn.Close()
 
             Call InitDB()
+            'Soll ein Mandant selektiert werden?
+            strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
+            strIdentityName = Strings.Replace(strIdentityName, "\", "/")
+            LblIdentity.Text = strIdentityName
+            objdbtaskscmd.Connection = objdbConn
+            objdbtaskscmd.CommandText = "SELECT * FROM tblimporttasks WHERE IdentityName='" + strIdentityName + "'"
+            objdbtaskscmd.Connection.Open()
+            objdttaksd.Load(objdbtaskscmd.ExecuteReader())
+            objdbtaskscmd.Connection.Close()
+            If objdttaksd.Rows.Count > 0 Then
+                lstBoxMandant.SelectedIndex = objdttaksd.Rows(0).Item("Mandant")
+                Call lstBoxMandant_MouseClick(Nothing, Nothing)
+                'Aufruf Click Debitor führt zu Endlosschleife
+            End If
 
 
         Catch ex As Exception
@@ -3111,6 +3110,8 @@ Friend Class frmImportMain
 
     Private Sub frmImportMain_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
 
+        'Dim objdbtakscmd As New MySqlCommand
+
         'DS in tabelle löschen
         MySQLdaDebitoren.DeleteCommand.Connection.Open()
         MySQLdaDebitoren.DeleteCommand.ExecuteNonQuery()
@@ -3119,6 +3120,13 @@ Friend Class frmImportMain
         MySQLdaDebitorenSub.DeleteCommand.Connection.Open()
         MySQLdaDebitorenSub.DeleteCommand.ExecuteNonQuery()
         MySQLdaDebitorenSub.DeleteCommand.Connection.Close()
+
+        'In Tasks löschen
+        'objdbtakscmd.Connection = objdbConn
+        'objdbtakscmd.CommandText = "DELETE FROM tblimporttasks WHERE IdentityName='" + LblIdentity.Text + "'"
+        'objdbtakscmd.Connection.Open()
+        'objdbtakscmd.ExecuteNonQuery()
+        'objdbtakscmd.Connection.Close()
 
 
     End Sub
@@ -3141,7 +3149,7 @@ Friend Class frmImportMain
 
     End Sub
 
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+    Private Sub Button1_Click(sender As Object, e As EventArgs)
 
         Me.Close()
         Me.Dispose()

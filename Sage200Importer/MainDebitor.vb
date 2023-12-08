@@ -3244,9 +3244,7 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcCheckDebiExistance(ByRef objdbMSSQLConn As SqlConnection,
-                                                 ByRef objdbMSSQLCmd As SqlCommand,
-                                                 ByRef intBelegNbr As Int32,
+    Public Shared Function FcCheckDebiExistance(ByRef intBelegNbr As Int32,
                                                  ByVal strTyp As String,
                                                  ByVal intTeqNr As Int32) As Int16
 
@@ -3256,7 +3254,10 @@ Public Class MainDebitor
 
         Dim intReturnvalue As Int32
         Dim intStatus As Int16
-        Dim tblKrediBeleg As New DataTable
+        Dim tblDebiBeleg As New DataTable
+        Dim objdbMSSQLConn As New SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
+        Dim objdbMSSQLCmd As New SqlCommand
+
 
         Try
 
@@ -3264,6 +3265,7 @@ Public Class MainDebitor
             intReturnvalue = 10
             intStatus = 0
 
+            objdbMSSQLCmd.Connection = objdbMSSQLConn
             objdbMSSQLConn.Open()
 
             Do Until intReturnvalue = 0
@@ -3276,10 +3278,10 @@ Public Class MainDebitor
                                                                         " AND typ='" + strTyp + "'" +
                                                                         " AND belnbr=" + intBelegNbr.ToString
 
-                tblKrediBeleg.Rows.Clear()
-                tblKrediBeleg.Load(objdbMSSQLCmd.ExecuteReader)
-                If tblKrediBeleg.Rows.Count > 0 Then
-                    intReturnvalue = tblKrediBeleg.Rows(0).Item("lfnbrk")
+                tblDebiBeleg.Rows.Clear()
+                tblDebiBeleg.Load(objdbMSSQLCmd.ExecuteReader)
+                If tblDebiBeleg.Rows.Count > 0 Then
+                    intReturnvalue = tblDebiBeleg.Rows(0).Item("lfnbrk")
                     intBelegNbr += 1
                 Else
                     intReturnvalue = 0
@@ -3291,10 +3293,14 @@ Public Class MainDebitor
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Debitor - BelegExistenzprüfung Problem " + intBelegNbr.ToString)
+            Err.Clear()
             Return 9
 
         Finally
             objdbMSSQLConn.Close()
+            objdbMSSQLCmd = Nothing
+            objdbMSSQLConn = Nothing
+            tblDebiBeleg = Nothing
 
         End Try
 

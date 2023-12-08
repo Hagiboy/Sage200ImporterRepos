@@ -5,7 +5,7 @@ Imports MySql.Data.MySqlClient
 Imports System.Data.OracleClient
 Imports System.Data.SqlClient
 Imports Microsoft.VisualBasic.ApplicationServices
-Imports CLClassSage200.WFSage200Import
+'Imports CLClassSage200.WFSage200Import
 Imports System.IO
 
 Public Class frmDebDisp
@@ -51,6 +51,8 @@ Public Class frmDebDisp
         Public intTeqNbrPLY As Int16
         Public strYear As String
         Public strPeriode As String
+        Public booValutaCor As Boolean
+        Public datValutaCor As Date
     End Class
 
 
@@ -115,9 +117,11 @@ Public Class frmDebDisp
     End Sub
 
     Friend Function FcDebiDisplay(intMandant As Int32,
+                                  LstMandnat As ListBox,
                                   LstBPerioden As ListBox) As Int16
 
         Dim objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
+        Dim objdbtaskcmd As New MySqlCommand
         Dim objdbMSSQLConn As New SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
         Dim objdbSQLcommand As New SqlCommand
 
@@ -125,11 +129,12 @@ Public Class frmDebDisp
         Dim strPeriode As String
         Dim strYearCh As String
         Dim BgWCheckDebitLocArgs As New BgWCheckDebitArgs
+        Dim objdbtasks As New DataTable
 
-        Dim intTeqNbr As Int32
-        Dim intTeqNbrLY As Int32
-        Dim intTeqNbrPLY As Int32
-        Dim strYear As String
+        'Dim intTeqNbr As Int32
+        'Dim intTeqNbrLY As Int32
+        'Dim intTeqNbrPLY As Int32
+        'Dim strYear As String
 
         Dim objFinanz As New SBSXASLib.AXFinanz
         Dim objfiBuha As New SBSXASLib.AXiFBhg
@@ -142,6 +147,20 @@ Public Class frmDebDisp
         Try
 
             Me.Cursor = Cursors.WaitCursor
+            'Zuerst in tblImportTasks setzen
+            objdbtaskcmd.Connection = objdbConn
+            objdbtaskcmd.Connection.Open()
+            objdbtaskcmd.CommandText = "SELECT * FROM tblimporttasks WHERE IdentityName='" + frmImportMain.LblIdentity.Text + "' AND Type='D'"
+            objdbtasks.Load(objdbtaskcmd.ExecuteReader())
+            If objdbtasks.Rows.Count > 0 Then
+                'update
+                objdbtaskcmd.CommandText = "UPDATE tblimporttasks SET Mandant=" + Convert.ToString(LstMandnat.SelectedIndex) + ", Periode=" + Convert.ToString(LstBPerioden.SelectedIndex) + " WHERE IdentityName='" + frmImportMain.LblIdentity.Text + "' AND Type='D'"
+            Else
+                'insert
+                objdbtaskcmd.CommandText = "INSERT INTO tblimporttasks (IdentityName, Type, Mandant, Periode) VALUES ('" + frmImportMain.LblIdentity.Text + "', 'D', " + Convert.ToString(LstMandnat.SelectedIndex) + ", " + Convert.ToString(LstBPerioden.SelectedIndex) + ")"
+            End If
+            objdbtaskcmd.ExecuteNonQuery()
+            objdbtaskcmd.Connection.Close()
 
             'intMode = 0
 
@@ -315,6 +334,8 @@ Public Class frmDebDisp
             BgWCheckDebitLocArgs.intTeqNbrPLY = intTeqNbrPLY
             BgWCheckDebitLocArgs.strYear = strYear
             BgWCheckDebitLocArgs.strPeriode = LstBPerioden.GetItemText(LstBPerioden.SelectedItem)
+            BgWCheckDebitLocArgs.booValutaCor = frmImportMain.chkValutaCorrect.Checked
+            BgWCheckDebitLocArgs.datValutaCor = frmImportMain.dtpValutaCorrect.Value
 
             BgWCheckDebi.RunWorkerAsync(BgWCheckDebitLocArgs)
 
@@ -356,238 +377,240 @@ Public Class frmDebDisp
             objdbConn = Nothing
             objdbMSSQLConn = Nothing
             objdbSQLcommand = Nothing
+            objdbtaskcmd = Nothing
+            objdbtasks = Nothing
 
-            System.GC.Collect()
+            'System.GC.Collect()
 
         End Try
 
 
 
-        End Function
+    End Function
 
-        Friend Function FcInitdgvDate(ByRef dgvDate As DataGridView) As Int16
+    Friend Function FcInitdgvDate(ByRef dgvDate As DataGridView) As Int16
 
-            'DGV - Info
-            'dgvInfo.DataSource = objdtInfo
-            dgvDate.AllowUserToAddRows = False
-            dgvDate.AllowUserToDeleteRows = False
-            'dgvInfo.Enabled = False
-            dgvDate.RowHeadersVisible = False
-            dgvDate.Columns("intYear").HeaderText = "Jahr"
-            dgvDate.Columns("intYear").Width = 35
-            dgvDate.Columns("strDatType").HeaderText = "Type"
-            dgvDate.Columns("strDatType").Width = 80
-            dgvDate.Columns("datFrom").HeaderText = "Von"
-            dgvDate.Columns("datFrom").Width = 70
-            dgvDate.Columns("datto").HeaderText = "Bis"
-            dgvDate.Columns("datTo").Width = 70
-            dgvDate.Columns("strStatus").HeaderText = "S"
-            dgvDate.Columns("strStatus").Width = 30
-            Return 0
+        'DGV - Info
+        'dgvInfo.DataSource = objdtInfo
+        dgvDate.AllowUserToAddRows = False
+        dgvDate.AllowUserToDeleteRows = False
+        'dgvInfo.Enabled = False
+        dgvDate.RowHeadersVisible = False
+        dgvDate.Columns("intYear").HeaderText = "Jahr"
+        dgvDate.Columns("intYear").Width = 35
+        dgvDate.Columns("strDatType").HeaderText = "Type"
+        dgvDate.Columns("strDatType").Width = 80
+        dgvDate.Columns("datFrom").HeaderText = "Von"
+        dgvDate.Columns("datFrom").Width = 70
+        dgvDate.Columns("datto").HeaderText = "Bis"
+        dgvDate.Columns("datTo").Width = 70
+        dgvDate.Columns("strStatus").HeaderText = "S"
+        dgvDate.Columns("strStatus").Width = 30
+        Return 0
 
-        End Function
-
-
-        Friend Function FcInitdgvInfo(ByRef dgvInfo As DataGridView) As Int16
-
-            'DGV - Info
-            'dgvInfo.DataSource = objdtInfo
-            dgvInfo.AllowUserToAddRows = False
-            dgvInfo.AllowUserToDeleteRows = False
-            'dgvInfo.Enabled = False
-            dgvInfo.RowHeadersVisible = False
-            dgvInfo.Columns("strInfoT").HeaderText = "Info"
-            dgvInfo.Columns("strInfoT").Width = 100
-            dgvInfo.Columns("strInfoV").HeaderText = "Wert"
-            dgvInfo.Columns("strInfoV").Width = 250
-            Return 0
-
-        End Function
-
-        Friend Function FcInitdgvBookings(ByRef dgvBookings As DataGridView) As Int16
-
-            dgvBookings.ShowCellToolTips = False
-            dgvBookings.AllowUserToAddRows = False
-            dgvBookings.AllowUserToDeleteRows = False
-            Dim okcol As New DataGridViewCheckBoxColumn
-            okcol.DataPropertyName = "booDebBook"
-            okcol.HeaderText = "ok"
-            okcol.DisplayIndex = 0
-            okcol.Width = 40
-            dgvBookings.Columns.Add(okcol)
-            dgvBookings.Columns("booDebBook").Visible = False
-            'dgvBookings.Columns("booDebBook").DisplayIndex = 0
-            'dgvBookings.Columns("booDebBook").HeaderText = "ok"
-            'dgvBookings.Columns("booDebBook").Width = 40
-            'dgvBookings.Columns("booDebBook").ValueType = System.Type.[GetType]("System.Boolean")
-            'dgvBookings.Columns("booDebBook").HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter
-            'dgvBookings.Columns("booDebBook").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter
-            dgvBookings.Columns("strDebRGNbr").DisplayIndex = 1
-            dgvBookings.Columns("strDebRGNbr").HeaderText = "RG-Nr"
-            dgvBookings.Columns("strDebRGNbr").Width = 60
-            dgvBookings.Columns("strDebRGNbr").ReadOnly = True
-            dgvBookings.Columns("lngDebNbr").DisplayIndex = 2
-            dgvBookings.Columns("lngDebNbr").HeaderText = "Debitor"
-            dgvBookings.Columns("lngDebNbr").Width = 60
-            dgvBookings.Columns("strDebBez").DisplayIndex = 3
-            dgvBookings.Columns("strDebBez").HeaderText = "Bezeichnung"
-            dgvBookings.Columns("strDebBez").Width = 140
-            dgvBookings.Columns("lngDebKtoNbr").DisplayIndex = 4
-            dgvBookings.Columns("lngDebKtoNbr").HeaderText = "Konto"
-            dgvBookings.Columns("lngDebKtoNbr").Width = 50
-            dgvBookings.Columns("strDebKtoBez").DisplayIndex = 5
-            dgvBookings.Columns("strDebKtoBez").HeaderText = "Bezeichnung"
-            dgvBookings.Columns("strDebKtoBez").Width = 150
-            dgvBookings.Columns("strDebCur").DisplayIndex = 6
-            dgvBookings.Columns("strDebCur").HeaderText = "Währung"
-            dgvBookings.Columns("strDebCur").Width = 60
-            dgvBookings.Columns("dblDebNetto").DisplayIndex = 7
-            dgvBookings.Columns("dblDebNetto").HeaderText = "Netto"
-            dgvBookings.Columns("dblDebNetto").Width = 80
-            dgvBookings.Columns("dblDebNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookings.Columns("dblDebNetto").DefaultCellStyle.Format = "N4"
-            dgvBookings.Columns("dblDebNetto").ReadOnly = True
-            dgvBookings.Columns("dblDebMwSt").DisplayIndex = 8
-            dgvBookings.Columns("dblDebMwSt").HeaderText = "MwSt"
-            dgvBookings.Columns("dblDebMwSt").Width = 70
-            dgvBookings.Columns("dblDebMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookings.Columns("dblDebMwSt").DefaultCellStyle.Format = "N4"
-            dgvBookings.Columns("dblDebBrutto").DisplayIndex = 9
-            dgvBookings.Columns("dblDebBrutto").HeaderText = "Brutto"
-            dgvBookings.Columns("dblDebBrutto").Width = 80
-            dgvBookings.Columns("dblDebBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookings.Columns("dblDebBrutto").DefaultCellStyle.Format = "N4"
-            dgvBookings.Columns("intSubBookings").DisplayIndex = 10
-            dgvBookings.Columns("intSubBookings").HeaderText = "Sub"
-            dgvBookings.Columns("intSubBookings").Width = 50
-            dgvBookings.Columns("intSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookings.Columns("dblSumSubBookings").DisplayIndex = 11
-            dgvBookings.Columns("dblSumSubBookings").HeaderText = "Sub-Summe"
-            dgvBookings.Columns("dblSumSubBookings").Width = 80
-            dgvBookings.Columns("dblSumSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookings.Columns("dblSumSubBookings").DefaultCellStyle.Format = "N4"
-            dgvBookings.Columns("lngDebIdentNbr").DisplayIndex = 12
-            dgvBookings.Columns("lngDebIdentNbr").HeaderText = "Ident"
-            dgvBookings.Columns("lngDebIdentNbr").Width = 80
-            dgvBookings.Columns("intBuchungsart").DisplayIndex = 13
-            dgvBookings.Columns("intBuchungsart").DisplayIndex = 13
-            dgvBookings.Columns("intBuchungsart").HeaderText = "BA"
-            dgvBookings.Columns("intBuchungsart").Width = 40
-            dgvBookings.Columns("strOPNr").DisplayIndex = 14
-            dgvBookings.Columns("strOPNr").HeaderText = "OP-Nr"
-            dgvBookings.Columns("strOPNr").Width = 80
-            dgvBookings.Columns("datDebRGDatum").DisplayIndex = 15
-            dgvBookings.Columns("datDebRGDatum").HeaderText = "RG Datum"
-            dgvBookings.Columns("datDebRGDatum").Width = 70
-            dgvBookings.Columns("datDebValDatum").DisplayIndex = 16
-            dgvBookings.Columns("datDebValDatum").HeaderText = "Val Datum"
-            dgvBookings.Columns("datDebValDatum").Width = 70
-            dgvBookings.Columns("strDebiBank").DisplayIndex = 17
-            dgvBookings.Columns("strDebiBank").HeaderText = "Bank"
-            dgvBookings.Columns("strDebiBank").Width = 60
-            dgvBookings.Columns("strDebStatusText").DisplayIndex = 18
-            dgvBookings.Columns("strDebStatusText").HeaderText = "Status"
-            dgvBookings.Columns("strDebStatusText").Width = 200
-            dgvBookings.Columns("intBuchhaltung").Visible = False
-            'dgvBookings.Columns("intBuchungsart").Visible = False
-            'dgvBookings.Columns("intRGArt").Visible = False
-            'dgvBookings.Columns("strRGArt").Visible = False
-            'dgvBookings.Columns("lngLinkedRG").Visible = False
-            'dgvBookings.Columns("booLinked").Visible = False
-            'dgvBookings.Columns("strRGName").Visible = False
-            'dgvBookings.Columns("strDebIdentnbr2").Visible = False
-            'dgvBookings.Columns("strDebText").Visible = False
-            'dgvBookings.Columns("strRGBemerkung").Visible = False
-            'dgvBookings.Columns("strDebRef").Visible = False
-            'dgvBookings.Columns("strZahlBed").Visible = False
-            'dgvBookings.Columns("strDebStatusBitLog").Visible = False
-            'dgvBookings.Columns("strDebBookStatus").Visible = False
-            'dgvBookings.Columns("booBooked").Visible = False
-            'dgvBookings.Columns("datBooked").Visible = False
-            'dgvBookings.Columns("lngBelegNr").Visible = False
-            Return 0
-
-        End Function
-
-        Friend Function FcInitdgvDebiSub(ByRef dgvBookingSub As DataGridView) As Int16
-
-            dgvBookingSub.RowHeadersWidth = 24
-
-            dgvBookingSub.ShowCellToolTips = False
-            dgvBookingSub.AllowUserToAddRows = False
-            dgvBookingSub.AllowUserToDeleteRows = False
-            dgvBookingSub.Columns("strRGNr").DisplayIndex = 0
-            dgvBookingSub.Columns("strRGNr").Width = 50
-            dgvBookingSub.Columns("strRGNr").HeaderText = "RG-Nr"
-            dgvBookingSub.Columns("intSollHaben").DisplayIndex = 1
-            dgvBookingSub.Columns("intSollHaben").Width = 20
-            dgvBookingSub.Columns("intSollHaben").HeaderText = "S/H"
-            dgvBookingSub.Columns("lngKto").DisplayIndex = 2
-            dgvBookingSub.Columns("lngKto").Width = 45
-            dgvBookingSub.Columns("lngKto").HeaderText = "Konto"
-            dgvBookingSub.Columns("strKtoBez").DisplayIndex = 3
-            dgvBookingSub.Columns("strKtoBez").HeaderText = "Bezeichnung"
-            dgvBookingSub.Columns("lngKST").DisplayIndex = 4
-            dgvBookingSub.Columns("lngKST").Width = 30
-            dgvBookingSub.Columns("lngKST").HeaderText = "KST"
-            dgvBookingSub.Columns("strKSTBez").DisplayIndex = 5
-            dgvBookingSub.Columns("strKSTBez").Width = 60
-            dgvBookingSub.Columns("strKSTBez").HeaderText = "Bezeichnung"
-            dgvBookingSub.Columns("lngProj").DisplayIndex = 6
-            dgvBookingSub.Columns("lngProj").Width = 30
-            dgvBookingSub.Columns("lngProj").HeaderText = "Proj"
-            dgvBookingSub.Columns("strProjBez").DisplayIndex = 7
-            dgvBookingSub.Columns("strProjBez").HeaderText = "Pr.-Bez."
-            dgvBookingSub.Columns("strProjBez").Width = 55
-            dgvBookingSub.Columns("dblNetto").DisplayIndex = 8
-            dgvBookingSub.Columns("dblNetto").Width = 65
-            dgvBookingSub.Columns("dblNetto").HeaderText = "Netto"
-            dgvBookingSub.Columns("dblNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookingSub.Columns("dblNetto").DefaultCellStyle.Format = "N4"
-            dgvBookingSub.Columns("dblMwSt").DisplayIndex = 9
-            dgvBookingSub.Columns("dblMwSt").Width = 60
-            dgvBookingSub.Columns("dblMwSt").HeaderText = "MwSt"
-            dgvBookingSub.Columns("dblMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookingSub.Columns("dblMwSt").DefaultCellStyle.Format = "N4"
-            dgvBookingSub.Columns("dblBrutto").DisplayIndex = 10
-            dgvBookingSub.Columns("dblBrutto").Width = 65
-            dgvBookingSub.Columns("dblBrutto").HeaderText = "Brutto"
-            dgvBookingSub.Columns("dblBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
-            dgvBookingSub.Columns("dblBrutto").DefaultCellStyle.Format = "N4"
-            dgvBookingSub.Columns("dblMwStSatz").DisplayIndex = 11
-            dgvBookingSub.Columns("dblMwStSatz").Width = 30
-            dgvBookingSub.Columns("dblMwStSatz").HeaderText = "MwStS"
-            dgvBookingSub.Columns("strMwStKey").DisplayIndex = 12
-            dgvBookingSub.Columns("strMwStKey").Width = 30
-            dgvBookingSub.Columns("strMwStKey").HeaderText = "MwStK"
-            dgvBookingSub.Columns("strStatusUBText").DisplayIndex = 13
-            dgvBookingSub.Columns("strStatusUBText").HeaderText = "Status"
-            dgvBookingSub.Columns("strStatusUBText").Width = 135
-
-            'dgvBookingSub.Columns("lngID").Visible = False
-            'dgvBookingSub.Columns("strArtikel").Visible = False
-            'dgvBookingSub.Columns("strStatusUBBitLog").Visible = False
-            'dgvBookingSub.Columns("strDebSubText").Visible = False
-            'dgvBookingSub.Columns("strDebBookStatus").Visible = False
-            Return 0
+    End Function
 
 
-        End Function
+    Friend Function FcInitdgvInfo(ByRef dgvInfo As DataGridView) As Int16
 
-        Private Sub frmDebDisp_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+        'DGV - Info
+        'dgvInfo.DataSource = objdtInfo
+        dgvInfo.AllowUserToAddRows = False
+        dgvInfo.AllowUserToDeleteRows = False
+        'dgvInfo.Enabled = False
+        dgvInfo.RowHeadersVisible = False
+        dgvInfo.Columns("strInfoT").HeaderText = "Info"
+        dgvInfo.Columns("strInfoT").Width = 100
+        dgvInfo.Columns("strInfoV").HeaderText = "Wert"
+        dgvInfo.Columns("strInfoV").Width = 250
+        Return 0
 
-            'DS in tabelle löschen
-            MySQLdaDebitoren.DeleteCommand.Connection.Open()
-            MySQLdaDebitoren.DeleteCommand.ExecuteNonQuery()
-            MySQLdaDebitoren.DeleteCommand.Connection.Close()
+    End Function
 
-            MySQLdaDebitorenSub.DeleteCommand.Connection.Open()
-            MySQLdaDebitorenSub.DeleteCommand.ExecuteNonQuery()
-            MySQLdaDebitorenSub.DeleteCommand.Connection.Close()
+    Friend Function FcInitdgvBookings(ByRef dgvBookings As DataGridView) As Int16
 
-        End Sub
+        dgvBookings.ShowCellToolTips = False
+        dgvBookings.AllowUserToAddRows = False
+        dgvBookings.AllowUserToDeleteRows = False
+        Dim okcol As New DataGridViewCheckBoxColumn
+        okcol.DataPropertyName = "booDebBook"
+        okcol.HeaderText = "ok"
+        okcol.DisplayIndex = 0
+        okcol.Width = 40
+        dgvBookings.Columns.Add(okcol)
+        dgvBookings.Columns("booDebBook").Visible = False
+        'dgvBookings.Columns("booDebBook").DisplayIndex = 0
+        'dgvBookings.Columns("booDebBook").HeaderText = "ok"
+        'dgvBookings.Columns("booDebBook").Width = 40
+        'dgvBookings.Columns("booDebBook").ValueType = System.Type.[GetType]("System.Boolean")
+        'dgvBookings.Columns("booDebBook").HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter
+        'dgvBookings.Columns("booDebBook").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter
+        dgvBookings.Columns("strDebRGNbr").DisplayIndex = 1
+        dgvBookings.Columns("strDebRGNbr").HeaderText = "RG-Nr"
+        dgvBookings.Columns("strDebRGNbr").Width = 60
+        dgvBookings.Columns("strDebRGNbr").ReadOnly = True
+        dgvBookings.Columns("lngDebNbr").DisplayIndex = 2
+        dgvBookings.Columns("lngDebNbr").HeaderText = "Debitor"
+        dgvBookings.Columns("lngDebNbr").Width = 60
+        dgvBookings.Columns("strDebBez").DisplayIndex = 3
+        dgvBookings.Columns("strDebBez").HeaderText = "Bezeichnung"
+        dgvBookings.Columns("strDebBez").Width = 140
+        dgvBookings.Columns("lngDebKtoNbr").DisplayIndex = 4
+        dgvBookings.Columns("lngDebKtoNbr").HeaderText = "Konto"
+        dgvBookings.Columns("lngDebKtoNbr").Width = 50
+        dgvBookings.Columns("strDebKtoBez").DisplayIndex = 5
+        dgvBookings.Columns("strDebKtoBez").HeaderText = "Bezeichnung"
+        dgvBookings.Columns("strDebKtoBez").Width = 150
+        dgvBookings.Columns("strDebCur").DisplayIndex = 6
+        dgvBookings.Columns("strDebCur").HeaderText = "Währung"
+        dgvBookings.Columns("strDebCur").Width = 60
+        dgvBookings.Columns("dblDebNetto").DisplayIndex = 7
+        dgvBookings.Columns("dblDebNetto").HeaderText = "Netto"
+        dgvBookings.Columns("dblDebNetto").Width = 80
+        dgvBookings.Columns("dblDebNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvBookings.Columns("dblDebNetto").DefaultCellStyle.Format = "N4"
+        dgvBookings.Columns("dblDebNetto").ReadOnly = True
+        dgvBookings.Columns("dblDebMwSt").DisplayIndex = 8
+        dgvBookings.Columns("dblDebMwSt").HeaderText = "MwSt"
+        dgvBookings.Columns("dblDebMwSt").Width = 70
+        dgvBookings.Columns("dblDebMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvBookings.Columns("dblDebMwSt").DefaultCellStyle.Format = "N4"
+        dgvBookings.Columns("dblDebBrutto").DisplayIndex = 9
+        dgvBookings.Columns("dblDebBrutto").HeaderText = "Brutto"
+        dgvBookings.Columns("dblDebBrutto").Width = 80
+        dgvBookings.Columns("dblDebBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvBookings.Columns("dblDebBrutto").DefaultCellStyle.Format = "N4"
+        dgvBookings.Columns("intSubBookings").DisplayIndex = 10
+        dgvBookings.Columns("intSubBookings").HeaderText = "Sub"
+        dgvBookings.Columns("intSubBookings").Width = 50
+        dgvBookings.Columns("intSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvBookings.Columns("dblSumSubBookings").DisplayIndex = 11
+        dgvBookings.Columns("dblSumSubBookings").HeaderText = "Sub-Summe"
+        dgvBookings.Columns("dblSumSubBookings").Width = 80
+        dgvBookings.Columns("dblSumSubBookings").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvBookings.Columns("dblSumSubBookings").DefaultCellStyle.Format = "N4"
+        dgvBookings.Columns("lngDebIdentNbr").DisplayIndex = 12
+        dgvBookings.Columns("lngDebIdentNbr").HeaderText = "Ident"
+        dgvBookings.Columns("lngDebIdentNbr").Width = 80
+        dgvBookings.Columns("intBuchungsart").DisplayIndex = 13
+        dgvBookings.Columns("intBuchungsart").DisplayIndex = 13
+        dgvBookings.Columns("intBuchungsart").HeaderText = "BA"
+        dgvBookings.Columns("intBuchungsart").Width = 40
+        dgvBookings.Columns("strOPNr").DisplayIndex = 14
+        dgvBookings.Columns("strOPNr").HeaderText = "OP-Nr"
+        dgvBookings.Columns("strOPNr").Width = 80
+        dgvBookings.Columns("datDebRGDatum").DisplayIndex = 15
+        dgvBookings.Columns("datDebRGDatum").HeaderText = "RG Datum"
+        dgvBookings.Columns("datDebRGDatum").Width = 70
+        dgvBookings.Columns("datDebValDatum").DisplayIndex = 16
+        dgvBookings.Columns("datDebValDatum").HeaderText = "Val Datum"
+        dgvBookings.Columns("datDebValDatum").Width = 70
+        dgvBookings.Columns("strDebiBank").DisplayIndex = 17
+        dgvBookings.Columns("strDebiBank").HeaderText = "Bank"
+        dgvBookings.Columns("strDebiBank").Width = 60
+        dgvBookings.Columns("strDebStatusText").DisplayIndex = 18
+        dgvBookings.Columns("strDebStatusText").HeaderText = "Status"
+        dgvBookings.Columns("strDebStatusText").Width = 200
+        dgvBookings.Columns("intBuchhaltung").Visible = False
+        'dgvBookings.Columns("intBuchungsart").Visible = False
+        'dgvBookings.Columns("intRGArt").Visible = False
+        'dgvBookings.Columns("strRGArt").Visible = False
+        'dgvBookings.Columns("lngLinkedRG").Visible = False
+        'dgvBookings.Columns("booLinked").Visible = False
+        'dgvBookings.Columns("strRGName").Visible = False
+        'dgvBookings.Columns("strDebIdentnbr2").Visible = False
+        'dgvBookings.Columns("strDebText").Visible = False
+        'dgvBookings.Columns("strRGBemerkung").Visible = False
+        'dgvBookings.Columns("strDebRef").Visible = False
+        'dgvBookings.Columns("strZahlBed").Visible = False
+        'dgvBookings.Columns("strDebStatusBitLog").Visible = False
+        'dgvBookings.Columns("strDebBookStatus").Visible = False
+        'dgvBookings.Columns("booBooked").Visible = False
+        'dgvBookings.Columns("datBooked").Visible = False
+        'dgvBookings.Columns("lngBelegNr").Visible = False
+        Return 0
 
-        Private Sub butImport_Click(sender As Object, e As EventArgs) Handles butImport.Click
+    End Function
+
+    Friend Function FcInitdgvDebiSub(ByRef dgvBookingSub As DataGridView) As Int16
+
+        dgvBookingSub.RowHeadersWidth = 24
+
+        dgvBookingSub.ShowCellToolTips = False
+        dgvBookingSub.AllowUserToAddRows = False
+        dgvBookingSub.AllowUserToDeleteRows = False
+        dgvBookingSub.Columns("strRGNr").DisplayIndex = 0
+        dgvBookingSub.Columns("strRGNr").Width = 50
+        dgvBookingSub.Columns("strRGNr").HeaderText = "RG-Nr"
+        dgvBookingSub.Columns("intSollHaben").DisplayIndex = 1
+        dgvBookingSub.Columns("intSollHaben").Width = 20
+        dgvBookingSub.Columns("intSollHaben").HeaderText = "S/H"
+        dgvBookingSub.Columns("lngKto").DisplayIndex = 2
+        dgvBookingSub.Columns("lngKto").Width = 45
+        dgvBookingSub.Columns("lngKto").HeaderText = "Konto"
+        dgvBookingSub.Columns("strKtoBez").DisplayIndex = 3
+        dgvBookingSub.Columns("strKtoBez").HeaderText = "Bezeichnung"
+        dgvBookingSub.Columns("lngKST").DisplayIndex = 4
+        dgvBookingSub.Columns("lngKST").Width = 30
+        dgvBookingSub.Columns("lngKST").HeaderText = "KST"
+        dgvBookingSub.Columns("strKSTBez").DisplayIndex = 5
+        dgvBookingSub.Columns("strKSTBez").Width = 60
+        dgvBookingSub.Columns("strKSTBez").HeaderText = "Bezeichnung"
+        dgvBookingSub.Columns("lngProj").DisplayIndex = 6
+        dgvBookingSub.Columns("lngProj").Width = 30
+        dgvBookingSub.Columns("lngProj").HeaderText = "Proj"
+        dgvBookingSub.Columns("strProjBez").DisplayIndex = 7
+        dgvBookingSub.Columns("strProjBez").HeaderText = "Pr.-Bez."
+        dgvBookingSub.Columns("strProjBez").Width = 55
+        dgvBookingSub.Columns("dblNetto").DisplayIndex = 8
+        dgvBookingSub.Columns("dblNetto").Width = 65
+        dgvBookingSub.Columns("dblNetto").HeaderText = "Netto"
+        dgvBookingSub.Columns("dblNetto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvBookingSub.Columns("dblNetto").DefaultCellStyle.Format = "N4"
+        dgvBookingSub.Columns("dblMwSt").DisplayIndex = 9
+        dgvBookingSub.Columns("dblMwSt").Width = 60
+        dgvBookingSub.Columns("dblMwSt").HeaderText = "MwSt"
+        dgvBookingSub.Columns("dblMwSt").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvBookingSub.Columns("dblMwSt").DefaultCellStyle.Format = "N4"
+        dgvBookingSub.Columns("dblBrutto").DisplayIndex = 10
+        dgvBookingSub.Columns("dblBrutto").Width = 65
+        dgvBookingSub.Columns("dblBrutto").HeaderText = "Brutto"
+        dgvBookingSub.Columns("dblBrutto").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        dgvBookingSub.Columns("dblBrutto").DefaultCellStyle.Format = "N4"
+        dgvBookingSub.Columns("dblMwStSatz").DisplayIndex = 11
+        dgvBookingSub.Columns("dblMwStSatz").Width = 30
+        dgvBookingSub.Columns("dblMwStSatz").HeaderText = "MwStS"
+        dgvBookingSub.Columns("strMwStKey").DisplayIndex = 12
+        dgvBookingSub.Columns("strMwStKey").Width = 30
+        dgvBookingSub.Columns("strMwStKey").HeaderText = "MwStK"
+        dgvBookingSub.Columns("strStatusUBText").DisplayIndex = 13
+        dgvBookingSub.Columns("strStatusUBText").HeaderText = "Status"
+        dgvBookingSub.Columns("strStatusUBText").Width = 135
+
+        'dgvBookingSub.Columns("lngID").Visible = False
+        'dgvBookingSub.Columns("strArtikel").Visible = False
+        'dgvBookingSub.Columns("strStatusUBBitLog").Visible = False
+        'dgvBookingSub.Columns("strDebSubText").Visible = False
+        'dgvBookingSub.Columns("strDebBookStatus").Visible = False
+        Return 0
+
+
+    End Function
+
+    Private Sub frmDebDisp_FormClosing(sender As Object, e As FormClosingEventArgs) Handles MyBase.FormClosing
+
+        'DS in tabelle löschen
+        MySQLdaDebitoren.DeleteCommand.Connection.Open()
+        MySQLdaDebitoren.DeleteCommand.ExecuteNonQuery()
+        MySQLdaDebitoren.DeleteCommand.Connection.Close()
+
+        MySQLdaDebitorenSub.DeleteCommand.Connection.Open()
+        MySQLdaDebitorenSub.DeleteCommand.ExecuteNonQuery()
+        MySQLdaDebitorenSub.DeleteCommand.Connection.Close()
+
+    End Sub
+
+    Private Sub butImport_Click(sender As Object, e As EventArgs) Handles butImport.Click
 
         'Dim intReturnValue As Int32
         'Dim intDebBelegsNummer As Int32
@@ -1521,329 +1544,329 @@ Public Class frmDebDisp
             Me.Cursor = Cursors.Default
             'Me.butImport.Enabled = False
             Me.Close()
-            Me.Dispose()
+            'Me.Dispose()
             'System.GC.Collect()
             'Application.Restart()
 
         End Try
 
 
-        End Sub
+    End Sub
 
-        Private Sub dgvBookings_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvBookings.CellContentClick
+    Private Sub dgvBookings_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgvBookings.CellContentClick
 
-            Dim intFctReturns As Int16
+        Dim intFctReturns As Int16
 
-            Try
+        Try
 
-                If e.RowIndex >= 0 Then
+            If e.RowIndex >= 0 Then
 
-                    dgvBookingSub.DataSource = dsDebitoren.Tables("tblDebiSubsFromUser").Select("strRGNr='" + dgvBookings.Rows(e.RowIndex).Cells("strDebRGNbr").Value + "'").CopyToDataTable
-                    intFctReturns = FcInitdgvDebiSub(dgvBookingSub)
+                dgvBookingSub.DataSource = dsDebitoren.Tables("tblDebiSubsFromUser").Select("strRGNr='" + dgvBookings.Rows(e.RowIndex).Cells("strDebRGNbr").Value + "'").CopyToDataTable
+                intFctReturns = FcInitdgvDebiSub(dgvBookingSub)
 
-                End If
+            End If
 
-            Catch ex As Exception
-                MessageBox.Show(ex.Message)
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
 
-            Finally
-                'dgvBookingSub.Update()
+        Finally
+            'dgvBookingSub.Update()
 
-            End Try
-
-
-        End Sub
-
-        Private Sub dgvBookings_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles dgvBookings.CellValueChanged
-
-            Dim intDecidiveCell As Integer
-
-            Try
+        End Try
 
 
-                If dgvBookings.Columns(e.ColumnIndex).HeaderText = "ok" And e.RowIndex >= 0 Then
+    End Sub
 
-                    If IIf(IsDBNull(dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value), False, dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value) Then
+    Private Sub dgvBookings_CellValueChanged(sender As Object, e As DataGridViewCellEventArgs) Handles dgvBookings.CellValueChanged
 
-                        'MsgBox("Geändert zu checked " + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + ", " + dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value.ToString + Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value).ToString)
-                        'Zulassen? = keine Fehler
-                        If Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 0 And Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 10000 Then
-                            If Val(Strings.Mid(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value, 13, 1)) = 1 Then
-                                MsgBox("Erst - RG Splitt-Bill ist nicht auffindbar. Wird trotzdem gebucht, wird nur die Zweit-RG gebucht.", vbOKOnly + vbExclamation, "Splitt-Bill No RG 1")
-                            Else
-                                MsgBox("Debi-Rechnung ist nicht buchbar.", vbOKOnly + vbExclamation, "Nicht buchbar")
-                                dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value = False
-                            End If
+        Dim intDecidiveCell As Integer
+
+        Try
+
+
+            If dgvBookings.Columns(e.ColumnIndex).HeaderText = "ok" And e.RowIndex >= 0 Then
+
+                If IIf(IsDBNull(dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value), False, dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value) Then
+
+                    'MsgBox("Geändert zu checked " + dgvDebitoren.Rows(e.RowIndex).Cells("strDebRGNbr").Value + ", " + dgvDebitoren.Rows(e.RowIndex).Cells("booDebBook").Value.ToString + Val(dgvDebitoren.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value).ToString)
+                    'Zulassen? = keine Fehler
+                    If Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 0 And Val(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value) <> 10000 Then
+                        If Val(Strings.Mid(dgvBookings.Rows(e.RowIndex).Cells("strDebStatusBitLog").Value, 13, 1)) = 1 Then
+                            MsgBox("Erst - RG Splitt-Bill ist nicht auffindbar. Wird trotzdem gebucht, wird nur die Zweit-RG gebucht.", vbOKOnly + vbExclamation, "Splitt-Bill No RG 1")
+                        Else
+                            MsgBox("Debi-Rechnung ist nicht buchbar.", vbOKOnly + vbExclamation, "Nicht buchbar")
+                            dgvBookings.Rows(e.RowIndex).Cells("booDebBook").Value = False
                         End If
-
                     End If
 
                 End If
 
-
-            Catch ex As Exception
-                MessageBox.Show(ex.Message, "Generelles Problem " + Err.Number.ToString)
-
-            End Try
+            End If
 
 
-        End Sub
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Generelles Problem " + Err.Number.ToString)
 
-        Private Sub BgWLoadDebi_DoWork(sender As Object, e As System.ComponentModel.DoWorkEventArgs) Handles BgWLoadDebi.DoWork
-
-
-
-            Dim strIdentityName As String
-            Dim strMDBName As String
-            Dim strSQL As String
-            Dim strSQLSub As String
-            Dim strRGTableType As String
-            Dim objdtLocDebiHead As New DataTable
-            Dim objdtlocDebiSub As New DataTable
-            Dim objdaolelocDebiSubs As New OleDb.OleDbDataAdapter
-            Dim objdaolelocDebiHeads As New OleDb.OleDbDataAdapter
-            Dim objdaolesubsselcomd As New OleDb.OleDbCommand
-            Dim objdaoleheadselcomd As New OleDb.OleDbCommand
-            Dim objdalocDebiSubs As New MySqlDataAdapter
-            Dim objdalocDebiHeads As New MySqlDataAdapter
-            Dim objdasubselcomd As New MySqlCommand
-            Dim objdaheadselcomd As New MySqlCommand
-            Dim objdslocdebisub As New DataSet
-            Dim objdslocdebihead As New DataSet
-            Dim strConnection As String
-            Dim objRGMySQLConn As New MySqlConnection
-            Dim objlocMySQLcmd As New MySqlCommand
-            Dim strSQLToParse As String
-            Dim objmysqlcomdwritehead As New MySqlCommand
-            Dim intFcReturns As Int16
-            Dim strmysqlSaveSub As String
-            Dim objmysqlcomdwritesub As New MySqlCommand
-            Dim intAccounting As Int16 = CInt(e.Argument)
-            Dim objdbConnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
-            Dim objdbAccessConn As New OleDb.OleDbConnection
-            Dim objOLEdbcmdLoc As New OleDb.OleDbCommand
+        End Try
 
 
-            Try
+    End Sub
 
-                Debug.Print("BW Start " + Convert.ToString(intAccounting))
-                objmysqlcomdwritehead.Connection = objdbConnZHDB02
-                objmysqlcomdwritesub.Connection = objdbConnZHDB02
+    Private Sub BgWLoadDebi_DoWork(sender As Object, e As System.ComponentModel.DoWorkEventArgs) Handles BgWLoadDebi.DoWork
 
-                'Für den Save der Records
-                strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
-                strIdentityName = Strings.Replace(strIdentityName, "\", "/")
 
-                strMDBName = Main.FcReadFromSettingsII("Buchh_RGTableMDB",
+
+        Dim strIdentityName As String
+        Dim strMDBName As String
+        Dim strSQL As String
+        Dim strSQLSub As String
+        Dim strRGTableType As String
+        Dim objdtLocDebiHead As New DataTable
+        Dim objdtlocDebiSub As New DataTable
+        Dim objdaolelocDebiSubs As New OleDb.OleDbDataAdapter
+        Dim objdaolelocDebiHeads As New OleDb.OleDbDataAdapter
+        Dim objdaolesubsselcomd As New OleDb.OleDbCommand
+        Dim objdaoleheadselcomd As New OleDb.OleDbCommand
+        Dim objdalocDebiSubs As New MySqlDataAdapter
+        Dim objdalocDebiHeads As New MySqlDataAdapter
+        Dim objdasubselcomd As New MySqlCommand
+        Dim objdaheadselcomd As New MySqlCommand
+        Dim objdslocdebisub As New DataSet
+        Dim objdslocdebihead As New DataSet
+        Dim strConnection As String
+        Dim objRGMySQLConn As New MySqlConnection
+        Dim objlocMySQLcmd As New MySqlCommand
+        Dim strSQLToParse As String
+        Dim objmysqlcomdwritehead As New MySqlCommand
+        Dim intFcReturns As Int16
+        Dim strmysqlSaveSub As String
+        Dim objmysqlcomdwritesub As New MySqlCommand
+        Dim intAccounting As Int16 = CInt(e.Argument)
+        Dim objdbConnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objdbAccessConn As New OleDb.OleDbConnection
+        Dim objOLEdbcmdLoc As New OleDb.OleDbCommand
+
+
+        Try
+
+            Debug.Print("BW Start " + Convert.ToString(intAccounting))
+            objmysqlcomdwritehead.Connection = objdbConnZHDB02
+            objmysqlcomdwritesub.Connection = objdbConnZHDB02
+
+            'Für den Save der Records
+            strIdentityName = System.Security.Principal.WindowsIdentity.GetCurrent().Name
+            strIdentityName = Strings.Replace(strIdentityName, "\", "/")
+
+            strMDBName = Main.FcReadFromSettingsII("Buchh_RGTableMDB",
                                                         intAccounting)
 
-                strSQL = Main.FcReadFromSettingsII("Buchh_SQLHead",
+            strSQL = Main.FcReadFromSettingsII("Buchh_SQLHead",
                                                  intAccounting)
 
-                strRGTableType = Main.FcReadFromSettingsII("Buchh_RGTableType",
+            strRGTableType = Main.FcReadFromSettingsII("Buchh_RGTableType",
                                                          intAccounting)
-                objdslocdebihead.EnforceConstraints = False
-                objdslocdebihead.AcceptChanges()
+            objdslocdebihead.EnforceConstraints = False
+            objdslocdebihead.AcceptChanges()
 
-                Debug.Print("BW Before Read Head " + Convert.ToString(intAccounting))
-                If strRGTableType = "A" Then
+            Debug.Print("BW Before Read Head " + Convert.ToString(intAccounting))
+            If strRGTableType = "A" Then
 
-                    'Access
-                    Call Main.FcInitAccessConnecation(objdbAccessConn,
+                'Access
+                Call Main.FcInitAccessConnecation(objdbAccessConn,
                                                   strMDBName)
-                    objdaoleheadselcomd.Connection = objdbAccessConn
-                    objdaoleheadselcomd.CommandText = strSQL
-                    objdaolelocDebiHeads.SelectCommand = objdaoleheadselcomd
-                    objdaolelocDebiHeads.SelectCommand.Connection.Open()
-                    objdaolelocDebiHeads.Fill(objdslocdebihead, "tbldebihead")
-                    objdaolelocDebiHeads.SelectCommand.Connection.Close()
-                    'objdbAccessConn.Open()
-                    'objOLEdbcmdLoc.CommandText = strSQL
-                    'objOLEdbcmdLoc.Connection = objdbAccessConn
-                    'objdtLocDebiHead.Load(objOLEdbcmdLoc.ExecuteReader)
-                    'objdbAccessConn.Close()
-                ElseIf strRGTableType = "M" Then
+                objdaoleheadselcomd.Connection = objdbAccessConn
+                objdaoleheadselcomd.CommandText = strSQL
+                objdaolelocDebiHeads.SelectCommand = objdaoleheadselcomd
+                objdaolelocDebiHeads.SelectCommand.Connection.Open()
+                objdaolelocDebiHeads.Fill(objdslocdebihead, "tbldebihead")
+                objdaolelocDebiHeads.SelectCommand.Connection.Close()
+                'objdbAccessConn.Open()
+                'objOLEdbcmdLoc.CommandText = strSQL
+                'objOLEdbcmdLoc.Connection = objdbAccessConn
+                'objdtLocDebiHead.Load(objOLEdbcmdLoc.ExecuteReader)
+                'objdbAccessConn.Close()
+            ElseIf strRGTableType = "M" Then
 
-                    strConnection = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
-                    objRGMySQLConn.ConnectionString = strConnection
-                    objdaheadselcomd.Connection = objRGMySQLConn
-                    objdaheadselcomd.CommandText = strSQL
-                    objdalocDebiHeads.SelectCommand = objdaheadselcomd
-                    objdalocDebiHeads.SelectCommand.Connection.Open()
-                    objdalocDebiHeads.Fill(objdslocdebihead, "tbldebihead")
-                    objdalocDebiHeads.SelectCommand.Connection.Close()
-                    'objlocMySQLcmd.Connection = objRGMySQLConn
-                    'objlocMySQLcmd.CommandText = strSQL
-                    'objRGMySQLConn.Open()
-                    'objdtLocDebiHead.Load(objlocMySQLcmd.ExecuteReader)
-                    'objRGMySQLConn.Close()
+                strConnection = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                objRGMySQLConn.ConnectionString = strConnection
+                objdaheadselcomd.Connection = objRGMySQLConn
+                objdaheadselcomd.CommandText = strSQL
+                objdalocDebiHeads.SelectCommand = objdaheadselcomd
+                objdalocDebiHeads.SelectCommand.Connection.Open()
+                objdalocDebiHeads.Fill(objdslocdebihead, "tbldebihead")
+                objdalocDebiHeads.SelectCommand.Connection.Close()
+                'objlocMySQLcmd.Connection = objRGMySQLConn
+                'objlocMySQLcmd.CommandText = strSQL
+                'objRGMySQLConn.Open()
+                'objdtLocDebiHead.Load(objlocMySQLcmd.ExecuteReader)
+                'objRGMySQLConn.Close()
 
-                Else
-                    MessageBox.Show("Tabletype not A or M")
-                    Exit Sub
-                End If
+            Else
+                MessageBox.Show("Tabletype not A or M")
+                Exit Sub
+            End If
 
-                objdslocdebisub.EnforceConstraints = False
-                objdslocdebisub.AcceptChanges()
+            objdslocdebisub.EnforceConstraints = False
+            objdslocdebisub.AcceptChanges()
 
-                strSQLToParse = Main.FcReadFromSettingsII("Buchh_SQLDetail",
+            strSQLToParse = Main.FcReadFromSettingsII("Buchh_SQLDetail",
                                                         intAccounting)
 
-                intFcReturns = Main.FcInitInsCmdDHeads(objmysqlcomdwritehead)
+            intFcReturns = Main.FcInitInsCmdDHeads(objmysqlcomdwritehead)
 
-                Debug.Print("BW Write Heads " + Convert.ToString(intAccounting))
-                For Each row As DataRow In objdslocdebihead.Tables("tbldebihead").Rows
+            Debug.Print("BW Write Heads " + Convert.ToString(intAccounting))
+            For Each row As DataRow In objdslocdebihead.Tables("tbldebihead").Rows
 
-                    objmysqlcomdwritehead.Connection.Open()
-                    objmysqlcomdwritehead.Parameters("@IdentityName").Value = strIdentityName
-                    objmysqlcomdwritehead.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id
-                    objmysqlcomdwritehead.Parameters("@intBuchhaltung").Value = intAccounting
-                    objmysqlcomdwritehead.Parameters("@strDebRGNbr").Value = row("strDebRGNbr")
-                    objmysqlcomdwritehead.Parameters("@intBuchungsart").Value = row("intBuchungsart")
-                    objmysqlcomdwritehead.Parameters("@intRGArt").Value = row("intRGArt")
-                    If row.Table.Columns.Contains("strRGArt") Then
-                        objmysqlcomdwritehead.Parameters("@strRGArt").Value = row("strRGArt")
-                    End If
-                    objmysqlcomdwritehead.Parameters("@strOPNr").Value = row("strOPNr")
-                    objmysqlcomdwritehead.Parameters("@lngDebNbr").Value = row("lngDebNbr")
-                    objmysqlcomdwritehead.Parameters("@lngDebKtoNbr").Value = row("lngDebKtoNbr")
-                    objmysqlcomdwritehead.Parameters("@strDebCur").Value = row("strDebCur")
-                    objmysqlcomdwritehead.Parameters("@lngDebiKST").Value = row("lngDebiKST")
-                    objmysqlcomdwritehead.Parameters("@dblDebNetto").Value = row("dblDebNetto")
-                    objmysqlcomdwritehead.Parameters("@dblDebMwSt").Value = row("dblDebMwSt")
-                    objmysqlcomdwritehead.Parameters("@dblDebBrutto").Value = row("dblDebBrutto")
-                    objmysqlcomdwritehead.Parameters("@lngDebIdentNbr").Value = row("lngDebIdentNbr")
-                    objmysqlcomdwritehead.Parameters("@strDebText").Value = row("strDebText")
-                    If row.Table.Columns.Contains("strDebReferenz") Then
-                        objmysqlcomdwritehead.Parameters("@strDebreferenz").Value = row("strDebReferenz")
-                    End If
-                    objmysqlcomdwritehead.Parameters("@datDebRGDatum").Value = row("datDebRGDatum")
-                    objmysqlcomdwritehead.Parameters("@datDebValDatum").Value = row("datDebValDatum")
-                    If row.Table.Columns.Contains("datRGCreate") Then
-                        objmysqlcomdwritehead.Parameters("@datRGCreate").Value = row("datRGCreate")
-                    End If
-                    If row.Table.Columns.Contains("intPayType") Then
-                        objmysqlcomdwritehead.Parameters("@intPayType").Value = row("intPayType")
-                    End If
-                    objmysqlcomdwritehead.Parameters("@strDebiBank").Value = row("strDebiBank")
-                    objmysqlcomdwritehead.Parameters("@lngLinkedRG").Value = row("lngLinkedRG")
-                    objmysqlcomdwritehead.Parameters("@strRGName").Value = row("strRGName")
-                    If row.Table.Columns.Contains("strDebIdentNbr2") Then
-                        objmysqlcomdwritehead.Parameters("@strDebIdentNbr2").Value = row("strDebIdentNbr2")
-                    End If
-                    If row.Table.Columns.Contains("booCrToInv") Then
-                        objmysqlcomdwritehead.Parameters("@booCrToInv").Value = row("booCrToInv")
-                    End If
-                    If row.Table.Columns.Contains("datPGVFrom") Then
-                        objmysqlcomdwritehead.Parameters("@datPGVFrom").Value = row("datPGVFrom")
-                    End If
-                    If row.Table.Columns.Contains("datPGVTo") Then
-                        objmysqlcomdwritehead.Parameters("@datPGVTo").Value = row("datPGVTo")
-                    End If
-                    objmysqlcomdwritehead.ExecuteNonQuery()
-                    objmysqlcomdwritehead.Connection.Close()
-                    objdtLocDebiHead.AcceptChanges()
+                objmysqlcomdwritehead.Connection.Open()
+                objmysqlcomdwritehead.Parameters("@IdentityName").Value = strIdentityName
+                objmysqlcomdwritehead.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id
+                objmysqlcomdwritehead.Parameters("@intBuchhaltung").Value = intAccounting
+                objmysqlcomdwritehead.Parameters("@strDebRGNbr").Value = row("strDebRGNbr")
+                objmysqlcomdwritehead.Parameters("@intBuchungsart").Value = row("intBuchungsart")
+                objmysqlcomdwritehead.Parameters("@intRGArt").Value = row("intRGArt")
+                If row.Table.Columns.Contains("strRGArt") Then
+                    objmysqlcomdwritehead.Parameters("@strRGArt").Value = row("strRGArt")
+                End If
+                objmysqlcomdwritehead.Parameters("@strOPNr").Value = row("strOPNr")
+                objmysqlcomdwritehead.Parameters("@lngDebNbr").Value = row("lngDebNbr")
+                objmysqlcomdwritehead.Parameters("@lngDebKtoNbr").Value = row("lngDebKtoNbr")
+                objmysqlcomdwritehead.Parameters("@strDebCur").Value = row("strDebCur")
+                objmysqlcomdwritehead.Parameters("@lngDebiKST").Value = row("lngDebiKST")
+                objmysqlcomdwritehead.Parameters("@dblDebNetto").Value = row("dblDebNetto")
+                objmysqlcomdwritehead.Parameters("@dblDebMwSt").Value = row("dblDebMwSt")
+                objmysqlcomdwritehead.Parameters("@dblDebBrutto").Value = row("dblDebBrutto")
+                objmysqlcomdwritehead.Parameters("@lngDebIdentNbr").Value = row("lngDebIdentNbr")
+                objmysqlcomdwritehead.Parameters("@strDebText").Value = row("strDebText")
+                If row.Table.Columns.Contains("strDebReferenz") Then
+                    objmysqlcomdwritehead.Parameters("@strDebreferenz").Value = row("strDebReferenz")
+                End If
+                objmysqlcomdwritehead.Parameters("@datDebRGDatum").Value = row("datDebRGDatum")
+                objmysqlcomdwritehead.Parameters("@datDebValDatum").Value = row("datDebValDatum")
+                If row.Table.Columns.Contains("datRGCreate") Then
+                    objmysqlcomdwritehead.Parameters("@datRGCreate").Value = row("datRGCreate")
+                End If
+                If row.Table.Columns.Contains("intPayType") Then
+                    objmysqlcomdwritehead.Parameters("@intPayType").Value = row("intPayType")
+                End If
+                objmysqlcomdwritehead.Parameters("@strDebiBank").Value = row("strDebiBank")
+                objmysqlcomdwritehead.Parameters("@lngLinkedRG").Value = row("lngLinkedRG")
+                objmysqlcomdwritehead.Parameters("@strRGName").Value = row("strRGName")
+                If row.Table.Columns.Contains("strDebIdentNbr2") Then
+                    objmysqlcomdwritehead.Parameters("@strDebIdentNbr2").Value = row("strDebIdentNbr2")
+                End If
+                If row.Table.Columns.Contains("booCrToInv") Then
+                    objmysqlcomdwritehead.Parameters("@booCrToInv").Value = row("booCrToInv")
+                End If
+                If row.Table.Columns.Contains("datPGVFrom") Then
+                    objmysqlcomdwritehead.Parameters("@datPGVFrom").Value = row("datPGVFrom")
+                End If
+                If row.Table.Columns.Contains("datPGVTo") Then
+                    objmysqlcomdwritehead.Parameters("@datPGVTo").Value = row("datPGVTo")
+                End If
+                objmysqlcomdwritehead.ExecuteNonQuery()
+                objmysqlcomdwritehead.Connection.Close()
+                objdtLocDebiHead.AcceptChanges()
 
-                    'Subs einlesen
-                    'Es muss der Weg über das DS genommen werden wegen den constraint-Verlethzungen
-                    strSQLSub = Main.FcSQLParse2(strSQLToParse,
+                'Subs einlesen
+                'Es muss der Weg über das DS genommen werden wegen den constraint-Verlethzungen
+                strSQLSub = Main.FcSQLParse2(strSQLToParse,
                                                        row("strDebRGNbr"),
                                                        objdslocdebihead.Tables("tbldebihead"),
                                                        "D")
 
-                    If strRGTableType = "A" Then
-                        objdaolesubsselcomd.CommandText = strSQLSub
-                        objdaolesubsselcomd.Connection = objdbAccessConn
-                        objdaolelocDebiSubs.SelectCommand = objdaolesubsselcomd
-                        objdaolelocDebiSubs.SelectCommand.Connection.Open()
-                        objdaolelocDebiSubs.Fill(objdslocdebisub, "tbldebisubs")
-                        objdaolelocDebiSubs.SelectCommand.Connection.Close()
-                        'objdbAccessConn.Open()
-                        'objOLEdbcmdLoc.CommandText = strSQLSub
-                        'objdtlocDebiSub.Load(objOLEdbcmdLoc.ExecuteReader)
-                        'objdbAccessConn.Close()
-                    ElseIf strRGTableType = "M" Then
-                        objdasubselcomd.CommandText = strSQLSub
-                        objdasubselcomd.Connection = objRGMySQLConn
-                        objdalocDebiSubs.SelectCommand = objdasubselcomd
-                        'objdalocDebiSubs.SelectCommand.Connection = objRGMySQLConn
-                        'objdalocDebiSubs.SelectCommand.CommandText = strSQLSub
-                        objdalocDebiSubs.SelectCommand.Connection.Open()
-                        objdalocDebiSubs.Fill(objdslocdebisub, "tbldebisubs")
-                        objdalocDebiSubs.SelectCommand.Connection.Close()
-                        'objRGMySQLConn.Open()
-                        'objdtlocDebiSub.Load(objlocMySQLcmd.ExecuteReader)
-                        'objRGMySQLConn.Close()
-                    End If
-
-
-
-                Next
-                If Not IsNothing(objdslocdebisub.Tables("tbldebisubs")) Then
-
-                    Debug.Print("BW Write Subs")
-                    'Subs schreiben
-                    intFcReturns = Main.FcInitInscmdSubs(objmysqlcomdwritesub)
-                    'For Each drsub As DataRow In objdtlocDebiSub.Rows
-                    For Each drsub As DataRow In objdslocdebisub.Tables("tbldebisubs").Rows
-
-                        objmysqlcomdwritesub.Connection.Open()
-                        objmysqlcomdwritesub.Parameters("@IdentityName").Value = strIdentityName
-                        objmysqlcomdwritesub.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id
-                        objmysqlcomdwritesub.Parameters("@strRGNr").Value = drsub("strRGNr")
-                        objmysqlcomdwritesub.Parameters("@lngKto").Value = drsub("lngKto")
-                        objmysqlcomdwritesub.Parameters("@lngKST").Value = drsub("lngKST")
-                        objmysqlcomdwritesub.Parameters("@dblNetto").Value = drsub("dblNetto")
-                        objmysqlcomdwritesub.Parameters("@dblMwSt").Value = drsub("dblMwSt")
-                        objmysqlcomdwritesub.Parameters("@dblBrutto").Value = drsub("dblBrutto")
-                        objmysqlcomdwritesub.Parameters("@dblMwStSatz").Value = drsub("dblMwStSatz")
-                        objmysqlcomdwritesub.Parameters("@strMwStKey").Value = drsub("strMwStKey")
-                        objmysqlcomdwritesub.Parameters("@intSollHaben").Value = drsub("intSollHaben")
-                        If objdtlocDebiSub.Columns.Contains("strArtikel") Then
-                            objmysqlcomdwritesub.Parameters("@strArtikel").Value = drsub("strArtikel")
-                        End If
-                        objmysqlcomdwritesub.ExecuteNonQuery()
-                        objmysqlcomdwritesub.Connection.Close()
-
-                        objdtlocDebiSub.AcceptChanges()
-
-                    Next
-
+                If strRGTableType = "A" Then
+                    objdaolesubsselcomd.CommandText = strSQLSub
+                    objdaolesubsselcomd.Connection = objdbAccessConn
+                    objdaolelocDebiSubs.SelectCommand = objdaolesubsselcomd
+                    objdaolelocDebiSubs.SelectCommand.Connection.Open()
+                    objdaolelocDebiSubs.Fill(objdslocdebisub, "tbldebisubs")
+                    objdaolelocDebiSubs.SelectCommand.Connection.Close()
+                    'objdbAccessConn.Open()
+                    'objOLEdbcmdLoc.CommandText = strSQLSub
+                    'objdtlocDebiSub.Load(objOLEdbcmdLoc.ExecuteReader)
+                    'objdbAccessConn.Close()
+                ElseIf strRGTableType = "M" Then
+                    objdasubselcomd.CommandText = strSQLSub
+                    objdasubselcomd.Connection = objRGMySQLConn
+                    objdalocDebiSubs.SelectCommand = objdasubselcomd
+                    'objdalocDebiSubs.SelectCommand.Connection = objRGMySQLConn
+                    'objdalocDebiSubs.SelectCommand.CommandText = strSQLSub
+                    objdalocDebiSubs.SelectCommand.Connection.Open()
+                    objdalocDebiSubs.Fill(objdslocdebisub, "tbldebisubs")
+                    objdalocDebiSubs.SelectCommand.Connection.Close()
+                    'objRGMySQLConn.Open()
+                    'objdtlocDebiSub.Load(objlocMySQLcmd.ExecuteReader)
+                    'objRGMySQLConn.Close()
                 End If
 
 
-                'Return 0
 
-            Catch ex As Exception
-                MessageBox.Show(ex.Message, "Debitoren-Daten-Lesen Problem", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-                'Return 1
+            Next
+            If Not IsNothing(objdslocdebisub.Tables("tbldebisubs")) Then
 
-            Finally
-                objdbAccessConn = Nothing
-                objRGMySQLConn = Nothing
+                Debug.Print("BW Write Subs")
+                'Subs schreiben
+                intFcReturns = Main.FcInitInscmdSubs(objmysqlcomdwritesub)
+                'For Each drsub As DataRow In objdtlocDebiSub.Rows
+                For Each drsub As DataRow In objdslocdebisub.Tables("tbldebisubs").Rows
 
-                objdslocdebihead = Nothing
-                objdslocdebisub = Nothing
+                    objmysqlcomdwritesub.Connection.Open()
+                    objmysqlcomdwritesub.Parameters("@IdentityName").Value = strIdentityName
+                    objmysqlcomdwritesub.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id
+                    objmysqlcomdwritesub.Parameters("@strRGNr").Value = drsub("strRGNr")
+                    objmysqlcomdwritesub.Parameters("@lngKto").Value = drsub("lngKto")
+                    objmysqlcomdwritesub.Parameters("@lngKST").Value = drsub("lngKST")
+                    objmysqlcomdwritesub.Parameters("@dblNetto").Value = drsub("dblNetto")
+                    objmysqlcomdwritesub.Parameters("@dblMwSt").Value = drsub("dblMwSt")
+                    objmysqlcomdwritesub.Parameters("@dblBrutto").Value = drsub("dblBrutto")
+                    objmysqlcomdwritesub.Parameters("@dblMwStSatz").Value = drsub("dblMwStSatz")
+                    objmysqlcomdwritesub.Parameters("@strMwStKey").Value = drsub("strMwStKey")
+                    objmysqlcomdwritesub.Parameters("@intSollHaben").Value = drsub("intSollHaben")
+                    If objdtlocDebiSub.Columns.Contains("strArtikel") Then
+                        objmysqlcomdwritesub.Parameters("@strArtikel").Value = drsub("strArtikel")
+                    End If
+                    objmysqlcomdwritesub.ExecuteNonQuery()
+                    objmysqlcomdwritesub.Connection.Close()
 
-                objdalocDebiSubs = Nothing
-                objdalocDebiHeads = Nothing
+                    objdtlocDebiSub.AcceptChanges()
 
-                objdaolelocDebiSubs = Nothing
-                objdaolelocDebiHeads = Nothing
+                Next
 
-                objdaoleheadselcomd = Nothing
-                objdaheadselcomd = Nothing
-                objdaolesubsselcomd = Nothing
-                objdasubselcomd = Nothing
+            End If
 
-                strConnection = Nothing
+
+            'Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Debitoren-Daten-Lesen Problem", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            'Return 1
+
+        Finally
+            objdbAccessConn = Nothing
+            objRGMySQLConn = Nothing
+
+            objdslocdebihead = Nothing
+            objdslocdebisub = Nothing
+
+            objdalocDebiSubs = Nothing
+            objdalocDebiHeads = Nothing
+
+            objdaolelocDebiSubs = Nothing
+            objdaolelocDebiHeads = Nothing
+
+            objdaoleheadselcomd = Nothing
+            objdaheadselcomd = Nothing
+            objdaolesubsselcomd = Nothing
+            objdasubselcomd = Nothing
+
+            strConnection = Nothing
             'System.GC.Collect()
 
             Debug.Print("BW finsih " + Convert.ToString(intAccounting))
 
         End Try
 
-        End Sub
+    End Sub
 
     Private Sub BgWCheckDebi_DoWork(sender As Object, e As System.ComponentModel.DoWorkEventArgs) Handles BgWCheckDebi.DoWork
 
@@ -1898,6 +1921,7 @@ Public Class frmDebDisp
 
         Try
 
+            Debug.Print("Start Check " + Convert.ToString(BgWCheckDebiArgsInProc.intMandant))
             'Finanz-Obj init
             'Login
             Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
@@ -1926,8 +1950,8 @@ Public Class frmDebDisp
             booDiffHeadText = IIf(Main.FcReadFromSettingsII("Buchh_TextSpecial", BgWCheckDebiArgsInProc.intMandant) = "0", False, True)
             booDiffSubText = IIf(Main.FcReadFromSettingsII("Buchh_SubTextSpecial", BgWCheckDebiArgsInProc.intMandant) = "0", False, True)
             booPKPrivate = IIf(Main.FcReadFromSettingsII("Buchh_PKTable", BgWCheckDebiArgsInProc.intMandant) = "t_customer", True, False)
-            booValutaCorrect = frmImportMain.chkValutaCorrect.Checked
-            datValutaCorrect = frmImportMain.dtpValutaCorrect.Value
+            booValutaCorrect = BgWCheckDebiArgsInProc.booValutaCor
+            datValutaCorrect = BgWCheckDebiArgsInProc.datValutaCor
             dsDebitoren.Tables("tblDebiHeadsFromUser").AcceptChanges()
 
             For Each row As DataRow In dsDebitoren.Tables("tblDebiHeadsFromUser").Rows
@@ -2633,6 +2657,7 @@ Public Class frmDebDisp
             selsubrow = Nothing
 
             System.GC.Collect()
+            Debug.Print("End Check " + Convert.ToString(BgWCheckDebiArgsInProc.intMandant))
 
         End Try
 
@@ -2744,10 +2769,10 @@ Public Class frmDebDisp
 
 
             'Start in Sync schreiben
-            intReturnValue = WFDBClass.FcWriteStartToSync(objdbConnZHDB02,
-                                                          BgWImportDebiArgsInProc.intMandant,
-                                                          1,
-                                                          dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count)
+            'intReturnValue = WFDBClass.FcWriteStartToSync(objdbConnZHDB02,
+            '                                              BgWImportDebiArgsInProc.intMandant,
+            '                                              1,
+            '                                              dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count)
 
             'Setting soll erfasste OP als externe Beleg-Nr. genommen werden und lngDebIdentNbr als Beleg-Nr.
             booErfOPExt = Convert.ToBoolean(Convert.ToInt16(Main.FcReadFromSettingsII("Buchh_ErfOPExt", BgWImportDebiArgsInProc.intMandant)))
@@ -2781,11 +2806,9 @@ Public Class frmDebDisp
                                 'Belegsnummer abholen
                                 intDebBelegsNummer = objdbBuha.GetNextBelNbr("G")
                                 'Prüfen ob wirklich frei und falls nicht hochzählen
-                                intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
-                                                                                      objdbSQLcommand,
-                                                                                      intDebBelegsNummer,
-                                                                                      "G",
-                                                                                      BgWImportDebiArgsInProc.intTeqNbr)
+                                intReturnValue = MainDebitor.FcCheckDebiExistance(intDebBelegsNummer,
+                                                                                  "G",
+                                                                                  BgWImportDebiArgsInProc.intTeqNbr)
 
                                 strExtBelegNbr = row("strOPNr")
                             End If
@@ -2806,22 +2829,18 @@ Public Class frmDebDisp
                                 objdbBuha.IncrBelNbr = "J"
                                 'Belegsnummer abholen
                                 intDebBelegsNummer = objdbBuha.GetNextBelNbr("R")
-                                intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
-                                                                                      objdbSQLcommand,
-                                                                                      intDebBelegsNummer,
-                                                                                      "R",
-                                                                                      BgWImportDebiArgsInProc.intTeqNbr)
+                                intReturnValue = MainDebitor.FcCheckDebiExistance(intDebBelegsNummer,
+                                                                                  "R",
+                                                                                  BgWImportDebiArgsInProc.intTeqNbr)
                             Else
                                 If Strings.Len(Main.FcCleanRGNrStrict(row("strOPNr"))) > 9 Then
                                     'Zahl zu gross
                                     objdbBuha.IncrBelNbr = "J"
                                     'Belegsnummer abholen
                                     intDebBelegsNummer = objdbBuha.GetNextBelNbr("R")
-                                    intReturnValue = MainDebitor.FcCheckDebiExistance(objdbMSSQLConn,
-                                                                                          objdbSQLcommand,
-                                                                                          intDebBelegsNummer,
-                                                                                          "R",
-                                                                                          BgWImportDebiArgsInProc.intTeqNbr)
+                                    intReturnValue = MainDebitor.FcCheckDebiExistance(intDebBelegsNummer,
+                                                                                      "R",
+                                                                                      BgWImportDebiArgsInProc.intTeqNbr)
                                     strExtBelegNbr = row("strOPNr")
                                 Else
                                     'Beleg-Nummerierung abschalten
@@ -3466,11 +3485,11 @@ Public Class frmDebDisp
                         End If
 
                         'Status Head schreiben
-                        dsDebitoren.Tables("tblDebiHeadsFromUser").AcceptChanges()
                         row("strDebBookStatus") = row("strDebStatusBitLog")
                         row("booBooked") = True
                         row("datBooked") = Now()
                         row("lngBelegNr") = intDebBelegsNummer
+                        dsDebitoren.Tables("tblDebiHeadsFromUser").AcceptChanges()
                         'Application.DoEvents()
 
                         'Status in File RG-Tabelle schreiben
@@ -3516,8 +3535,8 @@ Public Class frmDebDisp
             objdbAccessConn = Nothing
             objOracleConn = Nothing
 
-            System.GC.Collect()
-
+            'Me.dsDebitoren = Nothing
+            'System.GC.Collect()
 
         End Try
 
@@ -3525,8 +3544,36 @@ Public Class frmDebDisp
 
     Private Sub frmDebDisp_FormClosed(sender As Object, e As FormClosedEventArgs) Handles MyBase.FormClosed
 
+        'System.GC.Collect()
+        Me.mysqlcmdDebDel = Nothing
+        Me.mysqlcmdDebRead = Nothing
+        Me.mysqlcmdDebSubDel = Nothing
+        Me.mysqlcmdDebSubRead = Nothing
+        Me.mysqlconn = Nothing
+        Me.MySQLdaDebitoren = Nothing
+        Me.MySQLdaDebitorenSub = Nothing
+
+        Me.dsDebitoren = Nothing
         Me.Dispose()
         System.GC.Collect()
+        'System.Diagnostics.Process.Start(Application.ExecutablePath)
+        'Environment.Exit(0)
+        'System.GC.Collect()
+        Application.Restart()
+
+    End Sub
+
+    Private Sub butDeSeöect_Click(sender As Object, e As EventArgs) Handles butDeSeöect.Click
+
+        'Alle selektierten Records werden deselektiert
+
+        For Each row As DataRow In dsDebitoren.Tables("tblDebiHeadsFromUser").Rows
+            If row("booDebBook") Then
+                row("booDebBook") = False
+            End If
+        Next
+        dsDebitoren.Tables("tblDebiHeadsFromUser").AcceptChanges()
+        'Me.Refresh()
 
     End Sub
 End Class
