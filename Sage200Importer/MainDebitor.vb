@@ -446,7 +446,7 @@ Public Class MainDebitor
         Dim objlocOLEdbcmd As New OleDb.OleDbCommand
         Dim strMDBName As String = Main.FcReadFromSettingsII("Buchh_PKTableConnection",
                                                            intAccounting)
-        Dim objOrcommand As OracleClient.OracleCommand
+        'Dim objOrcommand As New OracleClient.OracleCommand
         Dim strSQL As String
         Dim intFunctionReturns As Int16
 
@@ -488,11 +488,12 @@ Public Class MainDebitor
             If strTableName <> "" And strDebFieldName <> "" Then
 
                 If strTableType = "O" Then 'Oracle
+                    Stop
                     'objOrdbconn.Open()
                     'objOrcommand.CommandText = "SELECT " + strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
                     '                            " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
-                    objOrcommand.CommandText = strSQL
-                    objdtDebitor.Load(objOrcommand.ExecuteReader)
+                    'objOrcommand.CommandText = strSQL
+                    'objdtDebitor.Load(objOrcommand.ExecuteReader)
                     'Ist DebiNrNew Linked oder Direkt
                     'If strDebNewFieldType = "D" Then
 
@@ -613,6 +614,11 @@ Public Class MainDebitor
 
         Finally
             objdtDebitor = Nothing
+            objdbConnDeb = Nothing
+            objsqlCommDeb = Nothing
+            objdbAccessConn = Nothing
+            objlocOLEdbcmd = Nothing
+            System.GC.Collect()
 
         End Try
 

@@ -353,7 +353,7 @@ Friend Class frmImportMain
             MessageBox.Show(ex.Message, "Problem Debitorenauflistung", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
-            System.GC.Collect()
+            'System.GC.Collect()
             Me.Cursor = Cursors.Default
 
         End Try

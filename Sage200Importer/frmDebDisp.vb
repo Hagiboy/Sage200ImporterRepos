@@ -343,9 +343,13 @@ Public Class frmDebDisp
                 Application.DoEvents()
             Loop
 
-            System.GC.Collect()
+            'System.GC.Collect()
+
+            Debug.Print("Vor Refresh DGV")
 
             'Grid neu aufbauen
+            'dgvBookings.DataSource = Nothing
+            'dgvBookingSub.DataSource = Nothing
             dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
             dgvBookingSub.DataSource = dsDebitoren.Tables("tblDebiSubsFromUser")
 
@@ -379,6 +383,8 @@ Public Class frmDebDisp
             objdbSQLcommand = Nothing
             objdbtaskcmd = Nothing
             objdbtasks = Nothing
+
+            BgWCheckDebitLocArgs = Nothing
 
             'System.GC.Collect()
 
@@ -1540,6 +1546,7 @@ Public Class frmDebDisp
             'Application.DoEvents()
             'Grid neu aufbauen, Daten von Mandant einlesen
             'Call butDebitoren.PerformClick()
+            BgWImportDebiLocArgs = Nothing
 
             Me.Cursor = Cursors.Default
             'Me.butImport.Enabled = False
@@ -1921,7 +1928,7 @@ Public Class frmDebDisp
 
         Try
 
-            Debug.Print("Start Check " + Convert.ToString(BgWCheckDebiArgsInProc.intMandant))
+            Debug.Print("Start Debi Check " + Convert.ToString(BgWCheckDebiArgsInProc.intMandant))
             'Finanz-Obj init
             'Login
             Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
@@ -2009,12 +2016,15 @@ Public Class frmDebDisp
                     row("booLinked") = False
                 End If
 
+                'Debug.Print("Before check Sub")
+
                 intReturnValue = Main.FcCheckSubBookings(row("strDebRGNbr"),
                                                     dsDebitoren.Tables("tblDebiSubsFromUser"),
                                                     intSubNumber,
                                                     dblSubBrutto,
                                                     dblSubNetto,
                                                     dblSubMwSt,
+                                                    row("datDebValDatum"),
                                                     objfiBuha,
                                                     objdbPIFb,
                                                     objFiBebu,
@@ -2657,7 +2667,7 @@ Public Class frmDebDisp
             selsubrow = Nothing
 
             System.GC.Collect()
-            Debug.Print("End Check " + Convert.ToString(BgWCheckDebiArgsInProc.intMandant))
+            Debug.Print("End Debi Check " + Convert.ToString(BgWCheckDebiArgsInProc.intMandant))
 
         End Try
 
@@ -3085,9 +3095,14 @@ Public Class frmDebDisp
                                 MessageBox.Show(ex.Message + vbCrLf + strErrMessage, "Problem " + (Err.Number And 65535).ToString, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                                 booBooingok = False
                             Else
-                                strErrMessage = "Belegerstellung RG " + strRGNbr + " Beleg " + intDebBelegsNummer.ToString + " möglich mit Warnung"
-                                MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString, MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                                booBooingok = True
+                                If (Err.Number And 65535) = 10030 Then
+                                    'MwSt-7.7/8.1 überschneidung nichts machen
+                                    booBooingok = True
+                                Else
+                                    strErrMessage = "Belegerstellung RG " + strRGNbr + " Beleg " + intDebBelegsNummer.ToString + " möglich mit Warnung"
+                                    MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString, MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                                    booBooingok = True
+                                End If
                             End If
 
                         End Try
@@ -3243,11 +3258,18 @@ Public Class frmDebDisp
 
 
                             Catch ex As Exception
-                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                                 If (Err.Number And 65535) < 10000 Then
+                                    MessageBox.Show(ex.Message, "Schweres Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                                     booBooingok = False
                                 Else
-                                    booBooingok = True
+                                    If (Err.Number And 65535) = 10030 Then
+                                        'MwSt 7.7/8.1 Überschneidung
+                                        booAccOk = True
+                                    Else
+                                        MessageBox.Show(ex.Message, "Buchbares Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                                        booBooingok = True
+                                    End If
+
                                 End If
 
                             End Try
@@ -3390,12 +3412,18 @@ Public Class frmDebDisp
                                 Call objfiBuha.WriteSammelBhgT()
 
                             Catch ex As Exception
-
-                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                                 If (Err.Number And 65535) < 10000 Then
+                                    MessageBox.Show(ex.Message, "Scxhweres Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
                                     booBooingok = False
                                 Else
-                                    booBooingok = True
+                                    If (Err.Number And 65535) = 10030 Then
+                                        'MwSt 7.7/8.1 Überschneidung Keine Meldung
+                                        booBooingok = True
+                                    Else
+                                        MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intDebBelegsNummer.ToString + ", RG " + strRGNbr, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                                        booBooingok = True
+                                    End If
+
                                 End If
                             End Try
 
@@ -3555,7 +3583,7 @@ Public Class frmDebDisp
 
         Me.dsDebitoren = Nothing
         Me.Dispose()
-        System.GC.Collect()
+        'System.GC.Collect()
         'System.Diagnostics.Process.Start(Application.ExecutablePath)
         'Environment.Exit(0)
         'System.GC.Collect()

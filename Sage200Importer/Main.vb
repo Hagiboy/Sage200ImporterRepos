@@ -1366,7 +1366,7 @@ ErrorHandler:
             'info befüllen
             If objlocdtPeriDef.Rows.Count > 0 Then 'Perioden-Definition vorhanden
 
-                strPeriodenDef(0) = objlocdtPeriDef.Rows(0).Item(2) 'Bezeichnung
+                strPeriodenDef(0) = IIf(IsDBNull(objlocdtPeriDef.Rows(0).Item(2)), "n/a", objlocdtPeriDef.Rows(0).Item(2)) 'Bezeichnung
                 strPeriodenDef(1) = objlocdtPeriDef.Rows(0).Item(3).ToString  'Von
                 strPeriodenDef(2) = objlocdtPeriDef.Rows(0).Item(4).ToString  'Bis
                 strPeriodenDef(3) = objlocdtPeriDef.Rows(0).Item(5)  'Status
@@ -1738,6 +1738,7 @@ ErrorHandler:
                                                     dblSubBrutto,
                                                     dblSubNetto,
                                                     dblSubMwSt,
+                                                    row("datDebValDatum"),
                                                     objfiBuha,
                                                     objdbPIFb,
                                                     objFiBebu,
@@ -2890,7 +2891,7 @@ ErrorHandler:
 
     Public Shared Function FcCheckMwSt(ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                        ByVal strStrCode As String,
-                                       ByVal dblStrWert As Double,
+                                       ByRef dblStrWert As Double,
                                        ByRef strStrCode200 As String,
                                        ByVal intKonto As Int32) As Integer
 
@@ -2929,6 +2930,10 @@ ErrorHandler:
                 'Wert von Tabelle übergeben
                 If Not IsDBNull(objlocdtMwSt.Rows(0).Item("intSage200Key")) Then
                     strStrCode200 = objlocdtMwSt.Rows(0).Item("intSage200Key")
+                    'Evtl falsch gesetzte MwSt-Satz korrigieren
+                    If objlocdtMwSt.Rows(0).Item("dblProzent") <> dblStrWert Then
+                        dblStrWert = objlocdtMwSt.Rows(0).Item("dblProzent")
+                    End If
                     Return 0
                 Else
                     strStrCode200 = "00"
@@ -2987,6 +2992,7 @@ ErrorHandler:
                                               ByRef dblSubBrutto As Double,
                                               ByRef dblSubNetto As Double,
                                               ByRef dblSubMwSt As Double,
+                                              ByVal datValuta As Date,
                                               ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                               ByRef objFiPI As SBSXASLib.AXiPlFin,
                                               ByRef objFiBebu As SBSXASLib.AXiBeBu,
@@ -3013,6 +3019,7 @@ ErrorHandler:
         Dim strBitLog As String
         Dim strStatusText As String
         Dim strStrStCodeSage200 As String = String.Empty
+        Dim dblStrStCodeSage As Double
         Dim strKstKtrSage200 As String = String.Empty
         Dim selsubrow() As DataRow
         Dim strStatusOverAll As String = "0000000"
@@ -3088,17 +3095,37 @@ ErrorHandler:
 
                 'MwSt prüfen 01
                 If Not IsDBNull(subrow("strMwStKey")) And IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "null" Then
+                    dblStrStCodeSage = IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz"))
                     intReturnValue = FcCheckMwSt(objFiBhg,
                                                  subrow("strMwStKey"),
-                                                 IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz")),
+                                                 dblStrStCodeSage,
                                                  strStrStCodeSage200,
                                                  subrow("lngKto"))
                     If intReturnValue = 0 Then
                         subrow("strMwStKey") = strStrStCodeSage200
+                        subrow("dblMwStSatz") = dblStrStCodeSage
                         'Check ob korrekt berechnet
-                        strSteuer = Split(objFiBhg.GetSteuerfeld2(subrow("lngKto").ToString,
-                                                                  "Zum Rechnen", subrow("dblBrutto").ToString,
+                        'Falsche Steueersätze abfangen
+                        Try
+
+                            strSteuer = Split(objFiBhg.GetSteuerfeld2(subrow("lngKto").ToString,
+                                                                  "Zum Rechnen",
+                                                                  subrow("dblBrutto").ToString,
+                                                                  strStrStCodeSage200,
+                                                                  "",
+                                                                  Format(datValuta, "yyyyMMdd"),
+                                                                  Convert.ToString(subrow("dblMwStSatz"))), "{<}")
+
+                        Catch ex As Exception
+                            'Debug.Print(ex.Message + ", " + (Err.Number And 65535).ToString)
+                            If (Err.Number And 65535) = 525 Then
+                                strSteuer = Split(objFiBhg.GetSteuerfeld2(subrow("lngKto").ToString,
+                                                                  "Zum Rechnen",
+                                                                  subrow("dblBrutto").ToString,
                                                                   strStrStCodeSage200), "{<}")
+                            End If
+
+                        End Try
                         If Val(strSteuer(2)) <> IIf(IsDBNull(subrow("dblMwst")), 0, subrow("dblMwst")) Then
                             'Im Fall von Auto-Korrekt anpassen wenn Toleranz
                             'Stop
