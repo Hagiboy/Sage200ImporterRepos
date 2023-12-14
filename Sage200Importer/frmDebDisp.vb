@@ -696,6 +696,7 @@ Public Class frmDebDisp
 
             Me.Cursor = Cursors.WaitCursor
             Me.butImport.Enabled = False
+
             BgWImportDebi.RunWorkerAsync(BgWImportDebiLocArgs)
 
             Do While BgWImportDebi.IsBusy
@@ -2769,7 +2770,7 @@ Public Class frmDebDisp
                                             BgWImportDebiArgsInProc.intMandant)
 
             booAccOk = objFinanz.CheckMandant(strMandant)
-            'Open Mandantg
+            'Open Mandant
             objFinanz.OpenMandant(strMandant, strPeriode)
             objfiBuha = objFinanz.GetFibuObj()
             objdbBuha = objFinanz.GetDebiObj()

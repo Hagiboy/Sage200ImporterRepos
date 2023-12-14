@@ -153,4 +153,13 @@
   <metadata name="dsKreditoren.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>697, 45</value>
   </metadata>
+  <metadata name="BgWLoadKredi.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>818, 45</value>
+  </metadata>
+  <metadata name="BgWCheckKredi.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>950, 45</value>
+  </metadata>
+  <metadata name="BgWImportKredi.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>1089, 45</value>
+  </metadata>
 </root>

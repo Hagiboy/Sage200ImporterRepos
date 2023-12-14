@@ -3422,6 +3422,411 @@ ErrorHandler:
 
     End Function
 
+    Friend Shared Function FcCheckKrediSubBookings2(ByVal lngKredID As Int32,
+                                              ByRef objDtKrediSub As DataTable,
+                                              ByRef intSubNumber As Int16,
+                                              ByRef dblSubBrutto As Double,
+                                              ByRef dblSubNetto As Double,
+                                              ByRef dblSubMwSt As Double,
+                                              ByVal datValuta As Date,
+                                              ByRef objFiBhg As SBSXASLib.AXiFBhg,
+                                              ByRef objBebu As SBSXASLib.AXiBeBu,
+                                              ByVal intBuchungsArt As Int32,
+                                              ByVal booAutoCorrect As Boolean,
+                                              ByVal booCpyKSTToSub As Boolean,
+                                              ByVal lngKrediKST As Int32,
+                                              ByVal intPayType As Int16,
+                                              ByVal strKrediBank As String) As Int16
+
+        'Functin Returns 0=ok, 1=Problem sub, 2=OP Diff zu Kopf, 3=OP nicht 0, 9=keine Subs
+
+        'BitLog in Sub
+        '1: Konto
+        '2: KST
+        '3: MwST
+        '4: Brutto, Netto + MwSt 0
+        '5: Netto 0
+        '6: Brutto 0
+        '7: Brutto - MwsT <> Netto
+
+        Dim intReturnValue As Int32
+        Dim strBitLog As String
+        Dim strStatusText As String
+        Dim strStrStCodeSage200 As String = String.Empty
+        Dim strKstKtrSage200 As String = String.Empty
+        Dim selsubrow() As DataRow
+        Dim strStatusOverAll As String = "0000000"
+        Dim strSteuer() As String
+
+        'Summen bilden und Angaben prüfen
+        intSubNumber = 0
+        dblSubNetto = 0
+        dblSubMwSt = 0
+        dblSubBrutto = 0
+
+        selsubrow = objDtKrediSub.Select("lngKredID=" + lngKredID.ToString)
+
+        Try
+
+            For Each subrow As DataRow In selsubrow
+
+                'Application.DoEvents()
+
+                strBitLog = String.Empty
+                'Runden
+                'subrow("dblNetto") = IIf(IsDBNull(subrow("dblNetto")), 0, Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero))
+                'subrow("dblMwSt") = IIf(IsDBNull(subrow("dblMwst")), 0, Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero))
+                'subrow("dblBrutto") = IIf(IsDBNull(subrow("dblBrutto")), 0, Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero))
+                'subrow("dblMwStSatz") = IIf(IsDBNull(subrow("dblMwStSatz")), 0, Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero))
+
+                'Runden
+                If IsDBNull(subrow("dblNetto")) Then
+                    subrow("dblNetto") = 0
+                Else
+                    subrow("dblNetto") = Decimal.Round(subrow("dblNetto"), 2, MidpointRounding.AwayFromZero)
+                End If
+                If IsDBNull(subrow("dblMwst")) Then
+                    subrow("dblMwst") = 0
+                Else
+                    subrow("dblMwst") = Decimal.Round(subrow("dblMwst"), 2, MidpointRounding.AwayFromZero)
+                End If
+                If IsDBNull(subrow("dblBrutto")) Then
+                    subrow("dblBrutto") = 0
+                Else
+                    subrow("dblBrutto") = Decimal.Round(subrow("dblBrutto"), 2, MidpointRounding.AwayFromZero)
+                End If
+                If IsDBNull(subrow("dblMwStSatz")) Then
+                    subrow("dblMwStSatz") = 0
+                Else
+                    subrow("dblMwStSatz") = Decimal.Round(subrow("dblMwStSatz"), 1, MidpointRounding.AwayFromZero)
+                End If
+
+                'Falls KTRToSub dann kopieren
+                If booCpyKSTToSub Then
+                    subrow("lngKST") = lngKrediKST
+                End If
+
+                'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
+                If subrow("lngKto") < 3000 Then
+                    If (subrow("lngKto") <> 1120) And (subrow("lngKto") <> 1121) Then 'Ausnahme AW24
+                        subrow("strMwStKey") = Nothing
+                    End If
+                    subrow("lngKST") = 0
+                End If
+
+                'Falls IBAN und BankKonto nicht CH, dann MwSt-Satz und MwSt-Key ändern
+                If intPayType = 9 Then
+                    If Char.IsLetter(CChar(Strings.Left(strKrediBank, 1))) And Char.IsLetter(CChar(Strings.Mid(strKrediBank, 2, 1))) Then
+                        'Nun da klar ist, dass es 2 Zeichen sind muss noch geklärt werden. ob es keine CH Bankv. ist
+                        If Strings.Left(strKrediBank, 2) <> "CH" Or Strings.Left(strKrediBank, 2) <> "ch" Then
+                            'TODO: Routine ausprogrammieren.
+                            subrow("dblMwStSatz") = 0
+                            subrow("strMwStKey") = Nothing
+                            subrow("dblNetto") = subrow("dblBrutto")
+                            subrow("dblMwSt") = 0
+                            'If booAutoCorrect Then
+                            '    strStatusText = "MwSt K " + subrow("dblMwst").ToString + " -> " + Val(strSteuer(2)).ToString
+                            '    subrow("dblMwst") = Val(strSteuer(2))
+                            '    subrow("dblBrutto") = subrow("dblNetto") + subrow("dblMwSt")
+                            'Else
+                            '    'Nur korrigieren wenn weniger als 1 Fr
+                            '    strStatusText = "MwSt K " + subrow("dblMwSt").ToString + ", " + Val(strSteuer(2)).ToString
+                            '    If Math.Abs(subrow("dblMwSt") - Val(strSteuer(2))) > 1 Then
+                            '        strStatusText += " >1 "
+                            '        intReturnValue = 1
+                            '    Else
+                            '        strStatusText += " <1 "
+                            '        subrow("dblMwst") = Val(strSteuer(2))
+                            '        subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                            '    End If
+
+                            'End If
+                        End If
+                    Else
+                        'subrow("strMwStKey") = "n/a"
+                    End If
+                Else
+                    'subrow("strMwStKey") = "null"
+                    'subrow("dblMwst") = 0
+                    'intReturnValue = 0
+
+                End If
+
+                'Falsch vergebener MwSt-Schlüssel zurücksetzen
+                If subrow("dblMwStSatz") = 0 And subrow("dblMwSt") = 0 And Not IsDBNull(subrow("strMwStKey")) Then
+                    subrow("strMwStKey") = Nothing
+                End If
+                If Not IsDBNull(subrow("strMwStKey")) Then
+                    intReturnValue = FcCheckMwSt(objFiBhg,
+                                                 subrow("strMwStKey"),
+                                                 subrow("dblMwStSatz"),
+                                                 strStrStCodeSage200,
+                                                 subrow("lngKto"))
+                    If intReturnValue = 0 Then
+                        subrow("strMwStKey") = strStrStCodeSage200
+                        'Check ob korrekt berechnet
+                        'falsche Steuersätze abfangen
+                        Try
+
+                            strSteuer = Split(objFiBhg.GetSteuerfeld2(subrow("lngKto").ToString,
+                                                                    "Zum Rechnen",
+                                                                    subrow("dblBrutto").ToString,
+                                                                    strStrStCodeSage200,
+                                                                    "",
+                                                                    Format(datValuta, "yyyyMMdd"),
+                                                                    Convert.ToString(subrow("dblMwStSatz"))), "{<}")
+
+                        Catch ex As Exception
+                            If (Err.Number And 65535) = 525 Then
+                                strSteuer = Split(objFiBhg.GetSteuerfeld2(subrow("lngKto").ToString,
+                                                                 "Zum Rechnen",
+                                                                 subrow("dblBrutto").ToString,
+                                                                 strStrStCodeSage200), "{<}")
+                            End If
+
+                        End Try
+                        If Val(strSteuer(2)) <> subrow("dblMwst") Then
+                            'Im Fall von Auto-Korrekt anpassen
+                            If booAutoCorrect Then
+                                strStatusText = "MwSt K " + subrow("dblMwst").ToString + " -> " + Val(strSteuer(2)).ToString
+                                subrow("dblMwst") = Val(strSteuer(2))
+                                subrow("dblBrutto") = subrow("dblNetto") + subrow("dblMwSt")
+                            Else
+                                'Nur korrigieren wenn weniger als 1 Fr
+                                strStatusText = "MwSt K " + subrow("dblMwSt").ToString + ", " + Val(strSteuer(2)).ToString
+                                If Math.Abs(subrow("dblMwSt") - Val(strSteuer(2))) > 1 Then
+                                    strStatusText += " >1 "
+                                    intReturnValue = 1
+                                Else
+                                    strStatusText += " <1 "
+                                    subrow("dblMwst") = Val(strSteuer(2))
+                                    subrow("dblBrutto") = Decimal.Round(subrow("dblNetto") + subrow("dblMwSt"), 2, MidpointRounding.AwayFromZero)
+                                End If
+
+                            End If
+                        End If
+                    Else
+                        subrow("strMwStKey") = "n/a"
+                    End If
+                Else
+                    subrow("strMwStKey") = "null"
+                    intReturnValue = 0
+                End If
+
+                strBitLog += Trim(intReturnValue.ToString)
+
+
+                'If subrow("intSollHaben") <> 2 Then
+                intSubNumber += 1
+                If subrow("intSollHaben") = 0 Then
+                    dblSubNetto += IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto"))
+                    dblSubMwSt += IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt"))
+                    dblSubBrutto += IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto"))
+                Else
+                    dblSubNetto += IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) * -1
+                    subrow("dblNetto") = Math.Abs(subrow("dblNetto")) * -1
+                    dblSubMwSt += IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) * -1
+                    subrow("dblMwSt") = Math.Abs(subrow("dblMwSt")) * -1
+                    dblSubBrutto += IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) * -1
+                    subrow("dblBrutto") = Math.Abs(subrow("dblBrutto")) * -1
+                End If
+                dblSubNetto = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero)
+                dblSubMwSt = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero)
+                dblSubBrutto = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero)
+
+                'Konto prüfen 02
+                If IIf(IsDBNull(subrow("lngKto")), 0, subrow("lngKTo")) > 0 Then
+                    intReturnValue = FcCheckKonto(subrow("lngKto"),
+                                                  objFiBhg,
+                                                  IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")),
+                                                  IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")),
+                                                  False)
+                    If intReturnValue = 0 Then
+                        subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto"))
+                    ElseIf intReturnValue = 2 Then
+                        subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " MwSt!"
+                    ElseIf intReturnValue = 3 Then
+                        subrow("strKtoBez") = MainDebitor.FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " NoKST"
+                        'Falls keine KST definiert KST auf 0 setzen
+                        subrow("lngKST") = 0
+                        'Error zurück setzen
+                        intReturnValue = 0
+                    Else
+                        subrow("strKtoBez") = "n/a"
+
+                    End If
+                Else
+                    subrow("strKtoBez") = "null"
+                    subrow("lngKto") = 0
+                    intReturnValue = 1
+
+                End If
+                strBitLog += Trim(intReturnValue.ToString)
+
+                'Kst/Ktr prüfen
+                If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
+                    intReturnValue = FcCheckKstKtr2(subrow("lngKST"),
+                                                   objFiBhg,
+                                                   objBebu,
+                                                   subrow("lngKto"),
+                                                   strKstKtrSage200)
+                    If intReturnValue = 0 Then
+                        subrow("strKstBez") = strKstKtrSage200
+                    ElseIf intReturnValue = 1 Then
+                        subrow("strKstBez") = "KoArt"
+
+                    Else
+                        subrow("strKstBez") = "n/a"
+
+                    End If
+                Else
+                    subrow("strKstBez") = "null"
+                    subrow("lngKST") = 0
+                    intReturnValue = 0
+
+                End If
+                strBitLog += Trim(intReturnValue.ToString)
+
+                ''MwSt prüfen
+                'If Not IsDBNull(subrow("strMwStKey")) Then
+                '    intReturnValue = FcCheckMwSt(objdbconn, objFiBhg, subrow("strMwStKey"), subrow("lngMwStSatz"), strStrStCodeSage200)
+                '    If intReturnValue = 0 Then
+                '        subrow("strMwStKey") = strStrStCodeSage200
+                '        'Check of korrekt berechnet
+                '        strSteuer = Split(objFiBhg.GetSteuerfeld(subrow("lngKto").ToString, "Zum Rechnen", subrow("dblBrutto").ToString, strStrStCodeSage200), "{<}")
+                '        If Val(strSteuer(2)) <> subrow("dblMwst") Then
+                '            'Im Fall von Auto-Korrekt anpassen
+                '            Stop
+                '        End If
+                '    Else
+                '        subrow("strMwStKey") = "n/a"
+
+                '    End If
+                'Else
+                '    subrow("strMwStKey") = "null"
+                '    intReturnValue = 0
+
+                'End If
+                'strBitLog += Trim(intReturnValue.ToString)
+
+                'Brutto + MwSt + Netto = 0
+                If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 And IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")) = 0 And IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
+                    strBitLog += "1"
+
+                Else
+                    strBitLog += "0"
+                End If
+
+                'Netto = 0
+                If IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) = 0 Then
+                    strBitLog += "1"
+
+                Else
+                    strBitLog += "0"
+                End If
+
+                'Brutto = 0
+                If IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) = 0 Then
+                    strBitLog += "1"
+
+                Else
+                    strBitLog += "0"
+                End If
+
+                'Brutto - MwSt <> Netto
+                If Math.Round(IIf(IsDBNull(subrow("dblBrutto")), 0, subrow("dblBrutto")) - IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")), 2, MidpointRounding.AwayFromZero) <> IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) Then
+                    strBitLog += "1"
+
+                Else
+                    strBitLog += "0"
+                End If
+
+
+                'Statustext zusammen setzten
+                'strStatusText = ""
+                'MwSt
+                If Left(strBitLog, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "MwSt"
+                End If
+                'Konto
+                If Mid(strBitLog, 2, 1) <> "0" Then
+                    If Left(strBitLog, 1) = "2" Then
+                        strStatusText = "Kto MwSt"
+                    ElseIf Mid(strBitLog, 2, 1) = "3" Then
+                        strStatusText = "Kto nKST"
+                    Else
+                        strStatusText = "Kto"
+                    End If
+                End If
+                'Kst/Ktr
+                If Mid(strBitLog, 3, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "KST"
+                End If
+                'Alles 0
+                If Mid(strBitLog, 4, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "All0"
+                End If
+                'Netto 0
+                If Mid(strBitLog, 5, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "Net0"
+                End If
+                'Brutto 0
+                If Mid(strBitLog, 6, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "Brut0"
+                End If
+                'Diff
+                If Mid(strBitLog, 7, 1) <> "0" Then
+                    strStatusText += IIf(strStatusText <> "", ", ", "") + "Diff"
+                End If
+
+                If Val(strBitLog) = 0 Then
+                    strStatusText += " ok"
+                End If
+
+                'BitLog und Text schreiben
+                subrow("strStatusUBBitLog") = strBitLog
+                subrow("strStatusUBText") = strStatusText
+
+                strStatusOverAll = strStatusOverAll Or strBitLog
+                strStatusText = String.Empty
+                'Application.DoEvents()
+
+            Next
+
+            'Rückgabe der ganzen Funktion Sub-Prüfung
+            If intSubNumber = 0 Then 'keine Subs
+                Return 9
+            Else
+                If Val(strStatusOverAll) > 0 Then
+                    Return 1
+                Else
+                    Return 0
+                    'If intBuchungsArt = 1 Then
+                    '    'OP - Buchung
+                    '    'If dblSubNetto <> 0 Or dblSubBrutto <> 0 Or dblSubMwSt <> 0 Then 'Diff
+                    '    'Return 2
+                    '    'Else
+                    '    Return 0
+                    '    'End If
+                    'Else
+                    '    'Belegsbuchung 'Nur Brutto 0 - Test
+                    '    If dblSubBrutto <> 0 Then
+                    '        Return 3
+                    '    Else
+                    '        Return 0
+                    '    End If
+                    'End If
+                End If
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Fehler Kredi-Subbuchungen " + lngKredID.ToString)
+
+        End Try
+
+    End Function
+
+
     Public Shared Function FcCheckKrediSubBookings(ByVal lngKredID As Int32,
                                               ByRef objDtKrediSub As DataTable,
                                               ByRef intSubNumber As Int16,
@@ -3882,6 +4287,60 @@ ErrorHandler:
         End Try
 
     End Function
+
+
+    Friend Shared Function FcCheckKstKtr2(ByVal lngKST As Long,
+                                         ByRef objFiBhg As SBSXASLib.AXiFBhg,
+                                         ByRef objBebu As SBSXASLib.AXiBeBu,
+                                         ByVal lngKonto As Long,
+                                         ByRef strKstKtrSage200 As String) As Int16
+
+        'return 0=ok, 1=Kst existiert kene Kostenart, 2=Kst nicht defniert, 3=nicht auf Konto anwendbar 1000 - 2999
+
+        Dim strReturn As String
+        Dim strReturnAr() As String
+        Dim booKstKAok As Boolean
+        Dim strKst, strKA As String
+        Dim strKAZeile As String
+
+        booKstKAok = False
+
+        Try
+            'If CInt(Left(lngKonto.ToString, 1)) >= 3 Then
+            strReturn = objFiBhg.GetKstKtrInfo(lngKST.ToString)
+            If strReturn = "EOF" Then
+                Return 2
+            Else
+                Call objBebu.ReadKaLnk(lngKST.ToString)
+                Do Until strKAZeile = "EOF"
+                    strKAZeile = objBebu.GetKaLnkLine
+                    strReturnAr = Split(strKAZeile, "{>}")
+                    strKA = strReturnAr(0)
+                    If strKA = Convert.ToString(lngKonto) Then
+                        booKstKAok = True
+                    End If
+                    'strKst = Convert.ToString(lngKST)
+                    'strKA = Convert.ToString(lngKonto)
+                    'Ist Kst auf Kostenbart definiert?
+                Loop
+
+                'booKstKAok = objFiPI.CheckKstKtr(strKst, strKA)
+
+                If booKstKAok Then
+                    Return 0
+                Else
+                    Return 1
+                End If
+            End If
+
+
+        Catch ex As Exception
+            Return 1
+
+        End Try
+
+    End Function
+
 
     Public Shared Function FcCheckKstKtr(ByVal lngKST As Long,
                                          ByRef objFiBhg As SBSXASLib.AXiFBhg,
@@ -6118,6 +6577,176 @@ ErrorHandler:
 
 
     End Function
+
+    Friend Shared Function FcInitInscmdKSubs(ByRef mysqlinscmd As MySqlCommand) As Int16
+
+        'Debitoren - Head
+        Dim inscmdFields As String
+        Dim inscmdValues As String
+
+        Try
+
+            inscmdFields = "IdentityName"
+            inscmdValues = "@IdentityName"
+            inscmdFields += ", ProcessID"
+            inscmdValues += ", @ProcessID"
+            inscmdFields += ", lngKredID"
+            inscmdValues += ", @lngKredID"
+            inscmdFields += ", lngKto"
+            inscmdValues += ", @lngKto"
+            inscmdFields += ", lngKST"
+            inscmdValues += ", @lngKST"
+            inscmdFields += ", dblNetto"
+            inscmdValues += ", @dblNetto"
+            inscmdFields += ", dblMwSt"
+            inscmdValues += ", @dblMwSt"
+            inscmdFields += ", dblBrutto"
+            inscmdValues += ", @dblBrutto"
+            inscmdFields += ", dblMwStSatz"
+            inscmdValues += ", @dblMwStSatz"
+            inscmdFields += ", strMwStKey"
+            inscmdValues += ", @strMwStKey"
+            inscmdFields += ", intSollHaben"
+            inscmdValues += ", @intSollHaben"
+            inscmdFields += ", strKredSubText"
+            inscmdValues += ", @strKredSubText"
+            inscmdFields += ", booRebilling"
+            inscmdValues += ", @booRebilling"
+
+
+            'Ins cmd DebiSub
+            mysqlinscmd.CommandText = "INSERT INTO tblkreditorensub (" + inscmdFields + ") VALUES (" + inscmdValues + ")"
+            mysqlinscmd.Parameters.Add("@IdentityName", MySqlDbType.String).SourceColumn = "IdentityName"
+            mysqlinscmd.Parameters.Add("@ProcessID", MySqlDbType.Int16).SourceColumn = "ProcessID"
+            mysqlinscmd.Parameters.Add("@lngKredID", MySqlDbType.Int32).SourceColumn = "lngKredID"
+            mysqlinscmd.Parameters.Add("@lngKto", MySqlDbType.Int32).SourceColumn = "lngKto"
+            mysqlinscmd.Parameters.Add("@lngKST", MySqlDbType.Int32).SourceColumn = "lngKST"
+            mysqlinscmd.Parameters.Add("@dblNetto", MySqlDbType.Decimal).SourceColumn = "dblNetto"
+            mysqlinscmd.Parameters.Add("@dblMwst", MySqlDbType.Decimal).SourceColumn = "dblMwSt"
+            mysqlinscmd.Parameters.Add("@dblBrutto", MySqlDbType.Decimal).SourceColumn = "dblBrutto"
+            mysqlinscmd.Parameters.Add("@dblMwStSatz", MySqlDbType.Double).SourceColumn = "dblMwStSatz"
+            mysqlinscmd.Parameters.Add("@strMwStKey", MySqlDbType.String).SourceColumn = "strMwStKey"
+            mysqlinscmd.Parameters.Add("@intSollHaben", MySqlDbType.Int16).SourceColumn = "intSollHaben"
+            mysqlinscmd.Parameters.Add("@strKredSubText", MySqlDbType.String).SourceColumn = "strKredSubText"
+            mysqlinscmd.Parameters.Add("@booRebilling", MySqlDbType.Int16).SourceColumn = "booRebilling"
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem KSubCommand Init", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Return 1
+
+        End Try
+
+
+    End Function
+
+
+    Friend Shared Function FcInitInsCmdKHeads(ByRef mysqlinscmd As MySqlCommand) As Int16
+
+        'Dim strIdentityName As String
+
+        'Kreditoren - Head
+        Dim inscmdFields As String
+        Dim inscmdValues As String
+
+        Try
+
+            inscmdFields = "IdentityName"
+            inscmdValues = "@IdentityName"
+            inscmdFields += ", ProcessID"
+            inscmdValues += ", @ProcessID"
+            inscmdFields += ", intBuchhaltung"
+            inscmdValues += ", @intBuchhaltung"
+            inscmdFields += ", lngKredID"
+            inscmdValues += ", @lngKredID"
+            inscmdFields += ", strKredRGNbr"
+            inscmdValues += ", @strKredRGNbr"
+            inscmdFields += ", intBuchungsart"
+            inscmdValues += ", @intBuchungsart"
+            inscmdFields += ", strOPNr"
+            inscmdValues += ", @strOPNr"
+            inscmdFields += ", lngKredNbr"
+            inscmdValues += ", @lngKredNbr"
+            inscmdFields += ", lngKredKtoNbr"
+            inscmdValues += ", @lngKredKtoNbr"
+            inscmdFields += ", strKredCur"
+            inscmdValues += ", @strKredCur"
+            inscmdFields += ", lngKrediKST"
+            inscmdValues += ", @lngKrediKST"
+            inscmdFields += ", dblKredNetto"
+            inscmdValues += ", @dblKredNetto"
+            inscmdFields += ", dblKredMwSt"
+            inscmdValues += ", @dblKredMwSt"
+            inscmdFields += ", dblKredBrutto"
+            inscmdValues += ", @dblKredBrutto"
+            inscmdFields += ", lngKredIdentNbr"
+            inscmdValues += ", @lngKredIdentNbr"
+            inscmdFields += ", strKredText"
+            inscmdValues += ", @strKredText"
+            inscmdFields += ", strKredRef"
+            inscmdValues += ", @strKredRef"
+            inscmdFields += ", datKredRGDatum"
+            inscmdValues += ", @datKredRGDatum"
+            inscmdFields += ", datKredValDatum"
+            inscmdValues += ", @datKredValDatum"
+            inscmdFields += ", intPayType"
+            inscmdValues += ", @intPayType"
+            inscmdFields += ", strKrediBank"
+            inscmdValues += ", @strKrediBank"
+            inscmdFields += ", strKrediBankInt"
+            inscmdValues += ", @strKrediBankInt"
+            inscmdFields += ", strRGBemerkung"
+            inscmdValues += ", @strRGBemerkung"
+            inscmdFields += ", strRGName"
+            inscmdValues += ", @strRGName"
+            inscmdFields += ", intZKond"
+            inscmdValues += ", @intZKond"
+            inscmdFields += ", datPGVFrom"
+            inscmdValues += ", @datPGVFrom"
+            inscmdFields += ", datPGVTo"
+            inscmdValues += ", @datPGVTo"
+
+
+
+            'Ins cmd KrediiHead
+            mysqlinscmd.CommandText = "INSERT INTO tblkreditorenhead (" + inscmdFields + ") VALUES (" + inscmdValues + ")"
+            mysqlinscmd.Parameters.Add("@IdentityName", MySqlDbType.String).SourceColumn = "IdentityName"
+            mysqlinscmd.Parameters.Add("@ProcessID", MySqlDbType.Int16).SourceColumn = "ProcessID"
+            mysqlinscmd.Parameters.Add("@intBuchhaltung", MySqlDbType.Int16).SourceColumn = "intBuchhaltung"
+            mysqlinscmd.Parameters.Add("@lngKredID", MySqlDbType.Int32).SourceColumn = "lngKredID"
+            mysqlinscmd.Parameters.Add("@strKredRGNbr", MySqlDbType.String).SourceColumn = "strKredRGNbr"
+            mysqlinscmd.Parameters.Add("@intBuchungsart", MySqlDbType.Int16).SourceColumn = "intBuchungsart"
+            mysqlinscmd.Parameters.Add("@strOPNr", MySqlDbType.String).SourceColumn = "strOPNr"
+            mysqlinscmd.Parameters.Add("@lngKredNbr", MySqlDbType.Int32).SourceColumn = "lngKredNbr"
+            mysqlinscmd.Parameters.Add("@lngKredKtoNbr", MySqlDbType.Int32).SourceColumn = "lngKredKtoNbr"
+            mysqlinscmd.Parameters.Add("@strKredCur", MySqlDbType.String).SourceColumn = "strKredCur"
+            mysqlinscmd.Parameters.Add("@lngKrediKST", MySqlDbType.Int32).SourceColumn = "lngKrediKST"
+            mysqlinscmd.Parameters.Add("@dblKredNetto", MySqlDbType.Decimal).SourceColumn = "dblKredNetto"
+            mysqlinscmd.Parameters.Add("@dblKredMwSt", MySqlDbType.Decimal).SourceColumn = "dblKredMwSt"
+            mysqlinscmd.Parameters.Add("@dblKredBrutto", MySqlDbType.Decimal).SourceColumn = "dblKredBrutto"
+            mysqlinscmd.Parameters.Add("@strKredText", MySqlDbType.String).SourceColumn = "strKredText"
+            mysqlinscmd.Parameters.Add("@lngKredIdentNbr", MySqlDbType.Int32).SourceColumn = "lngKredIdentNbr"
+            mysqlinscmd.Parameters.Add("@strKredRef", MySqlDbType.String).SourceColumn = "strKredRef"
+            mysqlinscmd.Parameters.Add("@datKredRGDatum", MySqlDbType.Date).SourceColumn = "datKredRGDatum"
+            mysqlinscmd.Parameters.Add("@datKredValDatum", MySqlDbType.Date).SourceColumn = "datKredValDatum"
+            mysqlinscmd.Parameters.Add("@intPayType", MySqlDbType.Int16).SourceColumn = "intPayType"
+            mysqlinscmd.Parameters.Add("@strKrediBank", MySqlDbType.String).SourceColumn = "strKrediBank"
+            mysqlinscmd.Parameters.Add("@strKrediBankInt", MySqlDbType.String).SourceColumn = "strKrediBankInt"
+            mysqlinscmd.Parameters.Add("@strRGName", MySqlDbType.String).SourceColumn = "strRGName"
+            mysqlinscmd.Parameters.Add("@strRGBemerkung", MySqlDbType.String).SourceColumn = "strRGBemerkung"
+            mysqlinscmd.Parameters.Add("@intZKond", MySqlDbType.Int16).SourceColumn = "intZKond"
+            mysqlinscmd.Parameters.Add("@datPGVFrom", MySqlDbType.Date).SourceColumn = "datPGVFrom"
+            mysqlinscmd.Parameters.Add("@datPGVTo", MySqlDbType.Date).SourceColumn = "datPGVTo"
+
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem KHeadCommand Init", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Return 1
+
+        End Try
+
+    End Function
+
 
     Friend Shared Function FcGetKundenzeichen2(ByVal lngJournalNr As Int32) As String
         'ByRef objOracleCon As OracleConnection,

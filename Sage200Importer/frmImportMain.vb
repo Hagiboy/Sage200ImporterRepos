@@ -1950,7 +1950,8 @@ Friend Class frmImportMain
                 'Je nach Anzahl von Links her verschieben
                 frmKredDisp.Left = intNbrKrediForms * 20
                 frmKredDisp.FcKrediDisplay(lstBoxMandant.SelectedValue,
-                                     lstBoxPerioden)
+                                           lstBoxMandant,
+                                           lstBoxPerioden)
 
             End If
 

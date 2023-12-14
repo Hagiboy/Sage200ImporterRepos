@@ -1173,7 +1173,9 @@ Public Class MainKreditor
 
     End Function
 
-    Public Shared Function FcCheckKreditor(ByVal lngKreditor As Long, ByVal intBuchungsart As Integer, ByRef objKrBuha As SBSXASLib.AXiKrBhg) As Integer
+    Public Shared Function FcCheckKreditor(ByVal lngKreditor As Long,
+                                           ByVal intBuchungsart As Integer,
+                                           ByRef objKrBuha As SBSXASLib.AXiKrBhg) As Integer
 
         Dim strReturn As String
 
