@@ -2978,14 +2978,16 @@ Public Class frmDebDisp
                                         SubRow("strMwStKey") <> "null" And
                                         SubRow("lngKto") <> 6906 Then
                                 If strBuchType = "R" Then
-                                    strSteuerFeld = Main.FcGetSteuerFeld(objfiBuha,
+                                    intReturnValue = Main.FcGetSteuerFeld(objfiBuha,
+                                                                         strSteuerFeld,
                                                                          SubRow("lngKto"),
                                                                          SubRow("strDebSubText"),
                                                                          SubRow("dblBrutto") * -1,
                                                                          SubRow("strMwStKey"),
                                                                          SubRow("dblMwSt") * -1)
                                 Else
-                                    strSteuerFeld = Main.FcGetSteuerFeld(objfiBuha,
+                                    intReturnValue = Main.FcGetSteuerFeld(objfiBuha,
+                                                                         strSteuerFeld,
                                                                          SubRow("lngKto"),
                                                                          SubRow("strDebSubText"),
                                                                          SubRow("dblBrutto"),
@@ -3178,7 +3180,8 @@ Public Class frmDebDisp
                                     dblSollBetrag = SubRow("dblNetto")
                                     strDebiTextSoll = SubRow("strDebSubText")
                                     If SubRow("dblMwSt") > 0 Then
-                                        strSteuerFeldSoll = Main.FcGetSteuerFeld(objfiBuha,
+                                        intReturnValue = Main.FcGetSteuerFeld(objfiBuha,
+                                                                                 strSteuerFeldSoll,
                                                                                  SubRow("lngKto"),
                                                                                  strDebiTextSoll,
                                                                                  SubRow("dblBrutto") * dblKursSoll,
@@ -3202,7 +3205,8 @@ Public Class frmDebDisp
                                     'dblHabenBetrag = dblSollBetrag
                                     strDebiTextHaben = SubRow("strDebSubText")
                                     If SubRow("dblMwSt") * -1 > 0 Then
-                                        strSteuerFeldHaben = Main.FcGetSteuerFeld(objfiBuha,
+                                        intReturnValue = Main.FcGetSteuerFeld(objfiBuha,
+                                                                                  strSteuerFeldHaben,
                                                                                   SubRow("lngKto"),
                                                                                   strDebiTextHaben,
                                                                                   SubRow("dblBrutto") * dblKursHaben * -1,
@@ -3320,7 +3324,13 @@ Public Class frmDebDisp
                                         dblKursSoll = 1 / Main.FcGetKurs(strCurrency, strValutaDatum, objfiBuha, intSollKonto)
                                         dblSollBetrag = SubRow("dblNetto")
                                         If SubRow("dblMwSt") > 0 Then
-                                            strSteuerFeldSoll = Main.FcGetSteuerFeld(objfiBuha, SubRow("lngKto"), strDebiTextSoll, SubRow("dblBrutto") * dblKursSoll, SubRow("strMwStKey"), SubRow("dblMwSt"))
+                                            intReturnValue = Main.FcGetSteuerFeld(objfiBuha,
+                                                                                     strSteuerFeldSoll,
+                                                                                     SubRow("lngKto"),
+                                                                                     strDebiTextSoll,
+                                                                                     SubRow("dblBrutto") * dblKursSoll,
+                                                                                     SubRow("strMwStKey"),
+                                                                                     SubRow("dblMwSt"))
                                         Else
                                             strSteuerFeldSoll = "STEUERFREI"
                                         End If
@@ -3353,7 +3363,13 @@ Public Class frmDebDisp
                                         dblKursHaben = 1 / Main.FcGetKurs(strCurrency, strValutaDatum, objfiBuha, intHabenKonto)
                                         dblHabenBetrag = SubRow("dblNetto") * -1
                                         If (SubRow("dblMwSt") * -1) > 0 Then
-                                            strSteuerFeldHaben = Main.FcGetSteuerFeld(objfiBuha, SubRow("lngKto"), strDebiTextHaben, SubRow("dblBrutto") * dblKursHaben * -1, SubRow("strMwStKey"), SubRow("dblMwSt") * -1)
+                                            intReturnValue = Main.FcGetSteuerFeld(objfiBuha,
+                                                                                      strSteuerFeldHaben,
+                                                                                      SubRow("lngKto"),
+                                                                                      strDebiTextHaben,
+                                                                                      SubRow("dblBrutto") * dblKursHaben * -1,
+                                                                                      SubRow("strMwStKey"),
+                                                                                      SubRow("dblMwSt") * -1)
                                         Else
                                             strSteuerFeldHaben = "STEUERFREI"
                                         End If

@@ -12,9 +12,12 @@ Imports Org.BouncyCastle.Crypto.Prng
 Public Class MainKreditor
 
 
-    Public Shared Function FcReadKreditorName(ByRef objKrBhg As SBSXASLib.AXiKrBhg, ByVal intKrediNbr As Int32, ByVal strCurrency As String) As String
+    Public Shared Function FcReadKreditorName(ByRef objKrBhg As SBSXASLib.AXiKrBhg,
+                                              ByRef strKreditorName As String,
+                                              ByVal intKrediNbr As Int32,
+                                              ByVal strCurrency As String) As Int16
 
-        Dim strKreditorName As String
+        'Dim strKreditorName As String
         Dim strKreditorAr() As String
 
         Try
@@ -34,11 +37,16 @@ Public Class MainKreditor
             End If
 
             strKreditorAr = Split(strKreditorName, "{>}")
+            strKreditorName = strKreditorAr(0)
 
-            Return strKreditorAr(0)
+            Return 0
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "kreditor-Name " + Err.Number.ToString)
+            Return 1
+
+        Finally
+            strKreditorAr = Nothing
 
         End Try
 
@@ -986,9 +994,7 @@ Public Class MainKreditor
     Public Shared Function FcWriteToKrediRGTable(ByVal intMandant As Int32,
                                                  ByVal strKredID As String,
                                                  ByVal datDate As Date,
-                                                 ByVal intBelegNr As Int32,
-                                                 ByRef objOracleConn As OracleConnection,
-                                                 ByRef objMySQLConn As MySqlConnection) As Int16
+                                                 ByVal intBelegNr As Int32) As Int16
 
         'Returns 0=ok, 1=Problem
 
@@ -1067,6 +1073,11 @@ Public Class MainKreditor
             'If objMySQLConn.State = ConnectionState.Open Then
             '    objMySQLConn.Close()
             'End If
+            objdbAccessConn = Nothing
+            objlocOLEdbcmd = Nothing
+            objlocMySQLRGConn = Nothing
+            objlocMySQLRGcmd = Nothing
+
 
         End Try
 

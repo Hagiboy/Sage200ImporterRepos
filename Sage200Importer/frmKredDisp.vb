@@ -5,21 +5,21 @@ Imports MySql.Data.MySqlClient
 Imports System.Data.OracleClient
 Imports System.Data.SqlClient
 Imports CLClassSage200.WFSage200Import
-Imports System.IO
-Imports Google.Protobuf.WellKnownTypes
-Imports Org.BouncyCastle.Crypto.Prng
+'Imports System.IO
+'Imports Google.Protobuf.WellKnownTypes
+'Imports Org.BouncyCastle.Crypto.Prng
 Imports Sage200Importer.frmDebDisp
 
 Public Class frmKredDisp
 
-    Dim Finanz As SBSXASLib.AXFinanz
-    Dim FBhg As SBSXASLib.AXiFBhg
-    Dim DbBhg As SBSXASLib.AXiDbBhg
-    Dim KrBhg As SBSXASLib.AXiKrBhg
-    Dim BsExt As SBSXASLib.AXiBSExt
-    Dim Adr As SBSXASLib.AXiAdr
-    Dim BeBu As SBSXASLib.AXiBeBu
-    Dim PIFin As SBSXASLib.AXiPlFin
+    'Dim Finanz As SBSXASLib.AXFinanz
+    'Dim FBhg As SBSXASLib.AXiFBhg
+    'Dim DbBhg As SBSXASLib.AXiDbBhg
+    'Dim KrBhg As SBSXASLib.AXiKrBhg
+    'Dim BsExt As SBSXASLib.AXiBSExt
+    'Dim Adr As SBSXASLib.AXiAdr
+    'Dim BeBu As SBSXASLib.AXiBeBu
+    'Dim PIFin As SBSXASLib.AXiPlFin
 
     Dim FELD_SEP As String
     Dim REC_SEP As String
@@ -36,14 +36,14 @@ Public Class frmKredDisp
     Dim datPeriodTo As Date
     Dim strPeriodStatus As String
 
-    Dim objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
-    Dim objdbMSSQLConn As New SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
-    Dim objdbSQLcommand As New SqlCommand
-    Dim objdbAccessConn As New OleDb.OleDbConnection
-    Dim objOracleConn As New OracleConnection("Data Source=(DESCRIPTION=" _
-                    + "(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.0.29)(PORT=1521))" _
-                    + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
-                    + "User Id=cis;Password=sugus;")
+    'Dim objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
+    'Dim objdbMSSQLConn As New SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
+    'Dim objdbSQLcommand As New SqlCommand
+    'Dim objdbAccessConn As New OleDb.OleDbConnection
+    'Dim objOracleConn As New OracleConnection("Data Source=(DESCRIPTION=" _
+    '                + "(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.0.29)(PORT=1521))" _
+    '                + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
+    '                + "User Id=cis;Password=sugus;")
 
 
 
@@ -780,544 +780,544 @@ Public Class frmKredDisp
                 Application.DoEvents()
             Loop
 
-            Me.Cursor = Cursors.Default
-
-
-            'Start in Sync schreiben
-            intReturnValue = WFDBClass.FcWriteStartToSync(objdbConn,
-                                                          frmImportMain.lstBoxMandant.SelectedValue,
-                                                          2,
-                                                          dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count)
-
-            'intTeqNbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
-
-            'Kopfbuchung
-            For Each row As DataRow In Me.dsKreditoren.Tables("tblKrediHeadsFromUser").Rows
-
-                If IIf(IsDBNull(row("booKredBook")), False, row("booKredBook")) Then
-
-                    'Test ob OP - Buchung
-                    If row("intBuchungsart") = 1 Then
-
-                        'Immer zuerst Belegs-Nummerierung aktivieren, falls vorhanden externe Nummer = OP - Nr. Rg
-                        'Führt zu Problemen beim Ausbuchen des DTA - Files
-                        'Resultat Besprechnung 17.09.20 mit Muhi/ Andy
-                        'DbBhg.IncrBelNbr = "J"
-                        'Belegsnummer abholen
-                        'intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
-
-                        'Auf Provisorisch setzen
-                        Call KrBhg.SetBuchMode("P")
-
-                        'Automatische ESR - Zahlungsverbindung
-                        KrBhg.EnableAutoESRZlgVerb = "J"
-
-                        'Eindeutigkeit der internen Beleg-Nummer setzen
-                        KrBhg.CheckDoubleIntBelNbr = "N"
-
-                        'Eindeutigkeit externer Beleg-Nummer setzen
-                        KrBhg.CheckDoubleExtBelNbr = "J"
-
-                        'If IsDBNull(row("strOPNr")) Or row("StrOPNr") = "" Then
-                        'strExtBelegNbr = row("strOPNr")
-
-                        'Zuerst Beleg-Nummerieungung aktivieren
-                        'KrBhg.IncrBelNbr = "N"
-                        'Belegsnummer abholen
-                        'intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
-                        'Else
-                        'Beleg-Nummerierung abschalten
-                        'KrBhg.IncrBelNbr = "N"
-                        'intKredBelegsNummer = row("strOPNr")
-                        'strExtBelegNbr = row("strOPNr")
-                        'End If
-                        strExtKredBelegsNummer = row("strKredRGNbr")
-
-                        'Variablen zuweisen
-                        intKreditorNbr = row("lngKredNbr")
-                        If row("dblKredBrutto") < 0 Then
-                            strBuchType = "G"
-                            'strZahlSperren = "J"
-                            row("dblKredBrutto") = row("dblKredBrutto") * -1
-                            'Belegsnummer abholen
-                            KrBhg.IncrBelNbr = "J"
-                            intKredBelegsNummer = KrBhg.GetNextBelNbr("G")
-                            KrBhg.IncrBelNbr = "N"
-
-                            intReturnValue = MainKreditor.FcCheckKrediExistance(objdbMSSQLConn,
-                                                                                objdbSQLcommand,
-                                                                                intKredBelegsNummer,
-                                                                                "G",
-                                                                                intTeqNbr,
-                                                                                intTeqNbrLY,
-                                                                                intTeqNbrPLY,
-                                                                                KrBhg)
-
-                        Else
-                            strBuchType = "R"
-                            'strZahlSperren = "N"
-                            'Belegsnummer abholen
-                            KrBhg.IncrBelNbr = "J"
-                            intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
-                            'Muss auf Nicht hochzählen gesetzt werden da Sage 200 nicht merkt, dass Beleg-Nr. schon vergeben worden sind. => In den Einstellungen muss von Zeit zu Zeit der Zähler geändert werden
-                            KrBhg.IncrBelNbr = "N"
-
-                            intReturnValue = MainKreditor.FcCheckKrediExistance(objdbMSSQLConn,
-                                                                                objdbSQLcommand,
-                                                                                intKredBelegsNummer,
-                                                                                "R",
-                                                                                intTeqNbr,
-                                                                                intTeqNbrLY,
-                                                                                intTeqNbrPLY,
-                                                                                KrBhg)
-
-                        End If
-
-                        strValutaDatum = Format(row("datKredValDatum"), "yyyyMMdd").ToString
-                        strBelegDatum = Format(row("datKredRGDatum"), "yyyyMMdd").ToString
-                        strVerfallDatum = String.Empty
-                        'strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
-                        'If IsDBNull(row("strKrediBank")) Then
-                        'intTeilnehmer = 0
-                        'Else
-                        'Teilnehmer nur bei ESR setzen
-                        If row("intPayType") <> 9 Then 'nicht IBAN
-                            'QR-Referenz
-                            strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
-                            If row("intPayType") = 10 Then
-                                strTeilnehmer = row("strKrediBank")
-                            Else
-                                strTeilnehmer = Val(row("strKrediBank"))
-                            End If
-                            intBankNbr = 0
-                        Else
-                            'IBAN
-                            strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
-                            intBankNbr = IIf(IsDBNull(row("intEBank")), 0, row("intEBank"))
-                            strTeilnehmer = String.Empty
-                        End If
-                        'End If
-                        strMahnerlaubnis = String.Empty 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
-                        'Sachbearbeiter aus Debitor auslesen
-                        strDebiLine = KrBhg.ReadKreditor3(row("lngKredNbr") * -1, "")
-                        strDebitor = Split(strDebiLine, "{>}")
-                        strSachBID = strDebitor(29)
-
-                        dblBetrag = row("dblKredBrutto")
-                        strKrediText = IIf(IsDBNull(row("strKredText")), "", row("strKredText"))
-                        strCurrency = row("strKredCur")
-                        'intBankNbr = 0
-                        intKondition = IIf(IsDBNull(row("intZKond")), 1, row("intZKond"))
-                        'LN 0=automatsich ersterfasste Kondition, -1=Schlechteste Kondition, -2=Beste Kondition
-                        intKonditionLN = 0
-                        intEigeneBank = row("intintBank")
-
-                        If strCurrency <> "CHF" Then 'Muss ergänzt werden => Was ist Leitwährung auf dem Konto
-                            dblKurs = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg)
-                        Else
-                            dblKurs = 1.0#
-                        End If
-
-                        Try
-                            booBookingok = True
-                            Call KrBhg.SetBelegKopf2(intKredBelegsNummer,
-                                                     strValutaDatum,
-                                                     intKreditorNbr,
-                                                     strExtKredBelegsNummer,
-                                                     strBelegDatum,
-                                                     strVerfallDatum,
-                                                     strKrediText,
-                                                     intBankNbr,
-                                                     strBuchType,
-                                                     strZahlSperren,
-                                                     strVorausZahlung,
-                                                     intKondition,
-                                                     intKonditionLN,
-                                                     strSachBID,
-                                                     strReferenz,
-                                                     strSkonto,
-                                                     dblBetrag.ToString,
-                                                     strErfassungsArt,
-                                                     dblKurs.ToString,
-                                                     strCurrency,
-                                                     "",
-                                                     strTeilnehmer,
-                                                     intEigeneBank.ToString)
-
-                        Catch ex As Exception
-                            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegkopf ")
-                            If (Err.Number And 65535) < 10000 Then
-                                booBookingok = False
-                            Else
-                                booBookingok = True
-                            End If
-
-                        End Try
-
-                        selKrediSub = dsKreditoren.Tables("tblKrediSubsFromUser").Select("lngKredID=" + row("lngKredID").ToString)
-
-                        For Each SubRow As DataRow In selKrediSub
-
-                            intGegenKonto = SubRow("lngKto")
-                            strFibuText = SubRow("strKredSubText")
-                            'Soll auf Minus setzen
-                            'If SubRow("intSollHaben") = 1 Then
-                            'dblNettoBetrag = SubRow("dblNetto") * -1
-                            'dblMwStBetrag = SubRow("dblMwSt") * -1
-                            'dblBruttoBetrag = SubRow("dblBrutto") * -1
-                            'Else
-                            If intGegenKonto <> 6906 Then
-                                If strBuchType = "R" Then
-                                    dblNettoBetrag = SubRow("dblNetto")
-                                    dblMwStBetrag = SubRow("dblMwSt")
-                                    dblBruttoBetrag = SubRow("dblBrutto")
-                                Else
-                                    dblNettoBetrag = SubRow("dblNetto") * -1
-                                    dblMwStBetrag = SubRow("dblMwSt") * -1
-                                    dblBruttoBetrag = SubRow("dblBrutto") * -1
-                                End If
-                            Else 'Rundungsdifferenzen
-                                If strBuchType = "R" Then
-                                    dblNettoBetrag = SubRow("dblBrutto")
-                                    dblMwStBetrag = SubRow("dblMwSt")
-                                    dblBruttoBetrag = SubRow("dblBrutto")
-                                Else
-                                    dblNettoBetrag = SubRow("dblBrutto") * -1
-                                    dblMwStBetrag = SubRow("dblMwSt") * -1
-                                    dblBruttoBetrag = SubRow("dblBrutto") * -1
-                                End If
-
-                            End If
-
-                            'If strBuchType = "R" Then
-                            '    dblNettoBetrag = SubRow("dblNetto")
-                            '    dblMwStBetrag = SubRow("dblMwSt")
-                            '    dblBruttoBetrag = SubRow("dblBrutto")
-                            'Else
-                            '    dblNettoBetrag = SubRow("dblNetto") * -1
-                            '    dblMwStBetrag = SubRow("dblMwSt") * -1
-                            '    dblBruttoBetrag = SubRow("dblBrutto") * -1
-                            'End If
-                            'End If
-                            'dblBebuBetrag = 1000.0#
-                            If SubRow("lngKST") > 0 Then
-                                strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strKredSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
-                            Else
-                                'strBeBuEintrag = "00" + "{<}" + SubRow("strKredSubText") + "{<}" + "0" + "{>}"
-                            End If
-                            If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then ' And SubRow("strMwStKey") <> "25" Then
-                                strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strKredSubText"), dblBruttoBetrag, SubRow("strMwStKey"), dblMwStBetrag)     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
-                            Else
-                                strSteuerFeld = "STEUERFREI"
-                            End If
-
-                            'strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
-                            'Debug.Print("Konto-Info: " + strSteuerInfo(26))
-
-                            Try
-                                booBookingok = True
-                                Call KrBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
-
-                            Catch ex As Exception
-                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Verteilung " + SubRow("strKredSubText") + ", Konto " + SubRow("lngKto").ToString)
-                                If (Err.Number And 65535) < 10000 Then
-                                    booBookingok = False
-                                Else
-                                    booBookingok = True
-                                End If
-
-                            End Try
-
-
-                            strSteuerFeld = String.Empty
-                            strBeBuEintrag = String.Empty
-
-                            'Status Sub schreiben
-                            'Application.DoEvents()
-
-                        Next
-
-
-                        Try
-                            booBookingok = True
-                            Call KrBhg.WriteBuchung()
-
-                        Catch ex As Exception
-                            If (Err.Number And 65535) < 10000 Then
-                                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung nicht möglich")
-                                booBookingok = False
-                            Else
-                                MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString + " Belegerstellung")
-                                booBookingok = True
-                            End If
-
-                        End Try
-
-                        'Application.DoEvents()
-
-                        strBeBuEintrag = String.Empty
-                        strSteuerFeld = String.Empty
-                        dblNettoBetrag = 0
-                        dblMwStBetrag = 0
-                        dblBruttoBetrag = 0
-
-                    Else
-
-                        'Buchung nur in Fibu
-                        'Prinzip Funktion WriteBuchung() anwenden mit allen Parametern
-                        'Beleg-Nummerierung aktivieren
-                        'DbBhg.IncrBelNbr = "J"
-                        'Belegsnummer abholen
-                        intKredBelegsNummer = FBhg.GetNextBelNbr()
-
-                        'Prüfen, ob wirklich frei
-                        intReturnValue = 10
-                        Do Until intReturnValue = 0
-                            intReturnValue = FBhg.doesBelegExist(intKredBelegsNummer,
-                                                                 "NOT_SET",
-                                                                 "NOT_SET",
-                                                                 Strings.Left(frmImportMain.lstBoxPerioden.Text, 4) + "0101",
-                                                                 Strings.Left(frmImportMain.lstBoxPerioden.Text, 4) + "1231")
-                            If intReturnValue <> 0 Then
-                                intKredBelegsNummer += 1
-                            End If
-                        Loop
-
-                        booBookingok = True
-
-                        'Variablen zuweisen
-                        strBelegDatum = Format(row("datKredRGDatum"), "yyyyMMdd").ToString
-                        strValutaDatum = Format(row("datKredValDatum"), "yyyyMMdd").ToString
-                        'strDebiText = row("strDebText")
-                        strCurrency = row("strKredCur")
-                        If strCurrency <> "CHF" Then 'Muss ergänzt werden => Was ist Leitwährung auf dem Konto
-                            dblKurs = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg)
-                        Else
-                            dblKurs = 1.0#
-                        End If
-
-                        selKrediSub = dsKreditoren.Tables("tblKrediSubsFromUser").Select("lngKredID=" + row("lngKredID").ToString)
-
-                        If selKrediSub.Length = 2 Then
-
-                            For Each SubRow As DataRow In selKrediSub
-
-                                If SubRow("intSollHaben") = 0 Then 'Soll
-
-                                    intSollKonto = SubRow("lngKto")
-                                    dblKursSoll = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg, intSollKonto)
-                                    'strSteuerInfo = Split(FBhg.GetKontoInfo(intSollKonto.ToString), "{>}")
-                                    'Debug.Print("Konto-Info Soll: " + strSteuerInfo(26))
-                                    dblSollBetrag = SubRow("dblNetto")
-                                    strKrediTextSoll = SubRow("strKredSubText")
-                                    If SubRow("dblMwSt") > 0 Then
-                                        strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg,
-                                                                                 SubRow("lngKto"),
-                                                                                 strKrediTextSoll,
-                                                                                 SubRow("dblBrutto") * dblKursSoll,
-                                                                                 SubRow("strMwStKey"),
-                                                                                 SubRow("dblMwSt"))
-                                    End If
-                                    If SubRow("lngKST") > 0 Then
-                                        strBeBuEintragSoll = SubRow("lngKST").ToString + "{<}" + strKrediTextSoll + "{<}" + "CALCULATE" + "{>}"
-                                    End If
-
-
-                                ElseIf SubRow("intSollHaben") = 1 Then 'Haben
-
-                                    intHabenKonto = SubRow("lngKto")
-                                    dblKursHaben = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg, intHabenKonto)
-                                    'strSteuerInfo = Split(FBhg.GetKontoInfo(intSollKonto.ToString), "{>}")
-                                    'Debug.Print("Konto-Info Haben: " + strSteuerInfo(26))
-                                    dblHabenBetrag = SubRow("dblNetto") * -1
-                                    'dblHabenBetrag = dblSollBetrag
-                                    strKrediTextHaben = SubRow("strKredSubText")
-                                    If SubRow("dblMwSt") > 0 Then
-                                        strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg,
-                                                                                  SubRow("lngKto"),
-                                                                                  strKrediTextHaben,
-                                                                                  SubRow("dblBrutto") * dblKursHaben * -1,
-                                                                                  SubRow("strMwStKey"),
-                                                                                  SubRow("dblMwSt") * -1)
-                                    End If
-                                    If SubRow("lngKST") > 0 Then
-                                        strBeBuEintragHaben = SubRow("lngKST").ToString + "{<}" + strKrediTextHaben + "{<}" + "CALCULATE" + "{>}"
-                                    End If
-
-                                Else
-
-                                    'Sammelbeleg
-                                    MsgBox("Nicht definierter Wert Sub-Buchungs-SollHaben: " + SubRow("intSollHaben").ToString)
-                                    'strKrediText = IIf(IsDBNull(row("strKredText")), "", row("strKredText"))
-
-                                End If
-
-                            Next
-
-                            'Tieferer Betrag für die Gesamt-Buchung herausfinden
-                            If dblSollBetrag <= dblHabenBetrag Then
-                                dblNettoBetrag = dblSollBetrag
-                            ElseIf dblHabenBetrag < dblSollBetrag Then
-                                dblNettoBetrag = dblHabenBetrag
-                            End If
-
-                            'Buchung ausführen
-                            Call FBhg.WriteBuchung(0,
-                                                   intKredBelegsNummer,
-                                                   strBelegDatum,
-                                                   intSollKonto.ToString,
-                                                   strKrediTextSoll,
-                                                   strCurrency,
-                                                   dblKursSoll.ToString,
-                                                   (dblNettoBetrag * dblKursSoll).ToString,
-                                                   strSteuerFeldSoll,
-                                                   intHabenKonto.ToString,
-                                                   strKrediTextHaben,
-                                                   strCurrency,
-                                                   dblKursHaben.ToString,
-                                                   (dblNettoBetrag * dblKursHaben).ToString,
-                                                   strSteuerFeldHaben,
-                                                   strCurrency,
-                                                   dblKurs.ToString,
-                                                   dblNettoBetrag.ToString,
-                                                   (dblNettoBetrag * dblKurs).ToString,
-                                                   strBeBuEintragSoll,
-                                                   strBeBuEintragHaben,
-                                                   strValutaDatum)
-
-                        Else
-                            MsgBox("Nicht 2 Subbuchungen.")
-                        End If
-
-                    End If
-
-                    If booBookingok Then
-                        If row("booPGV") Then
-                            'Bei PGV Buchungen
-                            If IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")) = "" Or
-                               (IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")) = "RV" And row("intPGVMthsAY") + row("intPGVMthsNY") > 1) Then
-
-                                intReturnValue = MainKreditor.FcPGVKTreatment(FBhg,
-                                                                       Finanz,
-                                                                       DbBhg,
-                                                                       PIFin,
-                                                                       BeBu,
-                                                                       KrBhg,
-                                                                       dsKreditoren.Tables("tblKrediSubsFromUser"),
-                                                                       row("lngKredID"),
-                                                                       intKredBelegsNummer,
-                                                                       row("strKredCur"),
-                                                                       row("datKredValDatum"),
-                                                                       "M",
-                                                                       row("datPGVFrom"),
-                                                                       row("datPGVTo"),
-                                                                       row("intPGVMthsAY") + row("intPGVMthsNY"),
-                                                                       row("intPGVMthsAY"),
-                                                                       row("intPGVMthsNY"),
-                                                                       2311,
-                                                                       2312,
-                                                                       frmImportMain.lstBoxPerioden.Text,
-                                                                       objdbConn,
-                                                                       objdbMSSQLConn,
-                                                                       objdbSQLcommand,
-                                                                       frmImportMain.lstBoxMandant.SelectedValue,
-                                                                       dsKreditoren.Tables("tblKreditorenInfo"),
-                                                                       strYear,
-                                                                       intTeqNbr,
-                                                                       intTeqNbrLY,
-                                                                       intTeqNbrPLY,
-                                                                       IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")),
-                                                                       datPeriodFrom,
-                                                                       datPeriodTo,
-                                                                       strPeriodStatus)
-
-                            Else
-
-                                'TP
-                                intReturnValue = MainKreditor.FcPGVKTreatmentYC(FBhg,
-                                                                       Finanz,
-                                                                       DbBhg,
-                                                                       PIFin,
-                                                                       BeBu,
-                                                                       KrBhg,
-                                                                       dsKreditoren.Tables("tblKrediSubsFromUser"),
-                                                                       row("lngKredID"),
-                                                                       intKredBelegsNummer,
-                                                                       row("strKredCur"),
-                                                                       row("datKredValDatum"),
-                                                                       "M",
-                                                                       row("datPGVFrom"),
-                                                                       row("datPGVTo"),
-                                                                       row("intPGVMthsAY") + row("intPGVMthsNY"),
-                                                                       row("intPGVMthsAY"),
-                                                                       row("intPGVMthsNY"),
-                                                                       2311,
-                                                                       2312,
-                                                                       frmImportMain.lstBoxPerioden.Text,
-                                                                       objdbConn,
-                                                                       objdbMSSQLConn,
-                                                                       objdbSQLcommand,
-                                                                       frmImportMain.lstBoxMandant.SelectedValue,
-                                                                       dsKreditoren.Tables("tblKreditorenInfo"),
-                                                                       strYear,
-                                                                       intTeqNbr,
-                                                                       intTeqNbrLY,
-                                                                       intTeqNbrPLY,
-                                                                       IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")),
-                                                                       datPeriodFrom,
-                                                                       datPeriodTo,
-                                                                       strPeriodStatus)
-
-
-                            End If
-
-
-                        End If
-
-                        'Status Head schreiben
-                        row("strKredBookStatus") = row("strKredStatusBitLog")
-                        row("booBooked") = True
-                        row("datBooked") = Now()
-                        row("lngBelegNr") = intKredBelegsNummer
-
-                        dsKreditoren.Tables("tblKrediHeadsFromUser").AcceptChanges()
-                        'strKRGReferTo = "lngKredID"
-                        'strKRGReferTo = "strKredRGNbr"
-                        If objdbConn.State = ConnectionState.Closed Then
-                            objdbConn.Open()
-                        End If
-                        strKRGReferTo = Main.FcReadFromSettings(objdbConn, "Buchh_TableKRGReferTo", frmImportMain.lstBoxMandant.SelectedValue)
-                        If objdbConn.State = ConnectionState.Open Then
-                            objdbConn.Close()
-                        End If
-                        'Status in File RG-Tabelle schreiben
-                        intReturnValue = MainKreditor.FcWriteToKrediRGTable(frmImportMain.lstBoxMandant.SelectedValue,
-                                                                        row(strKRGReferTo),
-                                                                        row("datBooked"),
-                                                                        row("lngBelegNr"),
-                                                                        objOracleConn,
-                                                                        objdbConn)
-                        If intReturnValue <> 0 Then
-                            'Throw an exception
-                            MessageBox.Show("Achtung, Beleg-Nummer: " + row("lngBelegNr").ToString + " konnte nicht In die RG-Tabelle geschrieben werden auf RG-ID: " + row("lngKredID").ToString + ".", "RG-Table Update nicht möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
-                        End If
-
-                    End If
-
-                End If
-
-            Next
-
-            'In sync-Tabelle schreiben
-            intReturnValue = WFDBClass.FcWriteEndToSync(objdbConn,
-                                                        frmImportMain.lstBoxMandant.SelectedValue,
-                                                        2,
-                                                        0,
-                                                        IIf(booBookingok, "ok", "Probleme"))
+            'Me.Cursor = Cursors.Default
+
+
+            ''Start in Sync schreiben
+            'intReturnValue = WFDBClass.FcWriteStartToSync(objdbConn,
+            '                                              frmImportMain.lstBoxMandant.SelectedValue,
+            '                                              2,
+            '                                              dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count)
+
+            ''intTeqNbr = Conversion.Val(Strings.Right(objdtInfo.Rows(1).Item(1), 3))
+
+            ''Kopfbuchung
+            'For Each row As DataRow In Me.dsKreditoren.Tables("tblKrediHeadsFromUser").Rows
+
+            '    If IIf(IsDBNull(row("booKredBook")), False, row("booKredBook")) Then
+
+            '        'Test ob OP - Buchung
+            '        If row("intBuchungsart") = 1 Then
+
+            '            'Immer zuerst Belegs-Nummerierung aktivieren, falls vorhanden externe Nummer = OP - Nr. Rg
+            '            'Führt zu Problemen beim Ausbuchen des DTA - Files
+            '            'Resultat Besprechnung 17.09.20 mit Muhi/ Andy
+            '            'DbBhg.IncrBelNbr = "J"
+            '            'Belegsnummer abholen
+            '            'intDebBelegsNummer = DbBhg.GetNextBelNbr("R")
+
+            '            'Auf Provisorisch setzen
+            '            Call KrBhg.SetBuchMode("P")
+
+            '            'Automatische ESR - Zahlungsverbindung
+            '            KrBhg.EnableAutoESRZlgVerb = "J"
+
+            '            'Eindeutigkeit der internen Beleg-Nummer setzen
+            '            KrBhg.CheckDoubleIntBelNbr = "N"
+
+            '            'Eindeutigkeit externer Beleg-Nummer setzen
+            '            KrBhg.CheckDoubleExtBelNbr = "J"
+
+            '            'If IsDBNull(row("strOPNr")) Or row("StrOPNr") = "" Then
+            '            'strExtBelegNbr = row("strOPNr")
+
+            '            'Zuerst Beleg-Nummerieungung aktivieren
+            '            'KrBhg.IncrBelNbr = "N"
+            '            'Belegsnummer abholen
+            '            'intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
+            '            'Else
+            '            'Beleg-Nummerierung abschalten
+            '            'KrBhg.IncrBelNbr = "N"
+            '            'intKredBelegsNummer = row("strOPNr")
+            '            'strExtBelegNbr = row("strOPNr")
+            '            'End If
+            '            strExtKredBelegsNummer = row("strKredRGNbr")
+
+            '            'Variablen zuweisen
+            '            intKreditorNbr = row("lngKredNbr")
+            '            If row("dblKredBrutto") < 0 Then
+            '                strBuchType = "G"
+            '                'strZahlSperren = "J"
+            '                row("dblKredBrutto") = row("dblKredBrutto") * -1
+            '                'Belegsnummer abholen
+            '                KrBhg.IncrBelNbr = "J"
+            '                intKredBelegsNummer = KrBhg.GetNextBelNbr("G")
+            '                KrBhg.IncrBelNbr = "N"
+
+            '                intReturnValue = MainKreditor.FcCheckKrediExistance(objdbMSSQLConn,
+            '                                                                    objdbSQLcommand,
+            '                                                                    intKredBelegsNummer,
+            '                                                                    "G",
+            '                                                                    intTeqNbr,
+            '                                                                    intTeqNbrLY,
+            '                                                                    intTeqNbrPLY,
+            '                                                                    KrBhg)
+
+            '            Else
+            '                strBuchType = "R"
+            '                'strZahlSperren = "N"
+            '                'Belegsnummer abholen
+            '                KrBhg.IncrBelNbr = "J"
+            '                intKredBelegsNummer = KrBhg.GetNextBelNbr("R")
+            '                'Muss auf Nicht hochzählen gesetzt werden da Sage 200 nicht merkt, dass Beleg-Nr. schon vergeben worden sind. => In den Einstellungen muss von Zeit zu Zeit der Zähler geändert werden
+            '                KrBhg.IncrBelNbr = "N"
+
+            '                intReturnValue = MainKreditor.FcCheckKrediExistance(objdbMSSQLConn,
+            '                                                                    objdbSQLcommand,
+            '                                                                    intKredBelegsNummer,
+            '                                                                    "R",
+            '                                                                    intTeqNbr,
+            '                                                                    intTeqNbrLY,
+            '                                                                    intTeqNbrPLY,
+            '                                                                    KrBhg)
+
+            '            End If
+
+            '            strValutaDatum = Format(row("datKredValDatum"), "yyyyMMdd").ToString
+            '            strBelegDatum = Format(row("datKredRGDatum"), "yyyyMMdd").ToString
+            '            strVerfallDatum = String.Empty
+            '            'strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
+            '            'If IsDBNull(row("strKrediBank")) Then
+            '            'intTeilnehmer = 0
+            '            'Else
+            '            'Teilnehmer nur bei ESR setzen
+            '            If row("intPayType") <> 9 Then 'nicht IBAN
+            '                'QR-Referenz
+            '                strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
+            '                If row("intPayType") = 10 Then
+            '                    strTeilnehmer = row("strKrediBank")
+            '                Else
+            '                    strTeilnehmer = Val(row("strKrediBank"))
+            '                End If
+            '                intBankNbr = 0
+            '            Else
+            '                'IBAN
+            '                strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
+            '                intBankNbr = IIf(IsDBNull(row("intEBank")), 0, row("intEBank"))
+            '                strTeilnehmer = String.Empty
+            '            End If
+            '            'End If
+            '            strMahnerlaubnis = String.Empty 'Format(row("datDebRGDatum"), "yyyyMMdd").ToString
+            '            'Sachbearbeiter aus Debitor auslesen
+            '            strDebiLine = KrBhg.ReadKreditor3(row("lngKredNbr") * -1, "")
+            '            strDebitor = Split(strDebiLine, "{>}")
+            '            strSachBID = strDebitor(29)
+
+            '            dblBetrag = row("dblKredBrutto")
+            '            strKrediText = IIf(IsDBNull(row("strKredText")), "", row("strKredText"))
+            '            strCurrency = row("strKredCur")
+            '            'intBankNbr = 0
+            '            intKondition = IIf(IsDBNull(row("intZKond")), 1, row("intZKond"))
+            '            'LN 0=automatsich ersterfasste Kondition, -1=Schlechteste Kondition, -2=Beste Kondition
+            '            intKonditionLN = 0
+            '            intEigeneBank = row("intintBank")
+
+            '            If strCurrency <> "CHF" Then 'Muss ergänzt werden => Was ist Leitwährung auf dem Konto
+            '                dblKurs = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg)
+            '            Else
+            '                dblKurs = 1.0#
+            '            End If
+
+            '            Try
+            '                booBookingok = True
+            '                Call KrBhg.SetBelegKopf2(intKredBelegsNummer,
+            '                                         strValutaDatum,
+            '                                         intKreditorNbr,
+            '                                         strExtKredBelegsNummer,
+            '                                         strBelegDatum,
+            '                                         strVerfallDatum,
+            '                                         strKrediText,
+            '                                         intBankNbr,
+            '                                         strBuchType,
+            '                                         strZahlSperren,
+            '                                         strVorausZahlung,
+            '                                         intKondition,
+            '                                         intKonditionLN,
+            '                                         strSachBID,
+            '                                         strReferenz,
+            '                                         strSkonto,
+            '                                         dblBetrag.ToString,
+            '                                         strErfassungsArt,
+            '                                         dblKurs.ToString,
+            '                                         strCurrency,
+            '                                         "",
+            '                                         strTeilnehmer,
+            '                                         intEigeneBank.ToString)
+
+            '            Catch ex As Exception
+            '                MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegkopf ")
+            '                If (Err.Number And 65535) < 10000 Then
+            '                    booBookingok = False
+            '                Else
+            '                    booBookingok = True
+            '                End If
+
+            '            End Try
+
+            '            selKrediSub = dsKreditoren.Tables("tblKrediSubsFromUser").Select("lngKredID=" + row("lngKredID").ToString)
+
+            '            For Each SubRow As DataRow In selKrediSub
+
+            '                intGegenKonto = SubRow("lngKto")
+            '                strFibuText = SubRow("strKredSubText")
+            '                'Soll auf Minus setzen
+            '                'If SubRow("intSollHaben") = 1 Then
+            '                'dblNettoBetrag = SubRow("dblNetto") * -1
+            '                'dblMwStBetrag = SubRow("dblMwSt") * -1
+            '                'dblBruttoBetrag = SubRow("dblBrutto") * -1
+            '                'Else
+            '                If intGegenKonto <> 6906 Then
+            '                    If strBuchType = "R" Then
+            '                        dblNettoBetrag = SubRow("dblNetto")
+            '                        dblMwStBetrag = SubRow("dblMwSt")
+            '                        dblBruttoBetrag = SubRow("dblBrutto")
+            '                    Else
+            '                        dblNettoBetrag = SubRow("dblNetto") * -1
+            '                        dblMwStBetrag = SubRow("dblMwSt") * -1
+            '                        dblBruttoBetrag = SubRow("dblBrutto") * -1
+            '                    End If
+            '                Else 'Rundungsdifferenzen
+            '                    If strBuchType = "R" Then
+            '                        dblNettoBetrag = SubRow("dblBrutto")
+            '                        dblMwStBetrag = SubRow("dblMwSt")
+            '                        dblBruttoBetrag = SubRow("dblBrutto")
+            '                    Else
+            '                        dblNettoBetrag = SubRow("dblBrutto") * -1
+            '                        dblMwStBetrag = SubRow("dblMwSt") * -1
+            '                        dblBruttoBetrag = SubRow("dblBrutto") * -1
+            '                    End If
+
+            '                End If
+
+            '                'If strBuchType = "R" Then
+            '                '    dblNettoBetrag = SubRow("dblNetto")
+            '                '    dblMwStBetrag = SubRow("dblMwSt")
+            '                '    dblBruttoBetrag = SubRow("dblBrutto")
+            '                'Else
+            '                '    dblNettoBetrag = SubRow("dblNetto") * -1
+            '                '    dblMwStBetrag = SubRow("dblMwSt") * -1
+            '                '    dblBruttoBetrag = SubRow("dblBrutto") * -1
+            '                'End If
+            '                'End If
+            '                'dblBebuBetrag = 1000.0#
+            '                If SubRow("lngKST") > 0 Then
+            '                    strBeBuEintrag = SubRow("lngKST").ToString + "{<}" + SubRow("strKredSubText") + "{<}" + "CALCULATE" + "{>}"    '"PROD{<}BebuText{<}" + dblBebuBetrag.ToString + "{>}"
+            '                Else
+            '                    'strBeBuEintrag = "00" + "{<}" + SubRow("strKredSubText") + "{<}" + "0" + "{>}"
+            '                End If
+            '                If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then ' And SubRow("strMwStKey") <> "25" Then
+            '                    strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strKredSubText"), dblBruttoBetrag, SubRow("strMwStKey"), dblMwStBetrag)     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+            '                Else
+            '                    strSteuerFeld = "STEUERFREI"
+            '                End If
+
+            '                'strSteuerInfo = Split(FBhg.GetKontoInfo(intGegenKonto.ToString), "{>}")
+            '                'Debug.Print("Konto-Info: " + strSteuerInfo(26))
+
+            '                Try
+            '                    booBookingok = True
+            '                    Call KrBhg.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
+
+            '                Catch ex As Exception
+            '                    MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Verteilung " + SubRow("strKredSubText") + ", Konto " + SubRow("lngKto").ToString)
+            '                    If (Err.Number And 65535) < 10000 Then
+            '                        booBookingok = False
+            '                    Else
+            '                        booBookingok = True
+            '                    End If
+
+            '                End Try
+
+
+            '                strSteuerFeld = String.Empty
+            '                strBeBuEintrag = String.Empty
+
+            '                'Status Sub schreiben
+            '                'Application.DoEvents()
+
+            '            Next
+
+
+            '            Try
+            '                booBookingok = True
+            '                Call KrBhg.WriteBuchung()
+
+            '            Catch ex As Exception
+            '                If (Err.Number And 65535) < 10000 Then
+            '                    MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung nicht möglich")
+            '                    booBookingok = False
+            '                Else
+            '                    MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString + " Belegerstellung")
+            '                    booBookingok = True
+            '                End If
+
+            '            End Try
+
+            '            'Application.DoEvents()
+
+            '            strBeBuEintrag = String.Empty
+            '            strSteuerFeld = String.Empty
+            '            dblNettoBetrag = 0
+            '            dblMwStBetrag = 0
+            '            dblBruttoBetrag = 0
+
+            '        Else
+
+            '            'Buchung nur in Fibu
+            '            'Prinzip Funktion WriteBuchung() anwenden mit allen Parametern
+            '            'Beleg-Nummerierung aktivieren
+            '            'DbBhg.IncrBelNbr = "J"
+            '            'Belegsnummer abholen
+            '            intKredBelegsNummer = FBhg.GetNextBelNbr()
+
+            '            'Prüfen, ob wirklich frei
+            '            intReturnValue = 10
+            '            Do Until intReturnValue = 0
+            '                intReturnValue = FBhg.doesBelegExist(intKredBelegsNummer,
+            '                                                     "NOT_SET",
+            '                                                     "NOT_SET",
+            '                                                     Strings.Left(frmImportMain.lstBoxPerioden.Text, 4) + "0101",
+            '                                                     Strings.Left(frmImportMain.lstBoxPerioden.Text, 4) + "1231")
+            '                If intReturnValue <> 0 Then
+            '                    intKredBelegsNummer += 1
+            '                End If
+            '            Loop
+
+            '            booBookingok = True
+
+            '            'Variablen zuweisen
+            '            strBelegDatum = Format(row("datKredRGDatum"), "yyyyMMdd").ToString
+            '            strValutaDatum = Format(row("datKredValDatum"), "yyyyMMdd").ToString
+            '            'strDebiText = row("strDebText")
+            '            strCurrency = row("strKredCur")
+            '            If strCurrency <> "CHF" Then 'Muss ergänzt werden => Was ist Leitwährung auf dem Konto
+            '                dblKurs = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg)
+            '            Else
+            '                dblKurs = 1.0#
+            '            End If
+
+            '            selKrediSub = dsKreditoren.Tables("tblKrediSubsFromUser").Select("lngKredID=" + row("lngKredID").ToString)
+
+            '            If selKrediSub.Length = 2 Then
+
+            '                For Each SubRow As DataRow In selKrediSub
+
+            '                    If SubRow("intSollHaben") = 0 Then 'Soll
+
+            '                        intSollKonto = SubRow("lngKto")
+            '                        dblKursSoll = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg, intSollKonto)
+            '                        'strSteuerInfo = Split(FBhg.GetKontoInfo(intSollKonto.ToString), "{>}")
+            '                        'Debug.Print("Konto-Info Soll: " + strSteuerInfo(26))
+            '                        dblSollBetrag = SubRow("dblNetto")
+            '                        strKrediTextSoll = SubRow("strKredSubText")
+            '                        If SubRow("dblMwSt") > 0 Then
+            '                            strSteuerFeldSoll = Main.FcGetSteuerFeld(FBhg,
+            '                                                                     SubRow("lngKto"),
+            '                                                                     strKrediTextSoll,
+            '                                                                     SubRow("dblBrutto") * dblKursSoll,
+            '                                                                     SubRow("strMwStKey"),
+            '                                                                     SubRow("dblMwSt"))
+            '                        End If
+            '                        If SubRow("lngKST") > 0 Then
+            '                            strBeBuEintragSoll = SubRow("lngKST").ToString + "{<}" + strKrediTextSoll + "{<}" + "CALCULATE" + "{>}"
+            '                        End If
+
+
+            '                    ElseIf SubRow("intSollHaben") = 1 Then 'Haben
+
+            '                        intHabenKonto = SubRow("lngKto")
+            '                        dblKursHaben = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg, intHabenKonto)
+            '                        'strSteuerInfo = Split(FBhg.GetKontoInfo(intSollKonto.ToString), "{>}")
+            '                        'Debug.Print("Konto-Info Haben: " + strSteuerInfo(26))
+            '                        dblHabenBetrag = SubRow("dblNetto") * -1
+            '                        'dblHabenBetrag = dblSollBetrag
+            '                        strKrediTextHaben = SubRow("strKredSubText")
+            '                        If SubRow("dblMwSt") > 0 Then
+            '                            strSteuerFeldHaben = Main.FcGetSteuerFeld(FBhg,
+            '                                                                      SubRow("lngKto"),
+            '                                                                      strKrediTextHaben,
+            '                                                                      SubRow("dblBrutto") * dblKursHaben * -1,
+            '                                                                      SubRow("strMwStKey"),
+            '                                                                      SubRow("dblMwSt") * -1)
+            '                        End If
+            '                        If SubRow("lngKST") > 0 Then
+            '                            strBeBuEintragHaben = SubRow("lngKST").ToString + "{<}" + strKrediTextHaben + "{<}" + "CALCULATE" + "{>}"
+            '                        End If
+
+            '                    Else
+
+            '                        'Sammelbeleg
+            '                        MsgBox("Nicht definierter Wert Sub-Buchungs-SollHaben: " + SubRow("intSollHaben").ToString)
+            '                        'strKrediText = IIf(IsDBNull(row("strKredText")), "", row("strKredText"))
+
+            '                    End If
+
+            '                Next
+
+            '                'Tieferer Betrag für die Gesamt-Buchung herausfinden
+            '                If dblSollBetrag <= dblHabenBetrag Then
+            '                    dblNettoBetrag = dblSollBetrag
+            '                ElseIf dblHabenBetrag < dblSollBetrag Then
+            '                    dblNettoBetrag = dblHabenBetrag
+            '                End If
+
+            '                'Buchung ausführen
+            '                Call FBhg.WriteBuchung(0,
+            '                                       intKredBelegsNummer,
+            '                                       strBelegDatum,
+            '                                       intSollKonto.ToString,
+            '                                       strKrediTextSoll,
+            '                                       strCurrency,
+            '                                       dblKursSoll.ToString,
+            '                                       (dblNettoBetrag * dblKursSoll).ToString,
+            '                                       strSteuerFeldSoll,
+            '                                       intHabenKonto.ToString,
+            '                                       strKrediTextHaben,
+            '                                       strCurrency,
+            '                                       dblKursHaben.ToString,
+            '                                       (dblNettoBetrag * dblKursHaben).ToString,
+            '                                       strSteuerFeldHaben,
+            '                                       strCurrency,
+            '                                       dblKurs.ToString,
+            '                                       dblNettoBetrag.ToString,
+            '                                       (dblNettoBetrag * dblKurs).ToString,
+            '                                       strBeBuEintragSoll,
+            '                                       strBeBuEintragHaben,
+            '                                       strValutaDatum)
+
+            '            Else
+            '                MsgBox("Nicht 2 Subbuchungen.")
+            '            End If
+
+            '        End If
+
+            '        If booBookingok Then
+            '            If row("booPGV") Then
+            '                'Bei PGV Buchungen
+            '                If IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")) = "" Or
+            '                   (IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")) = "RV" And row("intPGVMthsAY") + row("intPGVMthsNY") > 1) Then
+
+            '                    intReturnValue = MainKreditor.FcPGVKTreatment(FBhg,
+            '                                                           Finanz,
+            '                                                           DbBhg,
+            '                                                           PIFin,
+            '                                                           BeBu,
+            '                                                           KrBhg,
+            '                                                           dsKreditoren.Tables("tblKrediSubsFromUser"),
+            '                                                           row("lngKredID"),
+            '                                                           intKredBelegsNummer,
+            '                                                           row("strKredCur"),
+            '                                                           row("datKredValDatum"),
+            '                                                           "M",
+            '                                                           row("datPGVFrom"),
+            '                                                           row("datPGVTo"),
+            '                                                           row("intPGVMthsAY") + row("intPGVMthsNY"),
+            '                                                           row("intPGVMthsAY"),
+            '                                                           row("intPGVMthsNY"),
+            '                                                           2311,
+            '                                                           2312,
+            '                                                           frmImportMain.lstBoxPerioden.Text,
+            '                                                           objdbConn,
+            '                                                           objdbMSSQLConn,
+            '                                                           objdbSQLcommand,
+            '                                                           frmImportMain.lstBoxMandant.SelectedValue,
+            '                                                           dsKreditoren.Tables("tblKreditorenInfo"),
+            '                                                           strYear,
+            '                                                           intTeqNbr,
+            '                                                           intTeqNbrLY,
+            '                                                           intTeqNbrPLY,
+            '                                                           IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")),
+            '                                                           datPeriodFrom,
+            '                                                           datPeriodTo,
+            '                                                           strPeriodStatus)
+
+            '                Else
+
+            '                    'TP
+            '                    intReturnValue = MainKreditor.FcPGVKTreatmentYC(FBhg,
+            '                                                           Finanz,
+            '                                                           DbBhg,
+            '                                                           PIFin,
+            '                                                           BeBu,
+            '                                                           KrBhg,
+            '                                                           dsKreditoren.Tables("tblKrediSubsFromUser"),
+            '                                                           row("lngKredID"),
+            '                                                           intKredBelegsNummer,
+            '                                                           row("strKredCur"),
+            '                                                           row("datKredValDatum"),
+            '                                                           "M",
+            '                                                           row("datPGVFrom"),
+            '                                                           row("datPGVTo"),
+            '                                                           row("intPGVMthsAY") + row("intPGVMthsNY"),
+            '                                                           row("intPGVMthsAY"),
+            '                                                           row("intPGVMthsNY"),
+            '                                                           2311,
+            '                                                           2312,
+            '                                                           frmImportMain.lstBoxPerioden.Text,
+            '                                                           objdbConn,
+            '                                                           objdbMSSQLConn,
+            '                                                           objdbSQLcommand,
+            '                                                           frmImportMain.lstBoxMandant.SelectedValue,
+            '                                                           dsKreditoren.Tables("tblKreditorenInfo"),
+            '                                                           strYear,
+            '                                                           intTeqNbr,
+            '                                                           intTeqNbrLY,
+            '                                                           intTeqNbrPLY,
+            '                                                           IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")),
+            '                                                           datPeriodFrom,
+            '                                                           datPeriodTo,
+            '                                                           strPeriodStatus)
+
+
+            '                End If
+
+
+            '            End If
+
+            '            'Status Head schreiben
+            '            row("strKredBookStatus") = row("strKredStatusBitLog")
+            '            row("booBooked") = True
+            '            row("datBooked") = Now()
+            '            row("lngBelegNr") = intKredBelegsNummer
+
+            '            dsKreditoren.Tables("tblKrediHeadsFromUser").AcceptChanges()
+            '            'strKRGReferTo = "lngKredID"
+            '            'strKRGReferTo = "strKredRGNbr"
+            '            If objdbConn.State = ConnectionState.Closed Then
+            '                objdbConn.Open()
+            '            End If
+            '            strKRGReferTo = Main.FcReadFromSettings(objdbConn, "Buchh_TableKRGReferTo", frmImportMain.lstBoxMandant.SelectedValue)
+            '            If objdbConn.State = ConnectionState.Open Then
+            '                objdbConn.Close()
+            '            End If
+            '            'Status in File RG-Tabelle schreiben
+            '            intReturnValue = MainKreditor.FcWriteToKrediRGTable(frmImportMain.lstBoxMandant.SelectedValue,
+            '                                                            row(strKRGReferTo),
+            '                                                            row("datBooked"),
+            '                                                            row("lngBelegNr"),
+            '                                                            objOracleConn,
+            '                                                            objdbConn)
+            '            If intReturnValue <> 0 Then
+            '                'Throw an exception
+            '                MessageBox.Show("Achtung, Beleg-Nummer: " + row("lngBelegNr").ToString + " konnte nicht In die RG-Tabelle geschrieben werden auf RG-ID: " + row("lngKredID").ToString + ".", "RG-Table Update nicht möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            '            End If
+
+            '        End If
+
+            '    End If
+
+            'Next
+
+            ''In sync-Tabelle schreiben
+            'intReturnValue = WFDBClass.FcWriteEndToSync(objdbConn,
+            '                                            frmImportMain.lstBoxMandant.SelectedValue,
+            '                                            2,
+            '                                            0,
+            '                                            IIf(booBookingok, "ok", "Probleme"))
 
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " bei Buchung-Beleg " + strExtKredBelegsNummer)
+            MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString)
 
         Finally
             'Neu aufbauen
@@ -1587,6 +1587,7 @@ Public Class frmKredDisp
         Dim booCpyKSTToSub As Boolean
         Dim intReturnValue As Int16
         Dim intKreditorNew As Int32
+        Dim strKreditorNew As String
         Dim strBitLog As String
         Dim intSubNumber As Int32
         Dim dblSubBrutto As Decimal
@@ -1681,7 +1682,7 @@ Public Class frmKredDisp
                                                          dblSubBrutto,
                                                          dblSubNetto,
                                                          dblSubMwSt,
-                                                         row("datKredValDatum"),
+                                                         IIf(IsDBNull(row("datKredValDatum")), #1789-09-17#, row("datKredValDatum")),
                                                          objfiBuha,
                                                          objFiBebu,
                                                          row("intBuchungsart"),
@@ -1843,14 +1844,14 @@ Public Class frmKredDisp
                         row("datKredRGDatum") = BgWCheckKrediArgsInProc.datValutaCor.ToShortDateString
                         strStatus = "RgDCor"
                     End If
-                    If row("datKredValDatum") < BgWCheckKrediArgsInProc.datValutaCor Then
+                    If IIf(IsDBNull(row("datKredValDatum")), #1789-09-17#, row("datKredValDatum")) < BgWCheckKrediArgsInProc.datValutaCor Then
                         row("datKredValDatum") = BgWCheckKrediArgsInProc.datValutaCor.ToShortDateString
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValDCor"
                     End If
                 End If
 
                 'Jahresübergreifend RG- / Valuta-Datum
-                If Year(row("datKredRGDatum")) <> Year(row("datKredValDatum")) And Year(row("datKredValDatum")) >= 2023 Then
+                If Year(row("datKredRGDatum")) <> Year(IIf(IsDBNull(row("datKredValDatum")), #1789-09-17#, row("datKredValDatum"))) And Year(IIf(IsDBNull(row("datKredValDatum")), #1789-09-17#, row("datKredValDatum"))) >= 2023 Then
 
                     row("booPGV") = True
                     'datValutaPGV = row("datKredValDatum")
@@ -2033,8 +2034,12 @@ Public Class frmKredDisp
                         End If
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
-                            row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
+                            intReturnValue = MainKreditor.FcReadKreditorName(objKrBuha,
+                                                                                strKreditorNew,
+                                                                                intKreditorNew,
+                                                                                row("strKredCur"))
 
+                            row("strKredBez") = strKreditorNew
                         ElseIf intReturnValue = 5 Then
                             strStatus += " not approved"
                             row("strKredBez") = "nap"
@@ -2051,7 +2056,11 @@ Public Class frmKredDisp
                         row("strKredBez") = "n/a"
                     End If
                 Else
-                    row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
+                    intReturnValue = MainKreditor.FcReadKreditorName(objKrBuha,
+                                                                        strKreditorNew,
+                                                                        intKreditorNew,
+                                                                        row("strKredCur"))
+                    row("strKredBez") = strKreditorNew
                     row("lngKredNbr") = intKreditorNew
                     row("intEBank") = 0
                     If row("intPayType") = 9 Then
@@ -2078,7 +2087,8 @@ Public Class frmKredDisp
                     End If
                     row("strKredKtoBez") = "n/a"
                 Else
-                    row("strKredKtoBez") = MainDebitor.FcReadDebitorKName(objfiBuha, row("lngKredKtoNbr"))
+                    row("strKredKtoBez") = MainDebitor.FcReadDebitorKName(objfiBuha,
+                                                                          row("lngKredKtoNbr"))
                 End If
                 'Währung 3
                 If Mid(strBitLog, 3, 1) <> "0" Then
@@ -2288,6 +2298,11 @@ Public Class frmKredDisp
         Dim objdbMSSQLConn As New SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
         Dim objdbConnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
         Dim objdbSQLcommand As New SqlCommand
+        Dim objOracleConn As New OracleConnection("Data Source=(DESCRIPTION=" _
+                        + "(ADDRESS=(PROTOCOL=TCP)(HOST=10.0.0.29)(PORT=1521))" _
+                        + "(CONNECT_DATA=(SERVICE_NAME=CISNEW)));" _
+                        + "User Id=cis;Password=sugus;")
+
 
         Dim intReturnValue As Int16
         Dim strMandant As String
@@ -2339,6 +2354,7 @@ Public Class frmKredDisp
         Dim strKrediTextHaben As String
         Dim strSteuerFeldHaben As String
         Dim strBeBuEintragHaben As String
+        Dim strKRGReferTo As String
 
         Dim objFinanz As New SBSXASLib.AXFinanz
         Dim objfiBuha As New SBSXASLib.AXiFBhg
@@ -2349,9 +2365,11 @@ Public Class frmKredDisp
 
         Try
 
+            objdbSQLcommand.Connection = objdbMSSQLConn
+
             'Start in Sync schreiben
-            intReturnValue = WFDBClass.FcWriteStartToSync(objdbConn,
-                                                          frmImportMain.lstBoxMandant.SelectedValue,
+            intReturnValue = WFDBClass.FcWriteStartToSync(objdbConnZHDB02,
+                                                          BgWImportKrediArgsInProc.intMandant,
                                                           2,
                                                           dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count)
 
@@ -2411,7 +2429,7 @@ Public Class frmKredDisp
                             row("dblKredBrutto") = row("dblKredBrutto") * -1
                             'Belegsnummer abholen
                             objKrBuha.IncrBelNbr = "J"
-                            intKredBelegsNummer = KrBhg.GetNextBelNbr("G")
+                            intKredBelegsNummer = objKrBuha.GetNextBelNbr("G")
                             objKrBuha.IncrBelNbr = "N"
 
                             intReturnValue = MainKreditor.FcCheckKrediExistance(objdbMSSQLConn,
@@ -2476,7 +2494,9 @@ Public Class frmKredDisp
                         intKonditionLN = 0
                         intEigeneBank = row("intintBank")
                         If strCurrency <> "CHF" Then 'Muss ergänzt werden => Was ist Leitwährung auf dem Konto
-                            dblKurs = Main.FcGetKurs(strCurrency, strValutaDatum, FBhg)
+                            dblKurs = Main.FcGetKurs(strCurrency,
+                                                     strValutaDatum,
+                                                     objfiBuha)
                         Else
                             dblKurs = 1.0#
                         End If
@@ -2552,14 +2572,25 @@ Public Class frmKredDisp
                                 'strBeBuEintrag = "00" + "{<}" + SubRow("strKredSubText") + "{<}" + "0" + "{>}"
                             End If
                             If Not IsDBNull(SubRow("strMwStKey")) And SubRow("strMwStKey") <> "null" Then ' And SubRow("strMwStKey") <> "25" Then
-                                strSteuerFeld = Main.FcGetSteuerFeld(FBhg, SubRow("lngKto"), SubRow("strKredSubText"), dblBruttoBetrag, SubRow("strMwStKey"), dblMwStBetrag)     '"25{<}DEBI D Bhg Export MwSt{<}0{>}"
+                                intReturnValue = Main.FcGetSteuerFeld2(objfiBuha,
+                                                                      strSteuerFeld,
+                                                                     SubRow("lngKto"),
+                                                                     SubRow("strKredSubText"),
+                                                                     dblBruttoBetrag,
+                                                                     SubRow("strMwStKey"),
+                                                                     dblMwStBetrag,
+                                                                     row("datKredValDatum"))
                             Else
                                 strSteuerFeld = "STEUERFREI"
                             End If
 
                             Try
                                 booBookingok = True
-                                Call objKrBuha.SetVerteilung(intGegenKonto.ToString, strFibuText, dblNettoBetrag.ToString, strSteuerFeld, strBeBuEintrag)
+                                Call objKrBuha.SetVerteilung(intGegenKonto.ToString,
+                                                             strFibuText,
+                                                             dblNettoBetrag.ToString,
+                                                             strSteuerFeld,
+                                                             strBeBuEintrag)
 
                             Catch ex As Exception
                                 MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Verteilung " + SubRow("strKredSubText") + ", Konto " + SubRow("lngKto").ToString)
@@ -2585,8 +2616,13 @@ Public Class frmKredDisp
                                 MessageBox.Show(ex.Message, "Problem " + (Err.Number And 65535).ToString + " Belegerstellung nicht möglich")
                                 booBookingok = False
                             Else
-                                MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString + " Belegerstellung")
-                                booBookingok = True
+                                If (Err.Number And 65535) = 10030 Then
+                                    'MwSt-7.7/8.1 überschneidung nichts machen
+                                    booBookingok = True
+                                Else
+                                    MessageBox.Show(ex.Message, "Warnung " + (Err.Number And 65535).ToString + " Belegerstellung")
+                                    booBookingok = True
+                                End If
                             End If
 
                         End Try
@@ -2629,7 +2665,9 @@ Public Class frmKredDisp
                         'strDebiText = row("strDebText")
                         strCurrency = row("strKredCur")
                         If strCurrency <> "CHF" Then 'Muss ergänzt werden => Was ist Leitwährung auf dem Konto
-                            dblKurs = Main.FcGetKurs(strCurrency, strValutaDatum, objfiBuha)
+                            dblKurs = Main.FcGetKurs(strCurrency,
+                                                     strValutaDatum,
+                                                     objfiBuha)
                         Else
                             dblKurs = 1.0#
                         End If
@@ -2649,7 +2687,8 @@ Public Class frmKredDisp
                                     dblSollBetrag = SubRow("dblNetto")
                                     strKrediTextSoll = SubRow("strKredSubText")
                                     If SubRow("dblMwSt") > 0 Then
-                                        strSteuerFeldSoll = Main.FcGetSteuerFeld(objfiBuha,
+                                        intReturnValue = Main.FcGetSteuerFeld(objfiBuha,
+                                                                                 strSteuerFeldSoll,
                                                                                  SubRow("lngKto"),
                                                                                  strKrediTextSoll,
                                                                                  SubRow("dblBrutto") * dblKursSoll,
@@ -2671,7 +2710,8 @@ Public Class frmKredDisp
                                     'dblHabenBetrag = dblSollBetrag
                                     strKrediTextHaben = SubRow("strKredSubText")
                                     If SubRow("dblMwSt") > 0 Then
-                                        strSteuerFeldHaben = Main.FcGetSteuerFeld(objfiBuha,
+                                        intReturnValue = Main.FcGetSteuerFeld(objfiBuha,
+                                                                                  strSteuerFeldHaben,
                                                                                   SubRow("lngKto"),
                                                                                   strKrediTextHaben,
                                                                                   SubRow("dblBrutto") * dblKursHaben * -1,
@@ -2700,7 +2740,7 @@ Public Class frmKredDisp
                             End If
 
                             'Buchung ausführen
-                            Call FBhg.WriteBuchung(0,
+                            Call objfiBuha.WriteBuchung(0,
                                                    intKredBelegsNummer,
                                                    strBelegDatum,
                                                    intSollKonto.ToString,
@@ -2758,12 +2798,12 @@ Public Class frmKredDisp
                                                                        objdbConnZHDB02,
                                                                        objdbMSSQLConn,
                                                                        objdbSQLcommand,
-                                                                       frmImportMain.lstBoxMandant.SelectedValue,
+                                                                       BgWImportKrediArgsInProc.intMandant,
                                                                        dsKreditoren.Tables("tblKreditorenInfo"),
-                                                                       strYear,
-                                                                       intTeqNbr,
-                                                                       intTeqNbrLY,
-                                                                       intTeqNbrPLY,
+                                                                       BgWImportKrediArgsInProc.strYear,
+                                                                       BgWImportKrediArgsInProc.intTeqNbr,
+                                                                       BgWImportKrediArgsInProc.intTeqNbrLY,
+                                                                       BgWImportKrediArgsInProc.intTeqNbrPLY,
                                                                        IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")),
                                                                        datPeriodFrom,
                                                                        datPeriodTo,
@@ -2772,12 +2812,12 @@ Public Class frmKredDisp
                             Else
 
                                 'TP
-                                intReturnValue = MainKreditor.FcPGVKTreatmentYC(FBhg,
-                                                                       Finanz,
-                                                                       DbBhg,
-                                                                       PIFin,
-                                                                       BeBu,
-                                                                       KrBhg,
+                                intReturnValue = MainKreditor.FcPGVKTreatmentYC(objfiBuha,
+                                                                       objFinanz,
+                                                                       objdbBuha,
+                                                                       objdbPIFb,
+                                                                       objFiBebu,
+                                                                       objKrBuha,
                                                                        dsKreditoren.Tables("tblKrediSubsFromUser"),
                                                                        row("lngKredID"),
                                                                        intKredBelegsNummer,
@@ -2791,16 +2831,16 @@ Public Class frmKredDisp
                                                                        row("intPGVMthsNY"),
                                                                        2311,
                                                                        2312,
-                                                                       frmImportMain.lstBoxPerioden.Text,
-                                                                       objdbConn,
+                                                                       BgWImportKrediArgsInProc.strPeriode,
+                                                                       objdbConnZHDB02,
                                                                        objdbMSSQLConn,
                                                                        objdbSQLcommand,
-                                                                       frmImportMain.lstBoxMandant.SelectedValue,
+                                                                       BgWImportKrediArgsInProc.intMandant,
                                                                        dsKreditoren.Tables("tblKreditorenInfo"),
-                                                                       strYear,
-                                                                       intTeqNbr,
-                                                                       intTeqNbrLY,
-                                                                       intTeqNbrPLY,
+                                                                       BgWImportKrediArgsInProc.strYear,
+                                                                       BgWImportKrediArgsInProc.intTeqNbr,
+                                                                       BgWImportKrediArgsInProc.intTeqNbrLY,
+                                                                       BgWImportKrediArgsInProc.intTeqNbrPLY,
                                                                        IIf(IsDBNull(row("strPGVType")), "", row("strPGVType")),
                                                                        datPeriodFrom,
                                                                        datPeriodTo,
@@ -2821,20 +2861,19 @@ Public Class frmKredDisp
                         dsKreditoren.Tables("tblKrediHeadsFromUser").AcceptChanges()
                         'strKRGReferTo = "lngKredID"
                         'strKRGReferTo = "strKredRGNbr"
-                        If objdbConn.State = ConnectionState.Closed Then
-                            objdbConn.Open()
-                        End If
-                        strKRGReferTo = Main.FcReadFromSettings(objdbConn, "Buchh_TableKRGReferTo", frmImportMain.lstBoxMandant.SelectedValue)
-                        If objdbConn.State = ConnectionState.Open Then
-                            objdbConn.Close()
-                        End If
+                        'If objdbConn.State = ConnectionState.Closed Then
+                        '    objdbConn.Open()
+                        'End If
+                        strKRGReferTo = Main.FcReadFromSettingsII("Buchh_TableKRGReferTo", BgWImportKrediArgsInProc.intMandant)
+                        'If objdbConn.State = ConnectionState.Open Then
+                        '    objdbConn.Close()
+                        'End If
                         'Status in File RG-Tabelle schreiben
-                        intReturnValue = MainKreditor.FcWriteToKrediRGTable(frmImportMain.lstBoxMandant.SelectedValue,
+                        Debug.Print("Booking before Writing to RG-Table " + intKredBelegsNummer.ToString)
+                        intReturnValue = MainKreditor.FcWriteToKrediRGTable(BgWImportKrediArgsInProc.intMandant,
                                                                         row(strKRGReferTo),
                                                                         row("datBooked"),
-                                                                        row("lngBelegNr"),
-                                                                        objOracleConn,
-                                                                        objdbConn)
+                                                                        row("lngBelegNr"))
                         If intReturnValue <> 0 Then
                             'Throw an exception
                             MessageBox.Show("Achtung, Beleg-Nummer: " + row("lngBelegNr").ToString + " konnte nicht In die RG-Tabelle geschrieben werden auf RG-ID: " + row("lngKredID").ToString + ".", "RG-Table Update nicht möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
@@ -2846,14 +2885,43 @@ Public Class frmKredDisp
 
             Next
 
-
         Catch ex As Exception
+            MessageBox.Show(ex.Message, "Generelles Problem " + (Err.Number And 65535).ToString + " Belegerstellung " + intKredBelegsNummer.ToString + ", RG " + strExtKredBelegsNummer, MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Err.Clear()
+
 
         Finally
+            objKrBuha = Nothing
+            objfiBuha = Nothing
+            objdbPIFb = Nothing
+            objdbBuha = Nothing
+            objFiBebu = Nothing
+            objFinanz = Nothing
+
+            objdbConnZHDB02 = Nothing
+            objdbMSSQLConn = Nothing
+            objOracleConn = Nothing
+            objdbSQLcommand = Nothing
+
+            BgWImportKrediArgsInProc = Nothing
 
         End Try
 
 
     End Sub
 
+    Private Sub butDeSeöect_Click(sender As Object, e As EventArgs) Handles butDeSeöect.Click
+
+        'Alle selektierten Records werden deselektiert
+
+        For Each row As DataRow In dsKreditoren.Tables("tblKrediHeadsFromUser").Rows
+            If row("booKredBook") Then
+                row("booKredBook") = False
+            End If
+        Next
+        dsKreditoren.Tables("tblKrediHeadsFromUser").AcceptChanges()
+        'Me.Refresh()
+
+
+    End Sub
 End Class

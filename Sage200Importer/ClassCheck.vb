@@ -2605,7 +2605,10 @@ Friend Class ClassCheck
                         End If
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
-                            row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
+                            intReturnValue = MainKreditor.FcReadKreditorName(objKrBuha,
+                                                                                row("strKredBez"),
+                                                                                intKreditorNew,
+                                                                                row("strKredCur"))
 
                         ElseIf intReturnValue = 5 Then
                             strStatus += " not approved"
@@ -2623,7 +2626,10 @@ Friend Class ClassCheck
                         row("strKredBez") = "n/a"
                     End If
                 Else
-                    row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
+                    intReturnValue = MainKreditor.FcReadKreditorName(objKrBuha,
+                                                                        row("strKredBez"),
+                                                                        intKreditorNew,
+                                                                        row("strKredCur"))
                     row("lngKredNbr") = intKreditorNew
                     row("intEBank") = 0
                     If row("intPayType") = 9 Then

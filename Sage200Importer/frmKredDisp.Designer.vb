@@ -49,6 +49,7 @@ Partial Class frmKredDisp
         Me.BgWLoadKredi = New System.ComponentModel.BackgroundWorker()
         Me.BgWCheckKredi = New System.ComponentModel.BackgroundWorker()
         Me.BgWImportKredi = New System.ComponentModel.BackgroundWorker()
+        Me.butDeSeöect = New System.Windows.Forms.Button()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -211,7 +212,7 @@ Partial Class frmKredDisp
         '
         'butImport
         '
-        Me.butImport.Location = New System.Drawing.Point(1527, 51)
+        Me.butImport.Location = New System.Drawing.Point(1527, 40)
         Me.butImport.Name = "butImport"
         Me.butImport.Size = New System.Drawing.Size(86, 53)
         Me.butImport.TabIndex = 6
@@ -221,7 +222,7 @@ Partial Class frmKredDisp
         'txtNumber
         '
         Me.txtNumber.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.txtNumber.Location = New System.Drawing.Point(1540, 16)
+        Me.txtNumber.Location = New System.Drawing.Point(1540, 5)
         Me.txtNumber.Name = "txtNumber"
         Me.txtNumber.Size = New System.Drawing.Size(60, 29)
         Me.txtNumber.TabIndex = 10
@@ -229,7 +230,7 @@ Partial Class frmKredDisp
         'lblDB
         '
         Me.lblDB.AutoSize = True
-        Me.lblDB.Location = New System.Drawing.Point(1606, 27)
+        Me.lblDB.Location = New System.Drawing.Point(1606, 16)
         Me.lblDB.Name = "lblDB"
         Me.lblDB.Size = New System.Drawing.Size(22, 13)
         Me.lblDB.TabIndex = 11
@@ -252,11 +253,21 @@ Partial Class frmKredDisp
         'BgWImportKredi
         '
         '
+        'butDeSeöect
+        '
+        Me.butDeSeöect.Location = New System.Drawing.Point(1540, 101)
+        Me.butDeSeöect.Name = "butDeSeöect"
+        Me.butDeSeöect.Size = New System.Drawing.Size(31, 20)
+        Me.butDeSeöect.TabIndex = 13
+        Me.butDeSeöect.Text = "X"
+        Me.butDeSeöect.UseVisualStyleBackColor = True
+        '
         'frmKredDisp
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1628, 609)
+        Me.Controls.Add(Me.butDeSeöect)
         Me.Controls.Add(Me.dgvDates)
         Me.Controls.Add(Me.lblDB)
         Me.Controls.Add(Me.txtNumber)
@@ -294,4 +305,5 @@ Partial Class frmKredDisp
     Friend WithEvents BgWLoadKredi As System.ComponentModel.BackgroundWorker
     Friend WithEvents BgWCheckKredi As System.ComponentModel.BackgroundWorker
     Friend WithEvents BgWImportKredi As System.ComponentModel.BackgroundWorker
+    Friend WithEvents butDeSeöect As Button
 End Class

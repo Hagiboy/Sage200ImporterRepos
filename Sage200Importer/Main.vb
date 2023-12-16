@@ -3822,6 +3822,10 @@ ErrorHandler:
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Fehler Kredi-Subbuchungen " + lngKredID.ToString)
 
+        Finally
+            selsubrow = Nothing
+            strSteuer = Nothing
+
         End Try
 
     End Function
@@ -4595,31 +4599,86 @@ ErrorHandler:
     End Function
 
 
+    Public Shared Function FcGetSteuerFeld(ByRef objFBhg As SBSXASLib.AXiFBhg,
+                                           ByRef strSteuerFeld As String,
+                                           ByVal lngKto As Long,
+                                           ByVal strDebiSubText As String,
+                                           ByVal dblBrutto As Double,
+                                           ByVal strMwStKey As String,
+                                           ByVal dblMwSt As Double) As Int16
 
-    Public Shared Function FcGetSteuerFeld(ByRef objFBhg As SBSXASLib.AXiFBhg, ByVal lngKto As Long, ByVal strDebiSubText As String, ByVal dblBrutto As Double, ByVal strMwStKey As String, ByVal dblMwSt As Double) As String
-
-        Dim strSteuerFeld As String = String.Empty
+        'Dim strSteuerFeld As String = String.Empty
 
         Try
 
             If dblMwSt <> 0 Then
 
-                strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString, strDebiSubText, dblBrutto.ToString, strMwStKey, dblMwSt.ToString)
+                strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString,
+                                                      strDebiSubText,
+                                                      dblBrutto.ToString,
+                                                      strMwStKey,
+                                                      dblMwSt.ToString)
 
             Else
 
-                strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString, strDebiSubText, dblBrutto.ToString, strMwStKey)
+                strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString,
+                                                      strDebiSubText,
+                                                      dblBrutto.ToString,
+                                                      strMwStKey)
 
             End If
+            Return 0
 
         Catch ex As Exception
             MessageBox.Show(ex.Message)
+            Return 1
 
         End Try
 
-        Return strSteuerFeld
 
     End Function
+
+    Friend Shared Function FcGetSteuerFeld2(ByRef objFBhg As SBSXASLib.AXiFBhg,
+                                            ByRef strSteuerFeld As String,
+                                           lngKto As Long,
+                                           strDebiSubText As String,
+                                           dblBrutto As Double,
+                                           strMwStKey As String,
+                                           dblMwSt As Double,
+                                           datValuta As Date) As Int16
+
+        'Setzt Steuer-Feld mit Valuzta-Datum
+
+        Try
+
+            If dblMwSt <> 0 Then
+
+                strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString,
+                                                      strDebiSubText,
+                                                      dblBrutto.ToString,
+                                                      strMwStKey,
+                                                      dblMwSt.ToString,
+                                                      Format(datValuta, "yyyyMMdd"))
+
+            Else
+
+                strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString,
+                                                      strDebiSubText,
+                                                      dblBrutto.ToString,
+                                                      strMwStKey)
+
+            End If
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message)
+            Return 1
+
+        End Try
+
+
+    End Function
+
 
     Public Shared Function FcGetKurs(ByVal strCurrency As String,
                                      ByVal strDateValuta As String,
@@ -5156,7 +5215,10 @@ ErrorHandler:
                         End If
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
-                            row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
+                            intReturnValue = MainKreditor.FcReadKreditorName(objKrBuha,
+                                                                                row("strKredBez"),
+                                                                                intKreditorNew,
+                                                                                row("strKredCur"))
 
                         ElseIf intReturnValue = 5 Then
                             strStatus += " not approved"
@@ -5174,7 +5236,10 @@ ErrorHandler:
                         row("strKredBez") = "n/a"
                     End If
                 Else
-                    row("strKredBez") = MainKreditor.FcReadKreditorName(objKrBuha, intKreditorNew, row("strKredCur"))
+                    intReturnValue = MainKreditor.FcReadKreditorName(objKrBuha,
+                                                                        row("strKredBez"),
+                                                                        intKreditorNew,
+                                                                        row("strKredCur"))
                     row("lngKredNbr") = intKreditorNew
                     row("intEBank") = 0
                     If row("intPayType") = 9 Then
