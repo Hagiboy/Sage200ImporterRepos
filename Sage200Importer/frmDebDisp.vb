@@ -59,6 +59,10 @@ Public Class frmDebDisp
     Public Sub InitDB()
 
         Dim strIdentityName As String
+        Dim mysqllocda As New MySqlDataAdapter
+        Dim mysqllocdasel As MySqlCommand
+        Dim mysqllocdacon As New MySqlConnection
+        Dim mysqllocdadel As MySqlCommand
 
         Try
 
@@ -84,10 +88,11 @@ Public Class frmDebDisp
             'setzen für weiteren Gebraucht mit Process ID
             'Read cmd DebiHead
             mysqlcmdDebRead.CommandText = "SELECT * FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
+            mysqllocdasel = New MySqlCommand("SELECT * FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString)
 
             'Del cmd DebiHead
             mysqlcmdDebDel.CommandText = "DELETE FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
-
+            mysqllocdadel = New MySqlCommand("DELETE FROM tbldebitorenjhead WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString)
 
             'Debitoren Sub
             'Read
@@ -96,8 +101,30 @@ Public Class frmDebDisp
             'Del cmd Debi Sub
             mysqlcmdDebSubDel.CommandText = "DELETE FROM tbldebitorensub WHERE IdentityName='" + strIdentityName + "' AND ProcessID= " + Process.GetCurrentProcess().Id.ToString
 
-        Catch ex As Exception
+            mysqllocdacon.ConnectionString = "server=ZHDB02.sdlc.mssag.ch;uid=workbench;database=DBZ;Pwd=sesam"
+            'mysqllocdasel.Connection.ConnectionString = "Server=ZHDB02.sdlc.mssag.ch;User ID=workbench;Database=DBZ;Connection Timeout=30;Convert Zero DateTime=True"
+            'mysqllocdasel.CommandText = mysqlcmdDebRead.CommandText
+            mysqllocdasel.Connection = mysqllocdacon
+            mysqllocda.SelectCommand = mysqllocdasel
 
+            mysqllocdadel.Connection = mysqllocdacon
+            mysqllocda.DeleteCommand = mysqllocdadel
+            Dim mysqldacmdbld As New MySqlCommandBuilder(mysqllocda)
+            mysqldacmdbld.GetUpdateCommand()
+            mysqldacmdbld.GetInsertCommand()
+            MySQLdaDebitoren.UpdateCommand.CommandText = mysqldacmdbld.GetUpdateCommand().CommandText
+            MySQLdaDebitoren.InsertCommand.CommandText = mysqldacmdbld.GetInsertCommand().CommandText
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Generelles Problem " + Convert.ToString(Err.Number) + "Init Debitoren", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Err.Clear()
+
+        Finally
+            mysqllocda = Nothing
+            mysqllocdacon = Nothing
+            mysqllocdasel = Nothing
+            mysqllocdadel = Nothing
 
         End Try
 
@@ -292,6 +319,7 @@ Public Class frmDebDisp
             'Dim clImp As New ClassImport
             'clImp.FcDebitFill(intMandant)
             'clImp = Nothing
+            'MySQLdaDebitoren.AcceptChangesDuringFill = False
 
             BgWLoadDebi.RunWorkerAsync(intMandant)
 
@@ -302,10 +330,11 @@ Public Class frmDebDisp
             'Tabellentyp darstellen
             Me.lblDB.Text = Main.FcReadFromSettingsII("Buchh_RGTableType", intMandant)
 
-
             MySQLdaDebitoren.Fill(dsDebitoren, "tblDebiHeadsFromUser")
+            'MySQLdaDebitoren.Update(dsDebitoren, "tblDebiHeadsFromUser")
             MySQLdaDebitorenSub.Fill(dsDebitoren, "tblDebiSubsFromUser")
 
+            'Debug.Print("Changes nach Load Head " + dsDebitoren.Tables("tblDebiHeadsFromUser").GetChanges().Rows.Count.ToString)
             'Application.DoEvents()
 
             'Dim clCheck As New ClassCheck
@@ -345,11 +374,13 @@ Public Class frmDebDisp
 
             'System.GC.Collect()
 
-            Debug.Print("Vor Refresh DGV")
+            'Debug.Print("Vor Refresh DGV")
+            'Debug.Print("Changes nach Check Head " + dsDebitoren.Tables("tblDebiHeadsFromUser").GetChanges().Rows.Count.ToString)
 
             'Grid neu aufbauen
             'dgvBookings.DataSource = Nothing
             'dgvBookingSub.DataSource = Nothing
+            ''MySQLdaDebitoren.Update(dsDebitoren, "tblDebiHeadsFromUser")
             dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
             dgvBookingSub.DataSource = dsDebitoren.Tables("tblDebiSubsFromUser")
 
@@ -386,7 +417,7 @@ Public Class frmDebDisp
 
             BgWCheckDebitLocArgs = Nothing
 
-            'System.GC.Collect()
+            System.GC.Collect()
 
         End Try
 
@@ -1551,7 +1582,7 @@ Public Class frmDebDisp
 
             Me.Cursor = Cursors.Default
             'Me.butImport.Enabled = False
-            Me.Close()
+            'Me.Close()
             'Me.Dispose()
             'System.GC.Collect()
             'Application.Restart()
@@ -1674,7 +1705,7 @@ Public Class frmDebDisp
             strRGTableType = Main.FcReadFromSettingsII("Buchh_RGTableType",
                                                          intAccounting)
             objdslocdebihead.EnforceConstraints = False
-            objdslocdebihead.AcceptChanges()
+            'objdslocdebihead.AcceptChanges()
 
             Debug.Print("BW Before Read Head " + Convert.ToString(intAccounting))
             If strRGTableType = "A" Then
@@ -1715,7 +1746,7 @@ Public Class frmDebDisp
             End If
 
             objdslocdebisub.EnforceConstraints = False
-            objdslocdebisub.AcceptChanges()
+            'objdslocdebisub.AcceptChanges()
 
             strSQLToParse = Main.FcReadFromSettingsII("Buchh_SQLDetail",
                                                         intAccounting)
@@ -1773,7 +1804,7 @@ Public Class frmDebDisp
                 End If
                 objmysqlcomdwritehead.ExecuteNonQuery()
                 objmysqlcomdwritehead.Connection.Close()
-                objdtLocDebiHead.AcceptChanges()
+                'objdtLocDebiHead.AcceptChanges()
 
                 'Subs einlesen
                 'Es muss der Weg über das DS genommen werden wegen den constraint-Verlethzungen
@@ -1836,7 +1867,7 @@ Public Class frmDebDisp
                     objmysqlcomdwritesub.ExecuteNonQuery()
                     objmysqlcomdwritesub.Connection.Close()
 
-                    objdtlocDebiSub.AcceptChanges()
+                    'objdtlocDebiSub.AcceptChanges()
 
                 Next
 
@@ -2667,7 +2698,7 @@ Public Class frmDebDisp
             selSBrows = Nothing
             selsubrow = Nothing
 
-            System.GC.Collect()
+            'System.GC.Collect()
             Debug.Print("End Debi Check " + Convert.ToString(BgWCheckDebiArgsInProc.intMandant))
 
         End Try
@@ -3530,18 +3561,18 @@ Public Class frmDebDisp
                         End If
 
                         'Status Head schreiben
-                        row("strDebBookStatus") = row("strDebStatusBitLog")
-                        row("booBooked") = True
-                        row("datBooked") = Now()
-                        row("lngBelegNr") = intDebBelegsNummer
-                        dsDebitoren.Tables("tblDebiHeadsFromUser").AcceptChanges()
+                        'row("strDebBookStatus") = row("strDebStatusBitLog")
+                        'row("booBooked") = True
+                        'row("datBooked") = Now()
+                        'row("lngBelegNr") = intDebBelegsNummer
+                        'dsDebitoren.Tables("tblDebiHeadsFromUser").AcceptChanges()
                         'Application.DoEvents()
 
                         'Status in File RG-Tabelle schreiben
                         intReturnValue = MainDebitor.FcWriteToRGTable(BgWImportDebiArgsInProc.intMandant,
                                                                           row("strDebRGNbr"),
-                                                                          row("datBooked"),
-                                                                          row("lngBelegNr"),
+                                                                          Now(),
+                                                                          intDebBelegsNummer,
                                                                           objdbAccessConn,
                                                                           objOracleConn,
                                                                           objdbConnZHDB02,
@@ -3604,7 +3635,7 @@ Public Class frmDebDisp
         'System.Diagnostics.Process.Start(Application.ExecutablePath)
         'Environment.Exit(0)
         'System.GC.Collect()
-        Application.Restart()
+        'Application.Restart()
 
     End Sub
 
@@ -3613,8 +3644,10 @@ Public Class frmDebDisp
         'Alle selektierten Records werden deselektiert
 
         For Each row As DataRow In dsDebitoren.Tables("tblDebiHeadsFromUser").Rows
-            If row("booDebBook") Then
-                row("booDebBook") = False
+            If Not IsDBNull(row("booDebBook")) Then
+                If row("booDebBook") Then
+                    row("booDebBook") = False
+                End If
             End If
         Next
         dsDebitoren.Tables("tblDebiHeadsFromUser").AcceptChanges()

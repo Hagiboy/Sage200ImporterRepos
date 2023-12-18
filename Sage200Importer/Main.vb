@@ -3045,6 +3045,11 @@ ErrorHandler:
 
                 strBitLog = String.Empty
 
+                'DB- Null Kto auf 0 setzen
+                If IsDBNull(subrow("lngKto")) Then
+                    subrow("lngKto") = 0
+                End If
+
                 'Runden
                 If IsDBNull(subrow("dblNetto")) Then
                     subrow("dblNetto") = 0

@@ -10,7 +10,7 @@ Imports CLClassSage200.WFSage200Import
 Friend Class frmImportMain
 
     'Wird gebraucht um die GJ zu lesen
-    Public Finanz As SBSXASLib.AXFinanz
+    'Public Finanz As SBSXASLib.AXFinanz
     'Public FBhg As SBSXASLib.AXiFBhg
     'Public DbBhg As SBSXASLib.AXiDbBhg
     'Public KrBhg As SBSXASLib.AXiKrBhg
@@ -873,6 +873,11 @@ Friend Class frmImportMain
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Error In Load" + Err.Number.ToString)
+            Err.Clear()
+
+        Finally
+            objdtBuchhaltungen = Nothing
+            objDABuchhaltungen = Nothing
 
         End Try
 
@@ -3135,16 +3140,22 @@ Friend Class frmImportMain
 
     Private Sub lstBoxMandant_MouseClick(sender As Object, e As MouseEventArgs) Handles lstBoxMandant.MouseClick
 
+        Dim objFinanz As SBSXASLib.AXFinanz
+
         Try
 
 
             Call Main.FcReadPeriodsFromMandantLst(objdbConn,
-                                           Finanz,
+                                           objFinanz,
                                            lstBoxMandant.SelectedValue,
                                            lstBoxPerioden)
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Problem " + Err.Number.ToString)
+            Err.Clear()
+
+        Finally
+            objFinanz = Nothing
 
         End Try
 

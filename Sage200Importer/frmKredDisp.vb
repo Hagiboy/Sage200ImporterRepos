@@ -2853,12 +2853,12 @@ Public Class frmKredDisp
                         End If
 
                         'Status Head schreiben
-                        row("strKredBookStatus") = row("strKredStatusBitLog")
-                        row("booBooked") = True
-                        row("datBooked") = Now()
-                        row("lngBelegNr") = intKredBelegsNummer
+                        'row("strKredBookStatus") = row("strKredStatusBitLog")
+                        'row("booBooked") = True
+                        'row("datBooked") = Now()
+                        'row("lngBelegNr") = intKredBelegsNummer
 
-                        dsKreditoren.Tables("tblKrediHeadsFromUser").AcceptChanges()
+                        'dsKreditoren.Tables("tblKrediHeadsFromUser").AcceptChanges()
                         'strKRGReferTo = "lngKredID"
                         'strKRGReferTo = "strKredRGNbr"
                         'If objdbConn.State = ConnectionState.Closed Then
@@ -2872,8 +2872,8 @@ Public Class frmKredDisp
                         Debug.Print("Booking before Writing to RG-Table " + intKredBelegsNummer.ToString)
                         intReturnValue = MainKreditor.FcWriteToKrediRGTable(BgWImportKrediArgsInProc.intMandant,
                                                                         row(strKRGReferTo),
-                                                                        row("datBooked"),
-                                                                        row("lngBelegNr"))
+                                                                        Now(),
+                                                                        intKredBelegsNummer)
                         If intReturnValue <> 0 Then
                             'Throw an exception
                             MessageBox.Show("Achtung, Beleg-Nummer: " + row("lngBelegNr").ToString + " konnte nicht In die RG-Tabelle geschrieben werden auf RG-ID: " + row("lngKredID").ToString + ".", "RG-Table Update nicht möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)

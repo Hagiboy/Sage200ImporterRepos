@@ -41,6 +41,8 @@ Partial Class frmDebDisp
         Me.BgWCheckDebi = New System.ComponentModel.BackgroundWorker()
         Me.BgWImportDebi = New System.ComponentModel.BackgroundWorker()
         Me.butDeSeöect = New System.Windows.Forms.Button()
+        Me.mysqlcmdDebUpd = New MySqlConnector.MySqlCommand()
+        Me.MySqlcmdDebIns = New MySqlConnector.MySqlCommand()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -77,10 +79,10 @@ Partial Class frmDebDisp
         Me.MySQLdaDebitoren.AcceptChangesDuringFill = False
         Me.MySQLdaDebitoren.AcceptChangesDuringUpdate = False
         Me.MySQLdaDebitoren.DeleteCommand = Me.mysqlcmdDebDel
-        Me.MySQLdaDebitoren.InsertCommand = Nothing
+        Me.MySQLdaDebitoren.InsertCommand = Me.MySqlcmdDebIns
         Me.MySQLdaDebitoren.SelectCommand = Me.mysqlcmdDebRead
         Me.MySQLdaDebitoren.UpdateBatchSize = 0
-        Me.MySQLdaDebitoren.UpdateCommand = Nothing
+        Me.MySQLdaDebitoren.UpdateCommand = Me.mysqlcmdDebUpd
         '
         'mysqlcmdDebDel
         '
@@ -181,6 +183,20 @@ Partial Class frmDebDisp
         Me.butDeSeöect.Text = "X"
         Me.butDeSeöect.UseVisualStyleBackColor = True
         '
+        'mysqlcmdDebUpd
+        '
+        Me.mysqlcmdDebUpd.CommandTimeout = 30
+        Me.mysqlcmdDebUpd.Connection = Me.mysqlconn
+        Me.mysqlcmdDebUpd.Transaction = Nothing
+        Me.mysqlcmdDebUpd.UpdatedRowSource = System.Data.UpdateRowSource.None
+        '
+        'MySqlcmdDebIns
+        '
+        Me.MySqlcmdDebIns.CommandTimeout = 30
+        Me.MySqlcmdDebIns.Connection = Me.mysqlconn
+        Me.MySqlcmdDebIns.Transaction = Nothing
+        Me.MySqlcmdDebIns.UpdatedRowSource = System.Data.UpdateRowSource.None
+        '
         'frmDebDisp
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -225,4 +241,6 @@ Partial Class frmDebDisp
     Friend WithEvents BgWCheckDebi As System.ComponentModel.BackgroundWorker
     Friend WithEvents BgWImportDebi As System.ComponentModel.BackgroundWorker
     Friend WithEvents butDeSeöect As Button
+    Friend WithEvents mysqlcmdDebUpd As MySqlConnector.MySqlCommand
+    Friend WithEvents MySqlcmdDebIns As MySqlConnector.MySqlCommand
 End Class

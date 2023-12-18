@@ -274,6 +274,7 @@
   <ItemGroup>
     <EmbeddedResource Include="frmDebDisp.resx">
       <DependentUpon>frmDebDisp.vb</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="frmImportMain.resx">
       <DependentUpon>frmImportMain.vb</DependentUpon>
