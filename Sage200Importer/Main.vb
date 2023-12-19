@@ -1533,6 +1533,47 @@ ErrorHandler:
 
     End Function
 
+    Public Shared Function FcReadFromSettingsIII(strField As String,
+                                                intMandant As Int16,
+                                                ByRef strReturn As String) As Int16
+
+        Dim objdbconn As New MySqlConnection
+        Dim objlocdtSetting As New DataTable("tbllocSettings")
+        Dim objlocMySQLcmd As New MySqlCommand
+
+        Try
+
+            objlocMySQLcmd.CommandText = "SELECT t_sage_buchhaltungen." + strField + " FROM t_sage_buchhaltungen WHERE Buchh_Nr=" + intMandant.ToString
+            'Debug.Print(objlocMySQLcmd.CommandText)
+            objdbconn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString")
+            objdbconn.Open()
+            objlocMySQLcmd.Connection = objdbconn
+            objlocdtSetting.Load(objlocMySQLcmd.ExecuteReader)
+            objdbconn.Close()
+            'Debug.Print("Records" + objlocdtSetting.Rows.Count.ToString)
+            'Debug.Print("Return " + objlocdtSetting.Rows(0).Item(0).ToString)
+            strReturn = objlocdtSetting.Rows(0).Item(0).ToString
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Einstellung lesen")
+            Err.Clear()
+            Return 1
+
+        Finally
+            objlocdtSetting.Constraints.Clear()
+            objlocdtSetting.Rows.Clear()
+            objlocdtSetting.Columns.Clear()
+            objlocdtSetting = Nothing
+            objlocMySQLcmd = Nothing
+            objdbconn = Nothing
+            'System.GC.Collect()
+
+        End Try
+
+    End Function
+
+
     Public Shared Function FcReadFromSettingsII(ByVal strField As String,
                                               ByVal intMandant As Int16) As String
 
@@ -2986,23 +3027,23 @@ ErrorHandler:
 
     End Function
 
-    Public Shared Function FcCheckSubBookings(ByVal strDebRgNbr As String,
+    Public Shared Function FcCheckSubBookings(strDebRgNbr As String,
                                               ByRef objDtDebiSub As DataTable,
                                               ByRef intSubNumber As Int16,
                                               ByRef dblSubBrutto As Double,
                                               ByRef dblSubNetto As Double,
                                               ByRef dblSubMwSt As Double,
-                                              ByVal datValuta As Date,
+                                              datValuta As Date,
                                               ByRef objFiBhg As SBSXASLib.AXiFBhg,
                                               ByRef objFiPI As SBSXASLib.AXiPlFin,
                                               ByRef objFiBebu As SBSXASLib.AXiBeBu,
-                                              ByVal intBuchungsArt As Int32,
-                                              ByVal booAutoCorrect As Boolean,
-                                              ByVal booCpyKSTToSub As Boolean,
-                                              ByVal strKST As String,
+                                              intBuchungsArt As Int32,
+                                              booAutoCorrect As Boolean,
+                                              booCpyKSTToSub As Boolean,
+                                              strKST As String,
                                               ByRef lngDebKonto As Int32,
-                                              ByVal booCashSollKorrekt As Boolean,
-                                              ByVal booSplittBill As Boolean) As Int16
+                                              booCashSollKorrekt As Boolean,
+                                              booSplittBill As Boolean) As Int16
 
         'Functin Returns 0=ok, 1=Problem sub, 2=OP Diff zu Kopf, 3=OP nicht 0, 9=keine Subs
 
@@ -3039,6 +3080,7 @@ ErrorHandler:
 
             For Each subrow As DataRow In selsubrow
 
+                Debug.Print("In Subrow Check")
                 'If subrow("lngKto") = 3409 Then
                 '    Stop
                 'End If
@@ -3389,6 +3431,7 @@ ErrorHandler:
             'Falls Soll-Konto-Korretkur gesetzt hier Konto ändern
             If booCashSollKorrekt And intBuchungsArt = 4 Then
                 lngDebKonto = intSollKonto
+                Debug.Print("Konto in SB geändert")
             End If
 
             'Rückgabe der ganzen Funktion Sub-Prüfung
@@ -3422,6 +3465,7 @@ ErrorHandler:
 
         Finally
             selsubrow = Nothing
+            objDtDebiSub.AcceptChanges()
 
         End Try
 

@@ -343,5 +343,5 @@ Partial Class frmImportMain
     Friend WithEvents LblIdentity As Label
     Friend WithEvents LblVersion As Label
     Friend WithEvents lstBoxMandant As ListBox
-    Friend WithEvents lstBoxPerioden As ListBox
+    Public WithEvents lstBoxPerioden As ListBox
 End Class

@@ -429,8 +429,8 @@ Public Class MainDebitor
 
     End Function
 
-    Public Shared Function FcGetRefDebiNr(ByVal lngDebiNbr As Int32,
-                                          ByVal intAccounting As Int32,
+    Friend Shared Function FcGetRefDebiNr(lngDebiNbr As Int32,
+                                          intAccounting As Int32,
                                           ByRef intDebiNew As Int32) As Int16
 
         'Return 0=ok, 1=Neue Debi genereiert und gesetzt, 2=Rep_Ref nicht definiert, 3=Nicht in Tab_Repbetriebe, 4=keine Angaben in Tab_Repbetriebe
@@ -618,7 +618,7 @@ Public Class MainDebitor
             objsqlCommDeb = Nothing
             objdbAccessConn = Nothing
             objlocOLEdbcmd = Nothing
-            System.GC.Collect()
+            'System.GC.Collect()
 
         End Try
 

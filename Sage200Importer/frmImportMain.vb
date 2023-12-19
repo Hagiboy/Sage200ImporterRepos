@@ -28,6 +28,7 @@ Friend Class frmImportMain
     'Public FELD_SEP_OUT As String
     'Public REC_SEP_OUT As String
     'Public nID As String
+    Public strIdentityName As String
 
     Dim objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
     'Public objdbConnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
@@ -104,7 +105,7 @@ Friend Class frmImportMain
 
     Public Sub InitDB()
 
-        Dim strIdentityName As String
+        'Dim strIdentityName As String
 
         Try
 
@@ -141,10 +142,28 @@ Friend Class frmImportMain
 
         'Dim strIncrBelNbr As String = String.Empty
         Dim intNbrDebiForms As Int16
+        Dim objdbtasks As New DataTable
+        Dim objdbtaskcmd As New MySqlCommand
 
         Try
 
-            'Zuerst prüfen ob schon eine Insstanz für Mandant existiert
+            'Zuerst in tblImportTasks setzen
+            objdbtaskcmd.Connection = objdbConn
+            objdbtaskcmd.Connection.Open()
+            objdbtaskcmd.CommandText = "SELECT * FROM tblimporttasks WHERE IdentityName='" + LblIdentity.Text + "' AND Type='D'"
+            objdbtasks.Load(objdbtaskcmd.ExecuteReader())
+            If objdbtasks.Rows.Count > 0 Then
+                'update
+                objdbtaskcmd.CommandText = "UPDATE tblimporttasks SET Mandant=" + Convert.ToString(lstBoxMandant.SelectedValue) + ", Periode=" + Convert.ToString(lstBoxPerioden.SelectedIndex) + " WHERE IdentityName='" + LblIdentity.Text + "' AND Type='D'"
+            Else
+                'insert
+                objdbtaskcmd.CommandText = "INSERT INTO tblimporttasks (IdentityName, Type, Mandant, Periode) VALUES ('" + LblIdentity.Text + "', 'D', " + Convert.ToString(lstBoxMandant.SelectedValue) + ", " + Convert.ToString(lstBoxPerioden.SelectedIndex) + ")"
+            End If
+            objdbtaskcmd.ExecuteNonQuery()
+            objdbtaskcmd.Connection.Close()
+
+
+            'Prüfen ob schon eine Insstanz für Mandant existiert
             For Each frm As Form In Application.OpenForms()
                 If frm.Text = "Debitor " + lstBoxMandant.Text Then
                     'Es existiert schon eine Instanz
@@ -156,7 +175,7 @@ Friend Class frmImportMain
             Else
                 intNbrDebiForms = 0
                 Dim frmDebDisp As New frmDebDisp
-                frmDebDisp.Cursor = Cursors.WaitCursor
+                'frmDebDisp.Cursor = Cursors.WaitCursor
                 frmDebDisp.Text = "Debitor " + lstBoxMandant.Text
                 frmDebDisp.MdiParent = Me
                 frmDebDisp.Show()
@@ -170,13 +189,17 @@ Friend Class frmImportMain
                 Next
                 'Je nach Anzahl von Links her verschieben
                 frmDebDisp.Left = intNbrDebiForms * 15
-                frmDebDisp.FcDebiDisplay(lstBoxMandant.SelectedValue,
-                                         lstBoxMandant,
-                                         lstBoxPerioden)
+                'lstBox Perioden in SF füllen
+                For Each item As Object In lstBoxPerioden.Items
+                    frmDebDisp.lstBoxPerioden.Items.Add(item)
+                Next
+                'frmDebDisp.FcDebiDisplay(lstBoxMandant.SelectedValue,
+                '                         lstBoxMandant,
+                '                         lstBoxPerioden)
 
             End If
 
-            frmDebDisp.Cursor = Cursors.Default
+            'frmDebDisp.Cursor = Cursors.Default
             'Application.DoEvents()
 
 
@@ -354,6 +377,9 @@ Friend Class frmImportMain
 
         Finally
             'System.GC.Collect()
+            objdbtasks = Nothing
+            objdbtaskcmd = Nothing
+
             Me.Cursor = Cursors.Default
 
         End Try
@@ -865,7 +891,8 @@ Friend Class frmImportMain
             objdttaksd.Load(objdbtaskscmd.ExecuteReader())
             objdbtaskscmd.Connection.Close()
             If objdttaksd.Rows.Count > 0 Then
-                lstBoxMandant.SelectedIndex = objdttaksd.Rows(0).Item("Mandant")
+                lstBoxMandant.SelectedValue = objdttaksd.Rows(0).Item("Mandant")
+                'lstBoxMandant.SelectedIndex = objdttaksd.Rows(0).Item("Mandant")
                 Call lstBoxMandant_MouseClick(Nothing, Nothing)
                 'Aufruf Click Debitor führt zu Endlosschleife
             End If

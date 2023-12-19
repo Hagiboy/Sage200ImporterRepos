@@ -43,6 +43,8 @@ Partial Class frmDebDisp
         Me.butDeSeöect = New System.Windows.Forms.Button()
         Me.mysqlcmdDebUpd = New MySqlConnector.MySqlCommand()
         Me.MySqlcmdDebIns = New MySqlConnector.MySqlCommand()
+        Me.butCheckDeb = New System.Windows.Forms.Button()
+        Me.lstBoxPerioden = New System.Windows.Forms.ListBox()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -143,9 +145,9 @@ Partial Class frmDebDisp
         'txtNumber
         '
         Me.txtNumber.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.txtNumber.Location = New System.Drawing.Point(1489, 17)
+        Me.txtNumber.Location = New System.Drawing.Point(1515, 17)
         Me.txtNumber.Name = "txtNumber"
-        Me.txtNumber.Size = New System.Drawing.Size(60, 29)
+        Me.txtNumber.Size = New System.Drawing.Size(34, 29)
         Me.txtNumber.TabIndex = 9
         '
         'lblDB
@@ -197,11 +199,30 @@ Partial Class frmDebDisp
         Me.MySqlcmdDebIns.Transaction = Nothing
         Me.MySqlcmdDebIns.UpdatedRowSource = System.Data.UpdateRowSource.None
         '
+        'butCheckDeb
+        '
+        Me.butCheckDeb.Location = New System.Drawing.Point(1526, 111)
+        Me.butCheckDeb.Name = "butCheckDeb"
+        Me.butCheckDeb.Size = New System.Drawing.Size(23, 19)
+        Me.butCheckDeb.TabIndex = 13
+        Me.butCheckDeb.Text = "Check"
+        Me.butCheckDeb.UseVisualStyleBackColor = True
+        '
+        'lstBoxPerioden
+        '
+        Me.lstBoxPerioden.FormattingEnabled = True
+        Me.lstBoxPerioden.Location = New System.Drawing.Point(1477, 14)
+        Me.lstBoxPerioden.Name = "lstBoxPerioden"
+        Me.lstBoxPerioden.Size = New System.Drawing.Size(32, 30)
+        Me.lstBoxPerioden.TabIndex = 14
+        '
         'frmDebDisp
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1581, 623)
+        Me.Controls.Add(Me.lstBoxPerioden)
+        Me.Controls.Add(Me.butCheckDeb)
         Me.Controls.Add(Me.butDeSeöect)
         Me.Controls.Add(Me.dgvDates)
         Me.Controls.Add(Me.lblDB)
@@ -211,7 +232,7 @@ Partial Class frmDebDisp
         Me.Controls.Add(Me.dgvBookingSub)
         Me.Controls.Add(Me.dgvBookings)
         Me.Name = "frmDebDisp"
-        Me.Text = "frmDebDisp"
+        Me.Text = "Deb"
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).EndInit()
@@ -243,4 +264,6 @@ Partial Class frmDebDisp
     Friend WithEvents butDeSeöect As Button
     Friend WithEvents mysqlcmdDebUpd As MySqlConnector.MySqlCommand
     Friend WithEvents MySqlcmdDebIns As MySqlConnector.MySqlCommand
+    Friend WithEvents butCheckDeb As Button
+    Friend WithEvents lstBoxPerioden As ListBox
 End Class
