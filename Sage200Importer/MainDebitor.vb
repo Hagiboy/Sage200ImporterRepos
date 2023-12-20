@@ -435,7 +435,7 @@ Public Class MainDebitor
 
         'Return 0=ok, 1=Neue Debi genereiert und gesetzt, 2=Rep_Ref nicht definiert, 3=Nicht in Tab_Repbetriebe, 4=keine Angaben in Tab_Repbetriebe
 
-        Dim strTableName, strTableType, strDebFieldName, strDebNewField, strDebNewFieldType, strCompFieldName, strStreetFieldName, strZIPFieldName, strTownFieldName, strSageName, strDebiAccField As String
+        Dim strTableName, strTableType, strDebFieldName, strDebNewField As String
         'Dim intCreatable As Int16
         Dim objdtDebitor As New DataTable
         Dim intPKNewField As Int32
@@ -460,29 +460,8 @@ Public Class MainDebitor
                                                       intAccounting)
             strDebNewField = Main.FcReadFromSettingsII("Buchh_PKNewField",
                                                      intAccounting)
-            'strDebNewFieldType = Main.FcReadFromSettings(objdbconn,
-            '                                             "Buchh_PKNewFType",
-            '                                             intAccounting)
-            'strCompFieldName = Main.FcReadFromSettings(objdbconn,
-            '                                           "Buchh_PKCompany",
-            '                                           intAccounting)
-            'strStreetFieldName = Main.FcReadFromSettings(objdbconn,
-            '                                             "Buchh_PKStreet",
-            '                                             intAccounting)
-            'strZIPFieldName = Main.FcReadFromSettings(objdbconn,
-            '                                          "Buchh_PKZIP",
-            '                                          intAccounting)
-            'strTownFieldName = Main.FcReadFromSettings(objdbconn,
-            '                                           "Buchh_PKTown",
-            '                                           intAccounting)
-            'strSageName = Main.FcReadFromSettings(objdbconn,
-            '                                      "Buchh_PKSageName",
-            '                                      intAccounting)
-            'strDebiAccField = Main.FcReadFromSettings(objdbconn,
-            '                                          "Buchh_DPKAccount",
-            '                                          intAccounting)
 
-            strSQL = "SELECT * " + 'strDebFieldName + ", " + strDebNewField + ", " + strCompFieldName + ", " + strStreetFieldName + ", " + strZIPFieldName + ", " + strTownFieldName + ", " + strSageName + ", " + strDebiAccField +
+            strSQL = "SELECT * " +
                  " FROM " + strTableName + " WHERE " + strDebFieldName + "=" + lngDebiNbr.ToString
 
             If strTableName <> "" And strDebFieldName <> "" Then

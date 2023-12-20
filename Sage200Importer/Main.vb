@@ -4728,7 +4728,6 @@ ErrorHandler:
 
     End Function
 
-
     Public Shared Function FcGetKurs(ByVal strCurrency As String,
                                      ByVal strDateValuta As String,
                                      ByRef objFBhg As SBSXASLib.AXiFBhg,
