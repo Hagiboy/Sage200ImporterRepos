@@ -2029,15 +2029,15 @@ Public Class frmDebDisp
         Try
 
             Debug.Print("Start Debi Check " + Convert.ToString(BgWCheckDebiArgsInProc.intMandant))
-            objFinanz = Nothing
-            objFinanz = New SBSXASLib.AXFinanz
-            objfiBuha = Nothing
+            'objFinanz = Nothing
+            'objFinanz = New SBSXASLib.AXFinanz
+            'objfiBuha = Nothing
 
-            objdbBuha = Nothing
+            'objdbBuha = Nothing
 
-            objdbPIFb = Nothing
+            'objdbPIFb = Nothing
 
-            objFiBebu = Nothing
+            'objFiBebu = Nothing
 
             'Finanz-Obj init
             'Login
@@ -2064,13 +2064,13 @@ Public Class frmDebDisp
             Debug.Print("Nach Init Buha " + Convert.ToString(BgWCheckDebiArgsInProc.intMandant))
 
             'Variablen einlesen
-            booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsIII("Buchh_HeadAutoCorrect", BgWCheckDebiArgsInProc.intMandant, strFcReturns)))
-            booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsIII("Buchh_KSTHeadToSub", BgWCheckDebiArgsInProc.intMandant, strFcReturns)))
-            booSplittBill = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsIII("Buchh_LinkedBookings", BgWCheckDebiArgsInProc.intMandant, strFcReturns)))
-            booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsIII("Buchh_CashSollKontoKorr", BgWCheckDebiArgsInProc.intMandant, strFcReturns)))
-            booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsIII("Buchh_GeneratePaymentBooking", BgWCheckDebiArgsInProc.intMandant, strFcReturns)))
-            booDiffHeadText = IIf(FcReadFromSettingsIII("Buchh_TextSpecial", BgWCheckDebiArgsInProc.intMandant, strFcReturns) = "0", False, True)
-            booDiffSubText = IIf(FcReadFromSettingsIII("Buchh_SubTextSpecial", BgWCheckDebiArgsInProc.intMandant, strFcReturns) = "0", False, True)
+            booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_HeadAutoCorrect", BgWCheckDebiArgsInProc.intMandant)))
+            booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_KSTHeadToSub", BgWCheckDebiArgsInProc.intMandant)))
+            booSplittBill = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_LinkedBookings", BgWCheckDebiArgsInProc.intMandant)))
+            booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_CashSollKontoKorr", BgWCheckDebiArgsInProc.intMandant)))
+            booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_GeneratePaymentBooking", BgWCheckDebiArgsInProc.intMandant)))
+            booDiffHeadText = IIf(FcReadFromSettingsII("Buchh_TextSpecial", BgWCheckDebiArgsInProc.intMandant) = "0", False, True)
+            booDiffSubText = IIf(FcReadFromSettingsII("Buchh_SubTextSpecial", BgWCheckDebiArgsInProc.intMandant) = "0", False, True)
             intFcReturns = FcReadFromSettingsIII("Buchh_PKTable", BgWCheckDebiArgsInProc.intMandant, strFcReturns)
             booPKPrivate = IIf(strFcReturns = "t_customer", True, False)
             booValutaCorrect = BgWCheckDebiArgsInProc.booValutaCor
@@ -2112,8 +2112,7 @@ Public Class frmDebDisp
                 End If
                 If intDebitorNew <> 0 Or intReturnValue = 4 Then
                     intReturnValue = FcCheckDebitor(intDebitorNew,
-                                                                row("intBuchungsart"),
-                                                                objdbBuha)
+                                                                row("intBuchungsart"))
                 Else
                     intReturnValue = 2
                 End If
@@ -2125,7 +2124,7 @@ Public Class frmDebDisp
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Currency 03
-                intReturnValue = FcCheckCurrency(row("strDebCur"), objfiBuha)
+                intReturnValue = FcCheckCurrency(row("strDebCur"))
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Sub 04
@@ -2144,9 +2143,6 @@ Public Class frmDebDisp
                                                     dblSubNetto,
                                                     dblSubMwSt,
                                                     row("datDebValDatum"),
-                                                    objfiBuha,
-                                                    objdbPIFb,
-                                                    objFiBebu,
                                                     row("intBuchungsart"),
                                                     booAutoCorrect,
                                                     booCpyKSTToSub,
@@ -2339,20 +2335,17 @@ Public Class frmDebDisp
                     If Strings.Left(strBitLog, 1) <> "2" Then
                         If booPKPrivate = True Then
                             intReturnValue = FcIsPrivateDebitorCreatable(intDebitorNew,
-                                                                                     objdbBuha,
-                                                                                     BgWCheckDebiArgsInProc.strMandant,
-                                                                                     BgWCheckDebiArgsInProc.intMandant)
+                                                                         BgWCheckDebiArgsInProc.strMandant,
+                                                                         BgWCheckDebiArgsInProc.intMandant)
                         Else
                             intReturnValue = FcIsDebitorCreatable(intDebitorNew,
-                                                                              objdbBuha,
-                                                                              BgWCheckDebiArgsInProc.strMandant,
-                                                                              BgWCheckDebiArgsInProc.intMandant)
+                                                                  BgWCheckDebiArgsInProc.strMandant,
+                                                                  BgWCheckDebiArgsInProc.intMandant)
                         End If
                         If intReturnValue = 0 Then
                             strStatus += " erstellt"
-                            row("strDebBez") = FcReadDebitorName(objdbBuha,
-                                                                         intDebitorNew,
-                                                                         row("strDebCur"))
+                            row("strDebBez") = FcReadDebitorName(intDebitorNew,
+                                                                 row("strDebCur"))
 
                         ElseIf intReturnValue = 5 Then
                             strStatus += " not approved "
@@ -2368,9 +2361,8 @@ Public Class frmDebDisp
                     End If
                 Else
                     'If row("intBuchungsart") = 1 Then
-                    row("strDebBez") = FcReadDebitorName(objdbBuha,
-                                                                     intDebitorNew,
-                                                                     row("strDebCur"))
+                    row("strDebBez") = FcReadDebitorName(intDebitorNew,
+                                                         row("strDebCur"))
                     'Falls Währung auf Debitor nicht definiert, dann Currency setzen
                     If row("strDebBez") = "EOF" And row("intBuchungsart") = 1 Then
                         strBitLog = Strings.Left(strBitLog, 2) + "1" + Strings.Right(strBitLog, Len(strBitLog) - 3)
@@ -2382,8 +2374,7 @@ Public Class frmDebDisp
                 End If
 
                 'OP - Verdopplung 09
-                intReturnValue = FcCheckOPDouble(objdbBuha,
-                                                 row("lngDebNbr"),
+                intReturnValue = FcCheckOPDouble(row("lngDebNbr"),
                                                  row("strOPNr"),
                                                  IIf(row("dblDebBrutto") > 0, "R", "G"),
                                                  row("strDebCur"))
@@ -2530,8 +2521,7 @@ Public Class frmDebDisp
                                                                          BgWCheckDebiArgsInProc.intTeqNbrPLY)
                     row("lngLinkedDeb") = intLinkedDebitor
 
-                    intReturnValue = FcCheckLinkedRG(objdbBuha,
-                                                                 intLinkedDebitor,
+                    intReturnValue = FcCheckLinkedRG(intLinkedDebitor,
                                                                  row("strDebCur"),
                                                                  row("lngLinkedRG"))
                     'Falls erste Rechnung bezahlt, dann Flag setzen
@@ -2628,8 +2618,7 @@ Public Class frmDebDisp
                     End If
                     row("strDebKtoBez") = "n/a"
                 Else
-                    row("strDebKtoBez") = FcReadDebitorKName(objfiBuha,
-                                                                         row("lngDebKtoNbr"))
+                    row("strDebKtoBez") = FcReadDebitorKName(row("lngDebKtoNbr"))
                 End If
                 'Währung
                 If Mid(strBitLog, 3, 1) <> "0" Then
@@ -3023,13 +3012,12 @@ Public Class frmDebDisp
                         If row("booLinked") Then
                             strDebiText = row("strDebText") + ", FRG "
                         Else
-                            strDebiText = row("strDebText")
+                            strDebiText = IIf(IsDBNull(row("strDebText")), "n/a", row("strDebText"))
                         End If
                         strCurrency = row("strDebCur")
                         If strCurrency <> "CHF" Then 'Muss ergänzt werden => Was ist Leitwährung auf dem Konto
                             dblKurs = FcGetKurs(strCurrency,
-                                                     strValutaDatum,
-                                                     objfiBuha)
+                                                     strValutaDatum)
                         Else
                             dblKurs = 1.0#
                         End If
@@ -3107,16 +3095,14 @@ Public Class frmDebDisp
                                         SubRow("strMwStKey") <> "null" And
                                         SubRow("lngKto") <> 6906 Then
                                 If strBuchType = "R" Then
-                                    intReturnValue = FcGetSteuerFeld(objfiBuha,
-                                                                         strSteuerFeld,
+                                    intReturnValue = FcGetSteuerFeld(strSteuerFeld,
                                                                          SubRow("lngKto"),
                                                                          SubRow("strDebSubText"),
                                                                          SubRow("dblBrutto") * -1,
                                                                          SubRow("strMwStKey"),
                                                                          SubRow("dblMwSt") * -1)
                                 Else
-                                    intReturnValue = FcGetSteuerFeld(objfiBuha,
-                                                                         strSteuerFeld,
+                                    intReturnValue = FcGetSteuerFeld(strSteuerFeld,
                                                                          SubRow("lngKto"),
                                                                          SubRow("strDebSubText"),
                                                                          SubRow("dblBrutto"),
@@ -3274,10 +3260,11 @@ Public Class frmDebDisp
                         'Variablen zuweisen
                         strBelegDatum = Format(row("datDebRGDatum"), "yyyyMMdd").ToString
                         strValutaDatum = Format(row("datDebValDatum"), "yyyyMMdd").ToString
-                        'strDebiText = row("strDebText")
+                        strDebiText = row("strDebText")
                         strCurrency = row("strDebCur")
                         If strCurrency <> "CHF" Then 'Muss ergänzt werden => Was ist Leitwährung auf dem Konto
-                            dblKurs = FcGetKurs(strCurrency, strValutaDatum, objfiBuha)
+                            dblKurs = FcGetKurs(strCurrency,
+                                                strValutaDatum)
                         Else
                             dblKurs = 1.0#
                         End If
@@ -3303,14 +3290,15 @@ Public Class frmDebDisp
                                 If SubRow("intSollHaben") = 0 Then 'Soll
 
                                     intSollKonto = SubRow("lngKto")
-                                    dblKursSoll = FcGetKurs(strCurrency, strValutaDatum, objfiBuha, intSollKonto)
+                                    dblKursSoll = FcGetKurs(strCurrency,
+                                                            strValutaDatum,
+                                                            intSollKonto)
                                     'strSteuerInfo = Split(FBhg.GetKontoInfo(intSollKonto.ToString), "{>}")
                                     'Debug.Print("Konto-Info Soll: " + strSteuerInfo(26))
                                     dblSollBetrag = SubRow("dblNetto")
                                     strDebiTextSoll = SubRow("strDebSubText")
                                     If SubRow("dblMwSt") > 0 Then
-                                        intReturnValue = FcGetSteuerFeld(objfiBuha,
-                                                                                 strSteuerFeldSoll,
+                                        intReturnValue = FcGetSteuerFeld(strSteuerFeldSoll,
                                                                                  SubRow("lngKto"),
                                                                                  strDebiTextSoll,
                                                                                  SubRow("dblBrutto") * dblKursSoll,
@@ -3327,15 +3315,16 @@ Public Class frmDebDisp
                                 ElseIf SubRow("intSollHaben") = 1 Then 'Haben
 
                                     intHabenKonto = SubRow("lngKto")
-                                    dblKursHaben = FcGetKurs(strCurrency, strValutaDatum, objfiBuha, intHabenKonto)
+                                    dblKursHaben = FcGetKurs(strCurrency,
+                                                             strValutaDatum,
+                                                             intHabenKonto)
                                     'strSteuerInfo = Split(FBhg.GetKontoInfo(intSollKonto.ToString), "{>}")
                                     'Debug.Print("Konto-Info Haben: " + strSteuerInfo(26))
                                     dblHabenBetrag = SubRow("dblNetto") * -1
                                     'dblHabenBetrag = dblSollBetrag
                                     strDebiTextHaben = SubRow("strDebSubText")
                                     If SubRow("dblMwSt") * -1 > 0 Then
-                                        intReturnValue = FcGetSteuerFeld(objfiBuha,
-                                                                                  strSteuerFeldHaben,
+                                        intReturnValue = FcGetSteuerFeld(strSteuerFeldHaben,
                                                                                   SubRow("lngKto"),
                                                                                   strDebiTextHaben,
                                                                                   SubRow("dblBrutto") * dblKursHaben * -1,
@@ -3452,12 +3441,10 @@ Public Class frmDebDisp
                                         strDebiCurrency = strCurrency
                                         dblKursSoll = 1 / FcGetKurs(strCurrency,
                                                                     strValutaDatum,
-                                                                    objfiBuha,
                                                                     intSollKonto)
                                         dblSollBetrag = SubRow("dblNetto")
                                         If SubRow("dblMwSt") > 0 Then
-                                            intReturnValue = FcGetSteuerFeld(objfiBuha,
-                                                                                     strSteuerFeldSoll,
+                                            intReturnValue = FcGetSteuerFeld(strSteuerFeldSoll,
                                                                                      SubRow("lngKto"),
                                                                                      strDebiTextSoll,
                                                                                      SubRow("dblBrutto") * dblKursSoll,
@@ -3494,12 +3481,10 @@ Public Class frmDebDisp
                                         strKrediCurrency = strCurrency
                                         dblKursHaben = 1 / FcGetKurs(strCurrency,
                                                                      strValutaDatum,
-                                                                     objfiBuha,
                                                                      intHabenKonto)
                                         dblHabenBetrag = SubRow("dblNetto") * -1
                                         If (SubRow("dblMwSt") * -1) > 0 Then
-                                            intReturnValue = FcGetSteuerFeld(objfiBuha,
-                                                                                      strSteuerFeldHaben,
+                                            intReturnValue = FcGetSteuerFeld(strSteuerFeldHaben,
                                                                                       SubRow("lngKto"),
                                                                                       strDebiTextHaben,
                                                                                       SubRow("dblBrutto") * dblKursHaben * -1,
@@ -5208,10 +5193,9 @@ Public Class frmDebDisp
 
     End Function
 
-    Friend Function FcGetKurs(ByVal strCurrency As String,
-                                     ByVal strDateValuta As String,
-                                     ByRef objFBhg As SBSXASLib.AXiFBhg,
-                                     ByVal Optional intKonto As Integer = 0) As Double
+    Friend Function FcGetKurs(strCurrency As String,
+                              strDateValuta As String,
+                              Optional intKonto As Integer = 0) As Double
 
         'Konzept: Falls ein Konto mitgegeben wird, wird überprüft ob auf dem Konto die mitgegebene Währung Leitwärhung ist. Falls ja wird der Kurs 1 zurück gegeben
 
@@ -5221,17 +5205,17 @@ Public Class frmDebDisp
 
         Try
 
-            objFBhg.ReadKurse(strCurrency, "", "J")
+            objfiBuha.ReadKurse(strCurrency, "", "J")
 
             Do While strKursZeile <> "EOF"
-                strKursZeile = objFBhg.GetKursZeile()
+                strKursZeile = objfiBuha.GetKursZeile()
                 If strKursZeile <> "EOF" Then
                     strKursZeileAr = Split(strKursZeile, "{>}")
                     If strKursZeileAr(0) = strCurrency Then
                         'If strKursZeileAr(0) = "EUR" Then Stop
                         'Prüfen ob Currency Leitwährung auf Konto. Falls ja Return 1
                         If intKonto <> 0 Then
-                            strKontoInfo = Split(objFBhg.GetKontoInfo(intKonto.ToString), "{>}")
+                            strKontoInfo = Split(objfiBuha.GetKontoInfo(intKonto.ToString), "{>}")
                             If strKontoInfo(7) = strCurrency Then
                                 Return 1
                             Else
@@ -5260,13 +5244,12 @@ Public Class frmDebDisp
 
     End Function
 
-    Friend Function FcGetSteuerFeld(ByRef objFBhg As SBSXASLib.AXiFBhg,
-                                          ByRef strSteuerFeld As String,
-                                          ByVal lngKto As Long,
-                                          ByVal strDebiSubText As String,
-                                          ByVal dblBrutto As Double,
-                                          ByVal strMwStKey As String,
-                                          ByVal dblMwSt As Double) As Int16
+    Friend Function FcGetSteuerFeld(ByRef strSteuerFeld As String,
+                                    lngKto As Long,
+                                    strDebiSubText As String,
+                                    dblBrutto As Double,
+                                    strMwStKey As String,
+                                    dblMwSt As Double) As Int16
 
         'Dim strSteuerFeld As String = String.Empty
 
@@ -5274,7 +5257,7 @@ Public Class frmDebDisp
 
             If dblMwSt <> 0 Then
 
-                strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString,
+                strSteuerFeld = objfiBuha.GetSteuerfeld(lngKto.ToString,
                                                       strDebiSubText,
                                                       dblBrutto.ToString,
                                                       strMwStKey,
@@ -5282,7 +5265,7 @@ Public Class frmDebDisp
 
             Else
 
-                strSteuerFeld = objFBhg.GetSteuerfeld(lngKto.ToString,
+                strSteuerFeld = objfiBuha.GetSteuerfeld(lngKto.ToString,
                                                       strDebiSubText,
                                                       dblBrutto.ToString,
                                                       strMwStKey)
@@ -5548,8 +5531,7 @@ Public Class frmDebDisp
 
     End Function
 
-    Friend Function FcReadDebitorKName(ByRef objfiBuha As SBSXASLib.AXiFBhg,
-                                              ByVal lngDebKtoNbr As Long) As String
+    Friend Function FcReadDebitorKName(ByVal lngDebKtoNbr As Long) As String
 
         Dim strDebitorKName As String
         Dim strDebitorKAr() As String
@@ -5890,10 +5872,9 @@ Public Class frmDebDisp
 
     End Function
 
-    Friend Function FcCheckLinkedRG(ByRef objDbBhg As SBSXASLib.AXiDbBhg,
-                                           ByVal intNewDebiNbr As Int32,
-                                           ByVal strDebiCur As String,
-                                           ByVal intBelegNbr As Int32) As Int16
+    Friend Function FcCheckLinkedRG(intNewDebiNbr As Int32,
+                                    strDebiCur As String,
+                                    intBelegNbr As Int32) As Int16
 
         'Returns 0=ok, 1=Beleg nicht existent, 2=Beleg existiert, ist aber bezahlt, 9=Problem
 
@@ -5903,7 +5884,7 @@ Public Class frmDebDisp
 
         Try
 
-            intLaufNbr = objDbBhg.doesBelegExist2(intNewDebiNbr.ToString,
+            intLaufNbr = objdbBuha.doesBelegExist2(intNewDebiNbr.ToString,
                                                   strDebiCur,
                                                   intBelegNbr.ToString,
                                                   "NOT_SET",
@@ -5914,7 +5895,7 @@ Public Class frmDebDisp
 
             If intLaufNbr > 0 Then
                 'Prüfung ob Beleg bezahlt
-                strBeleg = objDbBhg.GetBeleg(intNewDebiNbr.ToString,
+                strBeleg = objdbBuha.GetBeleg(intNewDebiNbr.ToString,
                                              intLaufNbr.ToString)
 
                 strBelegArr = Split(strBeleg, "{>}")
@@ -6192,11 +6173,10 @@ Public Class frmDebDisp
 
     End Function
 
-    Friend Function FcCheckOPDouble(ByRef objdbBuha As SBSXASLib.AXiDbBhg,
-                                        ByVal strDebitor As String,
-                                        ByVal strOPNr As String,
-                                        ByVal strType As String,
-                                        ByVal strCurrency As String) As Int16
+    Friend Function FcCheckOPDouble(strDebitor As String,
+                                    strOPNr As String,
+                                    strType As String,
+                                    strCurrency As String) As Int16
 
         'Return 0=ok, 1=Beleg existiert, 9=Problem
 
@@ -6237,9 +6217,8 @@ Public Class frmDebDisp
 
     End Function
 
-    Friend Function FcReadDebitorName(ByRef objDbBhg As SBSXASLib.AXiDbBhg,
-                                             ByVal intDebiNbr As Int32,
-                                             ByVal strCurrency As String) As String
+    Friend Function FcReadDebitorName(intDebiNbr As Int32,
+                                      strCurrency As String) As String
 
         Dim strDebitorName As String
         Dim strDebitorAr() As String
@@ -6248,11 +6227,11 @@ Public Class frmDebDisp
 
             If strCurrency = "" Then
 
-                strDebitorName = objDbBhg.ReadDebitor3(intDebiNbr * -1, strCurrency)
+                strDebitorName = objdbBuha.ReadDebitor3(intDebiNbr * -1, strCurrency)
 
             Else
 
-                strDebitorName = objDbBhg.ReadDebitor3(intDebiNbr, strCurrency)
+                strDebitorName = objdbBuha.ReadDebitor3(intDebiNbr, strCurrency)
 
             End If
 
@@ -6272,7 +6251,6 @@ Public Class frmDebDisp
     End Function
 
     Friend Function FcIsDebitorCreatable(lngDebiNbr As Long,
-                                         ByRef objDbBhg As SBSXASLib.AXiDbBhg,
                                          strcmbBuha As String,
                                          intAccounting As Int16) As Int16
 
@@ -6466,8 +6444,7 @@ Public Class frmDebDisp
                         strBankOrt = Trim(Strings.Right(strBankAddress2, Len(strBankAddress2) - InStr(strBankAddress2, " ")))
                     End If
 
-                    intCreatable = FcCreateDebitor(objDbBhg,
-                                              lngDebiNbr,
+                    intCreatable = FcCreateDebitor(lngDebiNbr,
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Suchtext")), "", objdtDebitor.Rows(0).Item("Rep_Suchtext")),
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Firma")), "", objdtDebitor.Rows(0).Item("Rep_Firma")),
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("Rep_Strasse")), "", objdtDebitor.Rows(0).Item("Rep_Strasse")),
@@ -6739,8 +6716,7 @@ Public Class frmDebDisp
 
     End Function
 
-    Friend Function FcCreateDebitor(ByRef objDbBhg As SBSXASLib.AXiDbBhg,
-                                    intDebitorNewNbr As Int32,
+    Friend Function FcCreateDebitor(intDebitorNewNbr As Int32,
                                     strSuchtext As String,
                                     strDebName As String,
                                     strDebStreet As String,
@@ -6802,7 +6778,7 @@ Public Class frmDebDisp
 
         Try
 
-            Call objDbBhg.SetCommonInfo2(intDebitorNewNbr,
+            Call objdbBuha.SetCommonInfo2(intDebitorNewNbr,
                                          strDebName,
                                          strFirtName,
                                          "",
@@ -6824,7 +6800,7 @@ Public Class frmDebDisp
                                          strDebSprachCode,
                                          strText)
 
-            Call objDbBhg.SetExtendedInfo8(strDebSperren,
+            Call objdbBuha.SetExtendedInfo8(strDebSperren,
                                            strKreditLimite,
                                            intDebSammelKto.ToString,
                                            intDebErlKto.ToString,
@@ -6843,13 +6819,13 @@ Public Class frmDebDisp
 
             'Suchtext in Indivual-Feld schreiben
             If Not String.IsNullOrEmpty(strSuchtext) Then
-                Call objDbBhg.SetIndividInfoText(1,
+                Call objdbBuha.SetIndividInfoText(1,
                                                  strSuchtext)
             End If
 
             If intPayDefault = 9 Then 'IBAN
                 If Len(strZVIBAN) > 15 Then
-                    Call objDbBhg.SetZahlungsverbindung("B",
+                    Call objdbBuha.SetZahlungsverbindung("B",
                                                         strZVIBAN,
                                                         strZVBankName,
                                                         "",
@@ -6867,7 +6843,7 @@ Public Class frmDebDisp
                                                         "")
                 End If
             End If
-            Call objDbBhg.WriteDebitor3(0, intintBank.ToString)
+            Call objdbBuha.WriteDebitor3(0, intintBank.ToString)
 
             'Mail über Erstellung absetzen
 
@@ -6885,10 +6861,9 @@ Public Class frmDebDisp
 
     End Function
 
-    Friend Function FcIsPrivateDebitorCreatable(ByVal lngDebiNbr As Long,
-                                              ByRef objDbBhg As SBSXASLib.AXiDbBhg,
-                                              ByVal strcmbBuha As String,
-                                              ByVal intAccounting As Int16) As Int16
+    Friend Function FcIsPrivateDebitorCreatable(lngDebiNbr As Long,
+                                              strcmbBuha As String,
+                                              intAccounting As Int16) As Int16
 
         'Return: 0=creatable und erstellt, 3=Sage - Suchtext nicht erfasst, 4=Betrieb nicht gefunden, 9=Nicht hinterlegt
 
@@ -7064,8 +7039,7 @@ Public Class frmDebDisp
                         strCurrency = "CHF"
                     End If
 
-                    intCreatable = FcCreateDebitor(objDbBhg,
-                                              lngDebiNbr,
+                    intCreatable = FcCreateDebitor(lngDebiNbr,
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("LastName")), "", objdtDebitor.Rows(0).Item("LastName")) + IIf(IsDBNull(objdtDebitor.Rows(0).Item("FirstName")), "", objdtDebitor.Rows(0).Item("FirstName")),
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("LastName")), "", objdtDebitor.Rows(0).Item("LastName")),
                                               IIf(IsDBNull(objdtDebitor.Rows(0).Item("Street")), "", objdtDebitor.Rows(0).Item("Street")),
@@ -7388,9 +7362,6 @@ Public Class frmDebDisp
                                               ByRef dblSubNetto As Double,
                                               ByRef dblSubMwSt As Double,
                                               datValuta As Date,
-                                              ByRef objFiBhg As SBSXASLib.AXiFBhg,
-                                              ByRef objFiPI As SBSXASLib.AXiPlFin,
-                                              ByRef objFiBebu As SBSXASLib.AXiBeBu,
                                               intBuchungsArt As Int32,
                                               booAutoCorrect As Boolean,
                                               booCpyKSTToSub As Boolean,
@@ -7497,8 +7468,7 @@ Public Class frmDebDisp
                 'MwSt prüfen 01
                 If Not IsDBNull(subrow("strMwStKey")) And IIf(IsDBNull(subrow("strMwStKey")), "", subrow("strMwStKey")) <> "null" Then
                     dblStrStCodeSage = IIf(IsDBNull(subrow("dblMwStSatz")), 0, subrow("dblMwStSatz"))
-                    intReturnValue = FcCheckMwSt(objFiBhg,
-                                                 subrow("strMwStKey"),
+                    intReturnValue = FcCheckMwSt(subrow("strMwStKey"),
                                                  dblStrStCodeSage,
                                                  strStrStCodeSage200,
                                                  subrow("lngKto"))
@@ -7509,7 +7479,7 @@ Public Class frmDebDisp
                         'Falsche Steueersätze abfangen
                         Try
 
-                            strSteuer = Split(objFiBhg.GetSteuerfeld2(subrow("lngKto").ToString,
+                            strSteuer = Split(objfiBuha.GetSteuerfeld2(subrow("lngKto").ToString,
                                                                   "Zum Rechnen",
                                                                   subrow("dblBrutto").ToString,
                                                                   strStrStCodeSage200,
@@ -7520,7 +7490,7 @@ Public Class frmDebDisp
                         Catch ex As Exception
                             'Debug.Print(ex.Message + ", " + (Err.Number And 65535).ToString)
                             If (Err.Number And 65535) = 525 Then
-                                strSteuer = Split(objFiBhg.GetSteuerfeld2(subrow("lngKto").ToString,
+                                strSteuer = Split(objfiBuha.GetSteuerfeld2(subrow("lngKto").ToString,
                                                                   "Zum Rechnen",
                                                                   subrow("dblBrutto").ToString,
                                                                   strStrStCodeSage200), "{<}")
@@ -7597,22 +7567,21 @@ Public Class frmDebDisp
                         subrow("strKtoBez") = "K<3KST ->"
                     End If
                     intReturnValue = FcCheckKonto(subrow("lngKto"),
-                                                  objFiBhg,
                                                   IIf(IsDBNull(subrow("dblMwSt")), 0, subrow("dblMwSt")),
                                                   IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")),
                                                   False)
                     If intReturnValue = 0 Then
-                        subrow("strKtoBez") += FcReadDebitorKName(objFiBhg, subrow("lngKto"))
+                        subrow("strKtoBez") += FcReadDebitorKName(subrow("lngKto"))
                     ElseIf intReturnValue = 2 Then
-                        subrow("strKtoBez") += FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " MwSt!"
+                        subrow("strKtoBez") += FcReadDebitorKName(subrow("lngKto")) + " MwSt!"
                     ElseIf intReturnValue = 3 Then
-                        subrow("strKtoBez") += FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " NoKST"
+                        subrow("strKtoBez") += FcReadDebitorKName(subrow("lngKto")) + " NoKST"
                         'ElseIf intReturnValue = 4 Then
                         '    subrow("strKtoBez") = FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " K<3KST"
                         '    subrow("lngKST") = 0
                         '    intReturnValue = 0
                     ElseIf intReturnValue = 5 Then
-                        subrow("strKtoBez") += FcReadDebitorKName(objFiBhg, subrow("lngKto")) + " K<3MwSt"
+                        subrow("strKtoBez") += FcReadDebitorKName(subrow("lngKto")) + " K<3MwSt"
                     Else
                         subrow("strKtoBez") = "n/a"
 
@@ -7628,8 +7597,6 @@ Public Class frmDebDisp
                 'Kst/Ktr prüfen 03
                 If IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")) > 0 Then
                     intReturnValue = FcCheckKstKtr(IIf(IsDBNull(subrow("lngKST")), 0, subrow("lngKST")),
-                                                   objFiBhg,
-                                                   objFiPI,
                                                    subrow("lngKto"),
                                                    strKstKtrSage200)
                     If intReturnValue = 0 Then
@@ -7654,8 +7621,7 @@ Public Class frmDebDisp
 
                 'Projekt prüfen 04
                 If IIf(IsDBNull(subrow("lngProj")), 0, subrow("lngProj")) > 0 Then
-                    intReturnValue = FcCheckProj(objFiBebu,
-                                                 subrow("lngProj"),
+                    intReturnValue = FcCheckProj(subrow("lngProj"),
                                                  strProjDesc)
                     If intReturnValue = 0 Then
                         subrow("strProjBez") = strProjDesc
@@ -7825,8 +7791,7 @@ Public Class frmDebDisp
 
     End Function
 
-    Friend Function FcCheckMwSt(ByRef objFiBhg As SBSXASLib.AXiFBhg,
-                                strStrCode As String,
+    Friend Function FcCheckMwSt(strStrCode As String,
                                 ByRef dblStrWert As Double,
                                 ByRef strStrCode200 As String,
                                 intKonto As Int32) As Integer
@@ -7922,11 +7887,10 @@ Public Class frmDebDisp
 
     End Function
 
-    Friend Function FcCheckKonto(ByVal lngKtoNbr As Long,
-                                     ByRef objfiBuha As SBSXASLib.AXiFBhg,
-                                     ByVal dblMwSt As Double,
-                                     ByVal lngKST As Int32,
-                                     ByVal booExistanceOnly As Boolean) As Integer
+    Friend Function FcCheckKonto(lngKtoNbr As Long,
+                                 dblMwSt As Double,
+                                 lngKST As Int32,
+                                 booExistanceOnly As Boolean) As Integer
 
         'Returns 0=ok, 1=existiert nicht, 2=existiert aber keine KST erlaubt, 3=KST nicht auf Konto definiert, 4=KST auf Konto > 3
 
@@ -8007,8 +7971,6 @@ Public Class frmDebDisp
     End Function
 
     Friend Function FcCheckKstKtr(lngKST As Long,
-                                  ByRef objFiBhg As SBSXASLib.AXiFBhg,
-                                  ByRef objFiPI As SBSXASLib.AXiPlFin,
                                   lngKonto As Long,
                                   ByRef strKstKtrSage200 As String) As Int16
 
@@ -8020,12 +7982,12 @@ Public Class frmDebDisp
         Dim strKst, strKA As String
 
         booKstKAok = False
-        objFiPI = Nothing
-        objFiPI = objFiBhg.GetCheckObj
+        'objFiPI = Nothing
+        'objFiPI = objFiBhg.GetCheckObj
 
         Try
             'If CInt(Left(lngKonto.ToString, 1)) >= 3 Then
-            strReturn = objFiBhg.GetKstKtrInfo(lngKST.ToString)
+            strReturn = objfiBuha.GetKstKtrInfo(lngKST.ToString)
             If strReturn = "EOF" Then
                 Return 2
             Else
@@ -8034,7 +7996,7 @@ Public Class frmDebDisp
                 strKst = Convert.ToString(lngKST)
                 strKA = Convert.ToString(lngKonto)
                 'Ist Kst auf Kostenbart definiert?
-                booKstKAok = objFiPI.CheckKstKtr(strKst, strKA)
+                booKstKAok = objdbPIFb.CheckKstKtr(strKst, strKA)
 
                 If booKstKAok Then
                     Return 0
@@ -8053,9 +8015,8 @@ Public Class frmDebDisp
 
     End Function
 
-    Friend Function FcCheckProj(ByRef objFiBebu As SBSXASLib.AXiBeBu,
-                                    ByVal intProj As Int32,
-                                    ByRef strProjDesc As String) As Int16
+    Friend Function FcCheckProj(intProj As Int32,
+                                ByRef strProjDesc As String) As Int16
 
         'Returns 0=ok, 9=Problem
 
@@ -8096,8 +8057,7 @@ Public Class frmDebDisp
 
     End Function
 
-    Friend Function FcCheckCurrency(strCurrency As String,
-                                    ByRef objfiBuha As SBSXASLib.AXiFBhg) As Integer
+    Friend Function FcCheckCurrency(strCurrency As String) As Integer
 
         Dim strReturn As String
         Dim booFoundCurrency As Boolean
@@ -8136,8 +8096,7 @@ Public Class frmDebDisp
     End Function
 
     Friend Function FcCheckDebitor(lngDebitor As Long,
-                                   intBuchungsart As Integer,
-                                   ByRef objdbBuha As SBSXASLib.AXiDbBhg) As Integer
+                                   intBuchungsart As Integer) As Integer
 
         Dim strReturn As String
 
@@ -8267,7 +8226,7 @@ Public Class frmDebDisp
                         If strCur <> "CHF" Then
                             dblKursD = FcGetKurs(strCur,
                                                  strValutaDatum,
-                                                 objFBhg)
+                                                 drDSubrow("lngKto"))
                             strDebiCurrency = "CHF"
                         Else
                             dblKursD = 1.0#
@@ -8899,7 +8858,7 @@ Public Class frmDebDisp
                         If strCur <> "CHF" Then
                             dblKursD = FcGetKurs(strCur,
                                                  strValutaDatum,
-                                                 objFBhg)
+                                                 drDSubrow("lngKto"))
                             strDebiCurrency = "CHF"
                         Else
                             dblKursD = 1.0#

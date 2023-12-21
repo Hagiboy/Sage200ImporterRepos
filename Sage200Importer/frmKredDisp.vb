@@ -21,6 +21,13 @@ Public Class frmKredDisp
     'Dim BeBu As SBSXASLib.AXiBeBu
     'Dim PIFin As SBSXASLib.AXiPlFin
 
+    Dim objFinanz As New SBSXASLib.AXFinanz
+    Dim objfiBuha As New SBSXASLib.AXiFBhg
+    Dim objdbBuha As New SBSXASLib.AXiDbBhg
+    Dim objdbPIFb As New SBSXASLib.AXiPlFin
+    Dim objFiBebu As New SBSXASLib.AXiBeBu
+    Dim objKrBuha As New SBSXASLib.AXiKrBhg
+
     Dim FELD_SEP As String
     Dim REC_SEP As String
     Dim KSTKTR_SEP As String
@@ -123,12 +130,12 @@ Public Class frmKredDisp
         Dim BgWCheckKrediLocArgs As New BgWCheckDebitArgs
         Dim objdbtasks As New DataTable
 
-        Dim objFinanz As New SBSXASLib.AXFinanz
-        Dim objfiBuha As New SBSXASLib.AXiFBhg
-        Dim objdbBuha As New SBSXASLib.AXiDbBhg
-        Dim objdbPIFb As New SBSXASLib.AXiPlFin
-        Dim objFiBebu As New SBSXASLib.AXiBeBu
-        Dim objKrBuha As New SBSXASLib.AXiKrBhg
+        'Dim objFinanz As New SBSXASLib.AXFinanz
+        'Dim objfiBuha As New SBSXASLib.AXiFBhg
+        'Dim objdbBuha As New SBSXASLib.AXiDbBhg
+        'Dim objdbPIFb As New SBSXASLib.AXiPlFin
+        'Dim objFiBebu As New SBSXASLib.AXiBeBu
+        'Dim objKrBuha As New SBSXASLib.AXiKrBhg
 
 
         Try
@@ -356,12 +363,12 @@ Public Class frmKredDisp
             Return 1
 
         Finally
-            objFinanz = Nothing
-            objfiBuha = Nothing
-            objdbBuha = Nothing
-            objdbPIFb = Nothing
-            objFiBebu = Nothing
-            objKrBuha = Nothing
+            'objFinanz = Nothing
+            'objfiBuha = Nothing
+            'objdbBuha = Nothing
+            'objdbPIFb = Nothing
+            'objFiBebu = Nothing
+            'objKrBuha = Nothing
 
             objdbConn = Nothing
             objdbMSSQLConn = Nothing
@@ -1325,7 +1332,7 @@ Public Class frmKredDisp
 
             Me.Cursor = Cursors.Default
             'Me.butImportK.Enabled = True
-            Me.Close()
+            'Me.Close()
 
         End Try
 
