@@ -1951,13 +1951,29 @@ Friend Class frmImportMain
 
         'Dim intReturnValue As Int16
         Dim intNbrKrediForms As Int16
+        Dim objdbtasks As New DataTable
+        Dim objdbtaskcmd As New MySqlCommand
+
 
         Try
 
             Me.Cursor = Cursors.WaitCursor
-            System.GC.Collect()
+            'Zuerst in tblImportTasks setzen
+            objdbtaskcmd.Connection = objdbConn
+            objdbtaskcmd.Connection.Open()
+            objdbtaskcmd.CommandText = "SELECT * FROM tblimporttasks WHERE IdentityName='" + LblIdentity.Text + "' AND Type='C'"
+            objdbtasks.Load(objdbtaskcmd.ExecuteReader())
+            If objdbtasks.Rows.Count > 0 Then
+                'update
+                objdbtaskcmd.CommandText = "UPDATE tblimporttasks SET Mandant=" + Convert.ToString(lstBoxMandant.SelectedValue) + ", Periode=" + Convert.ToString(lstBoxPerioden.SelectedIndex) + " WHERE IdentityName='" + LblIdentity.Text + "' AND Type='C'"
+            Else
+                'insert
+                objdbtaskcmd.CommandText = "INSERT INTO tblimporttasks (IdentityName, Type, Mandant, Periode) VALUES ('" + LblIdentity.Text + "', 'C', " + Convert.ToString(lstBoxMandant.SelectedValue) + ", " + Convert.ToString(lstBoxPerioden.SelectedIndex) + ")"
+            End If
+            objdbtaskcmd.ExecuteNonQuery()
+            objdbtaskcmd.Connection.Close()
 
-            'Zuerst überprüfen, ob schon eine Instanz für mandant existiert
+            'Prüfen, ob schon eine Instanz für mandant existiert
             For Each frm As Form In Application.OpenForms()
                 If frm.Text = "Kreditor " + lstBoxMandant.Text Then
                     intNbrKrediForms += 1
@@ -1968,7 +1984,7 @@ Friend Class frmImportMain
             Else
                 intNbrKrediForms = 0
                 Dim frmKredDisp As New frmKredDisp
-                frmKredDisp.Cursor = Cursors.WaitCursor
+                'frmKredDisp.Cursor = Cursors.WaitCursor
                 frmKredDisp.Text = "Kreditor " + lstBoxMandant.Text
                 frmKredDisp.MdiParent = Me
                 frmKredDisp.Show()
@@ -1981,9 +1997,13 @@ Friend Class frmImportMain
                 Next
                 'Je nach Anzahl von Links her verschieben
                 frmKredDisp.Left = intNbrKrediForms * 20
-                frmKredDisp.FcKrediDisplay(lstBoxMandant.SelectedValue,
-                                           lstBoxMandant,
-                                           lstBoxPerioden)
+                'lstBox Perioden in SF füllen
+                For Each item As Object In lstBoxPerioden.Items
+                    frmKredDisp.lstBoxPerioden.Items.Add(item)
+                Next
+                'frmKredDisp.FcKrediDisplay(lstBoxMandant.SelectedValue,
+                '                           lstBoxMandant,
+                '                           lstBoxPerioden)
 
             End If
 

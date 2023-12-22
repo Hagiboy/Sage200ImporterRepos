@@ -6752,7 +6752,6 @@ ErrorHandler:
 
     End Function
 
-
     Friend Shared Function FcInitInsCmdKHeads(ByRef mysqlinscmd As MySqlCommand) As Int16
 
         'Dim strIdentityName As String

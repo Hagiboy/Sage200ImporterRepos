@@ -50,6 +50,8 @@ Partial Class frmKredDisp
         Me.BgWCheckKredi = New System.ComponentModel.BackgroundWorker()
         Me.BgWImportKredi = New System.ComponentModel.BackgroundWorker()
         Me.butDeSeöect = New System.Windows.Forms.Button()
+        Me.lstBoxPerioden = New System.Windows.Forms.ListBox()
+        Me.butCheclLred = New System.Windows.Forms.Button()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -222,9 +224,9 @@ Partial Class frmKredDisp
         'txtNumber
         '
         Me.txtNumber.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.txtNumber.Location = New System.Drawing.Point(1540, 5)
+        Me.txtNumber.Location = New System.Drawing.Point(1560, 5)
         Me.txtNumber.Name = "txtNumber"
-        Me.txtNumber.Size = New System.Drawing.Size(60, 29)
+        Me.txtNumber.Size = New System.Drawing.Size(40, 29)
         Me.txtNumber.TabIndex = 10
         '
         'lblDB
@@ -255,18 +257,37 @@ Partial Class frmKredDisp
         '
         'butDeSeöect
         '
-        Me.butDeSeöect.Location = New System.Drawing.Point(1540, 101)
+        Me.butDeSeöect.Location = New System.Drawing.Point(1545, 99)
         Me.butDeSeöect.Name = "butDeSeöect"
         Me.butDeSeöect.Size = New System.Drawing.Size(31, 20)
         Me.butDeSeöect.TabIndex = 13
         Me.butDeSeöect.Text = "X"
         Me.butDeSeöect.UseVisualStyleBackColor = True
         '
+        'lstBoxPerioden
+        '
+        Me.lstBoxPerioden.FormattingEnabled = True
+        Me.lstBoxPerioden.Location = New System.Drawing.Point(1529, 5)
+        Me.lstBoxPerioden.Name = "lstBoxPerioden"
+        Me.lstBoxPerioden.Size = New System.Drawing.Size(25, 30)
+        Me.lstBoxPerioden.TabIndex = 14
+        '
+        'butCheclLred
+        '
+        Me.butCheclLred.Location = New System.Drawing.Point(1582, 99)
+        Me.butCheclLred.Name = "butCheclLred"
+        Me.butCheclLred.Size = New System.Drawing.Size(27, 21)
+        Me.butCheclLred.TabIndex = 15
+        Me.butCheclLred.Text = "Check"
+        Me.butCheclLred.UseVisualStyleBackColor = True
+        '
         'frmKredDisp
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1628, 609)
+        Me.Controls.Add(Me.butCheclLred)
+        Me.Controls.Add(Me.lstBoxPerioden)
         Me.Controls.Add(Me.butDeSeöect)
         Me.Controls.Add(Me.dgvDates)
         Me.Controls.Add(Me.lblDB)
@@ -306,4 +327,6 @@ Partial Class frmKredDisp
     Friend WithEvents BgWCheckKredi As System.ComponentModel.BackgroundWorker
     Friend WithEvents BgWImportKredi As System.ComponentModel.BackgroundWorker
     Friend WithEvents butDeSeöect As Button
+    Friend WithEvents lstBoxPerioden As ListBox
+    Friend WithEvents butCheclLred As Button
 End Class
