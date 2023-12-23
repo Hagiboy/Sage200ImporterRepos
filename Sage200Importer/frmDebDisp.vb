@@ -166,7 +166,7 @@ Public Class frmDebDisp
         FELD_SEP_OUT = "{>}"
         REC_SEP_OUT = "{<}"
 
-        Me.Cursor = Cursors.WaitCursor
+        Cursor = Cursors.WaitCursor
 
         Call InitDB()
 
@@ -187,7 +187,7 @@ Public Class frmDebDisp
                                               intMandant,
                                               Me.lblDB.Text)
 
-        Me.Cursor = Cursors.Default
+        Cursor = Cursors.Default
 
         'MySQLdaDebitoren.Fill(dsDebitoren, "tblDebiHeadsFromUser")
         'MySQLdaDebitorenSub.Fill(dsDebitoren, "tblDebiSubsFromUser")
@@ -781,7 +781,7 @@ Public Class frmDebDisp
             BgWImportDebiLocArgs.strPeriode = frmImportMain.lstBoxPerioden.GetItemText(frmImportMain.lstBoxPerioden.SelectedItem)
 
 
-            Me.Cursor = Cursors.WaitCursor
+            Cursor = Cursors.WaitCursor
             Me.butImport.Enabled = False
 
             BgWImportDebi.RunWorkerAsync(BgWImportDebiLocArgs)
@@ -790,7 +790,7 @@ Public Class frmDebDisp
                 Application.DoEvents()
             Loop
 
-            Me.Cursor = Cursors.Default
+            Cursor = Cursors.Default
 
             'Me.Cursor = Cursors.WaitCursor
             ''Butteon desaktivieren

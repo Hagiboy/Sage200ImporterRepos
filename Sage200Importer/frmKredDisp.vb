@@ -137,6 +137,7 @@ Public Class frmKredDisp
         REC_SEP_OUT = "{<}"
 
         Me.Cursor = Cursors.WaitCursor
+        UseWaitCursor = True
 
         Call InitDB()
 
@@ -151,7 +152,9 @@ Public Class frmKredDisp
         Call FcReadFromSettingsIII("Buchh_RGTableType",
                                               intMandant,
                                               Me.lblDB.Text)
+        butCheclLred.Enabled = True
 
+        UseWaitCursor = False
         Me.Cursor = Cursors.Default
 
 
@@ -819,7 +822,8 @@ Public Class frmKredDisp
             BgWImportKrediLocArgs.strPeriode = frmImportMain.lstBoxPerioden.GetItemText(frmImportMain.lstBoxPerioden.SelectedItem)
 
 
-            Cursor = Cursors.WaitCursor
+            Me.Cursor = Cursors.WaitCursor
+            UseWaitCursor = True
             'Application.DoEvents()
             'Button disablen damit er nicht noch einmal geklickt werden kann.
             Me.butImport.Enabled = False
@@ -1374,7 +1378,8 @@ Public Class frmKredDisp
             'Neu aufbauen
             'butKreditoren_Click(butDebitoren, EventArgs.Empty)
             BgWImportKrediLocArgs = Nothing
-            Cursor = Cursors.Default
+            UseWaitCursor = False
+            Me.Cursor = Cursors.Default
             'Me.butImportK.Enabled = True
             'Me.Close()
 
@@ -3201,6 +3206,9 @@ Public Class frmKredDisp
 
         Try
 
+            Me.Cursor = Cursors.WaitCursor
+            UseWaitCursor = True
+
             'Info neu erstellen
             dsKreditoren.Tables.Add("tblKreditorenInfo")
             Dim col1 As DataColumn = New DataColumn("strInfoT")
@@ -3332,7 +3340,11 @@ Public Class frmKredDisp
             intFcReturns = FcInitdgvKreditoren(dgvBookings)
             intFcReturns = FcInitdgvKrediSub(dgvBookingSub)
             intFcReturns = FcInitdgvDate(dgvDates)
-
+            'Anzahl schreiben
+            txtNumber.Text = dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count.ToString
+            If dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count > 0 Then
+                butImport.Enabled = True
+            End If
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Generelles Problem Kredi-Check" + Err.Number.ToString)
@@ -3349,8 +3361,8 @@ Public Class frmKredDisp
             objdbConn = Nothing
             objdbMSSQLConn = Nothing
             objdbSQLcommand = Nothing
-            'Anzahl schreiben
-            txtNumber.Text = Me.dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count.ToString
+            UseWaitCursor = False
+            Me.Cursor = Cursors.Default
 
         End Try
 
@@ -6961,8 +6973,8 @@ Public Class frmKredDisp
                                                 ByVal objsqlcon As SqlConnection,
                                                 ByVal objsqlcmd As SqlCommand,
                                                 ByVal intAccounting As Int16,
-                                                ByRef objdtInfo As DataTable,
-                                                ByRef strYear As String,
+                                                ByVal objdtInfo As DataTable,
+                                                ByVal strYear As String,
                                                 ByRef intTeqNbr As Int16,
                                                 ByRef intTeqNbrLY As Int16,
                                                 ByRef intTeqNbrPLY As Int16,
@@ -6992,8 +7004,16 @@ Public Class frmKredDisp
         Dim strActualYear As String
         Dim datPGVEndSave As Date
         Dim datValutaSave As Date
+        Dim strLogonInfo() As String
+
+        Dim objFinanzCopy As New SBSXASLib.AXFinanz
+        Dim objfiBuhaCopy As New SBSXASLib.AXiFBhg
 
         Try
+
+            objFinanzCopy = objFinanz.DuplicateObjekt(2)
+            objfiBuhaCopy = objFinanzCopy.GetFibuObj()
+
 
             'Jahr retten
             strActualYear = strYear
@@ -7080,62 +7100,40 @@ Public Class frmKredDisp
 
                         End If
 
-                        If Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                        If Year(datValuta) = 2023 And Year(datValuta) <> Val(strActualYear) Then 'Achtung provisorisch
                             'Zuerst Info-Table löschen
-                            objdtInfo.Clear()
+                            'objdtInfo.Clear()
                             'Application.DoEvents()
                             'Im 2021 anmelden
                             intReturnValue = FcLoginSage2(objdbcon,
                                                           objsqlcon,
                                                           objsqlcmd,
-                                                          objFinanz,
-                                                          objfiBuha,
-                                                          objdbBuha,
-                                                          objdbPIFb,
-                                                          objFiBebu,
-                                                          objKrBuha,
+                                                          objFinanzCopy,
+                                                          objfiBuhaCopy,
                                                           intAccounting,
-                                                          objdtInfo,
                                                           "2023",
-                                                          strYear,
-                                                          intTeqNbr,
-                                                          intTeqNbrLY,
-                                                          intTeqNbrPLY,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus)
+                                                          strActualYear)
                             'Application.DoEvents()
 
-                        ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strYear) Then
+                        ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strActualYear) Then
                             'Zuerst Info-Table löschen
-                            objdtInfo.Clear()
+                            'objdtInfo.Clear()
                             'Application.DoEvents()
                             'Im 2022 anmelden
                             intReturnValue = FcLoginSage2(objdbcon,
                                                           objsqlcon,
                                                           objsqlcmd,
-                                                          objFinanz,
-                                                          objfiBuha,
-                                                          objdbBuha,
-                                                          objdbPIFb,
-                                                          objFiBebu,
-                                                          objKrBuha,
+                                                          objFinanzCopy,
+                                                          objfiBuhaCopy,
                                                           intAccounting,
-                                                          objdtInfo,
                                                           "2024",
-                                                          strYear,
-                                                          intTeqNbr,
-                                                          intTeqNbrLY,
-                                                          intTeqNbrPLY,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus)
+                                                          strActualYear)
                             'Application.DoEvents()
 
                         End If
 
                         'Buchen
-                        Call objfiBuha.WriteBuchung(0,
+                        Call objfiBuhaCopy.WriteBuchung(0,
                                intKBelegNr,
                                strBelegDatum,
                                intSollKonto.ToString,
@@ -7171,34 +7169,24 @@ Public Class frmKredDisp
                 'Gab es eine Neutralisierung fürs FJ?
                 If intINY > 0 And intITotal > 1 Then
                     'Was ist die aktuelle angemeldete Periode ?
-                    strPeriodenInfo = objFinanz.GetPeriListe(0)
-                    strPeriodenInfoA = Split(strPeriodenInfo, "{>}")
+                    'strPeriodenInfo = objFinanzCopy.GetPeriListe(0)
+                    'strPeriodenInfoA = Split(strPeriodenInfo, "{>}")
+                    strLogonInfo = Split(objFinanzCopy.GetLogonInfo(), "{>}")
 
                     'Ist aktuell angemeldete Periode = FJ
-                    If Year(datPGVEnd) <> Val(Strings.Left(strPeriodenInfo, 4)) Then
+                    If Year(datPGVEnd) <> Val(Strings.Left(strLogonInfo(7), 4)) Then
                         'Zuerst Info-Table löschen
-                        objdtInfo.Clear()
+                        'objdtInfo.Clear()
                         'Application.DoEvents()
                         'Login ins FJ
                         intReturnValue = FcLoginSage2(objdbcon,
                                                           objsqlcon,
                                                           objsqlcmd,
-                                                          objFinanz,
-                                                          objfiBuha,
-                                                          objdbBuha,
-                                                          objdbPIFb,
-                                                          objFiBebu,
-                                                          objKrBuha,
+                                                          objFinanzCopy,
+                                                          objfiBuhaCopy,
                                                           intAccounting,
-                                                          objdtInfo,
                                                           Year(datPGVEnd).ToString,
-                                                          strYear,
-                                                          intTeqNbr,
-                                                          intTeqNbrLY,
-                                                          intTeqNbrPLY,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus)
+                                                          strActualYear)
 
                         'Application.DoEvents()
 
@@ -7214,7 +7202,7 @@ Public Class frmKredDisp
                         strBebuEintragHaben = Nothing
 
                         'Buchen
-                        Call objfiBuha.WriteBuchung(0,
+                        Call objfiBuhaCopy.WriteBuchung(0,
                                intKBelegNr,
                                strBelegDatum,
                                intSollKonto.ToString,
@@ -7283,62 +7271,40 @@ Public Class frmKredDisp
                         strBebuEintragHaben = Nothing
                     End If
 
-                    If Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                    If Year(datValuta) = 2023 And Year(datValuta) <> Val(strActualYear) Then 'Achtung provisorisch
                         'Zuerst Info-Table löschen
-                        objdtInfo.Clear()
+                        'objdtInfo.Clear()
                         'Application.DoEvents()
                         'Im 2021 anmelden
                         intReturnValue = FcLoginSage2(objdbcon,
                                                           objsqlcon,
                                                           objsqlcmd,
-                                                          objFinanz,
-                                                          objfiBuha,
-                                                          objdbBuha,
-                                                          objdbPIFb,
-                                                          objFiBebu,
-                                                          objKrBuha,
+                                                          objFinanzCopy,
+                                                          objfiBuhaCopy,
                                                           intAccounting,
-                                                          objdtInfo,
                                                           "2023",
-                                                          strYear,
-                                                          intTeqNbr,
-                                                          intTeqNbrLY,
-                                                          intTeqNbrPLY,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus)
+                                                          strActualYear)
                         'Application.DoEvents()
 
-                    ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strYear) Then
+                    ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strActualYear) Then
                         'Zuerst Info-Table löschen
-                        objdtInfo.Clear()
+                        'objdtInfo.Clear()
                         'Application.DoEvents()
                         'Im 2022 anmelden
                         intReturnValue = FcLoginSage2(objdbcon,
                                                           objsqlcon,
                                                           objsqlcmd,
-                                                          objFinanz,
-                                                          objfiBuha,
-                                                          objdbBuha,
-                                                          objdbPIFb,
-                                                          objFiBebu,
-                                                          objKrBuha,
+                                                          objFinanzCopy,
+                                                          objfiBuhaCopy,
                                                           intAccounting,
-                                                          objdtInfo,
                                                           "2024",
-                                                          strYear,
-                                                          intTeqNbr,
-                                                          intTeqNbrLY,
-                                                          intTeqNbrPLY,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus)
+                                                          strActualYear)
                         'Application.DoEvents()
 
                     End If
 
                     'Buchen
-                    Call objfiBuha.WriteBuchung(0,
+                    Call objfiBuhaCopy.WriteBuchung(0,
                                intKBelegNr,
                                strBelegDatum,
                                intSollKonto.ToString,
@@ -7365,32 +7331,28 @@ Public Class frmKredDisp
 
             Next
             'Für weitere Buchungen ins ursprüngliche Jahr anmelden 
-            If strYear <> strActualYear Then
-                'Zuerst Info-Table löschen
-                objdtInfo.Clear()
-                'Application.DoEvents()
-                'Im Aufrufjahr anmelden
-                intReturnValue = FcLoginSage2(objdbcon,
-                                                  objsqlcon,
-                                                  objsqlcmd,
-                                                  objFinanz,
-                                                  objfiBuha,
-                                                  objdbBuha,
-                                                  objdbPIFb,
-                                                  objFiBebu,
-                                                  objKrBuha,
-                                                  intAccounting,
-                                                  objdtInfo,
-                                                  strActualYear,
-                                                  strYear,
-                                                  intTeqNbr,
-                                                  intTeqNbrLY,
-                                                  intTeqNbrPLY,
-                                                  datPeriodFrom,
-                                                  datPeriodTo,
-                                                  strPeriodStatus)
-                'Application.DoEvents()
-            End If
+            'If strYear <> strActualYear Then
+            '    'Zuerst Info-Table löschen
+            '    objdtInfo.Clear()
+            '    'Application.DoEvents()
+            '    'Im Aufrufjahr anmelden
+            '    intReturnValue = FcLoginSage2(objdbcon,
+            '                                      objsqlcon,
+            '                                      objsqlcmd,
+            '                                      objFinanzCopy,
+            '                                      objfiBuhaCopy,
+            '                                      intAccounting,
+            '                                      objdtInfo,
+            '                                      strActualYear,
+            '                                      strYear,
+            '                                      intTeqNbr,
+            '                                      intTeqNbrLY,
+            '                                      intTeqNbrPLY,
+            '                                      datPeriodFrom,
+            '                                      datPeriodTo,
+            '                                      strPeriodStatus)
+            '    'Application.DoEvents()
+            'End If
             Return 0
 
         Catch ex As Exception
@@ -7408,22 +7370,11 @@ Public Class frmKredDisp
     Friend Function FcLoginSage2(ByRef objdbconn As MySqlConnection,
                                        ByRef objsqlConn As SqlClient.SqlConnection,
                                        ByRef objsqlCom As SqlClient.SqlCommand,
-                                       ByRef objFinanz As SBSXASLib.AXFinanz,
-                                       ByRef objfiBuha As SBSXASLib.AXiFBhg,
-                                       ByRef objdbBuha As SBSXASLib.AXiDbBhg,
-                                       ByRef objdbPIFb As SBSXASLib.AXiPlFin,
-                                       ByRef objFiBebu As SBSXASLib.AXiBeBu,
-                                       ByRef objkrBuha As SBSXASLib.AXiKrBhg,
+                                       ByRef objFinanzCopy As SBSXASLib.AXFinanz,
+                                       ByRef objfiBuhaCopy As SBSXASLib.AXiFBhg,
                                        ByVal intAccounting As Int16,
-                                       ByRef objdtInfo As DataTable,
                                        ByVal strPeriod As String,
-                                       ByRef strYear As String,
-                                       ByRef intTeqNbr As Int16,
-                                       ByRef intTeqNbrLY As Int16,
-                                       ByRef intTeqNbrPLY As Int16,
-                                       ByRef datPeriodFrom As Date,
-                                       ByRef datPeriodTo As Date,
-                                       ByRef strPeriodStatus As String) As Int16
+                                       ByRef strYear As String) As Int16
 
         '0=ok, 1=Fibu nicht ok, 2=Debi nicht ok, 3=Debi nicht ok
         Dim booAccOk As Boolean
@@ -7441,14 +7392,14 @@ Public Class frmKredDisp
 
 
         Try
-
-            'objFinanz = Nothing
-            'objFinanz = New SBSXASLib.AXFinanz
+            objfiBuhaCopy = Nothing
+            objFinanzCopy = Nothing
+            objFinanzCopy = New SBSXASLib.AXFinanz
 
             'Application.DoEvents()
 
             'Login
-            Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+            Call objFinanzCopy.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
@@ -7457,112 +7408,112 @@ Public Class frmKredDisp
             strMandant = FcReadFromSettingsII("Buchh200_Name",
                                             intAccounting)
             objdbconn.Close()
-            booAccOk = objFinanz.CheckMandant(strMandant)
+            booAccOk = objFinanzCopy.CheckMandant(strMandant)
 
             'Open Mandantg
-            objFinanz.OpenMandant(strMandant, strPeriod)
+            objFinanzCopy.OpenMandant(strMandant, strPeriod)
 
             'Von Login aktuelle Periode auslesen
-            strLogonInfo = Split(objFinanz.GetLogonInfo(), "{>}")
-            objdtInfo.Rows.Add("Man/Periode", strMandant + "/" + strLogonInfo(7) + ", " + intAccounting.ToString)
+            strLogonInfo = Split(objFinanzCopy.GetLogonInfo(), "{>}")
+            'objdtInfo.Rows.Add("Man/Periode", strMandant + "/" + strLogonInfo(7) + ", " + intAccounting.ToString)
 
             'Check Periode
-            intPeriodenNr = objFinanz.ReadPeri(strMandant, strLogonInfo(7))
-            strPeriodenInfo = objFinanz.GetPeriListe(0)
+            intPeriodenNr = objFinanzCopy.ReadPeri(strMandant, strLogonInfo(7))
+            strPeriodenInfo = objFinanzCopy.GetPeriListe(0)
 
             strPeriode = Split(strPeriodenInfo, "{>}")
 
             'Teq-Nr von Vorjar lesen um in Suche nutzen zu können
-            objdtPeriodeLY.Rows.Clear()
-            strPeriodeLY = (Val(Strings.Left(strPeriode(4), 4)) - 1).ToString + Strings.Right(strPeriode(4), 4)
-            objsqlCom.CommandText = "SELECT teqnbr FROM periode WHERE mandid='" + strMandant + "' AND dtebis='" + strPeriodeLY + "'"
-            objsqlCom.Connection = objsqlConn
-            objsqlConn.Open()
-            objdtPeriodeLY.Load(objsqlCom.ExecuteReader)
-            objsqlConn.Close()
-            If objdtPeriodeLY.Rows.Count > 0 Then
-                intTeqNbrLY = objdtPeriodeLY.Rows(0).Item("teqnbr")
-            Else
-                intTeqNbrLY = 0
-            End If
+            'objdtPeriodeLY.Rows.Clear()
+            'strPeriodeLY = (Val(Strings.Left(strPeriode(4), 4)) - 1).ToString + Strings.Right(strPeriode(4), 4)
+            'objsqlCom.CommandText = "SELECT teqnbr FROM periode WHERE mandid='" + strMandant + "' AND dtebis='" + strPeriodeLY + "'"
+            'objsqlCom.Connection = objsqlConn
+            'objsqlConn.Open()
+            'objdtPeriodeLY.Load(objsqlCom.ExecuteReader)
+            'objsqlConn.Close()
+            'If objdtPeriodeLY.Rows.Count > 0 Then
+            '    intTeqNbrLY = objdtPeriodeLY.Rows(0).Item("teqnbr")
+            'Else
+            '    intTeqNbrLY = 0
+            'End If
             'Teq-Nr vom Vorvorjahr
-            objdtPeriodeLY.Rows.Clear()
-            strPeriodePLY = (Val(Strings.Left(strPeriode(4), 4)) - 2).ToString + Strings.Right(strPeriode(4), 4)
-            objsqlCom.CommandText = "SELECT teqnbr FROM periode WHERE mandid='" + strMandant + "' AND dtebis='" + strPeriodePLY + "'"
-            objsqlCom.Connection = objsqlConn
-            objsqlConn.Open()
-            objdtPeriodeLY.Load(objsqlCom.ExecuteReader)
-            objsqlConn.Close()
-            If objdtPeriodeLY.Rows.Count > 0 Then
-                intTeqNbrPLY = objdtPeriodeLY.Rows(0).Item("teqnbr")
-            Else
-                intTeqNbrPLY = 0
-            End If
+            'objdtPeriodeLY.Rows.Clear()
+            'strPeriodePLY = (Val(Strings.Left(strPeriode(4), 4)) - 2).ToString + Strings.Right(strPeriode(4), 4)
+            'objsqlCom.CommandText = "SELECT teqnbr FROM periode WHERE mandid='" + strMandant + "' AND dtebis='" + strPeriodePLY + "'"
+            'objsqlCom.Connection = objsqlConn
+            'objsqlConn.Open()
+            'objdtPeriodeLY.Load(objsqlCom.ExecuteReader)
+            'objsqlConn.Close()
+            'If objdtPeriodeLY.Rows.Count > 0 Then
+            '    intTeqNbrPLY = objdtPeriodeLY.Rows(0).Item("teqnbr")
+            'Else
+            '    intTeqNbrPLY = 0
+            'End If
 
-            intTeqNbr = strPeriode(8)
-            objdtInfo.Rows.Add("GeschäftsJ", strPeriode(3) + "-" + strPeriode(4) + ", teq: " + strPeriode(8).ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString)
-            objdtInfo.Rows.Add("Buchungen/ Status", strPeriode(5) + "-" + strPeriode(6) + "/ " + strPeriode(2))
+            'intTeqNbr = strPeriode(8)
+            'objdtInfo.Rows.Add("GeschäftsJ", strPeriode(3) + "-" + strPeriode(4) + ", teq: " + strPeriode(8).ToString + ", " + intTeqNbrLY.ToString + ", " + intTeqNbrPLY.ToString)
+            'objdtInfo.Rows.Add("Buchungen/ Status", strPeriode(5) + "-" + strPeriode(6) + "/ " + strPeriode(2))
             strYear = Strings.Left(strPeriode(4), 4)
 
-            FcReturns = FcReadPeriodenDef(objsqlConn,
-                                      objsqlCom,
-                                      strPeriode(8),
-                                      objdtInfo,
-                                      strYear)
+            'FcReturns = FcReadPeriodenDef(objsqlConn,
+            '                          objsqlCom,
+            '                          strPeriode(8),
+            '                          objdtInfo,
+            '                          strYear)
 
             'Perioden-Definition vom Tool einlesen
             'In einer ersten Phase nur erster DS einlesen
-            objdbcmd.Connection = objdbconn
-            objdbconn.Open()
-            objdbcmd.CommandText = "SELECT * FROM t_sage_buchhaltungen_periods WHERE year=" + strYear + " AND refMandant=" + intAccounting.ToString
-            dtPeriods.Load(objdbcmd.ExecuteReader)
-            objdbconn.Close()
-            If dtPeriods.Rows.Count > 0 Then
-                datPeriodFrom = dtPeriods.Rows(0).Item("periodFrom")
-                datPeriodTo = dtPeriods.Rows(0).Item("periodTo")
-                strPeriodStatus = dtPeriods.Rows(0).Item("status")
-            Else
-                datPeriodFrom = Convert.ToDateTime(strYear + "-01-01 00:00:01")
-                datPeriodTo = Convert.ToDateTime(strYear + "-12-31 23:59:59")
-                strPeriodStatus = "O"
-            End If
-            objdtInfo.Rows.Add("Perioden", Format(datPeriodFrom, "dd.MM.yyyy hh:mm:ss") + " - " + Format(datPeriodTo, "dd.MM.yyyy hh:mm:ss") + "/ " + strPeriodStatus)
+            'objdbcmd.Connection = objdbconn
+            'objdbconn.Open()
+            'objdbcmd.CommandText = "SELECT * FROM t_sage_buchhaltungen_periods WHERE year=" + strYear + " AND refMandant=" + intAccounting.ToString
+            'dtPeriods.Load(objdbcmd.ExecuteReader)
+            'objdbconn.Close()
+            'If dtPeriods.Rows.Count > 0 Then
+            '    datPeriodFrom = dtPeriods.Rows(0).Item("periodFrom")
+            '    datPeriodTo = dtPeriods.Rows(0).Item("periodTo")
+            '    strPeriodStatus = dtPeriods.Rows(0).Item("status")
+            'Else
+            '    datPeriodFrom = Convert.ToDateTime(strYear + "-01-01 00:00:01")
+            '    datPeriodTo = Convert.ToDateTime(strYear + "-12-31 23:59:59")
+            '    strPeriodStatus = "O"
+            'End If
+            'objdtInfo.Rows.Add("Perioden", Format(datPeriodFrom, "dd.MM.yyyy hh:mm:ss") + " - " + Format(datPeriodTo, "dd.MM.yyyy hh:mm:ss") + "/ " + strPeriodStatus)
 
             'Finanz Buha öffnen
-            If Not IsNothing(objfiBuha) Then
-                objfiBuha = Nothing
-            End If
-            objfiBuha = New SBSXASLib.AXiFBhg
-            objfiBuha = objFinanz.GetFibuObj()
+            'If Not IsNothing(objfiBuha) Then
+            '    objfiBuha = Nothing
+            'End If
+            'objfiBuha = New SBSXASLib.AXiFBhg
+            objfiBuhaCopy = objFinanzCopy.GetFibuObj()
             'Debitor öffnen
-            If Not IsNothing(objdbBuha) Then
-                objdbBuha = Nothing
-            End If
-            objdbBuha = New SBSXASLib.AXiDbBhg
-            objdbBuha = objFinanz.GetDebiObj()
-            If Not IsNothing(objdbPIFb) Then
-                objdbPIFb = Nothing
-            End If
-            objdbPIFb = New SBSXASLib.AXiPlFin
-            objdbPIFb = objfiBuha.GetCheckObj()
-            If Not IsNothing(objFiBebu) Then
-                objFiBebu = Nothing
-            End If
-            objFiBebu = New SBSXASLib.AXiBeBu
-            objFiBebu = objFinanz.GetBeBuObj()
+            'If Not IsNothing(objdbBuha) Then
+            '    objdbBuha = Nothing
+            'End If
+            'objdbBuha = New SBSXASLib.AXiDbBhg
+            'objdbBuha = objFinanz.GetDebiObj()
+            'If Not IsNothing(objdbPIFb) Then
+            '    objdbPIFb = Nothing
+            'End If
+            'objdbPIFb = New SBSXASLib.AXiPlFin
+            'objdbPIFb = objfiBuha.GetCheckObj()
+            'If Not IsNothing(objFiBebu) Then
+            '    objFiBebu = Nothing
+            'End If
+            'objFiBebu = New SBSXASLib.AXiBeBu
+            'objFiBebu = objFinanz.GetBeBuObj()
             'Kreditor
-            If Not IsNothing(objkrBuha) Then
-                objkrBuha = Nothing
-            End If
-            objkrBuha = New SBSXASLib.AXiKrBhg
-            objkrBuha = objFinanz.GetKrediObj
+            'If Not IsNothing(objkrBuha) Then
+            '    objkrBuha = Nothing
+            'End If
+            'objkrBuha = New SBSXASLib.AXiKrBhg
+            'objKrBuha = objFinanz.GetKrediObj
 
             'Application.DoEvents()
 
         Catch ex As Exception
             MsgBox("OpenMandant:" + vbCrLf + "Error" + vbCrLf + "Error # " + Str(Err.Number) + " was generated by " + Err.Source + vbCrLf + Err.Description + " Fehlernummer" & Str(Err.Number And 65535))
             Err.Clear()
-            End
+
 
         Finally
             objdtPeriodeLY = Nothing
@@ -7619,7 +7570,8 @@ Public Class frmKredDisp
             objlocdtPeriDef.Constraints.Clear()
             objlocdtPeriDef.Clear()
             objlocdtPeriDef.Dispose()
-            strPeriodenDef = Nothing
+            objlocdtPeriDef = Nothing
+            'strPeriodenDef = Nothing
 
         End Try
 
@@ -7643,8 +7595,8 @@ Public Class frmKredDisp
                                                 ByVal objsqlcon As SqlConnection,
                                                 ByVal objsqlcmd As SqlCommand,
                                                 ByVal intAccounting As Int16,
-                                                ByRef objdtInfo As DataTable,
-                                                ByRef strYear As String,
+                                                ByVal objdtInfo As DataTable,
+                                                ByVal strYear As String,
                                                 ByRef intTeqNbr As Int16,
                                                 ByRef intTeqNbrLY As Int16,
                                                 ByRef intTeqNbrPLY As Int16,
@@ -7674,9 +7626,16 @@ Public Class frmKredDisp
         Dim strActualYear As String
         Dim datPGVEndSave As Date
         Dim datValutaSave As Date
+        Dim strLogonInfo() As String
+
+        Dim objFinanzCopy As New SBSXASLib.AXFinanz
+        Dim objfiBuhaCopy As New SBSXASLib.AXiFBhg
 
 
         Try
+
+            objFinanzCopy = objFinanz.DuplicateObjekt(2)
+            objfiBuhaCopy = objFinanzCopy.GetFibuObj()
 
             'Jahr retten
             strActualYear = strYear
@@ -7783,65 +7742,43 @@ Public Class frmKredDisp
 
                         End If
 
-                        If Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                        If Year(datValuta) = 2023 And Year(datValuta) <> Val(strActualYear) Then 'Achtung provisorisch
                             'Zuerst Info-Table löschen
-                            objdtInfo.Clear()
+                            'objdtInfo.Clear()
                             'Application.DoEvents()
                             'Im 2021 anmelden
                             intReturnValue = FcLoginSage2(objdbcon,
                                                           objsqlcon,
                                                           objsqlcmd,
-                                                          objFinanz,
-                                                          objfiBuha,
-                                                          objdbBuha,
-                                                          objdbPIFb,
-                                                          objFiBebu,
-                                                          objKrBuha,
+                                                          objFinanzCopy,
+                                                          objfiBuhaCopy,
                                                           intAccounting,
-                                                          objdtInfo,
                                                           "2023",
-                                                          strYear,
-                                                          intTeqNbr,
-                                                          intTeqNbrLY,
-                                                          intTeqNbrPLY,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus)
+                                                          strActualYear)
                             'Application.DoEvents()
 
-                        ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strYear) Then
+                        ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strActualYear) Then
                             'Zuerst Info-Table löschen
-                            objdtInfo.Clear()
+                            'objdtInfo.Clear()
                             'Application.DoEvents()
                             'Im 2022 anmelden
                             intReturnValue = FcLoginSage2(objdbcon,
                                                           objsqlcon,
                                                           objsqlcmd,
-                                                          objFinanz,
-                                                          objfiBuha,
-                                                          objdbBuha,
-                                                          objdbPIFb,
-                                                          objFiBebu,
-                                                          objKrBuha,
+                                                          objFinanzCopy,
+                                                          objfiBuhaCopy,
                                                           intAccounting,
-                                                          objdtInfo,
                                                           "2024",
-                                                          strYear,
-                                                          intTeqNbr,
-                                                          intTeqNbrLY,
-                                                          intTeqNbrPLY,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus)
+                                                          strActualYear)
                             'Application.DoEvents()
 
                         End If
 
                         'doppelte Beleg-Nummern zulassen in HB
-                        objfiBuha.CheckDoubleIntBelNbr = "N"
+                        objfiBuhaCopy.CheckDoubleIntBelNbr = "N"
 
                         'Buchen
-                        Call objfiBuha.WriteBuchung(0,
+                        Call objfiBuhaCopy.WriteBuchung(0,
                                intKBelegNr,
                                strBelegDatum,
                                intSollKonto.ToString,
@@ -7877,34 +7814,24 @@ Public Class frmKredDisp
                 'Gab es eine Neutralisierung fürs FJ?
                 If intINY > 0 And intITotal > 1 Then
                     'Was ist die aktuelle angemeldete Periode ?
-                    strPeriodenInfo = objFinanz.GetPeriListe(0)
-                    strPeriodenInfoA = Split(strPeriodenInfo, "{>}")
+                    'strPeriodenInfo = objFinanzCopy.GetPeriListe(0)
+                    'strPeriodenInfoA = Split(strPeriodenInfo, "{>}")
+                    strLogonInfo = Split(objFinanzCopy.GetLogonInfo(), "{>}")
 
                     'Ist aktuell angemeldete Periode = FJ
-                    If Year(datPGVEnd) <> Val(Strings.Left(strPeriodenInfo, 4)) Then
+                    If Year(datPGVEnd) <> Val(Strings.Left(strLogonInfo(7), 4)) Then
                         'Zuerst Info-Table löschen
-                        objdtInfo.Clear()
-                        Application.DoEvents()
+                        'objdtInfo.Clear()
+                        'Application.DoEvents()
                         'Login ins FJ
                         intReturnValue = FcLoginSage2(objdbcon,
                                                           objsqlcon,
                                                           objsqlcmd,
-                                                          objFinanz,
-                                                          objfiBuha,
-                                                          objdbBuha,
-                                                          objdbPIFb,
-                                                          objFiBebu,
-                                                          objKrBuha,
+                                                          objFinanzCopy,
+                                                          objfiBuhaCopy,
                                                           intAccounting,
-                                                          objdtInfo,
                                                           Year(datPGVEnd).ToString,
-                                                          strYear,
-                                                          intTeqNbr,
-                                                          intTeqNbrLY,
-                                                          intTeqNbrPLY,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus)
+                                                          strActualYear)
 
                         'Application.DoEvents()
 
@@ -7920,7 +7847,7 @@ Public Class frmKredDisp
                         strBebuEintragHaben = Nothing
 
                         'Buchen
-                        Call objfiBuha.WriteBuchung(0,
+                        Call objfiBuhaCopy.WriteBuchung(0,
                                intKBelegNr,
                                strBelegDatum,
                                intSollKonto.ToString,
@@ -7982,65 +7909,43 @@ Public Class frmKredDisp
                         strBebuEintragHaben = Nothing
                     End If
 
-                    If Year(datValuta) = 2023 And Year(datValuta) <> Val(strYear) Then 'Achtung provisorisch
+                    If Year(datValuta) = 2023 And Year(datValuta) <> Val(strActualYear) Then 'Achtung provisorisch
                         'Zuerst Info-Table löschen
-                        objdtInfo.Clear()
+                        'objdtInfo.Clear()
                         'Application.DoEvents()
                         'Im 2021 anmelden
                         intReturnValue = FcLoginSage2(objdbcon,
                                                           objsqlcon,
                                                           objsqlcmd,
-                                                          objFinanz,
-                                                          objfiBuha,
-                                                          objdbBuha,
-                                                          objdbPIFb,
-                                                          objFiBebu,
-                                                          objKrBuha,
+                                                          objFinanzCopy,
+                                                          objfiBuhaCopy,
                                                           intAccounting,
-                                                          objdtInfo,
                                                           "2023",
-                                                          strYear,
-                                                          intTeqNbr,
-                                                          intTeqNbrLY,
-                                                          intTeqNbrPLY,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus)
+                                                          strActualYear)
                         'Application.DoEvents()
 
-                    ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strYear) Then
+                    ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strActualYear) Then
                         'Zuerst Info-Table löschen
-                        objdtInfo.Clear()
+                        'objdtInfo.Clear()
                         'Application.DoEvents()
                         'Im 2022 anmelden
                         intReturnValue = FcLoginSage2(objdbcon,
                                                           objsqlcon,
                                                           objsqlcmd,
-                                                          objFinanz,
-                                                          objfiBuha,
-                                                          objdbBuha,
-                                                          objdbPIFb,
-                                                          objFiBebu,
-                                                          objKrBuha,
+                                                          objFinanzCopy,
+                                                          objfiBuhaCopy,
                                                           intAccounting,
-                                                          objdtInfo,
                                                           "2024",
-                                                          strYear,
-                                                          intTeqNbr,
-                                                          intTeqNbrLY,
-                                                          intTeqNbrPLY,
-                                                          datPeriodFrom,
-                                                          datPeriodTo,
-                                                          strPeriodStatus)
+                                                          strActualYear)
                         'Application.DoEvents()
 
                     End If
 
                     'doppelte Beleg-Nummern zulassen in HB
-                    objfiBuha.CheckDoubleIntBelNbr = "N"
+                    objfiBuhaCopy.CheckDoubleIntBelNbr = "N"
 
                     'Buchen
-                    Call objfiBuha.WriteBuchung(0,
+                    Call objfiBuhaCopy.WriteBuchung(0,
                                intKBelegNr,
                                strBelegDatum,
                                intSollKonto.ToString,
@@ -8067,32 +7972,28 @@ Public Class frmKredDisp
 
             Next
             'Für weitere Buchungen ins ursprüngliche Jahr anmelden 
-            If strYear <> strActualYear Then
-                'Zuerst Info-Table löschen
-                objdtInfo.Clear()
-                'Application.DoEvents()
-                'Im Aufrufjahr anmelden
-                intReturnValue = FcLoginSage2(objdbcon,
-                                                  objsqlcon,
-                                                  objsqlcmd,
-                                                  objFinanz,
-                                                  objfiBuha,
-                                                  objdbBuha,
-                                                  objdbPIFb,
-                                                  objFiBebu,
-                                                  objKrBuha,
-                                                  intAccounting,
-                                                  objdtInfo,
-                                                  strActualYear,
-                                                  strYear,
-                                                  intTeqNbr,
-                                                  intTeqNbrLY,
-                                                  intTeqNbrPLY,
-                                                  datPeriodFrom,
-                                                  datPeriodTo,
-                                                  strPeriodStatus)
-                'Application.DoEvents()
-            End If
+            'If strYear <> strActualYear Then
+            '    'Zuerst Info-Table löschen
+            '    objdtInfo.Clear()
+            '    'Application.DoEvents()
+            '    'Im Aufrufjahr anmelden
+            '    intReturnValue = FcLoginSage2(objdbcon,
+            '                                      objsqlcon,
+            '                                      objsqlcmd,
+            '                                      objFinanzCopy,
+            '                                      objfiBuhaCopy,
+            '                                      intAccounting,
+            '                                      objdtInfo,
+            '                                      strActualYear,
+            '                                      strYear,
+            '                                      intTeqNbr,
+            '                                      intTeqNbrLY,
+            '                                      intTeqNbrPLY,
+            '                                      datPeriodFrom,
+            '                                      datPeriodTo,
+            '                                      strPeriodStatus)
+            '    'Application.DoEvents()
+            'End If
             Return 0
 
         Catch ex As Exception

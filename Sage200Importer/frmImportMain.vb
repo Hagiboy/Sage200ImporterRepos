@@ -1957,7 +1957,6 @@ Friend Class frmImportMain
 
         Try
 
-            Me.Cursor = Cursors.WaitCursor
             'Zuerst in tblImportTasks setzen
             objdbtaskcmd.Connection = objdbConn
             objdbtaskcmd.Connection.Open()
@@ -1987,6 +1986,8 @@ Friend Class frmImportMain
                 'frmKredDisp.Cursor = Cursors.WaitCursor
                 frmKredDisp.Text = "Kreditor " + lstBoxMandant.Text
                 frmKredDisp.MdiParent = Me
+                frmKredDisp.butImport.Enabled = False
+                frmKredDisp.butCheclLred.Enabled = False
                 frmKredDisp.Show()
                 frmKredDisp.Top = 105
                 'Für korrekte Plazierung
@@ -2007,7 +2008,6 @@ Friend Class frmImportMain
 
             End If
 
-            frmKredDisp.Cursor = Cursors.Default
             'Application.DoEvents()
 
             'intMode = 1
@@ -2137,8 +2137,8 @@ Friend Class frmImportMain
             MessageBox.Show(ex.Message, "Problem Kreditorenauflistung", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
 
         Finally
-
-            Me.Cursor = Cursors.Default
+            objdbtasks = Nothing
+            objdbtaskcmd = Nothing
 
         End Try
 
