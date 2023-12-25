@@ -22,15 +22,16 @@ Partial Class frmKredDisp
     'Das Bearbeiten mit dem Code-Editor ist nicht möglich.
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
-        Dim DataGridViewCellStyle10 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle11 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle12 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle13 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle14 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle15 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle16 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle17 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle18 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle55 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle56 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle57 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle58 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle59 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle60 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle61 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle62 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle63 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmKredDisp))
         Me.dgvInfo = New System.Windows.Forms.DataGridView()
         Me.dgvBookingSub = New System.Windows.Forms.DataGridView()
         Me.dgvBookings = New System.Windows.Forms.DataGridView()
@@ -43,115 +44,118 @@ Partial Class frmKredDisp
         Me.mysqlcmdKredSubRead = New MySqlConnector.MySqlCommand()
         Me.dsKreditoren = New System.Data.DataSet()
         Me.butImport = New System.Windows.Forms.Button()
-        Me.txtNumber = New System.Windows.Forms.TextBox()
-        Me.lblDB = New System.Windows.Forms.Label()
         Me.dgvDates = New System.Windows.Forms.DataGridView()
         Me.BgWLoadKredi = New System.ComponentModel.BackgroundWorker()
         Me.BgWCheckKredi = New System.ComponentModel.BackgroundWorker()
         Me.BgWImportKredi = New System.ComponentModel.BackgroundWorker()
-        Me.butDeSeöect = New System.Windows.Forms.Button()
         Me.lstBoxPerioden = New System.Windows.Forms.ListBox()
         Me.butCheclLred = New System.Windows.Forms.Button()
+        Me.TSKredi = New System.Windows.Forms.ToolStrip()
+        Me.ButDeselect = New System.Windows.Forms.ToolStripButton()
+        Me.PRKredi = New System.Windows.Forms.ToolStripProgressBar()
+        Me.TSLblType = New System.Windows.Forms.ToolStripLabel()
+        Me.TSLblNmbr = New System.Windows.Forms.ToolStripLabel()
         CType(Me.dgvInfo, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookingSub, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dsKreditoren, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgvDates, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.TSKredi.SuspendLayout()
         Me.SuspendLayout()
         '
         'dgvInfo
         '
-        DataGridViewCellStyle10.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle10.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle10.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle10.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle10.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle10.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle10.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.dgvInfo.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle10
+        DataGridViewCellStyle55.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle55.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle55.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle55.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle55.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle55.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle55.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.dgvInfo.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle55
         Me.dgvInfo.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        DataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle11.BackColor = System.Drawing.SystemColors.Window
-        DataGridViewCellStyle11.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle11.ForeColor = System.Drawing.SystemColors.ControlText
-        DataGridViewCellStyle11.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle11.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle11.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
-        Me.dgvInfo.DefaultCellStyle = DataGridViewCellStyle11
+        DataGridViewCellStyle56.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle56.BackColor = System.Drawing.SystemColors.Window
+        DataGridViewCellStyle56.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle56.ForeColor = System.Drawing.SystemColors.ControlText
+        DataGridViewCellStyle56.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle56.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle56.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
+        Me.dgvInfo.DefaultCellStyle = DataGridViewCellStyle56
         Me.dgvInfo.Location = New System.Drawing.Point(915, 2)
         Me.dgvInfo.Name = "dgvInfo"
-        DataGridViewCellStyle12.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle12.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle12.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle12.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle12.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle12.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle12.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.dgvInfo.RowHeadersDefaultCellStyle = DataGridViewCellStyle12
+        DataGridViewCellStyle57.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle57.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle57.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle57.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle57.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle57.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle57.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.dgvInfo.RowHeadersDefaultCellStyle = DataGridViewCellStyle57
         Me.dgvInfo.Size = New System.Drawing.Size(308, 119)
         Me.dgvInfo.TabIndex = 5
         '
         'dgvBookingSub
         '
-        DataGridViewCellStyle13.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle13.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle13.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle13.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle13.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle13.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle13.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.dgvBookingSub.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle13
+        DataGridViewCellStyle58.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle58.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle58.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle58.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle58.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle58.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle58.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.dgvBookingSub.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle58
         Me.dgvBookingSub.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        DataGridViewCellStyle14.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle14.BackColor = System.Drawing.SystemColors.Window
-        DataGridViewCellStyle14.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle14.ForeColor = System.Drawing.SystemColors.ControlText
-        DataGridViewCellStyle14.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle14.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle14.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
-        Me.dgvBookingSub.DefaultCellStyle = DataGridViewCellStyle14
+        DataGridViewCellStyle59.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle59.BackColor = System.Drawing.SystemColors.Window
+        DataGridViewCellStyle59.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle59.ForeColor = System.Drawing.SystemColors.ControlText
+        DataGridViewCellStyle59.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle59.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle59.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
+        Me.dgvBookingSub.DefaultCellStyle = DataGridViewCellStyle59
         Me.dgvBookingSub.Location = New System.Drawing.Point(12, 2)
         Me.dgvBookingSub.Name = "dgvBookingSub"
-        DataGridViewCellStyle15.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle15.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle15.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle15.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle15.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle15.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle15.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.dgvBookingSub.RowHeadersDefaultCellStyle = DataGridViewCellStyle15
+        DataGridViewCellStyle60.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle60.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle60.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle60.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle60.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle60.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle60.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.dgvBookingSub.RowHeadersDefaultCellStyle = DataGridViewCellStyle60
         Me.dgvBookingSub.Size = New System.Drawing.Size(897, 119)
         Me.dgvBookingSub.TabIndex = 4
         '
         'dgvBookings
         '
-        DataGridViewCellStyle16.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle16.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle16.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle16.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle16.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle16.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle16.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.dgvBookings.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle16
+        DataGridViewCellStyle61.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle61.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle61.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle61.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle61.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle61.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle61.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.dgvBookings.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle61
         Me.dgvBookings.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        DataGridViewCellStyle17.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle17.BackColor = System.Drawing.SystemColors.Window
-        DataGridViewCellStyle17.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle17.ForeColor = System.Drawing.SystemColors.ControlText
-        DataGridViewCellStyle17.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle17.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle17.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
-        Me.dgvBookings.DefaultCellStyle = DataGridViewCellStyle17
+        DataGridViewCellStyle62.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle62.BackColor = System.Drawing.SystemColors.Window
+        DataGridViewCellStyle62.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle62.ForeColor = System.Drawing.SystemColors.ControlText
+        DataGridViewCellStyle62.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle62.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle62.WrapMode = System.Windows.Forms.DataGridViewTriState.[False]
+        Me.dgvBookings.DefaultCellStyle = DataGridViewCellStyle62
         Me.dgvBookings.Location = New System.Drawing.Point(12, 127)
         Me.dgvBookings.Name = "dgvBookings"
-        DataGridViewCellStyle18.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle18.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle18.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle18.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle18.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle18.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle18.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.dgvBookings.RowHeadersDefaultCellStyle = DataGridViewCellStyle18
+        DataGridViewCellStyle63.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle63.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle63.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle63.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle63.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle63.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle63.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.dgvBookings.RowHeadersDefaultCellStyle = DataGridViewCellStyle63
         Me.dgvBookings.Size = New System.Drawing.Size(1611, 479)
         Me.dgvBookings.TabIndex = 3
         '
@@ -214,29 +218,12 @@ Partial Class frmKredDisp
         '
         'butImport
         '
-        Me.butImport.Location = New System.Drawing.Point(1527, 40)
+        Me.butImport.Location = New System.Drawing.Point(1529, 65)
         Me.butImport.Name = "butImport"
-        Me.butImport.Size = New System.Drawing.Size(86, 53)
+        Me.butImport.Size = New System.Drawing.Size(84, 44)
         Me.butImport.TabIndex = 6
         Me.butImport.Text = "Import"
         Me.butImport.UseVisualStyleBackColor = True
-        '
-        'txtNumber
-        '
-        Me.txtNumber.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.txtNumber.Location = New System.Drawing.Point(1560, 5)
-        Me.txtNumber.Name = "txtNumber"
-        Me.txtNumber.Size = New System.Drawing.Size(40, 29)
-        Me.txtNumber.TabIndex = 10
-        '
-        'lblDB
-        '
-        Me.lblDB.AutoSize = True
-        Me.lblDB.Location = New System.Drawing.Point(1606, 16)
-        Me.lblDB.Name = "lblDB"
-        Me.lblDB.Size = New System.Drawing.Size(22, 13)
-        Me.lblDB.TabIndex = 11
-        Me.lblDB.Text = "DB"
         '
         'dgvDates
         '
@@ -255,15 +242,6 @@ Partial Class frmKredDisp
         'BgWImportKredi
         '
         '
-        'butDeSeöect
-        '
-        Me.butDeSeöect.Location = New System.Drawing.Point(1545, 99)
-        Me.butDeSeöect.Name = "butDeSeöect"
-        Me.butDeSeöect.Size = New System.Drawing.Size(31, 20)
-        Me.butDeSeöect.TabIndex = 13
-        Me.butDeSeöect.Text = "X"
-        Me.butDeSeöect.UseVisualStyleBackColor = True
-        '
         'lstBoxPerioden
         '
         Me.lstBoxPerioden.FormattingEnabled = True
@@ -271,27 +249,70 @@ Partial Class frmKredDisp
         Me.lstBoxPerioden.Name = "lstBoxPerioden"
         Me.lstBoxPerioden.Size = New System.Drawing.Size(25, 30)
         Me.lstBoxPerioden.TabIndex = 14
+        Me.lstBoxPerioden.Visible = False
         '
         'butCheclLred
         '
-        Me.butCheclLred.Location = New System.Drawing.Point(1582, 99)
+        Me.butCheclLred.Location = New System.Drawing.Point(1529, 21)
         Me.butCheclLred.Name = "butCheclLred"
-        Me.butCheclLred.Size = New System.Drawing.Size(27, 21)
+        Me.butCheclLred.Size = New System.Drawing.Size(84, 38)
         Me.butCheclLred.TabIndex = 15
         Me.butCheclLred.Text = "Check"
         Me.butCheclLred.UseVisualStyleBackColor = True
+        '
+        'TSKredi
+        '
+        Me.TSKredi.Dock = System.Windows.Forms.DockStyle.Bottom
+        Me.TSKredi.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ButDeselect, Me.PRKredi, Me.TSLblNmbr, Me.TSLblType})
+        Me.TSKredi.Location = New System.Drawing.Point(0, 606)
+        Me.TSKredi.Name = "TSKredi"
+        Me.TSKredi.Size = New System.Drawing.Size(1628, 28)
+        Me.TSKredi.Stretch = True
+        Me.TSKredi.TabIndex = 16
+        Me.TSKredi.Text = "TSKredi"
+        '
+        'ButDeselect
+        '
+        Me.ButDeselect.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
+        Me.ButDeselect.Font = New System.Drawing.Font("Segoe UI", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.ButDeselect.Image = CType(resources.GetObject("ButDeselect.Image"), System.Drawing.Image)
+        Me.ButDeselect.ImageAlign = System.Drawing.ContentAlignment.BottomLeft
+        Me.ButDeselect.ImageTransparentColor = System.Drawing.Color.Magenta
+        Me.ButDeselect.Name = "ButDeselect"
+        Me.ButDeselect.Size = New System.Drawing.Size(24, 25)
+        Me.ButDeselect.Text = "X"
+        '
+        'PRKredi
+        '
+        Me.PRKredi.Name = "PRKredi"
+        Me.PRKredi.Size = New System.Drawing.Size(600, 25)
+        '
+        'TSLblType
+        '
+        Me.TSLblType.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
+        Me.TSLblType.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
+        Me.TSLblType.Name = "TSLblType"
+        Me.TSLblType.Size = New System.Drawing.Size(59, 25)
+        Me.TSLblType.Text = "TSLblType"
+        '
+        'TSLblNmbr
+        '
+        Me.TSLblNmbr.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right
+        Me.TSLblNmbr.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text
+        Me.TSLblNmbr.Font = New System.Drawing.Font("Segoe UI", 11.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.TSLblNmbr.Name = "TSLblNmbr"
+        Me.TSLblNmbr.Size = New System.Drawing.Size(18, 25)
+        Me.TSLblNmbr.Text = "0"
         '
         'frmKredDisp
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1628, 609)
+        Me.ClientSize = New System.Drawing.Size(1628, 634)
+        Me.Controls.Add(Me.TSKredi)
         Me.Controls.Add(Me.butCheclLred)
         Me.Controls.Add(Me.lstBoxPerioden)
-        Me.Controls.Add(Me.butDeSeöect)
         Me.Controls.Add(Me.dgvDates)
-        Me.Controls.Add(Me.lblDB)
-        Me.Controls.Add(Me.txtNumber)
         Me.Controls.Add(Me.butImport)
         Me.Controls.Add(Me.dgvInfo)
         Me.Controls.Add(Me.dgvBookingSub)
@@ -303,6 +324,8 @@ Partial Class frmKredDisp
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dsKreditoren, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgvDates, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.TSKredi.ResumeLayout(False)
+        Me.TSKredi.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -320,13 +343,15 @@ Partial Class frmKredDisp
     Public WithEvents mysqlcmdKredSubRead As MySqlConnector.MySqlCommand
     Public WithEvents dsKreditoren As DataSet
     Friend WithEvents butImport As Button
-    Friend WithEvents txtNumber As TextBox
-    Friend WithEvents lblDB As Label
     Friend WithEvents dgvDates As DataGridView
     Friend WithEvents BgWLoadKredi As System.ComponentModel.BackgroundWorker
     Friend WithEvents BgWCheckKredi As System.ComponentModel.BackgroundWorker
     Friend WithEvents BgWImportKredi As System.ComponentModel.BackgroundWorker
-    Friend WithEvents butDeSeöect As Button
     Friend WithEvents lstBoxPerioden As ListBox
     Friend WithEvents butCheclLred As Button
+    Friend WithEvents TSKredi As ToolStrip
+    Friend WithEvents ButDeselect As ToolStripButton
+    Friend WithEvents PRKredi As ToolStripProgressBar
+    Friend WithEvents TSLblType As ToolStripLabel
+    Friend WithEvents TSLblNmbr As ToolStripLabel
 End Class

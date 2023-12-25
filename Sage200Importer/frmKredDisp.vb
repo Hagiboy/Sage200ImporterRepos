@@ -151,7 +151,7 @@ Public Class frmKredDisp
         'Tabellentyp darstellen
         Call FcReadFromSettingsIII("Buchh_RGTableType",
                                               intMandant,
-                                              Me.lblDB.Text)
+                                              Me.TSLblType.Text)
         butCheclLred.Enabled = True
 
         UseWaitCursor = False
@@ -2925,20 +2925,6 @@ Public Class frmKredDisp
 
     End Sub
 
-    Private Sub butDeSeöect_Click(sender As Object, e As EventArgs) Handles butDeSeöect.Click
-
-        'Alle selektierten Records werden deselektiert
-
-        For Each row As DataRow In dsKreditoren.Tables("tblKrediHeadsFromUser").Rows
-            If row("booKredBook") Then
-                row("booKredBook") = False
-            End If
-        Next
-        dsKreditoren.Tables("tblKrediHeadsFromUser").AcceptChanges()
-        'Me.Refresh()
-
-
-    End Sub
 
     Friend Function FcReadFromSettingsIII(strField As String,
                                                 intMandant As Int16,
@@ -3341,7 +3327,7 @@ Public Class frmKredDisp
             intFcReturns = FcInitdgvKrediSub(dgvBookingSub)
             intFcReturns = FcInitdgvDate(dgvDates)
             'Anzahl schreiben
-            txtNumber.Text = dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count.ToString
+            TSLblNmbr.Text = dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count.ToString
             If dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count > 0 Then
                 butImport.Enabled = True
             End If
@@ -3361,6 +3347,7 @@ Public Class frmKredDisp
             objdbConn = Nothing
             objdbMSSQLConn = Nothing
             objdbSQLcommand = Nothing
+            butCheclLred.Enabled = False
             UseWaitCursor = False
             Me.Cursor = Cursors.Default
 
@@ -4919,6 +4906,9 @@ Public Class frmKredDisp
             'End If
 
         Catch ex As Exception
+            If (Err.Number And 65535) = 100 Then
+                'MessageBox.Show(ex.Message, "Kostenart nicht definiert", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            End If
             Return 1
 
         End Try
@@ -6900,10 +6890,12 @@ Public Class frmKredDisp
 
             Else
 
-                strSteuerFeld = objFiBebu.GetSteuerfeld(lngKto.ToString,
+                strSteuerFeld = objfiBuha.GetSteuerfeld(lngKto.ToString,
                                                       strDebiSubText,
                                                       dblBrutto.ToString,
-                                                      strMwStKey)
+                                                      strMwStKey,
+                                                      dblMwSt.ToString,
+                                                      Format(datValuta, "yyyyMMdd"))
 
             End If
             Return 0
@@ -8100,5 +8092,18 @@ Public Class frmKredDisp
 
     End Function
 
+    Private Sub ButDeselect_Click(sender As Object, e As EventArgs) Handles ButDeselect.Click
 
+        'Alle selektierten Records werden deselektiert
+
+        For Each row As DataRow In dsKreditoren.Tables("tblKrediHeadsFromUser").Rows
+            If row("booKredBook") Then
+                row("booKredBook") = False
+            End If
+        Next
+        dsKreditoren.Tables("tblKrediHeadsFromUser").AcceptChanges()
+        'Me.Refresh()
+
+
+    End Sub
 End Class

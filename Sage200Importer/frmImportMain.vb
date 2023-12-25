@@ -886,7 +886,7 @@ Friend Class frmImportMain
             strIdentityName = Strings.Replace(strIdentityName, "\", "/")
             LblIdentity.Text = strIdentityName
             objdbtaskscmd.Connection = objdbConn
-            objdbtaskscmd.CommandText = "SELECT * FROM tblimporttasks WHERE IdentityName='" + strIdentityName + "'"
+            objdbtaskscmd.CommandText = "SELECT * FROM tblimporttasks WHERE IdentityName='" + strIdentityName + "' AND LastActive=true"
             objdbtaskscmd.Connection.Open()
             objdttaksd.Load(objdbtaskscmd.ExecuteReader())
             objdbtaskscmd.Connection.Close()
@@ -1964,11 +1964,14 @@ Friend Class frmImportMain
             objdbtasks.Load(objdbtaskcmd.ExecuteReader())
             If objdbtasks.Rows.Count > 0 Then
                 'update
-                objdbtaskcmd.CommandText = "UPDATE tblimporttasks SET Mandant=" + Convert.ToString(lstBoxMandant.SelectedValue) + ", Periode=" + Convert.ToString(lstBoxPerioden.SelectedIndex) + " WHERE IdentityName='" + LblIdentity.Text + "' AND Type='C'"
+                objdbtaskcmd.CommandText = "UPDATE tblimporttasks SET Mandant=" + Convert.ToString(lstBoxMandant.SelectedValue) + ", Periode=" + Convert.ToString(lstBoxPerioden.SelectedIndex) + ", LastActive=true WHERE IdentityName='" + LblIdentity.Text + "' AND Type='C'"
             Else
                 'insert
                 objdbtaskcmd.CommandText = "INSERT INTO tblimporttasks (IdentityName, Type, Mandant, Periode) VALUES ('" + LblIdentity.Text + "', 'C', " + Convert.ToString(lstBoxMandant.SelectedValue) + ", " + Convert.ToString(lstBoxPerioden.SelectedIndex) + ")"
             End If
+            objdbtaskcmd.ExecuteNonQuery()
+            'Debi auf nicht aktiv setzen
+            objdbtaskcmd.CommandText = "UPDATE tblimporttasks SET LastActive=false WHERE IdentityName='" + LblIdentity.Text + "' AND Type='D'"
             objdbtaskcmd.ExecuteNonQuery()
             objdbtaskcmd.Connection.Close()
 
