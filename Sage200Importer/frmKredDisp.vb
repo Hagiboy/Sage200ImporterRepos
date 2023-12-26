@@ -3615,33 +3615,40 @@ Public Class frmKredDisp
         'Dim strPeriodenInfo As String
         Dim strArPeriode() As String
         Dim strArLogonInfo() As String
+        Dim strLogonInfo() As String
+        Dim strPeriodenInfo As String
         Dim strYear As String
         Dim intPeriodenNr As Int16
         Dim intFctReturns As Int16
         Dim dtPeriods As New DataTable
 
+        Dim objFinanzCopy As New SBSXASLib.AXFinanz
+        'Dim objfiBuhaCopy As New SBSXASLib.AXiFBhg
+
+
         Try
 
             'Login
-            'Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
-            '                        System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
-            '                        System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
-            '                        System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
+            Call objFinanzCopy.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
+                                    System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
 
             intFctReturns = FcReadFromSettingsIII("Buchh200_Name",
                                                 intAccounting,
                                                 strMandant)
 
-            'booAccOk = objFinanz.CheckMandant(strMandant)
+            booAccOk = objFinanzCopy.CheckMandant(strMandant)
 
-            'objFinanz.OpenMandant(strMandant, strPeriod)
+            objFinanzCopy.OpenMandant(strMandant, strPeriod)
 
             'Von Login aktuelle Periode auslesen
+            strLogonInfo = Split(objFinanzCopy.GetLogonInfo(), "{>}")
             'strArLogonInfo = Split(objFinanz.GetLogonInfo(), "{>}")
 
             'Check Periode
-            'intPeriodenNr = objFinanz.ReadPeri(strMandant, strArLogonInfo(7))
-            'strPeriodenInfo = objFinanz.GetPeriListe(0)
+            intPeriodenNr = objFinanzCopy.ReadPeri(strMandant, strLogonInfo(7))
+            strPeriodenInfo = objFinanzCopy.GetPeriListe(0)
 
             strArPeriode = Split(strPeriodenInfo, "{>}")
 
@@ -7396,10 +7403,10 @@ Public Class frmKredDisp
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
 
-            objdbconn.Open()
+            'objdbconn.Open()
             strMandant = FcReadFromSettingsII("Buchh200_Name",
                                             intAccounting)
-            objdbconn.Close()
+            'objdbconn.Close()
             booAccOk = objFinanzCopy.CheckMandant(strMandant)
 
             'Open Mandantg
@@ -7569,33 +7576,33 @@ Public Class frmKredDisp
 
     End Function
 
-    Friend Function FcPGVKTreatmentYC(ByVal tblKrediB As DataTable,
-                                                ByVal intKRGNbr As Int32,
-                                                ByVal intKBelegNr As Int32,
-                                                ByVal strCur As String,
-                                                ByVal datValuta As Date,
-                                                ByVal strIType As String,
-                                                ByVal datPGVStart As Date,
-                                                ByVal datPGVEnd As Date,
-                                                ByVal intITotal As Int16,
-                                                ByVal intITY As Int16,
-                                                ByVal intINY As Int16,
-                                                ByVal intAcctTY As Int16,
-                                                ByVal intAcctNY As Int16,
-                                                ByVal strPeriode As String,
-                                                ByVal objdbcon As MySqlConnection,
-                                                ByVal objsqlcon As SqlConnection,
-                                                ByVal objsqlcmd As SqlCommand,
-                                                ByVal intAccounting As Int16,
-                                                ByVal objdtInfo As DataTable,
-                                                ByVal strYear As String,
-                                                ByRef intTeqNbr As Int16,
-                                                ByRef intTeqNbrLY As Int16,
-                                                ByRef intTeqNbrPLY As Int16,
-                                                ByRef strPGVType As String,
-                                                ByRef datPeriodFrom As Date,
-                                                ByRef datPeriodTo As Date,
-                                                ByRef strPeriodStatus As String) As Int16
+    Friend Function FcPGVKTreatmentYC(tblKrediB As DataTable,
+                                      intKRGNbr As Int32,
+                                      intKBelegNr As Int32,
+                                      strCur As String,
+                                      datValuta As Date,
+                                      strIType As String,
+                                      datPGVStart As Date,
+                                      datPGVEnd As Date,
+                                      intITotal As Int16,
+                                      intITY As Int16,
+                                      intINY As Int16,
+                                      intAcctTY As Int16,
+                                      intAcctNY As Int16,
+                                      strPeriode As String,
+                                      objdbcon As MySqlConnection,
+                                      objsqlcon As SqlConnection,
+                                      objsqlcmd As SqlCommand,
+                                      intAccounting As Int16,
+                                      objdtInfo As DataTable,
+                                      strYear As String,
+                                      ByRef intTeqNbr As Int16,
+                                      ByRef intTeqNbrLY As Int16,
+                                      ByRef intTeqNbrPLY As Int16,
+                                      ByRef strPGVType As String,
+                                      ByRef datPeriodFrom As Date,
+                                      ByRef datPeriodTo As Date,
+                                      ByRef strPeriodStatus As String) As Int16
 
         Dim dblNettoBetrag As Double
         Dim intSollKonto As Int16

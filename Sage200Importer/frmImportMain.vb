@@ -154,11 +154,14 @@ Friend Class frmImportMain
             objdbtasks.Load(objdbtaskcmd.ExecuteReader())
             If objdbtasks.Rows.Count > 0 Then
                 'update
-                objdbtaskcmd.CommandText = "UPDATE tblimporttasks SET Mandant=" + Convert.ToString(lstBoxMandant.SelectedValue) + ", Periode=" + Convert.ToString(lstBoxPerioden.SelectedIndex) + " WHERE IdentityName='" + LblIdentity.Text + "' AND Type='D'"
+                objdbtaskcmd.CommandText = "UPDATE tblimporttasks SET Mandant=" + Convert.ToString(lstBoxMandant.SelectedValue) + ", Periode=" + Convert.ToString(lstBoxPerioden.SelectedIndex) + ", LastActive=true WHERE IdentityName='" + LblIdentity.Text + "' AND Type='D'"
             Else
                 'insert
                 objdbtaskcmd.CommandText = "INSERT INTO tblimporttasks (IdentityName, Type, Mandant, Periode) VALUES ('" + LblIdentity.Text + "', 'D', " + Convert.ToString(lstBoxMandant.SelectedValue) + ", " + Convert.ToString(lstBoxPerioden.SelectedIndex) + ")"
             End If
+            objdbtaskcmd.ExecuteNonQuery()
+            'Kredi auf nicht aktiv setzen
+            objdbtaskcmd.CommandText = "UPDATE tblimporttasks SET LastActive=false WHERE IdentityName='" + LblIdentity.Text + "' AND Type='C'"
             objdbtaskcmd.ExecuteNonQuery()
             objdbtaskcmd.Connection.Close()
 
@@ -178,6 +181,8 @@ Friend Class frmImportMain
                 'frmDebDisp.Cursor = Cursors.WaitCursor
                 frmDebDisp.Text = "Debitor " + lstBoxMandant.Text
                 frmDebDisp.MdiParent = Me
+                frmDebDisp.butCheckDeb.Enabled = False
+                frmDebDisp.butImport.Enabled = False
                 frmDebDisp.Show()
                 frmDebDisp.Top = 100
                 'Für korrekte Plazierung
@@ -193,6 +198,8 @@ Friend Class frmImportMain
                 For Each item As Object In lstBoxPerioden.Items
                     frmDebDisp.lstBoxPerioden.Items.Add(item)
                 Next
+                'Select same item
+                frmDebDisp.lstBoxPerioden.SelectedItem = lstBoxPerioden.SelectedItem
                 'frmDebDisp.FcDebiDisplay(lstBoxMandant.SelectedValue,
                 '                         lstBoxMandant,
                 '                         lstBoxPerioden)
@@ -2005,6 +2012,8 @@ Friend Class frmImportMain
                 For Each item As Object In lstBoxPerioden.Items
                     frmKredDisp.lstBoxPerioden.Items.Add(item)
                 Next
+                'Select same item
+                frmKredDisp.lstBoxPerioden.SelectedItem = lstBoxPerioden.SelectedItem
                 'frmKredDisp.FcKrediDisplay(lstBoxMandant.SelectedValue,
                 '                           lstBoxMandant,
                 '                           lstBoxPerioden)
