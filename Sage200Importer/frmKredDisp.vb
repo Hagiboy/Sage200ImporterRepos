@@ -472,7 +472,7 @@ Public Class frmKredDisp
 
         Try
 
-            dgvBookings.ShowCellToolTips = False
+            dgvBookings.ShowCellToolTips = True
             dgvBookings.AllowUserToAddRows = False
             dgvBookings.AllowUserToDeleteRows = False
             Dim okcol As New DataGridViewCheckBoxColumn
@@ -606,7 +606,7 @@ Public Class frmKredDisp
 
         Try
 
-            dgvBookingSub.ShowCellToolTips = False
+            dgvBookingSub.ShowCellToolTips = True
             dgvBookingSub.AllowUserToAddRows = False
             dgvBookingSub.AllowUserToDeleteRows = False
             'dgvBookingSub.Columns("strRGNr").DisplayIndex = 0
@@ -1682,6 +1682,7 @@ Public Class frmKredDisp
             objFinanz.OpenMandant(strMandant, BgWCheckKrediArgsInProc.strPeriode)
 
             objfiBuha = objFinanz.GetFibuObj()
+            objdbPIFb = objfiBuha.GetCheckObj()
             objKrBuha = objFinanz.GetKrediObj()
             objFiBebu = objFinanz.GetBeBuObj()
 
@@ -3182,7 +3183,7 @@ Public Class frmKredDisp
         Dim BgWCheckKrediLocArgs As New BgWCheckDebitArgs
         'Dim objdbtasks As New DataTable
 
-        'Dim objFinanz As New SBSXASLib.AXFinanz
+        Dim objFinanzCopy As New SBSXASLib.AXFinanz
         'Dim objfiBuha As New SBSXASLib.AXiFBhg
         'Dim objdbBuha As New SBSXASLib.AXiDbBhg
         'Dim objdbPIFb As New SBSXASLib.AXiPlFin
@@ -3232,15 +3233,12 @@ Public Class frmKredDisp
             col6.Caption = "S"
             dsKreditoren.Tables("tblKreditorenDates").Columns.Add(col6)
 
+            strPeriode = lstBoxPerioden.GetItemText(lstBoxPerioden.SelectedItem)
+
             Call FcLoginSage3(objdbConn,
                                   objdbMSSQLConn,
                                   objdbSQLcommand,
-                                  objFinanz,
-                                  objfiBuha,
-                                  objdbBuha,
-                                  objdbPIFb,
-                                  objFiBebu,
-                                  objKrBuha,
+                                  objFinanzCopy,
                                   intMandant,
                                   dsKreditoren.Tables("tblKreditorenInfo"),
                                   dsKreditoren.Tables("tblKreditorenDates"),
@@ -3316,11 +3314,16 @@ Public Class frmKredDisp
                 Application.DoEvents()
             Loop
 
+            'Tooltip für Fehler hier einbauen
+
             'Grid neu aufbauen
             dgvDates.DataSource = dsKreditoren.Tables("tblKreditorenDates")
             dgvInfo.DataSource = dsKreditoren.Tables("tblKreditorenInfo")
             dgvBookings.DataSource = dsKreditoren.Tables("tblKrediHeadsFromUser")
             dgvBookingSub.DataSource = dsKreditoren.Tables("tblKrediSubsFromUser")
+            For Each dgvr As DataGridViewRow In dgvBookings.Rows
+                dgvr.Cells("strKredStatusText").ToolTipText = "Explained Error Codes"
+            Next
 
             intFcReturns = FcInitdgvInfo(dgvInfo)
             intFcReturns = FcInitdgvKreditoren(dgvBookings)
@@ -3360,11 +3363,6 @@ Public Class frmKredDisp
                                        ByRef objsqlConn As SqlClient.SqlConnection,
                                        ByRef objsqlCom As SqlClient.SqlCommand,
                                        ByRef objFinanz As SBSXASLib.AXFinanz,
-                                       ByRef objfiBuha As SBSXASLib.AXiFBhg,
-                                       ByRef objdbBuha As SBSXASLib.AXiDbBhg,
-                                       ByRef objdbPIFb As SBSXASLib.AXiPlFin,
-                                       ByRef objFiBebu As SBSXASLib.AXiBeBu,
-                                       ByRef objkrBuha As SBSXASLib.AXiKrBhg,
                                        ByVal intAccounting As Int16,
                                        ByRef objdtInfo As DataTable,
                                        ByRef objdtDates As DataTable,
@@ -3494,29 +3492,29 @@ Public Class frmKredDisp
             '    objfiBuha = Nothing
             'End If
             'objfiBuha = New SBSXASLib.AXiFBhg
-            objfiBuha = objFinanz.GetFibuObj()
+            'objfiBuha = objFinanz.GetFibuObj()
             'Debitor öffnen
             'If Not IsNothing(objdbBuha) Then
             '    objdbBuha = Nothing
             'End If
             'objdbBuha = New SBSXASLib.AXiDbBhg
-            objdbBuha = objFinanz.GetDebiObj()
+            'objdbBuha = objFinanz.GetDebiObj()
             'If Not IsNothing(objdbPIFb) Then
             '    objdbPIFb = Nothing
             'End If
             'objdbPIFb = New SBSXASLib.AXiPlFin
-            objdbPIFb = objfiBuha.GetCheckObj()
+            'objdbPIFb = objfiBuha.GetCheckObj()
             'If Not IsNothing(objFiBebu) Then
             '    objFiBebu = Nothing
             'End If
             'objFiBebu = New SBSXASLib.AXiBeBu
-            objFiBebu = objFinanz.GetBeBuObj()
+            'objFiBebu = objFinanz.GetBeBuObj()
             'Kreditor
             'If Not IsNothing(objkrBuha) Then
             '    objkrBuha = Nothing
             'End If
             'objkrBuha = New SBSXASLib.AXiKrBhg
-            objkrBuha = objFinanz.GetKrediObj
+            'objKrBuha = objFinanz.GetKrediObj
 
             'Application.DoEvents()
 

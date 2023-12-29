@@ -199,7 +199,7 @@ Partial Class frmDebDisp
         '
         Me.TSDebis.Dock = System.Windows.Forms.DockStyle.Bottom
         Me.TSDebis.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ButDeselect, Me.PRKredi, Me.TSLblDebType, Me.TSLblNmbr})
-        Me.TSDebis.Location = New System.Drawing.Point(0, 596)
+        Me.TSDebis.Location = New System.Drawing.Point(0, 619)
         Me.TSDebis.Name = "TSDebis"
         Me.TSDebis.Size = New System.Drawing.Size(1581, 27)
         Me.TSDebis.Stretch = True
@@ -240,7 +240,7 @@ Partial Class frmDebDisp
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(1581, 623)
+        Me.ClientSize = New System.Drawing.Size(1581, 646)
         Me.Controls.Add(Me.TSDebis)
         Me.Controls.Add(Me.lstBoxPerioden)
         Me.Controls.Add(Me.butCheckDeb)
