@@ -1296,7 +1296,7 @@ ErrorHandler:
             'Auf aktuelles Jahr gehen
             'Bei Jahresanfang
             'cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year("2022-12-31")).ToString)
-            lstBoxPeriods.SelectedIndex = lstBoxPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now())).ToString)
+            lstBoxPeriods.SelectedIndex = lstBoxPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now()) - 1).ToString)
 
         Catch ex As Exception
             MessageBox.Show(ex.Message, "Periodendefinition lesen")

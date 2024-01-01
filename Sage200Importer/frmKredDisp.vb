@@ -2091,7 +2091,7 @@ Public Class frmKredDisp
                             strStatus += " AufwKto n/a"
                             row("strKredBez") = "Aufwandskonto n/a"
                         Else
-                            strStatus += " nicht erstellt."
+                            strStatus += " nicht erstellt"
                             row("strKredBez") = "n/a"
                         End If
                         row("lngKredNbr") = intKreditorNew
@@ -3173,7 +3173,7 @@ Public Class frmKredDisp
     Private Sub butCheclLred_Click(sender As Object, e As EventArgs) Handles butCheclLred.Click
 
         Dim objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
-        'Dim objdbtaskcmd As New MySqlCommand
+        Dim objdbtaskcmd As New MySqlCommand
         Dim objdbMSSQLConn As New SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
         Dim objdbSQLcommand As New SqlCommand
 
@@ -3181,6 +3181,11 @@ Public Class frmKredDisp
         Dim strPeriode As String
         Dim strYearCh As String
         Dim BgWCheckKrediLocArgs As New BgWCheckDebitArgs
+        Dim strErrC() As String
+        Dim objtblErrC As New DataTable()
+        Dim strErrFound() As DataRow
+        Dim strErrDecoded As String
+        Dim strErrResp As String
         'Dim objdbtasks As New DataTable
 
         Dim objFinanzCopy As New SBSXASLib.AXFinanz
@@ -3192,6 +3197,12 @@ Public Class frmKredDisp
 
 
         Try
+
+            objdbtaskcmd.Connection = objdbConn
+            objdbtaskcmd.CommandText = "SELECT * FROM t_importer_errc"
+            objdbtaskcmd.Connection.Open()
+            objtblErrC.Load(objdbtaskcmd.ExecuteReader())
+            objdbtaskcmd.Connection.Close()
 
             Me.Cursor = Cursors.WaitCursor
             UseWaitCursor = True
@@ -3314,15 +3325,36 @@ Public Class frmKredDisp
                 Application.DoEvents()
             Loop
 
-            'Tooltip für Fehler hier einbauen
 
             'Grid neu aufbauen
             dgvDates.DataSource = dsKreditoren.Tables("tblKreditorenDates")
             dgvInfo.DataSource = dsKreditoren.Tables("tblKreditorenInfo")
             dgvBookings.DataSource = dsKreditoren.Tables("tblKrediHeadsFromUser")
             dgvBookingSub.DataSource = dsKreditoren.Tables("tblKrediSubsFromUser")
+            'Tooltip für Fehler
             For Each dgvr As DataGridViewRow In dgvBookings.Rows
-                dgvr.Cells("strKredStatusText").ToolTipText = "Explained Error Codes"
+                strErrDecoded = ""
+                strErrC = Split(dgvr.Cells("strKredStatusText").Value, ",")
+                For Each strErrCElement As String In strErrC
+                    strErrResp = ""
+                    strErrFound = objtblErrC.Select("code Like '" + Strings.Trim(strErrCElement) + "'")
+                    If strErrFound.Length > 0 Then
+                        If strErrFound(0).Item("resp_it") > 0 Then
+                            strErrResp = "IT " + strErrFound(0).Item("resp_it").ToString
+                        End If
+                        If strErrFound(0).Item("resp_ac") > 0 Then
+                            strErrResp += IIf(strErrResp <> "", ", ", "") + "AC " + strErrFound(0).Item("resp_ac").ToString
+                        End If
+                        If strErrFound(0).Item("resp_bs") > 0 Then
+                            strErrResp += IIf(strErrResp <> "", ", ", "") + "BS " + strErrFound(0).Item("resp_bs").ToString
+                        End If
+                        If strErrFound(0).Item("resp_ab") > 0 Then
+                            strErrResp += IIf(strErrResp <> "", ", ", "") + "AB " + strErrFound(0).Item("resp_ab").ToString
+                        End If
+                        strErrDecoded += strErrFound(0).Item("explained") + vbTab + strErrResp + vbCrLf
+                    End If
+                Next
+                dgvr.Cells("strKredStatusText").ToolTipText = strErrDecoded
             Next
 
             intFcReturns = FcInitdgvInfo(dgvInfo)
