@@ -8,7 +8,7 @@ Imports System.Runtime.InteropServices
 
 ' Werte der Assemblyattribute überprüfen
 
-<Assembly: AssemblyTitle("Sage200Importer")>
+<Assembly: AssemblyTitle("Sage200ImporterV2")>
 <Assembly: AssemblyDescription("")>
 <Assembly: AssemblyCompany("")>
 <Assembly: AssemblyProduct("Sage200Importer")>
@@ -31,5 +31,5 @@ Imports System.Runtime.InteropServices
 ' übernehmen, indem Sie "*" eingeben:
 ' <Assembly: AssemblyVersion("1.0.*")>
 
-<Assembly: AssemblyVersion("1.0.12.12")>
+<Assembly: AssemblyVersion("1.0.12.15")>
 <Assembly: AssemblyFileVersion("1.0.0.0")>

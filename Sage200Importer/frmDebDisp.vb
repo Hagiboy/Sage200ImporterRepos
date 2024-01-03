@@ -526,7 +526,7 @@ Public Class frmDebDisp
 
     Friend Function FcInitdgvBookings(ByRef dgvBookings As DataGridView) As Int16
 
-        dgvBookings.ShowCellToolTips = False
+        dgvBookings.ShowCellToolTips = True
         dgvBookings.AllowUserToAddRows = False
         dgvBookings.AllowUserToDeleteRows = False
         Dim okcol As New DataGridViewCheckBoxColumn
@@ -633,7 +633,7 @@ Public Class frmDebDisp
 
         dgvBookingSub.RowHeadersWidth = 24
 
-        dgvBookingSub.ShowCellToolTips = False
+        dgvBookingSub.ShowCellToolTips = True
         dgvBookingSub.AllowUserToAddRows = False
         dgvBookingSub.AllowUserToDeleteRows = False
         dgvBookingSub.Columns("strRGNr").DisplayIndex = 0
@@ -3717,7 +3717,7 @@ Public Class frmDebDisp
     Private Sub butCheckDeb_Click(sender As Object, e As EventArgs) Handles butCheckDeb.Click
 
         Dim objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
-        'Dim objdbtaskcmd As New MySqlCommand
+        Dim objdbtaskcmd As New MySqlCommand
         Dim objdbMSSQLConn As New SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
         Dim objdbSQLcommand As New SqlCommand
 
@@ -3725,6 +3725,11 @@ Public Class frmDebDisp
         Dim strPeriode As String
         Dim strYearCh As String
         Dim BgWCheckDebitLocArgs As New BgWCheckDebitArgs
+        Dim strErrC() As String
+        Dim objtblErrC As New DataTable()
+        Dim strErrFound() As DataRow
+        Dim strErrDecoded As String
+        Dim strErrResp As String
         'Dim objdbtasks As New DataTable
 
         'Dim intTeqNbr As Int32
@@ -3741,6 +3746,12 @@ Public Class frmDebDisp
 
 
         Try
+
+            objdbtaskcmd.Connection = objdbConn
+            objdbtaskcmd.CommandText = "SELECT * FROM t_importer_errc"
+            objdbtaskcmd.Connection.Open()
+            objtblErrC.Load(objdbtaskcmd.ExecuteReader())
+            objdbtaskcmd.Connection.Close()
 
             Me.Cursor = Cursors.WaitCursor
             UseWaitCursor = True
@@ -3862,10 +3873,37 @@ Public Class frmDebDisp
                 Application.DoEvents()
             Loop
 
+            'Grid neu aufbauen
             dgvDates.DataSource = dsDebitoren.Tables("tblDebitorenDates")
             dgvInfo.DataSource = dsDebitoren.Tables("tblDebitorenInfo")
             dgvBookings.DataSource = dsDebitoren.Tables("tblDebiHeadsFromUser")
             dgvBookingSub.DataSource = dsDebitoren.Tables("tblDebiSubsFromUser")
+
+            'Tooltip für Fehler
+            For Each dgvr As DataGridViewRow In dgvBookings.Rows
+                strErrDecoded = ""
+                strErrC = Split(dgvr.Cells("strDebStatusText").Value, ",")
+                For Each strErrCElement As String In strErrC
+                    strErrResp = ""
+                    strErrFound = objtblErrC.Select("code Like '" + Strings.Trim(strErrCElement) + "'")
+                    If strErrFound.Length > 0 Then
+                        If strErrFound(0).Item("resp_it") > 0 Then
+                            strErrResp = "IT " + strErrFound(0).Item("resp_it").ToString
+                        End If
+                        If strErrFound(0).Item("resp_ac") > 0 Then
+                            strErrResp += IIf(strErrResp <> "", ", ", "") + "AC " + strErrFound(0).Item("resp_ac").ToString
+                        End If
+                        If strErrFound(0).Item("resp_bs") > 0 Then
+                            strErrResp += IIf(strErrResp <> "", ", ", "") + "BS " + strErrFound(0).Item("resp_bs").ToString
+                        End If
+                        If strErrFound(0).Item("resp_ab") > 0 Then
+                            strErrResp += IIf(strErrResp <> "", ", ", "") + "AB " + strErrFound(0).Item("resp_ab").ToString
+                        End If
+                        strErrDecoded += strErrFound(0).Item("explained") + vbTab + strErrResp + vbCrLf
+                    End If
+                Next
+                dgvr.Cells("strDebStatusText").ToolTipText = strErrDecoded
+            Next
 
             intFcReturns = FcInitdgvInfo(dgvInfo)
             intFcReturns = FcInitdgvBookings(dgvBookings)

@@ -168,13 +168,13 @@ Friend Class frmImportMain
 
             'Prüfen ob schon eine Insstanz für Mandant existiert
             For Each frm As Form In Application.OpenForms()
-                If frm.Text = "Debitor " + lstBoxMandant.Text Then
+                If frm.Text Like "*Debitor*" Then
                     'Es existiert schon eine Instanz
                     intNbrDebiForms += 1
                 End If
             Next
             If intNbrDebiForms > 0 Then
-                MessageBox.Show("Es ist schone ein Formular für " + "Debitor " + lstBoxMandant.Text + " geöffnet.", "Pro Mandant nur 1 Formular möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                MessageBox.Show("Es ist schone ein Formular für " + " einen Debitor geöffnet.", "Nur 1 Debitor-Formular möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
             Else
                 intNbrDebiForms = 0
                 Dim frmDebDisp As New frmDebDisp
@@ -1984,12 +1984,12 @@ Friend Class frmImportMain
 
             'Prüfen, ob schon eine Instanz für mandant existiert
             For Each frm As Form In Application.OpenForms()
-                If frm.Text = "Kreditor " + lstBoxMandant.Text Then
+                If frm.Text Like "*Kreditor*" Then
                     intNbrKrediForms += 1
                 End If
             Next
             If intNbrKrediForms > 0 Then
-                MessageBox.Show("Es ist schone ein Formular für " + "Kredtor " + lstBoxMandant.Text + " geöffnet.", "Pro Mandant nur 1 Formular möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+                MessageBox.Show("Es ist schone ein Formular für Kredtor geöffnet.", "Nur 1 Kreditoren-Formular möglich", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
             Else
                 intNbrKrediForms = 0
                 Dim frmKredDisp As New frmKredDisp
