@@ -2022,6 +2022,9 @@ Public Class frmDebDisp
         Dim nrow As DataRow
         Dim intFcReturns As Int16
         Dim strFcReturns As String
+        Dim intActRGNbr As Int32
+        Dim intTotRGs As Int32
+
 
         Try
 
@@ -2070,7 +2073,14 @@ Public Class frmDebDisp
             datValutaCorrect = BgWCheckDebiArgsInProc.datValutaCor
             'dsDebitoren.Tables("tblDebiHeadsFromUser").AcceptChanges()
 
+            intTotRGs = dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count
+            intActRGNbr = 0
+
             For Each row As DataRow In dsDebitoren.Tables("tblDebiHeadsFromUser").Rows
+
+                'Progress Bar
+                intActRGNbr += 1
+                BgWCheckDebi.ReportProgress(100 / intTotRGs * intActRGNbr)
 
                 'If row("strDebRGNbr") = "101261" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
@@ -2845,6 +2855,8 @@ Public Class frmDebDisp
         Dim strErfassungsDatum As String
         Dim intFcReturns As Int16
         Dim strFcreturns As String
+        Dim intActRGNbr As Int32
+        Dim intTotRGs As Int32
 
 
         'Dim objFinanz As New SBSXASLib.AXFinanz
@@ -2894,8 +2906,15 @@ Public Class frmDebDisp
             intFcReturns = FcReadFromSettingsIII("Buchh_ErfOPExt", BgWImportDebiArgsInProc.intMandant, strFcreturns)
             booErfOPExt = Convert.ToBoolean(Convert.ToInt16(strFcreturns))
 
+            intTotRGs = dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count
+            intActRGNbr = 0
+
             'Kopfbuchung
-            For Each row In Me.dsDebitoren.Tables("tblDebiHeadsFromUser").Rows
+            For Each row In dsDebitoren.Tables("tblDebiHeadsFromUser").Rows
+
+                'Progress - Bar
+                intActRGNbr += 1
+                BgWImportDebi.ReportProgress(100 / intTotRGs * intActRGNbr)
 
                 If IIf(IsDBNull(row("booDebBook")), False, row("booDebBook")) Then
 
@@ -4487,7 +4506,7 @@ Public Class frmDebDisp
             objdtDates.Rows.Add(strYear, "GJ Mandant", Date.ParseExact(strArPeriode(3), "yyyyMMdd", System.Globalization.CultureInfo.CurrentCulture), Date.ParseExact(strArPeriode(4), "yyyyMMdd", System.Globalization.CultureInfo.CurrentCulture), "O")
             objdtDates.Rows.Add(strYear, "Buchungen", Date.ParseExact(strArPeriode(5), "yyyyMMdd", System.Globalization.CultureInfo.CurrentCulture), Date.ParseExact(strArPeriode(6), "yyyyMMdd", System.Globalization.CultureInfo.CurrentCulture), strArPeriode(2))
 
-            intFctReturns = FcReadPeriodenDef3(intPeriodenNr,
+            intFctReturns = FcReadPeriodenDef3(strArPeriode(8),
                                                     objdtDates,
                                                     strYear)
 
@@ -9261,6 +9280,30 @@ Public Class frmDebDisp
         dsDebitoren.Tables("tblDebiHeadsFromUser").AcceptChanges()
         'Me.Refresh()
 
+
+    End Sub
+
+    Private Sub BgWCheckDebi_ProgressChanged(sender As Object, e As System.ComponentModel.ProgressChangedEventArgs) Handles BgWCheckDebi.ProgressChanged
+
+        Me.PRDebi.Value = e.ProgressPercentage
+
+    End Sub
+
+    Private Sub BgWCheckDebi_RunWorkerCompleted(sender As Object, e As System.ComponentModel.RunWorkerCompletedEventArgs) Handles BgWCheckDebi.RunWorkerCompleted
+
+        Me.PRDebi.Value = 0
+
+    End Sub
+
+    Private Sub BgWImportDebi_ProgressChanged(sender As Object, e As System.ComponentModel.ProgressChangedEventArgs) Handles BgWImportDebi.ProgressChanged
+
+        Me.PRDebi.Value = e.ProgressPercentage
+
+    End Sub
+
+    Private Sub BgWImportDebi_RunWorkerCompleted(sender As Object, e As System.ComponentModel.RunWorkerCompletedEventArgs) Handles BgWImportDebi.RunWorkerCompleted
+
+        Me.PRDebi.Value = 0
 
     End Sub
 End Class

@@ -1663,6 +1663,8 @@ Public Class frmKredDisp
         Dim selsubrow() As DataRow
         Dim intFcReturns As Int16
         Dim strFcReturns As String
+        Dim intActRGNbr As Int32
+        Dim intTotRGs As Int32
 
         Try
 
@@ -1694,7 +1696,12 @@ Public Class frmKredDisp
             booLeaveSubText = IIf(FcReadFromSettingsII("Buchh_KSubLeaveText", BgWCheckKrediArgsInProc.intMandant) = "0", False, True)
             booDiffSubText = IIf(FcReadFromSettingsII("Buchh_KSubTextSpecial", BgWCheckKrediArgsInProc.intMandant) = "0", False, True)
 
+            intTotRGs = dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count
+            intActRGNbr = 0
             For Each row As DataRow In dsKreditoren.Tables("tblKrediHeadsFromUser").Rows
+
+                intActRGNbr += 1
+                BgWCheckKredi.ReportProgress(100 / intTotRGs * intActRGNbr)
 
                 'If row("lngKredID") = "117383" Then Stop
                 'Runden
@@ -2395,6 +2402,9 @@ Public Class frmKredDisp
         Dim strSteuerFeldHaben As String
         Dim strBeBuEintragHaben As String
         Dim strKRGReferTo As String
+        Dim intActRGNbr As Int32
+        Dim intTotRGs As Int32
+
 
         'Dim objFinanz As New SBSXASLib.AXFinanz
         'Dim objfiBuha As New SBSXASLib.AXiFBhg
@@ -2432,8 +2442,14 @@ Public Class frmKredDisp
             'objFiBebu = objFinanz.GetBeBuObj()
             'objKrBuha = objFinanz.GetKrediObj()
 
+            intTotRGs = dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count
+            intActRGNbr = 0
             'Kopfbuchung
-            For Each row As DataRow In Me.dsKreditoren.Tables("tblKrediHeadsFromUser").Rows
+            For Each row As DataRow In dsKreditoren.Tables("tblKrediHeadsFromUser").Rows
+
+                'Für Progress-Bar
+                intActRGNbr += 1
+                BgWImportKredi.ReportProgress(100 / intTotRGs * intActRGNbr)
 
                 If IIf(IsDBNull(row("booKredBook")), False, row("booKredBook")) Then
 
@@ -3687,7 +3703,7 @@ Public Class frmKredDisp
             objdtDates.Rows.Add(strYear, "GJ Mandant", Date.ParseExact(strArPeriode(3), "yyyyMMdd", System.Globalization.CultureInfo.CurrentCulture), Date.ParseExact(strArPeriode(4), "yyyyMMdd", System.Globalization.CultureInfo.CurrentCulture), "O")
             objdtDates.Rows.Add(strYear, "Buchungen", Date.ParseExact(strArPeriode(5), "yyyyMMdd", System.Globalization.CultureInfo.CurrentCulture), Date.ParseExact(strArPeriode(6), "yyyyMMdd", System.Globalization.CultureInfo.CurrentCulture), strArPeriode(2))
 
-            intFctReturns = FcReadPeriodenDef3(intPeriodenNr,
+            intFctReturns = FcReadPeriodenDef3(strArPeriode(8),
                                                     objdtDates,
                                                     strYear)
 
@@ -8141,6 +8157,30 @@ Public Class frmKredDisp
         dsKreditoren.Tables("tblKrediHeadsFromUser").AcceptChanges()
         'Me.Refresh()
 
+
+    End Sub
+
+    Private Sub BgWCheckKredi_ProgressChanged(sender As Object, e As System.ComponentModel.ProgressChangedEventArgs) Handles BgWCheckKredi.ProgressChanged
+
+        Me.PRKredi.Value = e.ProgressPercentage
+
+    End Sub
+
+    Private Sub BgWCheckKredi_RunWorkerCompleted(sender As Object, e As System.ComponentModel.RunWorkerCompletedEventArgs) Handles BgWCheckKredi.RunWorkerCompleted
+
+        Me.PRKredi.Value = 0
+
+    End Sub
+
+    Private Sub BgWImportKredi_ProgressChanged(sender As Object, e As System.ComponentModel.ProgressChangedEventArgs) Handles BgWImportKredi.ProgressChanged
+
+        Me.PRKredi.Value = e.ProgressPercentage
+
+    End Sub
+
+    Private Sub BgWImportKredi_RunWorkerCompleted(sender As Object, e As System.ComponentModel.RunWorkerCompletedEventArgs) Handles BgWImportKredi.RunWorkerCompleted
+
+        Me.PRKredi.Value = 0
 
     End Sub
 End Class

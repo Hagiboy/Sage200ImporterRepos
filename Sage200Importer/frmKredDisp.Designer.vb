@@ -238,9 +238,11 @@ Partial Class frmKredDisp
         '
         'BgWCheckKredi
         '
+        Me.BgWCheckKredi.WorkerReportsProgress = True
         '
         'BgWImportKredi
         '
+        Me.BgWImportKredi.WorkerReportsProgress = True
         '
         'lstBoxPerioden
         '

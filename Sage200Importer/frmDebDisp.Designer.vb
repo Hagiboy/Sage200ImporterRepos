@@ -45,7 +45,7 @@ Partial Class frmDebDisp
         Me.lstBoxPerioden = New System.Windows.Forms.ListBox()
         Me.TSDebis = New System.Windows.Forms.ToolStrip()
         Me.ButDeselect = New System.Windows.Forms.ToolStripButton()
-        Me.PRKredi = New System.Windows.Forms.ToolStripProgressBar()
+        Me.PRDebi = New System.Windows.Forms.ToolStripProgressBar()
         Me.TSLblDebType = New System.Windows.Forms.ToolStripLabel()
         Me.TSLblNmbr = New System.Windows.Forms.ToolStripLabel()
         CType(Me.dgvBookings, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -173,9 +173,11 @@ Partial Class frmDebDisp
         '
         'BgWCheckDebi
         '
+        Me.BgWCheckDebi.WorkerReportsProgress = True
         '
         'BgWImportDebi
         '
+        Me.BgWImportDebi.WorkerReportsProgress = True
         '
         'butCheckDeb
         '
@@ -198,7 +200,7 @@ Partial Class frmDebDisp
         'TSDebis
         '
         Me.TSDebis.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.TSDebis.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ButDeselect, Me.PRKredi, Me.TSLblDebType, Me.TSLblNmbr})
+        Me.TSDebis.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ButDeselect, Me.PRDebi, Me.TSLblDebType, Me.TSLblNmbr})
         Me.TSDebis.Location = New System.Drawing.Point(0, 619)
         Me.TSDebis.Name = "TSDebis"
         Me.TSDebis.Size = New System.Drawing.Size(1581, 27)
@@ -216,10 +218,10 @@ Partial Class frmDebDisp
         Me.ButDeselect.Size = New System.Drawing.Size(23, 24)
         Me.ButDeselect.Text = "X"
         '
-        'PRKredi
+        'PRDebi
         '
-        Me.PRKredi.Name = "PRKredi"
-        Me.PRKredi.Size = New System.Drawing.Size(600, 24)
+        Me.PRDebi.Name = "PRDebi"
+        Me.PRDebi.Size = New System.Drawing.Size(600, 24)
         '
         'TSLblDebType
         '
@@ -285,7 +287,7 @@ Partial Class frmDebDisp
     Friend WithEvents lstBoxPerioden As ListBox
     Friend WithEvents TSDebis As ToolStrip
     Friend WithEvents ButDeselect As ToolStripButton
-    Friend WithEvents PRKredi As ToolStripProgressBar
+    Friend WithEvents PRDebi As ToolStripProgressBar
     Friend WithEvents TSLblDebType As ToolStripLabel
     Friend WithEvents TSLblNmbr As ToolStripLabel
 End Class
