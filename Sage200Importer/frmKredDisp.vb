@@ -2227,16 +2227,16 @@ Public Class frmKredDisp
                 'PayType 15
                 If Mid(strBitLog, 15, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "PType "
-                    If Mid(strBitLog, 14, 1) = "4" Then
+                    If Mid(strBitLog, 15, 1) = "4" Then
                         strStatus += "NoR"
-                    ElseIf Mid(strBitLog, 14, 1) = "6" Then
+                    ElseIf Mid(strBitLog, 15, 1) = "6" Then
                         strStatus += "BRef"
-                    ElseIf Mid(strBitLog, 14, 1) = "7" Then
+                    ElseIf Mid(strBitLog, 15, 1) = "7" Then
                         strStatus += "QIBAN"
-                    ElseIf Mid(strBitLog, 14, 1) = "5" Then
+                    ElseIf Mid(strBitLog, 15, 1) = "5" Then
                         strStatus += "BNoQ"
                     Else
-                        strStatus += Mid(strBitLog, 14, 1)
+                        strStatus += Mid(strBitLog, 15, 1)
                     End If
                 End If
                 'PGV keine Ziffer
