@@ -3668,8 +3668,8 @@ Public Class frmDebDisp
                             'Throw an exception
                         End If
 
-                        'Evtl. Query nach Buchung ausführen
-                        'Call MainDebitor.FcExecuteAfterDebit(BgWImportDebiArgsInProc.intMandant, objdbConn)
+                        'Evtl.Query nach Buchung ausführen
+                        Call FcExecuteAfterDebit(BgWImportDebiArgsInProc.intMandant)
                     End If
 
 
@@ -9265,6 +9265,73 @@ Public Class frmDebDisp
         End Try
 
     End Function
+
+    Friend Function FcExecuteAfterDebit(ByVal intMandant As Integer) As Int16
+
+        Dim strSQL As String
+        Dim strAfterDebiRunType As String
+        Dim strMDBName As String
+        Dim objlocMySQLRGConn As New MySqlConnection
+        Dim objlocMySQLRGcmd As New MySqlCommand
+        Dim intAffected As Int16
+
+
+        Try
+
+            'objMySQLConn.Open()
+            strSQL = FcReadFromSettingsII("Buchh_SQLafterDebiRun", intMandant)
+            strAfterDebiRunType = FcReadFromSettingsII("Buchh_SQLafterDebiType", intMandant)
+            strMDBName = FcReadFromSettingsII("Buchh_SQLafterDebiMDB", intMandant)
+
+            If strSQL <> "" Then
+
+                If strAfterDebiRunType = "A" Then
+                    Stop
+                    'Access
+                    'strdbProvider = "PROVIDER=Microsoft.Jet.OLEDB.4.0;"
+                    'strdbSource = "Data Source="
+                    'strdbPathAndFile = "\\sdlc.mssag.ch\Apps\Backends\" + strMDBName + ";Jet OLEDB:System Database=\\sdlc.mssag.ch\Apps\Backends\Workbench.mdw;User ID=HagerR;"
+                    'strSQL = "UPDATE " + strNameKRGTable + " SET Kredigebucht=true, KredigebuchtDatum=#" + Format(datDate, "yyyy-MM-dd").ToString + "#, " + strBelegNrName + "='" + intBelegNr.ToString + "' WHERE " + strKRGNbrFieldName + "=" + lngKredID.ToString
+
+                    'objdbAccessConn.ConnectionString = strdbProvider + strdbSource + strdbPathAndFile
+                    'objdbAccessConn.Open()
+
+                    'objlocOLEdbcmd.CommandText = strSQL
+
+                    'objlocOLEdbcmd.Connection = objdbAccessConn
+                    'intAffected = objlocOLEdbcmd.ExecuteNonQuery()
+
+                ElseIf strAfterDebiRunType = "M" Then
+                    'MySQL
+                    objlocMySQLRGConn.ConnectionString = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                    objlocMySQLRGConn.Open()
+                    objlocMySQLRGcmd.Connection = objlocMySQLRGConn
+                    objlocMySQLRGcmd.CommandText = strSQL
+                    intAffected = objlocMySQLRGcmd.ExecuteNonQuery()
+
+                End If
+
+            End If
+
+            Return 0
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Nach Debitor - Ausführung")
+            Return 1
+
+        Finally
+
+            If objlocMySQLRGConn.State = ConnectionState.Open Then
+                objlocMySQLRGConn.Close()
+            End If
+            objlocMySQLRGConn = Nothing
+            objlocMySQLRGcmd = Nothing
+
+        End Try
+
+    End Function
+
 
     Private Sub ButDeselect_Click(sender As Object, e As EventArgs) Handles ButDeselect.Click
 

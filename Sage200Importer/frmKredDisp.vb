@@ -2235,6 +2235,8 @@ Public Class frmKredDisp
                         strStatus += "QIBAN"
                     ElseIf Mid(strBitLog, 15, 1) = "5" Then
                         strStatus += "BNoQ"
+                    ElseIf Mid(strBitLog, 15, 1) = "9" Then
+                        strStatus += "R<21"
                     Else
                         strStatus += Mid(strBitLog, 15, 1)
                     End If
