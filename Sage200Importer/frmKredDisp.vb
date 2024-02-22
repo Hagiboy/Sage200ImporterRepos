@@ -1496,7 +1496,7 @@ Public Class frmKredDisp
                 objmysqlcomdwritehead.Parameters("@IdentityName").Value = strIdentityName
                 objmysqlcomdwritehead.Parameters("@ProcessID").Value = Process.GetCurrentProcess().Id
                 objmysqlcomdwritehead.Parameters("@intBuchhaltung").Value = intAccounting
-                objmysqlcomdwritehead.Parameters("@strKredRGNbr").Value = row("strKredRGNbr")
+                objmysqlcomdwritehead.Parameters("@strKredRGNbr").Value = Strings.Replace((row("strKredRGNbr")), "'", "")
                 objmysqlcomdwritehead.Parameters("@intBuchungsart").Value = row("intBuchungsart")
                 objmysqlcomdwritehead.Parameters("@lngKredID").Value = row("lngKredID")
                 objmysqlcomdwritehead.Parameters("@strOPNr").Value = row("strOPNr")
@@ -1670,10 +1670,20 @@ Public Class frmKredDisp
 
             'Finanz-Obj init
             'Login
-            Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+            Try
+                Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
+
+            Catch inEx As Exception
+                If inEx.HResult <> -2147473602 Then
+                    MessageBox.Show(inEx.Message, "Connect to Sage - DB " + Err.Number.ToString)
+                    Exit Sub
+                End If
+
+
+            End Try
 
             intFcReturns = FcReadFromSettingsIII("Buchh200_Name",
                                             BgWCheckKrediArgsInProc.intMandant,
@@ -2353,7 +2363,7 @@ Public Class frmKredDisp
                         + "User Id=cis;Password=sugus;")
 
 
-        Dim intReturnValue As Int16
+        Dim intReturnValue As Int32
         Dim strMandant As String
         Dim booAccOk As Boolean
         Dim strPeriode As String = BgWImportKrediArgsInProc.strPeriode
@@ -3448,10 +3458,20 @@ Public Class frmKredDisp
             'Application.DoEvents()
 
             'Login
-            Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+            Try
+                Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
+
+            Catch inEx As Exception
+                If inEx.HResult <> -2147473602 Then
+                    MessageBox.Show(inEx.Message, "Connect to Sage - DB " + Err.Number.ToString)
+                    Exit Function
+                End If
+
+
+            End Try
 
             'objdbconn.Open()
             FcReturns = FcReadFromSettingsIII("Buchh200_Name",
@@ -3677,10 +3697,20 @@ Public Class frmKredDisp
         Try
 
             'Login
-            Call objFinanzCopy.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+            Try
+                Call objFinanzCopy.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
+
+            Catch inEx As Exception
+                If inEx.HResult <> -2147473602 Then
+                    MessageBox.Show(inEx.Message, "Connect to Sage - DB " + Err.Number.ToString)
+                    Exit Function
+                End If
+
+
+            End Try
 
             intFctReturns = FcReadFromSettingsIII("Buchh200_Name",
                                                 intAccounting,
@@ -6730,6 +6760,8 @@ Public Class frmKredDisp
                             strField = RowBooking(0).Item("strDebText")
                         Case "KUNDENZEICHEN"
                             strField = FcGetKundenzeichen2(RowBooking(0).Item("lngDebIdentNbr"))
+                        Case "KUNDENZEICHENK"
+                            strField = FcGetKundenzeichen2(RowBooking(0).Item("lngKredIdentNbr"))
                         Case Else
                             strField = "unknown field"
                     End Select

@@ -8,6 +8,7 @@ Imports System.Net
 Imports System.IO
 Imports System.Xml
 Imports Microsoft.VisualBasic
+Imports Mysqlx.XDevAPI.Common
 
 'Imports System.Data.OleDb
 
@@ -1268,11 +1269,20 @@ ErrorHandler:
             objFinanz = Nothing
             objFinanz = New SBSXASLib.AXFinanz
 
-            'Login
-            Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+            Try
+                'Login
+                Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
+            Catch inEx As Exception
+                If inEx.HResult <> -2147473602 Then
+                    MessageBox.Show(inEx.Message, "Connect to Sage - DB " + Err.Number.ToString)
+                    Exit Function
+                End If
+
+
+            End Try
 
             objdbconn.Open()
             strMandant = FcReadFromSettings(objdbconn, "Buchh200_Name", intAccounting)
@@ -1296,10 +1306,11 @@ ErrorHandler:
             'Auf aktuelles Jahr gehen
             'Bei Jahresanfang
             'cmbPeriods.SelectedIndex = cmbPeriods.Items.IndexOf((DateAndTime.Year("2022-12-31")).ToString)
-            lstBoxPeriods.SelectedIndex = lstBoxPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now()) - 1).ToString)
+            lstBoxPeriods.SelectedIndex = lstBoxPeriods.Items.IndexOf((DateAndTime.Year(DateAndTime.Now())).ToString)
 
         Catch ex As Exception
-            MessageBox.Show(ex.Message, "Periodendefinition lesen")
+            MessageBox.Show(ex.Message, "Periodendefinition lesen " + Err.Number.ToString)
+
 
         End Try
 

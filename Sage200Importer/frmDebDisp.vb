@@ -1839,7 +1839,7 @@ Public Class frmDebDisp
                 objmysqlcomdwritehead.Parameters("@dblDebMwSt").Value = row("dblDebMwSt")
                 objmysqlcomdwritehead.Parameters("@dblDebBrutto").Value = row("dblDebBrutto")
                 objmysqlcomdwritehead.Parameters("@lngDebIdentNbr").Value = row("lngDebIdentNbr")
-                objmysqlcomdwritehead.Parameters("@strDebText").Value = row("strDebText")
+                objmysqlcomdwritehead.Parameters("@strDebText").Value = FcDeleteNonAscii(IIf(IsDBNull(row("strDebText")), "", row("strDebText")))
                 If row.Table.Columns.Contains("strDebReferenz") Then
                     objmysqlcomdwritehead.Parameters("@strDebreferenz").Value = row("strDebReferenz")
                 End If
@@ -1853,7 +1853,7 @@ Public Class frmDebDisp
                 End If
                 objmysqlcomdwritehead.Parameters("@strDebiBank").Value = row("strDebiBank")
                 objmysqlcomdwritehead.Parameters("@lngLinkedRG").Value = row("lngLinkedRG")
-                objmysqlcomdwritehead.Parameters("@strRGName").Value = row("strRGName")
+                objmysqlcomdwritehead.Parameters("@strRGName").Value = FcDeleteNonAscii(IIf(IsDBNull(row("strRGName")), "", row("strRGName")))
                 If row.Table.Columns.Contains("strDebIdentNbr2") Then
                     objmysqlcomdwritehead.Parameters("@strDebIdentNbr2").Value = row("strDebIdentNbr2")
                 End If
@@ -2040,10 +2040,19 @@ Public Class frmDebDisp
 
             'Finanz-Obj init
             'Login
-            Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+            Try
+                Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
+
+            Catch inEx As Exception
+                If inEx.HResult <> -2147473602 Then
+                    MessageBox.Show(inEx.Message, "Connect to Sage - DB " + Err.Number.ToString)
+                    Exit Sub
+                End If
+
+            End Try
 
 
             intFcReturns = FcReadFromSettingsIII("Buchh200_Name",
@@ -4316,10 +4325,18 @@ Public Class frmDebDisp
             'Application.DoEvents()
 
             'Login
-            Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+            Try
+                Call objFinanz.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
+            Catch inEx As Exception
+                If inEx.HResult <> -2147473602 Then
+                    MessageBox.Show(inEx.Message, "Connect to Sage - DB " + Err.Number.ToString)
+                    Exit Function
+                End If
+
+            End Try
 
             'objdbconn.Open()
             FcReturns = FcReadFromSettingsIII("Buchh200_Name",
@@ -4478,10 +4495,20 @@ Public Class frmDebDisp
         Try
 
             'Login
-            Call objFinanzCopy.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
+            Try
+                Call objFinanzCopy.ConnectSBSdb(System.Configuration.ConfigurationManager.AppSettings("OwnSageServer"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageDB"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSageID"),
                                     System.Configuration.ConfigurationManager.AppSettings("OwnSagePsw"), "")
+
+            Catch inEx As Exception
+                If inEx.HResult <> -2147473602 Then
+                    MessageBox.Show(inEx.Message, "Connect to Sage - DB " + Err.Number.ToString)
+                    Exit Function
+                End If
+
+
+            End Try
 
             intFctReturns = FcReadFromSettingsIII("Buchh200_Name",
                                                 intAccounting,
@@ -7303,7 +7330,13 @@ Public Class frmDebDisp
             objlocMySQLcmd.Connection = objdbconn
             objlocdtBank.Load(objlocMySQLcmd.ExecuteReader)
 
-            Return objlocdtBank.Rows(0).Item(0).ToString
+            If objlocdtBank.Rows.Count > 0 Then
+                Return objlocdtBank.Rows(0).Item(0).ToString
+            Else
+                Return "7777777"
+            End If
+
+
 
 
         Catch ex As Exception
@@ -8765,7 +8798,18 @@ Public Class frmDebDisp
 
         Try
 
-            objFinanzCopy = objFinanz.DuplicateObjekt(2)
+            Try
+                objFinanzCopy = objFinanz.DuplicateObjekt(2)
+
+            Catch inEx As Exception
+                If inEx.HResult <> -2147473602 Then
+                    MessageBox.Show(inEx.Message, "Connect to Sage - DB " + Err.Number.ToString)
+                    Exit Function
+                End If
+
+
+            End Try
+
             objfiBuhaCopy = objFinanzCopy.GetFibuObj()
 
             'Jahr retten
@@ -9332,6 +9376,25 @@ Public Class frmDebDisp
 
     End Function
 
+    Friend Function FcDeleteNonAscii(strTexttoClean As String) As String
+
+        Dim I As Long
+        Dim J As Long
+        Dim strChar As String
+
+        I = 1
+        For J = 1 To Len(strTexttoClean)
+            strChar = Mid$(strTexttoClean, J, 1)
+            If (AscW(strChar) And &HFFFF&) <= &H7F& Then
+                Mid$(strTexttoClean, I, 1) = strChar
+                I = I + 1
+            End If
+        Next
+        strTexttoClean = Strings.Left$(strTexttoClean, I - 1)
+        Return strTexttoClean
+
+    End Function
+
 
     Private Sub ButDeselect_Click(sender As Object, e As EventArgs) Handles ButDeselect.Click
 
@@ -9349,6 +9412,8 @@ Public Class frmDebDisp
 
 
     End Sub
+
+
 
     Private Sub BgWCheckDebi_ProgressChanged(sender As Object, e As System.ComponentModel.ProgressChangedEventArgs) Handles BgWCheckDebi.ProgressChanged
 
