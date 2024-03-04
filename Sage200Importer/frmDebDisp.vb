@@ -2016,6 +2016,7 @@ Public Class frmDebDisp
         Dim intDZKondS200 As Int32
         Dim booDiffHeadText As Boolean
         Dim booDiffSubText As Boolean
+        Dim booErfOPExt As Boolean
         Dim strDebiHeadText As String
         Dim strDebiSubText As String
         Dim selsubrow() As DataRow
@@ -2074,6 +2075,7 @@ Public Class frmDebDisp
             booSplittBill = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_LinkedBookings", BgWCheckDebiArgsInProc.intMandant)))
             booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_CashSollKontoKorr", BgWCheckDebiArgsInProc.intMandant)))
             booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_GeneratePaymentBooking", BgWCheckDebiArgsInProc.intMandant)))
+            booErfOPExt = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_ErfOPExt", BgWCheckDebiArgsInProc.intMandant)))
             booDiffHeadText = IIf(FcReadFromSettingsII("Buchh_TextSpecial", BgWCheckDebiArgsInProc.intMandant) = "0", False, True)
             booDiffSubText = IIf(FcReadFromSettingsII("Buchh_SubTextSpecial", BgWCheckDebiArgsInProc.intMandant) = "0", False, True)
             intFcReturns = FcReadFromSettingsIII("Buchh_PKTable", BgWCheckDebiArgsInProc.intMandant, strFcReturns)
@@ -2153,7 +2155,7 @@ Public Class frmDebDisp
                                                     row("intBuchungsart"),
                                                     booAutoCorrect,
                                                     booCpyKSTToSub,
-                                                    row("lngDebiKST"),
+                                                    IIf(IsDBNull(row("lngDebiKST")), 0, row("lngDebiKST")),
                                                     row("lngDebKtoNbr"),
                                                     booCashSollCorrect,
                                                     booSplittBill)
@@ -2382,9 +2384,11 @@ Public Class frmDebDisp
 
                 'OP - Verdopplung 09
                 intReturnValue = FcCheckOPDouble(row("lngDebNbr"),
+                                                 row("lngDebIdentNbr"),
                                                  row("strOPNr"),
                                                  IIf(row("dblDebBrutto") > 0, "R", "G"),
-                                                 row("strDebCur"))
+                                                 row("strDebCur"),
+                                                 booErfOPExt)
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'PGV => Prüfung vor Valuta-Datum da Valuta-Datum verändert wird
@@ -6231,35 +6235,65 @@ Public Class frmDebDisp
     End Function
 
     Friend Function FcCheckOPDouble(strDebitor As String,
+                                    lngDebIdentNbr As Int32,
                                     strOPNr As String,
                                     strType As String,
-                                    strCurrency As String) As Int16
+                                    strCurrency As String,
+                                    booErfOPExt As Boolean) As Int16
 
         'Return 0=ok, 1=Beleg existiert, 9=Problem
 
         Dim intBelegReturn As Int32
 
         Try
-            intBelegReturn = objdbBuha.doesBelegExist(strDebitor,
+            If Not booErfOPExt Then
+                intBelegReturn = objdbBuha.doesBelegExist(strDebitor,
                                                       strCurrency,
                                                       FcCleanRGNrStrict(strOPNr),
                                                       "NOT_SET",
                                                       strType,
                                                       "")
-            If intBelegReturn = 0 Then
-                'Zusätzlich extern überprüfen
-                intBelegReturn = objdbBuha.doesBelegExistExtern(strDebitor,
+                If intBelegReturn = 0 Then
+                    'Zusätzlich extern überprüfen
+                    intBelegReturn = objdbBuha.doesBelegExistExtern(strDebitor,
                                                                 strCurrency,
                                                                 strOPNr,
                                                                 strType,
                                                                 "")
-                If intBelegReturn <> 0 Then
-                    Return 1
+                    If intBelegReturn <> 0 Then
+                        Return 1
+                    Else
+                        Return 0
+                    End If
                 Else
-                    Return 0
+                    Return 1
                 End If
+
             Else
-                Return 1
+
+                intBelegReturn = objdbBuha.doesBelegExist(strDebitor,
+                                                          strCurrency,
+                                                          lngDebIdentNbr.ToString,
+                                                          "NOT_SET",
+                                                          strType,
+                                                          "")
+                If intBelegReturn = 0 Then
+                    'Zusätzlich extern überprüfen
+                    intBelegReturn = objdbBuha.doesBelegExistExtern(strDebitor,
+                                                                strCurrency,
+                                                                strOPNr,
+                                                                strType,
+                                                                "")
+                    If intBelegReturn <> 0 Then
+                        Return 1
+                    Else
+                        Return 0
+                    End If
+                Else
+                    Return 1
+                End If
+
+
             End If
 
 
