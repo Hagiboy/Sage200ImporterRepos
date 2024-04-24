@@ -45,6 +45,9 @@ Partial Class frmImportMain
         Me.mysqlcongen = New MySqlConnector.MySqlConnection()
         Me.mysqlcmdgen = New MySqlConnector.MySqlCommand()
         Me.ToolStripContainer1 = New System.Windows.Forms.ToolStripContainer()
+        Me.GroupBox3 = New System.Windows.Forms.GroupBox()
+        Me.chkValutaEndCorrect = New System.Windows.Forms.CheckBox()
+        Me.dtpValutaEndCorrect = New System.Windows.Forms.DateTimePicker()
         Me.lstBoxPerioden = New System.Windows.Forms.ListBox()
         Me.lstBoxMandant = New System.Windows.Forms.ListBox()
         Me.LblTaskID = New System.Windows.Forms.Label()
@@ -55,6 +58,7 @@ Partial Class frmImportMain
         CType(Me.dsDebitoren, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.ToolStripContainer1.ContentPanel.SuspendLayout()
         Me.ToolStripContainer1.SuspendLayout()
+        Me.GroupBox3.SuspendLayout()
         Me.SuspendLayout()
         '
         'GroupBox1
@@ -139,7 +143,7 @@ Partial Class frmImportMain
         Me.GroupBox2.Size = New System.Drawing.Size(140, 69)
         Me.GroupBox2.TabIndex = 17
         Me.GroupBox2.TabStop = False
-        Me.GroupBox2.Text = "Optionen"
+        Me.GroupBox2.Text = "Optionen Startdatum"
         '
         'dsDebitoren
         '
@@ -238,6 +242,7 @@ Partial Class frmImportMain
         '
         'ToolStripContainer1.ContentPanel
         '
+        Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox3)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.lstBoxPerioden)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.lstBoxMandant)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.LblTaskID)
@@ -251,6 +256,37 @@ Partial Class frmImportMain
         Me.ToolStripContainer1.Size = New System.Drawing.Size(1688, 105)
         Me.ToolStripContainer1.TabIndex = 24
         Me.ToolStripContainer1.Text = "ToolStripContainer1"
+        '
+        'GroupBox3
+        '
+        Me.GroupBox3.Controls.Add(Me.chkValutaEndCorrect)
+        Me.GroupBox3.Controls.Add(Me.dtpValutaEndCorrect)
+        Me.GroupBox3.Location = New System.Drawing.Point(907, 4)
+        Me.GroupBox3.Name = "GroupBox3"
+        Me.GroupBox3.Size = New System.Drawing.Size(140, 69)
+        Me.GroupBox3.TabIndex = 23
+        Me.GroupBox3.TabStop = False
+        Me.GroupBox3.Text = "Optionen Enddatum"
+        '
+        'chkValutaEndCorrect
+        '
+        Me.chkValutaEndCorrect.AutoSize = True
+        Me.chkValutaEndCorrect.Location = New System.Drawing.Point(6, 19)
+        Me.chkValutaEndCorrect.Name = "chkValutaEndCorrect"
+        Me.chkValutaEndCorrect.Size = New System.Drawing.Size(118, 17)
+        Me.chkValutaEndCorrect.TabIndex = 15
+        Me.chkValutaEndCorrect.Text = "Valuta-Anpassung?"
+        Me.chkValutaEndCorrect.UseVisualStyleBackColor = True
+        '
+        'dtpValutaEndCorrect
+        '
+        Me.dtpValutaEndCorrect.Enabled = False
+        Me.dtpValutaEndCorrect.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.dtpValutaEndCorrect.Location = New System.Drawing.Point(5, 37)
+        Me.dtpValutaEndCorrect.MinDate = New Date(2020, 1, 1, 0, 0, 0, 0)
+        Me.dtpValutaEndCorrect.Name = "dtpValutaEndCorrect"
+        Me.dtpValutaEndCorrect.Size = New System.Drawing.Size(90, 20)
+        Me.dtpValutaEndCorrect.TabIndex = 16
         '
         'lstBoxPerioden
         '
@@ -314,6 +350,8 @@ Partial Class frmImportMain
         Me.ToolStripContainer1.ContentPanel.PerformLayout()
         Me.ToolStripContainer1.ResumeLayout(False)
         Me.ToolStripContainer1.PerformLayout()
+        Me.GroupBox3.ResumeLayout(False)
+        Me.GroupBox3.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
@@ -344,4 +382,7 @@ Partial Class frmImportMain
     Friend WithEvents LblVersion As Label
     Friend WithEvents lstBoxMandant As ListBox
     Public WithEvents lstBoxPerioden As ListBox
+    Friend WithEvents GroupBox3 As GroupBox
+    Friend WithEvents chkValutaEndCorrect As CheckBox
+    Friend WithEvents dtpValutaEndCorrect As DateTimePicker
 End Class

@@ -3234,4 +3234,27 @@ Friend Class frmImportMain
         'Me.Dispose()
     End Sub
 
+    Private Sub chkValutaEndCorrect_CheckedChanged(sender As Object, e As EventArgs) Handles chkValutaEndCorrect.CheckedChanged
+
+        If chkValutaEndCorrect.Checked Then
+            dtpValutaEndCorrect.Enabled = True
+        Else
+            dtpValutaEndCorrect.Enabled = False
+        End If
+
+    End Sub
+
+
+    Private Sub dtpValutaEndCorrect_Validating(sender As Object, e As System.ComponentModel.CancelEventArgs) Handles dtpValutaEndCorrect.Validating
+
+        'Nur prüfen, wenn auch Start-Datum veränbdert werden soll.
+        If chkValutaCorrect.Checked Then
+            'Ist End-Datum < als Startdatum?
+            If dtpValutaEndCorrect.Value < dtpValutaCorrect.Value Then
+                MessageBox.Show("End-Datum kann nicht vor Start-Datum liegen", "Datums-Fehler")
+                dtpValutaEndCorrect.Value = dtpValutaCorrect.Value
+            End If
+        End If
+
+    End Sub
 End Class

@@ -64,6 +64,8 @@ Public Class frmDebDisp
         Public strPeriode As String
         Public booValutaCor As Boolean
         Public datValutaCor As Date
+        Public booValutaEndCor As Boolean
+        Public datValutaEndCor As Date
     End Class
 
 
@@ -1857,6 +1859,9 @@ Public Class frmDebDisp
                 If row.Table.Columns.Contains("strDebIdentNbr2") Then
                     objmysqlcomdwritehead.Parameters("@strDebIdentNbr2").Value = row("strDebIdentNbr2")
                 End If
+                If row.Table.Columns.Contains("strRGBemerkung") Then
+                    objmysqlcomdwritehead.Parameters("@strRGBemerkung").Value = row("strRGBemerkung")
+                End If
                 If row.Table.Columns.Contains("booCrToInv") Then
                     objmysqlcomdwritehead.Parameters("@booCrToInv").Value = row("booCrToInv")
                 End If
@@ -2003,6 +2008,8 @@ Public Class frmDebDisp
         Dim booPKPrivate As Boolean
         Dim booValutaCorrect As Boolean
         Dim datValutaCorrect As Date
+        Dim booValutaEndCorrect As Boolean
+        Dim datValutaEndCorrect As Date
         Dim booDateChanged As Boolean
         Dim datValutaSave As Date
         Dim intMonthsAJ As Int16
@@ -2082,6 +2089,8 @@ Public Class frmDebDisp
             booPKPrivate = IIf(strFcReturns = "t_customer", True, False)
             booValutaCorrect = BgWCheckDebiArgsInProc.booValutaCor
             datValutaCorrect = BgWCheckDebiArgsInProc.datValutaCor
+            booValutaEndCorrect = BgWCheckDebiArgsInProc.booValutaEndCor
+            datValutaEndCorrect = BgWCheckDebiArgsInProc.datValutaEndCor
             'dsDebitoren.Tables("tblDebiHeadsFromUser").AcceptChanges()
 
             intTotRGs = dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count
@@ -2384,7 +2393,7 @@ Public Class frmDebDisp
 
                 'OP - Verdopplung 09
                 intReturnValue = FcCheckOPDouble(row("lngDebNbr"),
-                                                 row("lngDebIdentNbr"),
+                                                 IIf(IsDBNull(row("lngDebIdentNbr")), 0, row("lngDebIdentNbr")),
                                                  row("strOPNr"),
                                                  IIf(row("dblDebBrutto") > 0, "R", "G"),
                                                  row("strDebCur"),
@@ -2400,11 +2409,23 @@ Public Class frmDebDisp
                 If booValutaCorrect Then
                     If row("datDebRGDatum") < datValutaCorrect Then
                         row("datDebRGDatum") = datValutaCorrect.ToShortDateString
-                        strStatus = "RgDCor"
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDCor"
                     End If
                     If row("datDebValDatum") < datValutaCorrect Then
                         row("datDebValDatum") = datValutaCorrect.ToShortDateString
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValDCor"
+                    End If
+                End If
+
+                'Evtl. End-Datum Korrektur
+                If booValutaEndCorrect Then
+                    If row("datDebRGDatum") > datValutaEndCorrect Then
+                        row("datDebRGDatum") = datValutaEndCorrect.ToShortDateString
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDECor"
+                    End If
+                    If row("datDebValDatum") > datValutaEndCorrect Then
+                        row("datDebValDatum") = datValutaEndCorrect.ToShortDateString
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValDECor"
                     End If
                 End If
 
@@ -3898,6 +3919,8 @@ Public Class frmDebDisp
             BgWCheckDebitLocArgs.strPeriode = lstBoxPerioden.GetItemText(lstBoxPerioden.SelectedItem)
             BgWCheckDebitLocArgs.booValutaCor = frmImportMain.chkValutaCorrect.Checked
             BgWCheckDebitLocArgs.datValutaCor = frmImportMain.dtpValutaCorrect.Value
+            BgWCheckDebitLocArgs.booValutaEndCor = frmImportMain.chkValutaEndCorrect.Checked
+            BgWCheckDebitLocArgs.datValutaEndCor = frmImportMain.dtpValutaEndCorrect.Value
 
             BgWCheckDebi.RunWorkerAsync(BgWCheckDebitLocArgs)
 
@@ -4099,6 +4122,8 @@ Public Class frmDebDisp
             inscmdValues += ", @strRGName"
             inscmdFields += ", strDebIdentNbr2"
             inscmdValues += ", @strDebIdentNbr2"
+            inscmdFields += ", strRGBemerkung"
+            inscmdValues += ", @strRGBemerkung"
             inscmdFields += ", booCrToInv"
             inscmdValues += ", @booCrToInv"
             inscmdFields += ", datPGVFrom"
@@ -4135,6 +4160,7 @@ Public Class frmDebDisp
             mysqlinscmd.Parameters.Add("@lngLinkedRG", MySqlDbType.Int32).SourceColumn = "lngLinkedRG"
             mysqlinscmd.Parameters.Add("@strRGName", MySqlDbType.String).SourceColumn = "strRGName"
             mysqlinscmd.Parameters.Add("@strDebIdentNbr2", MySqlDbType.String).SourceColumn = "strDebIdentNbr2"
+            mysqlinscmd.Parameters.Add("@strRGBemerkung", MySqlDbType.String).SourceColumn = "strRGBemerkung"
             mysqlinscmd.Parameters.Add("@booCrToInv", MySqlDbType.Int16).SourceColumn = "booCrToInv"
             mysqlinscmd.Parameters.Add("@datPGVFrom", MySqlDbType.Date).SourceColumn = "datPGVFrom"
             mysqlinscmd.Parameters.Add("@datPGVTo", MySqlDbType.Date).SourceColumn = "datPGVTo"
@@ -5556,8 +5582,8 @@ Public Class frmDebDisp
                         '    strField = rsDebi.Fields("RGBemerkung")
                         'Case "rsDebi.Fields([JornalNr])"
                         '    strField = rsDebi.Fields("JornalNr")
-                        'Case "rsDebiTemp.Fields([strRGBemerkung])"
-                        '    strField = rsDebiTemp.Fields("strRGBemerkung")
+                        Case "rsDebiTemp.Fields([strRGBemerkung])"
+                            strField = RowBooking(0).Item("strRGBemerkung")
                         'Case "rsDebiTemp.Fields(""strDebRGNbr"")"
                         '    strField = rsDebiTemp.Fields("strDebRGNbr")
                         'Case "rsDebiTemp.Fields([lngDebIdentNbr])"
