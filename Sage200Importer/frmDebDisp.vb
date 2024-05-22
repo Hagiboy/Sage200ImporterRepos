@@ -1855,6 +1855,7 @@ Public Class frmDebDisp
                 End If
                 objmysqlcomdwritehead.Parameters("@strDebiBank").Value = row("strDebiBank")
                 objmysqlcomdwritehead.Parameters("@lngLinkedRG").Value = row("lngLinkedRG")
+                objmysqlcomdwritehead.Parameters("@lngLinkedGS").Value = row("lngLinkedGS")
                 objmysqlcomdwritehead.Parameters("@strRGName").Value = FcDeleteNonAscii(IIf(IsDBNull(row("strRGName")), "", row("strRGName")))
                 If row.Table.Columns.Contains("strDebIdentNbr2") Then
                     objmysqlcomdwritehead.Parameters("@strDebIdentNbr2").Value = row("strDebIdentNbr2")
@@ -1992,6 +1993,7 @@ Public Class frmDebDisp
         Dim booAutoCorrect As Boolean
         Dim booCpyKSTToSub As Boolean
         Dim booSplittBill As Boolean
+        Dim booLinkedGS As Boolean
         Dim booCashSollCorrect As Boolean
         Dim booGeneratePymentBooking As Boolean
         Dim strRGNbr As String
@@ -2080,6 +2082,7 @@ Public Class frmDebDisp
             booAutoCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_HeadAutoCorrect", BgWCheckDebiArgsInProc.intMandant)))
             booCpyKSTToSub = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_KSTHeadToSub", BgWCheckDebiArgsInProc.intMandant)))
             booSplittBill = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_LinkedBookings", BgWCheckDebiArgsInProc.intMandant)))
+            booLinkedGS = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_LinkedGS", BgWCheckDebiArgsInProc.intMandant)))
             booCashSollCorrect = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_CashSollKontoKorr", BgWCheckDebiArgsInProc.intMandant)))
             booGeneratePymentBooking = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_GeneratePaymentBooking", BgWCheckDebiArgsInProc.intMandant)))
             booErfOPExt = Convert.ToBoolean(Convert.ToInt16(FcReadFromSettingsII("Buchh_ErfOPExt", BgWCheckDebiArgsInProc.intMandant)))
@@ -2148,11 +2151,18 @@ Public Class frmDebDisp
                 strBitLog += Trim(intReturnValue.ToString)
 
                 'Sub 04
+                'SplitBill oder GS
                 If booSplittBill And IIf(IsDBNull(row("intRGArt")), 0, row("intRGArt")) = 10 Then
                     row("booLinked") = True
                 Else
                     row("booLinked") = False
                 End If
+                If booLinkedGS And IIf(IsDBNull(row("intRGArt")), 0, row("intRGArt")) = 11 Then
+                    row("booGS") = True
+                Else
+                    row("booGS") = False
+                End If
+
 
                 intReturnValue = FcCheckSubBookings(row("strDebRGNbr"),
                                                     dsDebitoren.Tables("tblDebiSubsFromUser"),
@@ -2167,7 +2177,8 @@ Public Class frmDebDisp
                                                     IIf(IsDBNull(row("lngDebiKST")), 0, row("lngDebiKST")),
                                                     row("lngDebKtoNbr"),
                                                     booCashSollCorrect,
-                                                    booSplittBill)
+                                                    row("booLinked"),
+                                                    row("booGS"))
 
                 strBitLog += Trim(intReturnValue.ToString)
 
@@ -2202,11 +2213,19 @@ Public Class frmDebDisp
                 End If
 
                 'Bei SplitBill - erste Rechnung evtl. Rückzahlung im Total nicht beachten
-                If booSplittBill And row("intRGArt") = 1 And IIf(IsDBNull(row("lngLinkedRG")), 0, row("lngLinkedRG")) > 0 Then
+                If row("booLinked") And row("intRGArt") = 1 And IIf(IsDBNull(row("lngLinkedRG")), 0, row("lngLinkedRG")) > 0 Then
                     row("dblDebBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero) * -1
                     row("dblDebNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero) * -1
                     row("dblDebMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero) * -1
                 End If
+
+                'Bei GS wie SplitBill
+                If row("booGS") And row("intRGArt") = 1 And IIf(IsDBNull(row("lngLinkedGS")), 0, row("lngLinkedGS")) > 0 Then
+                    row("dblDebBrutto") = Decimal.Round(dblSubBrutto, 2, MidpointRounding.AwayFromZero) * -1
+                    row("dblDebNetto") = Decimal.Round(dblSubNetto, 2, MidpointRounding.AwayFromZero) * -1
+                    row("dblDebMwSt") = Decimal.Round(dblSubMwSt, 2, MidpointRounding.AwayFromZero) * -1
+                End If
+
 
                 'Autokorrektur 05
                 If booAutoCorrect And row("intBuchungsart") = 1 Then
@@ -2637,6 +2656,34 @@ Public Class frmDebDisp
                 intReturnValue = FcCheckDZKond(strMandant,
                                                            row("intZKond"))
                 strBitLog += Trim(intReturnValue.ToString)
+
+                'GS Check 15
+                If row("booGS") Then
+                    'Zuerst Debitor von erstem Beleg suchen
+                    intDebitorNew = FcGetDebitorFromLinkedRG(IIf(IsDBNull(row("lngLinkedGS")), 0, row("lngLinkedGS")),
+                                                                         BgWCheckDebiArgsInProc.intMandant,
+                                                                         intLinkedDebitor,
+                                                                         BgWCheckDebiArgsInProc.intTeqNbr,
+                                                                         BgWCheckDebiArgsInProc.intTeqNbrLY,
+                                                                         BgWCheckDebiArgsInProc.intTeqNbrPLY)
+                    row("lngLinkedGSDeb") = intLinkedDebitor
+
+                    intReturnValue = FcCheckLinkedRG(intLinkedDebitor,
+                                                                 row("strDebCur"),
+                                                                 row("lngLinkedGS"))
+
+                    'Falls erste Rechnung bezahlt, dann Flag setzen
+                    If intReturnValue = 2 Then
+                        row("booLinkedPayed") = True
+
+                    Else
+                        row("booLinkedPayed") = False
+
+                    End If
+
+
+                End If
+
 
                 'Status-String auswerten
                 ''Debitor
@@ -4118,6 +4165,8 @@ Public Class frmDebDisp
             inscmdValues += ", @strDebiBank"
             inscmdFields += ", lngLinkedRG"
             inscmdValues += ", @lngLinkedRG"
+            inscmdFields += ", lngLinkedGS"
+            inscmdValues += ", @lngLinkedGS"
             inscmdFields += ", strRGName"
             inscmdValues += ", @strRGName"
             inscmdFields += ", strDebIdentNbr2"
@@ -4158,6 +4207,7 @@ Public Class frmDebDisp
             mysqlinscmd.Parameters.Add("@intPayType", MySqlDbType.Int16).SourceColumn = "intPayType"
             mysqlinscmd.Parameters.Add("@strDebiBank", MySqlDbType.String).SourceColumn = "strDebiBank"
             mysqlinscmd.Parameters.Add("@lngLinkedRG", MySqlDbType.Int32).SourceColumn = "lngLinkedRG"
+            mysqlinscmd.Parameters.Add("@lngLinkedGS", MySqlDbType.Int32).SourceColumn = "lngLinkedGS"
             mysqlinscmd.Parameters.Add("@strRGName", MySqlDbType.String).SourceColumn = "strRGName"
             mysqlinscmd.Parameters.Add("@strDebIdentNbr2", MySqlDbType.String).SourceColumn = "strDebIdentNbr2"
             mysqlinscmd.Parameters.Add("@strRGBemerkung", MySqlDbType.String).SourceColumn = "strRGBemerkung"
@@ -7491,7 +7541,8 @@ Public Class frmDebDisp
                                               strKST As String,
                                               ByRef lngDebKonto As Int32,
                                               booCashSollKorrekt As Boolean,
-                                              booSplittBill As Boolean) As Int16
+                                              booSplittBill As Boolean,
+                                              booLinkedGS As Boolean) As Int16
 
         'Functin Returns 0=ok, 1=Problem sub, 2=OP Diff zu Kopf, 3=OP nicht 0, 9=keine Subs
 
@@ -7790,7 +7841,7 @@ Public Class frmDebDisp
                 End If
 
                 'Netto = 0; 06
-                If IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) = 0 And Not booSplittBill Then
+                If (IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) = 0 And Not booSplittBill) Or (IIf(IsDBNull(subrow("dblNetto")), 0, subrow("dblNetto")) = 0 And Not booLinkedGS) Then
                     strBitLog += "1"
 
                 Else
@@ -7874,7 +7925,7 @@ Public Class frmDebDisp
             'Falls Soll-Konto-Korretkur gesetzt hier Konto ändern
             If booCashSollKorrekt And intBuchungsArt = 4 Then
                 lngDebKonto = intSollKonto
-                Debug.Print("Konto in SB geändert")
+                'Debug.Print("Konto in SB geändert")
             End If
 
             'Rückgabe der ganzen Funktion Sub-Prüfung
