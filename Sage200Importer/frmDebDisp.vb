@@ -159,7 +159,7 @@ Public Class frmDebDisp
 
     End Sub
 
-    Private Async Sub frmDebDisp_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Sub frmDebDisp_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         FELD_SEP = "{<}"
         REC_SEP = "{>}"
@@ -2574,7 +2574,9 @@ Public Class frmDebDisp
 
                     intReturnValue = FcCheckLinkedRG(intLinkedDebitor,
                                                                  row("strDebCur"),
-                                                                 row("lngLinkedRG"))
+                                                                 row("lngLinkedRG"),
+                                                                 row("dblDebBrutto"),
+                                                                 BgWCheckDebiArgsInProc.strYear)
                     'Falls erste Rechnung bezahlt, dann Flag setzen
                     If intReturnValue = 2 Then
                         row("booLinkedPayed") = True
@@ -2670,7 +2672,9 @@ Public Class frmDebDisp
 
                     intReturnValue = FcCheckLinkedRG(intLinkedDebitor,
                                                                  row("strDebCur"),
-                                                                 row("lngLinkedGS"))
+                                                                 row("lngLinkedGS"),
+                                                                 row("dblDebBrutto"),
+                                                                 BgWCheckDebiArgsInProc.strYear)
 
                     'Falls erste Rechnung bezahlt, dann Flag setzen
                     If intReturnValue = 2 Then
@@ -2683,7 +2687,7 @@ Public Class frmDebDisp
 
 
                 End If
-
+                strBitLog += Trim(intReturnValue.ToString)
 
                 'Status-String auswerten
                 ''Debitor
@@ -2772,8 +2776,10 @@ Public Class frmDebDisp
                 If Mid(strBitLog, 13, 1) <> "0" Then
                     If Mid(strBitLog, 13, 1) = "1" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "SplBNo1"
-                    Else
+                    ElseIf Mid(strBitLog, 15, 1) = "2" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "SplBBez1"
+                    Else
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "SplBRG1<GS"
                     End If
 
                 End If
@@ -2781,6 +2787,18 @@ Public Class frmDebDisp
                 If Mid(strBitLog, 14, 1) <> "0" Then
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ZKond"
                 End If
+                'GS
+                If Mid(strBitLog, 15, 1) <> "0" Then
+                    If Mid(strBitLog, 15, 1) = "1" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "GSNoRG1"
+                    ElseIf Mid(strBitLog, 15, 1) = "2" Then
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "GSBezRG1"
+                    Else
+                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "GSRG1<GS"
+                    End If
+
+                End If
+
 
                 'PGV keine Ziffer
                 If row("booPGV") Then
@@ -2793,7 +2811,7 @@ Public Class frmDebDisp
 
                 'Status schreiben
                 '5 Autokorrektur trotzdem ok, 10 Valuta 2 trotzdem ok, 11 RG 2 trotdem ok
-                If Val(strBitLog) = 0 Or Val(strBitLog) = 1000002200 Or Val(strBitLog) = 2200 Or Val(strBitLog) = 1000000000 Then
+                If Val(strBitLog) = 0 Or Val(strBitLog) = 10000022000 Or Val(strBitLog) = 22000 Or Val(strBitLog) = 10000000000 Then
                     row("booDebBook") = True
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
                 End If
@@ -2938,6 +2956,7 @@ Public Class frmDebDisp
         Dim strFcreturns As String
         Dim intActRGNbr As Int32
         Dim intTotRGs As Int32
+        Dim intZV As Int32
 
 
         'Dim objFinanz As New SBSXASLib.AXFinanz
@@ -2986,9 +3005,14 @@ Public Class frmDebDisp
             'Setting soll erfasste OP als externe Beleg-Nr. genommen werden und lngDebIdentNbr als Beleg-Nr.
             intFcReturns = FcReadFromSettingsIII("Buchh_ErfOPExt", BgWImportDebiArgsInProc.intMandant, strFcreturns)
             booErfOPExt = Convert.ToBoolean(Convert.ToInt16(strFcreturns))
+            intFcReturns = FcReadFromSettingsIII("Buchh200_Name",
+                                                 BgWImportDebiArgsInProc.intMandant,
+                                                 strMandant)
 
             intTotRGs = dsDebitoren.Tables("tblDebiHeadsFromUser").Rows.Count
             intActRGNbr = 0
+
+            objdbSQLcommand.Connection = objdbMSSQLConn
 
             'Kopfbuchung
             For Each row In dsDebitoren.Tables("tblDebiHeadsFromUser").Rows
@@ -3267,7 +3291,14 @@ Public Class frmDebDisp
                                         dblSplitPayed = dblBetrag
 
                                         'Teilzahlung buchen
-                                        Call objdbBuha.SetZahlung(1944,
+                                        'ZV suchen
+                                        intZV = FcGetZV(objdbMSSQLConn,
+                                                        objdbSQLcommand,
+                                                        strMandant,
+                                                        "SB",
+                                                        intZV)
+
+                                        Call objdbBuha.SetZahlung(intZV,
                                                               strBelegDatum,
                                                               strValutaDatum,
                                                               row("strDebCur"),
@@ -3278,20 +3309,106 @@ Public Class frmDebDisp
                                                               dblSplitPayed.ToString,
                                                               row("strDebCur"),
                                                               ,
-                                                              row("lngDebIdentNbr").ToString + ", TZ " + row("strDebRGNbr").ToString)
+                                                              row("lngDebIdentNbr").ToString + ", TZ SB " + row("strDebRGNbr").ToString)
 
                                         Call objdbBuha.WriteTeilzahlung4(intLaufNbr.ToString,
-                                                                     row("lngDebIdentNbr").ToString + ", TZ " + row("strDebRGNbr").ToString,
+                                                                     row("lngDebIdentNbr").ToString + ", TZ SB " + row("strDebRGNbr").ToString,
                                                                      "NOT_SET",
                                                                      ,
                                                                      "NOT_SET",
                                                                      "NOT_SET",
-                                                                     "Default",
-                                                                     "Default")
+                                                                     "DEFAULT",
+                                                                     "DEFAULT")
+
+                                    End If
+
+
+                                End If
+
+                            End If
+
+                            'Bei GS soeben gebuchte GS TZ, TZ auf RG1, Belege werden durch Dispatcher ausgebucht
+                            If row("booGS") And Mid(row("strDebStatusBitLog"), 15, 1) = "0" Then 'Nur wenn Beleg in gleicher Buha
+                                'Zuerst TZ auf GS
+                                'Laufnummer von GS holen
+                                intLaufNbr = objdbBuha.doesBelegExist2(intDebitorNbr.ToString,
+                                                                       row("strDebCur"),
+                                                                       intDebBelegsNummer.ToString,
+                                                                       "NOT_SET",
+                                                                       "G",
+                                                                       "NOT_SET",
+                                                                       "NOT_SET",
+                                                                       "NOT_SET")
+
+                                If intLaufNbr > 0 Then
+
+                                    'ZV suchen
+                                    intFcReturns = FcGetZV(objdbMSSQLConn,
+                                                        objdbSQLcommand,
+                                                        strMandant,
+                                                        "GS",
+                                                        intZV)
+
+                                    Call objdbBuha.SetZahlung(intZV,
+                                                          strBelegDatum,
+                                                          strValutaDatum,
+                                                          row("strDebCur"),
+                                                          dblKurs,
+                                                          "",
+                                                          "",
+                                                          row("lngDebNbr"),
+                                                          (dblBetrag * -1).ToString,
+                                                          row("strDebCur"),
+                                                          ,
+                                                          row("lngDebIdentNbr").ToString + ", TZ GS " + row("lngLinkedGS").ToString)
+
+                                    Call objdbBuha.WriteTeilzahlung4(intLaufNbr.ToString,
+                                                                     row("lngDebIdentNbr").ToString + ", TZ GS " + row("lngLinkedGS").ToString,
+                                                                     "NOT_SET",
+                                                                     ,
+                                                                     "NOT_SET",
+                                                                     "NOT_SET",
+                                                                     "DEFAULT",
+                                                                     "DEFAULT")
+
+                                    'TZ Auf RG1
+                                    intLaufNbr = objdbBuha.doesBelegExist2(row("lngLinkedGSDeb").ToString,
+                                                                       row("strDebCur"),
+                                                                       row("lngLinkedGS").ToString,
+                                                                       "NOT_SET",
+                                                                       "R",
+                                                                       "NOT_SET",
+                                                                       "NOT_SET",
+                                                                       "NOT_SET")
+
+                                    If intLaufNbr > 0 Then
+
+                                        Call objdbBuha.SetZahlung(intZV,
+                                                                  strBelegDatum,
+                                                                  strValutaDatum,
+                                                                  row("strDebCur"),
+                                                                  dblKurs,
+                                                                  "",
+                                                                  "",
+                                                                  row("lngLinkedGSDeb"),
+                                                                  dblBetrag.ToString,
+                                                                  row("strDebCur"),
+                                                                  ,
+                                                                  row("lngDebIdentNbr").ToString + ", TZ GS " + row("strDebRGNbr").ToString)
+
+                                        Call objdbBuha.WriteTeilzahlung4(intLaufNbr.ToString,
+                                                                     row("lngDebIdentNbr").ToString + ", TZ GS " + row("strDebRGNbr").ToString,
+                                                                     "NOT_SET",
+                                                                     ,
+                                                                     "NOT_SET",
+                                                                     "NOT_SET",
+                                                                     "DEFAULT",
+                                                                     "DEFAULT")
 
                                     End If
 
                                 End If
+
 
                             End If
 
@@ -6011,13 +6128,18 @@ Public Class frmDebDisp
 
     Friend Function FcCheckLinkedRG(intNewDebiNbr As Int32,
                                     strDebiCur As String,
-                                    intBelegNbr As Int32) As Int16
+                                    intBelegNbr As Int32,
+                                    dblBetragToBook As Double,
+                                    strPeriod As String) As Int16
 
         'Returns 0=ok, 1=Beleg nicht existent, 2=Beleg existiert, ist aber bezahlt, 9=Problem
 
         Dim intLaufNbr As Int32
         Dim strBeleg As String
         Dim strBelegArr() As String
+        Dim dblBetragOpen As Double
+        Dim intLaufNbrTZ As Int32
+        Dim dblTZPayed As Double = 0
 
         Try
 
@@ -6036,10 +6158,56 @@ Public Class frmDebDisp
                                              intLaufNbr.ToString)
 
                 strBelegArr = Split(strBeleg, "{>}")
+                dblBetragOpen = strBelegArr(19)
                 If strBelegArr(4) = "B" Then
                     Return 2
                 Else
-                    Return 0
+                    'Teilzahlungen suchen
+                    intLaufNbrTZ = objdbBuha.doesBelegExist2(intNewDebiNbr.ToString,
+                                                             strDebiCur,
+                                                             intBelegNbr.ToString,
+                                                             "NOT_SET",
+                                                             "T",
+                                                             "NOT_SET",
+                                                             "NOT_SET",
+                                                             "NOT_SET")
+                    If intLaufNbrTZ > 0 Then
+                        'Zahlungen aufsummieren und prüfen ob Abbucnhung möglich
+                        'Alle Belege des Debitors lesen und TZ mit gleicher Beleg-Nr. aufsummieren
+                        Call objdbBuha.ReadBeleg2(intNewDebiNbr.ToString,
+                                                  strPeriod,
+                                                  strDebiCur,
+                                                  "O")
+
+                        strBeleg = objdbBuha.GetBelegZeile2()
+
+                        Do Until strBeleg = "EOF"
+                            strBelegArr = Split(strBeleg, "{>}")
+
+                            If strBelegArr(1) = intBelegNbr And strBelegArr(5) = "T" Then
+                                dblTZPayed += strBelegArr(19) * -1
+                            End If
+
+                            strBeleg = objdbBuha.GetBelegZeile2()
+                        Loop
+
+                        'Ist TZ von GS auf RG 1 möglich?
+                        If dblBetragOpen - dblTZPayed < dblBetragToBook * -1 Then
+                            Return 4
+                        Else
+                            Return 0
+                        End If
+
+                    Else
+                        'Ist Abbuchung möglich?
+                        If (dblBetragToBook * -1) > dblBetragOpen Then
+                            Return 3
+                        Else
+                            Return 0
+                        End If
+
+                    End If
+
                 End If
 
             Else
@@ -9506,6 +9674,55 @@ Public Class frmDebDisp
 
     End Function
 
+    Friend Function FcGetZV(ByRef objSQLConn As SqlClient.SqlConnection,
+                            ByRef objSQLCmd As SqlClient.SqlCommand,
+                            ByVal strMandant As String,
+                            ByVal strType As String,
+                            ByRef intZV As Int32) As Int16
+
+        Dim tblZV As New DataTable
+
+        Try
+
+            If objSQLConn.State = ConnectionState.Closed Then
+                objSQLConn.Open()
+            End If
+
+            If strType = "SB" Then
+
+                objSQLCmd.CommandText = "SELECT lfnbr FROM bankpost WHERE mandid='" + strMandant + "'" +
+                                                                        " AND typ='E'" +
+                                                                        " AND ktofibu='1092'"
+            ElseIf strType = "GS" Then
+
+                objSQLCmd.CommandText = "SELECT lfnbr FROM bankpost WHERE mandid='" + strMandant + "'" +
+                                                                        " AND typ='E'" +
+                                                                        " AND ktofibu='1093'"
+
+            End If
+
+            'Auslesen
+            tblZV.Load(objSQLCmd.ExecuteReader)
+            If tblZV.Rows.Count = 1 Then
+                'Gefunden
+                intZV = tblZV.Rows(0).Item("lfnbr")
+            Else
+                intZV = 0
+            End If
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem ZV - Suche")
+            intZV = 0
+            Return 9
+
+        Finally
+            objSQLConn.Close()
+
+        End Try
+
+
+    End Function
 
     Private Sub ButDeselect_Click(sender As Object, e As EventArgs) Handles ButDeselect.Click
 
