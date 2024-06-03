@@ -2776,7 +2776,7 @@ Public Class frmDebDisp
                 If Mid(strBitLog, 13, 1) <> "0" Then
                     If Mid(strBitLog, 13, 1) = "1" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "SplBNo1"
-                    ElseIf Mid(strBitLog, 15, 1) = "2" Then
+                    ElseIf Mid(strBitLog, 13, 1) = "2" Then
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "SplBBez1"
                     Else
                         strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "SplBRG1<GS"
@@ -3292,7 +3292,7 @@ Public Class frmDebDisp
 
                                         'Teilzahlung buchen
                                         'ZV suchen
-                                        intZV = FcGetZV(objdbMSSQLConn,
+                                        intReturnValue = FcGetZV(objdbMSSQLConn,
                                                         objdbSQLcommand,
                                                         strMandant,
                                                         "SB",
