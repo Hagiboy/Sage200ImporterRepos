@@ -2105,7 +2105,7 @@ Public Class frmDebDisp
                 intActRGNbr += 1
                 BgWCheckDebi.ReportProgress(100 / intTotRGs * intActRGNbr)
 
-                'If row("strDebRGNbr") = "101261" Then Stop
+                'If row("strDebRGNbr") = "1502174" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -2593,7 +2593,9 @@ Public Class frmDebDisp
 
                     For Each SBsubrow As DataRow In selSBrows
                         'Debug.Print("SB gelöscht da Linked RG")
-                        SBsubrow.Delete()
+                        If IIf(IsDBNull(SBsubrow("strArtikel")), "", SBsubrow("strArtikel")) <> "Rundungsdifferenz" Then
+                            SBsubrow.Delete()
+                        End If
                     Next
 
                     Dim drSBBuchung As DataRow = dsDebitoren.Tables("tblDebiSubsFromUser").NewRow
@@ -3032,7 +3034,7 @@ Public Class frmDebDisp
                         'Verdopplung interne BelegsNummer verhindern
                         objdbBuha.CheckDoubleIntBelNbr = "J"
 
-                        If row("dblDebBrutto") < 0 Then
+                        If row("dblDebBrutto") <0 Then
                             'Gutschrift
                             'Falls booGSToInv (Gutschrift zu Rechnung) dann OP-Nummer vorgeben, sonst hochzählen lassen
                             If row("booCrToInv") Then
@@ -8537,7 +8539,7 @@ Public Class frmDebDisp
 
                 datValuta = datValutaSave
                 If strPGVType = "RV" Then
-                    datPGVStart = "2024-01-01"
+                    datPGVStart = frmImportMain.strNexY + "-01-01"
                 End If
 
                 'Evtl. Aufteilen auf 2 Jahre
@@ -8648,7 +8650,7 @@ Public Class frmDebDisp
                         'Application.DoEvents()
 
                         '2311 -> 2312
-                        datValuta = "2024-01-01" 'Achtung provisorisch
+                        datValuta = frmImportMain.strNexY + "-01-01" 'Achtung provisorisch
                         strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                         strBelegDatum = strValutaDatum
                         intHabenKonto = intAcctTY
@@ -8711,7 +8713,7 @@ Public Class frmDebDisp
                         strBebuEintragSoll = Nothing
                     End If
 
-                    If Year(datValuta) = 2023 And Year(datValuta) <> Val(strActualYear) Then 'Achtung provisorisch
+                    If Year(datValuta) = frmImportMain.intCurY And Year(datValuta) <> Val(strActualYear) Then 'Achtung provisorisch
                         'Zuerst Info-Table löschen
                         'objdtInfo.Clear()
                         'Application.DoEvents()
@@ -8722,11 +8724,11 @@ Public Class frmDebDisp
                                                       objFinanzCopy,
                                                       objfiBuhaCopy,
                                                       intAccounting,
-                                                      "2023",
+                                                      frmImportMain.strCurY,
                                                       strActualYear)
                         'Application.DoEvents()
 
-                    ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strActualYear) Then
+                    ElseIf Year(datValuta) = frmImportMain.intNexY And Year(datValuta) <> Val(strActualYear) Then
                         'Zuerst Info-Table löschen
                         'objdtInfo.Clear()
                         'Application.DoEvents()
@@ -8737,7 +8739,7 @@ Public Class frmDebDisp
                                                       objFinanzCopy,
                                                       objfiBuhaCopy,
                                                       intAccounting,
-                                                      "2024",
+                                                      frmImportMain.strNexY,
                                                       strActualYear)
                         'Application.DoEvents()
 
@@ -9113,7 +9115,7 @@ Public Class frmDebDisp
                         intITY = 0
                     ElseIf strPGVType = "RV" Then
                         'Damit die Periodenbuchung auf den ersten gebucht wird.
-                        datPGVStart = "2024-01-01"
+                        datPGVStart = frmImportMain.strNexY + "-01-01"
                         datValuta = datValutaSave
                         intITY = 1
                         intINY = 0
@@ -9124,7 +9126,7 @@ Public Class frmDebDisp
                 'Evtl. Aufteilen auf 2 Jahre
                 For intYearLooper As Int16 = Year(datValuta) To Year(datPGVEnd)
 
-                    If intYearLooper = 2023 Then
+                    If intYearLooper = frmImportMain.intCurY Then
                         dblNettoBetrag = drDSubrow("dblNetto") * -1 / intITotal * intITY
                         intHabenKonto = intAcctTY
                     Else
@@ -9137,7 +9139,7 @@ Public Class frmDebDisp
                         strBelegDatum = Format(datValuta, "yyyyMMdd").ToString
 
                         If intITotal = 1 Then
-                            If Year(datValuta) = 2023 Then
+                            If Year(datValuta) = frmImportMain.intCurY Then
                                 strDebiTextHaben = drDSubrow("strDebSubText") + ", TA"
                             Else
                                 strDebiTextHaben = drDSubrow("strDebSubText") + ", TA Auflösung"
@@ -9154,8 +9156,8 @@ Public Class frmDebDisp
                             strDebiTextSoll = strDebiTextHaben
                             If strPGVType = "VR" Then
                                 'Valuta - Datum auf 01.01.24 legen, Achtung provisorisch
-                                strValutaDatum = "20240101"
-                                strBelegDatum = "20240101"
+                                strValutaDatum = frmImportMain.strNexY + "0101"
+                                strBelegDatum = frmImportMain.strNexY + "0101"
                             Else
                                 'strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                                 strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
@@ -9196,7 +9198,7 @@ Public Class frmDebDisp
 
                         End If
 
-                        If Year(datValuta) = 2023 And Year(datValuta) <> Val(strActualYear) Then 'Achtung provisorisch
+                        If Year(datValuta) = frmImportMain.intCurY And Year(datValuta) <> Val(strActualYear) Then 'Achtung provisorisch
                             'Zuerst Info-Table löschen
                             'objdtInfo.Clear()
                             'Application.DoEvents()
@@ -9207,11 +9209,11 @@ Public Class frmDebDisp
                                                           objFinanzCopy,
                                                           objfiBuhaCopy,
                                                           intAccounting,
-                                                          "2023",
+                                                          frmImportMain.strCurY,
                                                           strActualYear)
                             ''Application.DoEvents()
 
-                        ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strActualYear) Then
+                        ElseIf Year(datValuta) = frmImportMain.intNexY And Year(datValuta) <> Val(strActualYear) Then
                             'Zuerst Info-Table löschen
                             'objdtInfo.Clear()
                             'Application.DoEvents()
@@ -9222,7 +9224,7 @@ Public Class frmDebDisp
                                                           objFinanzCopy,
                                                           objfiBuhaCopy,
                                                           intAccounting,
-                                                          "2024",
+                                                          frmImportMain.strNexY,
                                                           strActualYear)
                             'Application.DoEvents()
 
@@ -9290,7 +9292,7 @@ Public Class frmDebDisp
                         'Application.DoEvents()
 
                         '2311 -> 2312
-                        datValuta = "2024-01-01" 'Achtung provisorisch
+                        datValuta = frmImportMain.strNexY + "-01-01" 'Achtung provisorisch
                         strValutaDatum = Format(datValuta, "yyyyMMdd").ToString
                         strBelegDatum = strValutaDatum
                         intHabenKonto = intAcctTY
@@ -9344,7 +9346,7 @@ Public Class frmDebDisp
                     strBelegDatum = strValutaDatum
                     intHabenKonto = drDSubrow("lngKto")
                     If intITotal = 1 Then
-                        If Year(datValuta) = 2023 Then
+                        If Year(datValuta) = frmImportMain.intCurY Then
                             strDebiTextHaben = drDSubrow("strDebSubText") + ", TA"
                         Else
                             strDebiTextHaben = drDSubrow("strDebSubText") + ", TA Auflösung"
@@ -9370,7 +9372,7 @@ Public Class frmDebDisp
                         strBebuEintragSoll = Nothing
                     End If
 
-                    If Year(datValuta) = 2023 And Year(datValuta) <> Val(strActualYear) Then 'Achtung provisorisch
+                    If Year(datValuta) = frmImportMain.intCurY And Year(datValuta) <> Val(strActualYear) Then 'Achtung provisorisch
                         'Zuerst Info-Table löschen
                         'objdtInfo.Clear()
                         'Application.DoEvents()
@@ -9381,11 +9383,11 @@ Public Class frmDebDisp
                                                           objFinanzCopy,
                                                           objfiBuhaCopy,
                                                           intAccounting,
-                                                          "2023",
+                                                          frmImportMain.strCurY,
                                                           strActualYear)
                         'Application.DoEvents()
 
-                    ElseIf Year(datValuta) = 2024 And Year(datValuta) <> Val(strActualYear) Then
+                    ElseIf Year(datValuta) = frmImportMain.intNexY And Year(datValuta) <> Val(strActualYear) Then
                         'Zuerst Info-Table löschen
                         'objdtInfo.Clear()
                         'Application.DoEvents()
@@ -9396,7 +9398,7 @@ Public Class frmDebDisp
                                                           objFinanzCopy,
                                                           objfiBuhaCopy,
                                                           intAccounting,
-                                                          "2024",
+                                                          frmImportMain.strNexY,
                                                           strActualYear)
                         'Application.DoEvents()
 
