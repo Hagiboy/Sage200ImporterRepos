@@ -4507,7 +4507,7 @@ Public Class frmKredDisp
 
                 'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
                 If subrow("lngKto") < 3000 Then
-                    If (subrow("lngKto") <> 1120) And (subrow("lngKto") <> 1121) Then 'Ausnahme AW24
+                    If (subrow("lngKto") <> 1120) And (subrow("lngKto") <> 1121) And (subrow("lngKto") <> 1500) Then 'Ausnahme AW24
                         subrow("strMwStKey") = Nothing
                     End If
                     subrow("lngKST") = 0
