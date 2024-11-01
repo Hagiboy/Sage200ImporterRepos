@@ -1872,6 +1872,7 @@ Public Class frmDebDisp
                 If row.Table.Columns.Contains("datPGVTo") Then
                     objmysqlcomdwritehead.Parameters("@datPGVTo").Value = row("datPGVTo")
                 End If
+                objmysqlcomdwritehead.Parameters("@intZKond").Value = row("intZKond")
                 objmysqlcomdwritehead.ExecuteNonQuery()
                 objmysqlcomdwritehead.Connection.Close()
                 'objdtLocDebiHead.AcceptChanges()
@@ -4298,6 +4299,9 @@ Public Class frmDebDisp
             inscmdValues += ", @datPGVFrom"
             inscmdFields += ", datPGVTo"
             inscmdValues += ", @datPGVTo"
+            inscmdFields += ", intZKond"
+            inscmdValues += ", @intZKond"
+
 
 
             'Ins cmd DebiHead
@@ -4333,6 +4337,7 @@ Public Class frmDebDisp
             mysqlinscmd.Parameters.Add("@booCrToInv", MySqlDbType.Int16).SourceColumn = "booCrToInv"
             mysqlinscmd.Parameters.Add("@datPGVFrom", MySqlDbType.Date).SourceColumn = "datPGVFrom"
             mysqlinscmd.Parameters.Add("@datPGVTo", MySqlDbType.Date).SourceColumn = "datPGVTo"
+            mysqlinscmd.Parameters.Add("@intZKond", MySqlDbType.Int16).SourceColumn = "intZKond"
 
             Return 0
 
