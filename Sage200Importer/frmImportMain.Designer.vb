@@ -291,7 +291,7 @@ Partial Class frmImportMain
         'lstBoxPerioden
         '
         Me.lstBoxPerioden.FormattingEnabled = True
-        Me.lstBoxPerioden.Location = New System.Drawing.Point(278, 4)
+        Me.lstBoxPerioden.Location = New System.Drawing.Point(317, 4)
         Me.lstBoxPerioden.Name = "lstBoxPerioden"
         Me.lstBoxPerioden.Size = New System.Drawing.Size(127, 69)
         Me.lstBoxPerioden.TabIndex = 22
@@ -302,7 +302,7 @@ Partial Class frmImportMain
         Me.lstBoxMandant.FormattingEnabled = True
         Me.lstBoxMandant.Location = New System.Drawing.Point(10, 4)
         Me.lstBoxMandant.Name = "lstBoxMandant"
-        Me.lstBoxMandant.Size = New System.Drawing.Size(262, 69)
+        Me.lstBoxMandant.Size = New System.Drawing.Size(301, 69)
         Me.lstBoxMandant.TabIndex = 21
         '
         'LblTaskID

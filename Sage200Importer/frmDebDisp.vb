@@ -9,6 +9,7 @@ Imports Microsoft.VisualBasic.ApplicationServices
 Imports System.IO
 Imports System.Net
 Imports System.Xml
+Imports SBSXASLib
 
 Public Class frmDebDisp
 
@@ -20,6 +21,7 @@ Public Class frmDebDisp
     'Dim Adr As SBSXASLib.AXiAdr
     'Dim BeBu As SBSXASLib.AXiBeBu
     'Dim PIFin As SBSXASLib.AXiPlFin
+
 
     Dim objFinanz As New SBSXASLib.AXFinanz
     Dim objfiBuha As New SBSXASLib.AXiFBhg
@@ -2438,15 +2440,35 @@ Public Class frmDebDisp
                 End If
 
                 'Evtl. End-Datum Korrektur
+                'Datum soll nur korrigiert werden, wenn das zukünftige Jahr noch nicht existiert
                 If booValutaEndCorrect Then
+                    intReturnValue = 0
+
                     If row("datDebRGDatum") > datValutaEndCorrect Then
-                        row("datDebRGDatum") = datValutaEndCorrect.ToShortDateString
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDECor"
+
+                        intReturnValue = FcCheckDate2(row("datDebRGDatum"),
+                                              BgWCheckDebiArgsInProc.strYear,
+                                              dsDebitoren.Tables("tblDebitorenDates"),
+                                              True)
+
+                        If intReturnValue <> 0 Then
+                            row("datDebRGDatum") = datValutaEndCorrect.ToShortDateString
+                            strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "RgDECor"
+                        End If
                     End If
                     If row("datDebValDatum") > datValutaEndCorrect Then
-                        row("datDebValDatum") = datValutaEndCorrect.ToShortDateString
-                        strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValDECor"
+
+                        intReturnValue = FcCheckDate2(row("datDebValDatum"),
+                                              BgWCheckDebiArgsInProc.strYear,
+                                              dsDebitoren.Tables("tblDebitorenDates"),
+                                              True)
+
+                        If intReturnValue <> 0 Then
+                            row("datDebValDatum") = datValutaEndCorrect.ToShortDateString
+                            strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ValDECor"
+                        End If
                     End If
+
                 End If
 
                 booDateChanged = False
@@ -2467,7 +2489,7 @@ Public Class frmDebDisp
                         If row("strPGVType") = "VR" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
-                            row("datDebValDatum") = "2024-01-01"
+                            row("datDebValDatum") = "2025-01-01"
                             booDateChanged = True
                         ElseIf row("strPGVType") = "RV" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
@@ -6181,10 +6203,24 @@ Public Class frmDebDisp
                     If intLaufNbrTZ > 0 Then
                         'Zahlungen aufsummieren und prüfen ob Abbucnhung möglich
                         'Alle Belege des Debitors lesen und TZ mit gleicher Beleg-Nr. aufsummieren
-                        Call objdbBuha.ReadBeleg2(intNewDebiNbr.ToString,
+
+                        Try
+                            Call objdbBuha.ReadBeleg2(intNewDebiNbr.ToString,
                                                   strPeriod,
                                                   strDebiCur,
                                                   "O")
+
+                        Catch ex As Exception
+                            If Err.Number = -2147483548 Then
+                                Call objdbBuha.ReadBeleg2(intNewDebiNbr.ToString,
+                                                  Val(strPeriod) - 1.ToString,
+                                                  strDebiCur,
+                                                  "O")
+                            End If
+
+                        End Try
+
+
 
                         strBeleg = objdbBuha.GetBelegZeile2()
 
@@ -6440,7 +6476,13 @@ Public Class frmDebDisp
                 Else
                     'Ist etwas blockiert?
                     selrelDates = tblDates.Select("intYear=" + strSelYear)
-                    booIsDateOk = True
+                    'Ist etwas blockiert?
+                    If selrelDates.Length <> 0 Then
+                        booIsDateOk = True
+                    Else
+                        booIsDateOk = False
+                    End If
+
                     For Each drselrelDates In selrelDates
                         If datDateToCheck >= drselrelDates("datFrom") And datDateToCheck <= drselrelDates("datTo") Then
                             'Ist Status <> O
@@ -6459,7 +6501,12 @@ Public Class frmDebDisp
             Else
                 selrelDates = tblDates.Select("intYear=" + Convert.ToString(DateAndTime.Year(datDateToCheck)))
                 'Ist etwas blockiert?
-                booIsDateOk = True
+                If selrelDates.Length <> 0 Then
+                    booIsDateOk = True
+                Else
+                    booIsDateOk = False
+                End If
+
                 For Each drselrelDates In selrelDates
                     If datDateToCheck >= drselrelDates("datFrom") And datDateToCheck <= drselrelDates("datTo") Then
                         'Ist Status <> O

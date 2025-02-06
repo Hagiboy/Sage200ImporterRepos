@@ -6436,6 +6436,7 @@ ErrorHandler:
                 strFctReturn += ", K"
             End If
 
+
             Return strFctReturn
 
         Catch ex As Exception

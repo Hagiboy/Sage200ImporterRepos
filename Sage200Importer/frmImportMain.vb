@@ -398,6 +398,149 @@ Friend Class frmImportMain
 
     End Sub
 
+    Friend Function FcPreviewThem(ByVal intAccounting As Int16,
+                                  ByRef intNumberDeb As Int16,
+                                  ByRef intNumberKred As Int16) As Int16
+
+
+        Dim objdbConnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim intFcReturns As Int16
+        Dim strMDBName As String
+        Dim strSQL As String
+        Dim strRGTableType As String
+        Dim objdslocdebihead As New DataSet
+        Dim objdaoleheadselcomd As New OleDb.OleDbCommand
+        Dim objdbAccessConn As New OleDb.OleDbConnection
+        Dim objdaolelocDebiHeads As New OleDb.OleDbDataAdapter
+        Dim strConnection As String
+        Dim objRGMySQLConn As New MySqlConnection
+        Dim objdaheadselcomd As New MySqlCommand
+        Dim objdalocDebiHeads As New MySqlDataAdapter
+        'Kred
+        Dim objdslocKredihead As New DataSet
+        Dim strKRGTableType As String
+        Dim objdaolesubsselcomd As New OleDb.OleDbCommand
+        Dim objdaolelocKrediHeads As New OleDb.OleDbDataAdapter
+        Dim objdalocKrediHeads As New MySqlDataAdapter
+
+        Try
+
+            'Deb
+            intFcReturns = frmDebDisp.FcReadFromSettingsIII("Buchh_RGTableMDB",
+                                                        intAccounting,
+                                                        strMDBName)
+
+            intFcReturns = frmDebDisp.FcReadFromSettingsIII("Buchh_SQLHead",
+                                                 intAccounting,
+                                                 strSQL)
+
+            intFcReturns = frmDebDisp.FcReadFromSettingsIII("Buchh_RGTableType",
+                                                         intAccounting,
+                                                         strRGTableType)
+
+            objdslocdebihead.EnforceConstraints = False
+
+            If strRGTableType = "A" And Len(strSQL) > 0 Then
+
+                'Access
+                Call frmDebDisp.FcInitAccessConnecation(objdbAccessConn,
+                                                  strMDBName)
+                objdaoleheadselcomd.Connection = objdbAccessConn
+                objdaoleheadselcomd.CommandText = strSQL
+                objdaolelocDebiHeads.SelectCommand = objdaoleheadselcomd
+                objdaolelocDebiHeads.SelectCommand.Connection.Open()
+                objdaolelocDebiHeads.Fill(objdslocdebihead, "tbldebihead")
+                objdaolelocDebiHeads.SelectCommand.Connection.Close()
+
+                intNumberDeb = objdslocdebihead.Tables("tbldebihead").Rows.Count
+
+            ElseIf strRGTableType = "M" And Len(strSQL) > 0 Then
+
+                strConnection = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                objRGMySQLConn.ConnectionString = strConnection
+                objdaheadselcomd.Connection = objRGMySQLConn
+                objdaheadselcomd.CommandText = strSQL
+                objdalocDebiHeads.SelectCommand = objdaheadselcomd
+                objdalocDebiHeads.SelectCommand.Connection.Open()
+                objdalocDebiHeads.Fill(objdslocdebihead, "tbldebihead")
+                objdalocDebiHeads.SelectCommand.Connection.Close()
+
+                intNumberDeb = objdslocdebihead.Tables("tbldebihead").Rows.Count
+
+            Else 'Len(strSQL) = 0 Then 'Kein SQL definiert
+                intNumberDeb = 0
+
+                'Else
+                '   MessageBox.Show("Tabletype not A or M bei Acc " + intAccounting.ToString)
+                '  Return 1
+            End If
+
+            'Kred
+            strMDBName = ""
+            strSQL = ""
+            intFcReturns = frmKredDisp.FcReadFromSettingsIII("Buchh_KRGTableMDB",
+                                              intAccounting,
+                                              strMDBName)
+
+            intFcReturns = frmKredDisp.FcReadFromSettingsIII("Buchh_SQLHeadKred",
+                                          intAccounting,
+                                          strSQL)
+
+            intFcReturns = frmKredDisp.FcReadFromSettingsIII("Buchh_KRGTableType",
+                                                   intAccounting,
+                                                   strKRGTableType)
+
+            objdslocKredihead.EnforceConstraints = False
+
+            If strKRGTableType = "A" And Len(strSQL) > 0 Then
+
+                'Access
+                Call frmKredDisp.FcInitAccessConnecation(objdbAccessConn,
+                                                  strMDBName)
+                objdaolesubsselcomd.Connection = objdbAccessConn
+                objdaolesubsselcomd.CommandText = strSQL
+                objdaolelocKrediHeads.SelectCommand = objdaolesubsselcomd
+                objdaolelocKrediHeads.SelectCommand.Connection.Open()
+                objdaolelocKrediHeads.Fill(objdslocKredihead, "tblkredihead")
+                objdaolelocKrediHeads.SelectCommand.Connection.Close()
+
+                intNumberKred = objdslocKredihead.Tables("tblkredihead").Rows.Count
+
+            ElseIf strKRGTableType = "M" And Len(strSQL) > 0 Then
+
+                strConnection = System.Configuration.ConfigurationManager.AppSettings(strMDBName)
+                objRGMySQLConn.ConnectionString = strConnection
+                objdaheadselcomd.Connection = objRGMySQLConn
+                objdaheadselcomd.CommandText = strSQL
+                objdalocKrediHeads.SelectCommand = objdaheadselcomd
+                objdalocKrediHeads.SelectCommand.Connection.Open()
+                objdalocKrediHeads.Fill(objdslocKredihead, "tblkredihead")
+                objdalocKrediHeads.SelectCommand.Connection.Close()
+
+                intNumberKred = objdslocKredihead.Tables("tblkredihead").Rows.Count
+
+            Else
+                intNumberKred = 0
+
+            End If
+
+            Return 0
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Problem in Anzahl vorlesen.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            Return 9
+
+        Finally
+
+            objdslocdebihead = Nothing
+            objdslocKredihead = Nothing
+
+        End Try
+
+
+    End Function
+
+
     Public Sub InitdgvInfo()
 
         ''DGV - Info
@@ -797,6 +940,9 @@ Friend Class frmImportMain
         Dim objdbtaskscmd As New MySqlCommand
         Dim objdttaksd As New DataTable
         Dim strIdentityName As String
+        Dim intDebNbr As Int16
+        Dim intKredNbr As Int16
+        Dim intFcReturns As Int16
 
         Try
 
@@ -807,7 +953,10 @@ Friend Class frmImportMain
             objDABuchhaltungen.Fill(objdtBuchhaltungen)
 
             For Each drBuha In objdtBuchhaltungen.Rows
-                strDKDef = Main.FcGetDKDef(drBuha("Buchh_Nr"))
+                intFcReturns = FcPreviewThem(drBuha("Buchh_Nr"),
+                                             intDebNbr,
+                                             intKredNbr)
+                strDKDef = Main.FcGetDKDef(drBuha("Buchh_Nr")) + " (" + intDebNbr.ToString + "/ " + intKredNbr.ToString + ")"
                 drBuha("Buchh_Bez") += strDKDef
             Next
             'cmbMarken.Sorted = True
@@ -3207,6 +3356,14 @@ Friend Class frmImportMain
 
         Try
 
+            'Wenn Datums-Anpassung gewählt ist, bei Wahl anderer Mandant Opttion deaktivieren
+            If chkValutaCorrect.Checked Then
+                chkValutaCorrect.Checked = False
+            End If
+            If chkValutaEndCorrect.Checked Then
+                chkValutaEndCorrect.Checked = False
+            End If
+
 
             Call Main.FcReadPeriodsFromMandantLst(objdbConn,
                                            objFinanz,
@@ -3261,4 +3418,5 @@ Friend Class frmImportMain
         End If
 
     End Sub
+
 End Class
