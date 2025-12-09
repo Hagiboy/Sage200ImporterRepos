@@ -250,10 +250,10 @@ Partial Class frmImportMain
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.LblVersion)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox2)
         Me.ToolStripContainer1.ContentPanel.Controls.Add(Me.GroupBox1)
-        Me.ToolStripContainer1.ContentPanel.Size = New System.Drawing.Size(1688, 80)
+        Me.ToolStripContainer1.ContentPanel.Size = New System.Drawing.Size(1688, 62)
         Me.ToolStripContainer1.Location = New System.Drawing.Point(2, 1)
         Me.ToolStripContainer1.Name = "ToolStripContainer1"
-        Me.ToolStripContainer1.Size = New System.Drawing.Size(1688, 105)
+        Me.ToolStripContainer1.Size = New System.Drawing.Size(1688, 87)
         Me.ToolStripContainer1.TabIndex = 24
         Me.ToolStripContainer1.Text = "ToolStripContainer1"
         '

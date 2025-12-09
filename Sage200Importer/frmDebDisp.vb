@@ -2067,7 +2067,7 @@ Public Class frmDebDisp
 
             End Try
 
-
+            'Mandant Key von Sage holen
             intFcReturns = FcReadFromSettingsIII("Buchh200_Name",
                                                 BgWCheckDebiArgsInProc.intMandant,
                                                 strMandant)
@@ -2108,7 +2108,7 @@ Public Class frmDebDisp
                 intActRGNbr += 1
                 BgWCheckDebi.ReportProgress(100 / intTotRGs * intActRGNbr)
 
-                'If row("strDebRGNbr") = "1502174" Then Stop
+                'If row("strDebRGNbr") = "134944" Then Stop
                 strRGNbr = row("strDebRGNbr") 'Für Error-Msg
 
                 'Runden
@@ -2642,6 +2642,10 @@ Public Class frmDebDisp
                     dsDebitoren.Tables("tblDebiSubsFromUser").AcceptChanges()
                     drSBBuchung = Nothing
                     Debug.Print("SB eingefügt von Main ohne MWst bei Linked " + row("strDebRGNbr"))
+                    'Falls es in den UB zu einem Fehler kam, ist dieser nun hinfällig
+                    If Mid(strBitLog, 4, 1) = "1" Then
+                        strBitLog = Strings.Left(strBitLog, 3) + "0" + Strings.Right(strBitLog, Len(strBitLog) - 4)
+                    End If
                 Else
                     intReturnValue = 0
                 End If
@@ -6235,7 +6239,7 @@ Public Class frmDebDisp
                         Loop
 
                         'Ist TZ von GS auf RG 1 möglich?
-                        If dblBetragOpen - dblTZPayed < dblBetragToBook * -1 Then
+                        If Math.Round(dblBetragOpen - dblTZPayed, 2) < dblBetragToBook * -1 Then
                             Return 4
                         Else
                             Return 0
@@ -7784,7 +7788,7 @@ Public Class frmDebDisp
         Dim dblStrStCodeSage As Double
         Dim strKstKtrSage200 As String = String.Empty
         Dim selsubrow() As DataRow
-        Dim strStatusOverAll As String = "0000000"
+        Dim strStatusOverAll As String = "00000000"
         Dim strSteuer() As String
         Dim intSollKonto As Int32 = lngDebKonto
         Dim strProjDesc As String
@@ -7968,6 +7972,8 @@ Public Class frmDebDisp
                                                   False)
                     If intReturnValue = 0 Then
                         subrow("strKtoBez") += FcReadDebitorKName(subrow("lngKto"))
+                    ElseIf intReturnValue = 1 Then
+                        subrow("strKtoBez") += FcReadDebitorKName(subrow("lngKto")) + " n/a"
                     ElseIf intReturnValue = 2 Then
                         subrow("strKtoBez") += FcReadDebitorKName(subrow("lngKto")) + " MwSt!"
                     ElseIf intReturnValue = 3 Then

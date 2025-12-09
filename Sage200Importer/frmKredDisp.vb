@@ -1508,7 +1508,7 @@ Public Class frmKredDisp
                 objmysqlcomdwritehead.Parameters("@dblKredMwSt").Value = row("dblKredMwSt")
                 objmysqlcomdwritehead.Parameters("@dblKredBrutto").Value = row("dblKredBrutto")
                 objmysqlcomdwritehead.Parameters("@lngKredIdentNbr").Value = row("lngKredIdentNbr")
-                objmysqlcomdwritehead.Parameters("@strKredText").Value = row("strKredText")
+                objmysqlcomdwritehead.Parameters("@strKredText").Value = Strings.Left(row("strKredText"), 125)
                 objmysqlcomdwritehead.Parameters("@strKredRef").Value = row("strKredRef")
                 objmysqlcomdwritehead.Parameters("@datKredRGDatum").Value = row("datKredRGDatum")
                 objmysqlcomdwritehead.Parameters("@datKredValDatum").Value = row("datKredValDatum")
@@ -1665,6 +1665,9 @@ Public Class frmKredDisp
         Dim strFcReturns As String
         Dim intActRGNbr As Int32
         Dim intTotRGs As Int32
+        Dim intKZKond As Int32
+        Dim intKZKondS200 As Int32
+
 
         Try
 
@@ -1705,6 +1708,8 @@ Public Class frmKredDisp
             booDiffHeadText = IIf(FcReadFromSettingsII("Buchh_KTextSpecial", BgWCheckKrediArgsInProc.intMandant) = "0", False, True)
             booLeaveSubText = IIf(FcReadFromSettingsII("Buchh_KSubLeaveText", BgWCheckKrediArgsInProc.intMandant) = "0", False, True)
             booDiffSubText = IIf(FcReadFromSettingsII("Buchh_KSubTextSpecial", BgWCheckKrediArgsInProc.intMandant) = "0", False, True)
+            'booPKPrivate = IIf(FcReadFromSettingsII("Buchh_PKTable", BgWCheckKrediArgsInProc.intMandant) = "t_customer", True, False)
+
 
             intTotRGs = dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count
             intActRGNbr = 0
@@ -1713,7 +1718,7 @@ Public Class frmKredDisp
                 intActRGNbr += 1
                 BgWCheckKredi.ReportProgress(100 / intTotRGs * intActRGNbr)
 
-                If row("lngKredID") = "31762" Then Stop
+                If row("lngKredID") = "84687" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -2046,7 +2051,7 @@ Public Class frmKredDisp
 
                 'interne Bank 13
                 intReturnValue = FcCheckDebiIntBank(BgWCheckKrediArgsInProc.intMandant,
-                                                         row("strKrediBankInt"),
+                                                         IIf(IsDBNull(row("strKrediBankInt")), "", row("strKrediBankInt")),
                                                          intintBank)
                 row("intintBank") = intintBank
                 strBitLog += Trim(intReturnValue.ToString)
@@ -2069,6 +2074,40 @@ Public Class frmKredDisp
                 Else
                     strBitLog += "0"
                 End If
+
+                'Zahlungskondition 16
+                'Falls Zahlungskondition vorhnaden, von RG holen. Sonst von Tab_Repbetrieben
+                If IsDBNull(row("intZKond")) Then
+                    row("intZKond") = 0
+                    intKZKond = 0
+                Else
+                    'ID in effektive Sage 200 umwandeln (=von Tabelle lesen)
+                    intReturnValue = FcGetDZKondSageID(row("intZKond"),
+                                                       intKZKondS200)
+                    row("intZKond") = intKZKondS200
+
+                End If
+                If row("intZKond") = 0 Then
+                    'Falls PKs nicht in Privater Tabelle
+                    If booPKPrivate = False Then
+                        'Daten aus Rep_Betrieben holen
+                        intReturnValue = FcGetKZkondFromRep(row("lngKredNbr"),
+                                                            intKZKond,
+                                                            BgWCheckKrediArgsInProc.intMandant)
+                    Else
+                        'Daten aus der t_customer holen
+                        intReturnValue = FcGetKZkondFromCust(row("lngKredNbr"),
+                                                             intKZKond,
+                                                             BgWCheckKrediArgsInProc.intMandant)
+                    End If
+                    row("intZKond") = intKZKond
+
+                End If
+                'Prüfen ob ZK - ID existiert in Sage 200 Mandant
+                intReturnValue = FcCheckKZKond(strMandant,
+                                               row("intZKond"))
+                strBitLog += Trim(intReturnValue.ToString)
+
 
                 'Status-String auswerten
                 'booPKPrivate = IIf(Main.FcReadFromSettingsII("Buchh_PKKrediTable", BgWCheckKrediArgsInProc.intMandant) = "t_customer", True, False)
@@ -2120,6 +2159,9 @@ Public Class frmKredDisp
                     intReturnValue = FcReadKreditorName(strKreditorNew,
                                                                         intKreditorNew,
                                                                         row("strKredCur"))
+                    If strKreditorNew = "EOF" Then
+                        Stop
+                    End If
                     row("strKredBez") = strKreditorNew
                     row("lngKredNbr") = intKreditorNew
                     row("intEBank") = 0
@@ -2251,6 +2293,10 @@ Public Class frmKredDisp
                         strStatus += Mid(strBitLog, 15, 1)
                     End If
                 End If
+                'ZK 16
+                If Mid(strBitLog, 16, 1) <> "0" Then
+                    strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ZV "
+                End If
                 'PGV keine Ziffer
                 If row("booPGV") Then
                     If row("intPGVMthsAY") + row("intPGVMthsNY") = 1 Then
@@ -2261,7 +2307,7 @@ Public Class frmKredDisp
                 End If
 
                 'Status schreiben
-                If Val(strBitLog) = 0 Or Val(strBitLog) = 10000000000 Then
+                If Val(strBitLog) = 0 Or Val(strBitLog) = 100000000000 Then 'Kein Fehler oder erfolgreiche Autokorrektur
                     row("booKredBook") = True
                     strStatus = strStatus + IIf(strStatus <> "", ", ", "") + "ok"
                 End If
@@ -2416,6 +2462,7 @@ Public Class frmKredDisp
         Dim strKRGReferTo As String
         Dim intActRGNbr As Int32
         Dim intTotRGs As Int32
+        Dim intDaysZK As Int16
 
 
         'Dim objFinanz As New SBSXASLib.AXFinanz
@@ -2453,6 +2500,10 @@ Public Class frmKredDisp
             'objdbPIFb = objfiBuha.GetCheckObj()
             'objFiBebu = objFinanz.GetBeBuObj()
             'objKrBuha = objFinanz.GetKrediObj()
+            intReturnValue = FcReadFromSettingsIII("Buchh200_Name",
+                                                BgWImportKrediArgsInProc.intMandant,
+                                                strMandant)
+
 
             intTotRGs = dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count
             intActRGNbr = 0
@@ -2525,7 +2576,12 @@ Public Class frmKredDisp
 
                         strValutaDatum = Format(row("datKredValDatum"), "yyyyMMdd").ToString
                         strBelegDatum = Format(row("datKredRGDatum"), "yyyyMMdd").ToString
-                        strVerfallDatum = String.Empty
+                        'Funktioniert nicht mehr. Verfallsdatum muss berechnet werden.
+                        'strVerfallDatum = String.Empty
+                        intDaysZK = FcGetKZKondDays(strMandant,
+                                                    row("intZKond"))
+                        strVerfallDatum = Format(DateAdd("d", intDaysZK, row("datKredRGDatum")), "yyyyMMdd").ToString
+
                         If row("intPayType") <> 9 Then 'nicht IBAN
                             'QR-Referenz
                             strReferenz = IIf(IsDBNull(row("strKredRef")), "", row("strKredRef"))
@@ -4259,6 +4315,7 @@ Public Class frmKredDisp
                         intRecordCounter = 0
                         Do Until intRecordCounter = objdsPKNbrs.Tables(0).Rows.Count
                             If Not objdsPKNbrs.Tables(0).Rows(intRecordCounter).Item("PKNr") = i Then
+                                'Hier Check einbauen
                                 intNewPKNr = i
                                 Return 0
                             End If
@@ -5015,6 +5072,7 @@ Public Class frmKredDisp
                     Return 3
                 ElseIf dblBrutto = 0 Then
                     Return 1
+                    'Return 0 'kann 0 sein
                 ElseIf dblNetto = 0 Then
                     'Return 2
                 ElseIf Math.Abs(Decimal.Round(dblBrutto - dblNetto - dblMwSt - dblRDiff, 2, MidpointRounding.AwayFromZero)) > 0 Then 'Math.Round(dblBrutto - dblRDiff - dblMwSt, 2, MidpointRounding.AwayFromZero) <> Math.Round(dblNetto, 2, MidpointRounding.AwayFromZero) Then
@@ -5830,7 +5888,7 @@ Public Class frmKredDisp
             'Zahlungsbedingung suchen
             'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
             objsqlcommandZHDB02.CommandText = "Select t_customer.PKNr, t_sage_zahlungskondition.SageID " +
-                                                  "FROM t_customer INNER JOIN t_sage_zahlungskondition On t_customer.DebiZKonditionID = t_sage_zahlungskondition.ID " +
+                                                  "FROM t_customer INNER JOIN t_sage_zahlungskondition On t_customer.KrediZKonditionID = t_sage_zahlungskondition.ID " +
                                                   "WHERE t_customer.PKNr=" + lngKrediiNbr.ToString
             objDADebitor.SelectCommand = objsqlcommandZHDB02
             objdsDebitor.EnforceConstraints = False
@@ -5882,6 +5940,7 @@ Public Class frmKredDisp
                                            ByRef strBankClearing As String) As Int16
 
         Dim objdbconn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+
         Dim objIBANReq As HttpWebRequest
         Dim objdtIBAN As New DataTable
         'Dim striBANURI As New Uri("https://rest.sepatools.eu/validate_iban_dummy/AL90208110080000001039531801")
@@ -5936,6 +5995,7 @@ Public Class frmKredDisp
                         'bank address
                         strXMLTag(5) = objXMLNode.ChildNodes.Item(9).Name
                         strXMLAddress = Split(objXMLNode.ChildNodes.Item(9).InnerText, vbLf)
+
                         If strXMLAddress.Count = 2 Then
                             strXMLText(5) = strXMLAddress(0)
                             strXMLTag(6) = "bank_address2"
@@ -5945,8 +6005,11 @@ Public Class frmKredDisp
                             strXMLTag(6) = "bank_address2"
                             strXMLText(6) = strXMLAddress(2)
                         End If
-                        strXMLTag(7) = objXMLNode.ChildNodes.Item(39).Name
-                        strXMLText(7) = objXMLNode.ChildNodes.Item(39).InnerText
+                        If Len(strXMLText(4)) > 0 Then
+                            strXMLTag(7) = objXMLNode.ChildNodes.Item(39).Name
+                            strXMLText(7) = objXMLNode.ChildNodes.Item(39).InnerText
+
+                        End If
                     Next
                     'BIC
                     objXMLNodeList = objXMLDoc.SelectNodes("/result/bic_candidates-list/bic_candidates")
@@ -5966,8 +6029,11 @@ Public Class frmKredDisp
                     strBankClearing = Trim(strXMLText(3))
                     strBankBIC = Trim(strXMLText(8))
 
-                    'in IBAN-Tabelle schreiben
-                    objmysqlcom.CommandText = "INSERT INTO t_sage_tbliban (strIBANNr, 
+
+                    If Val(strXMLText(1)) <> 256 Then
+
+                        'in IBAN-Tabelle schreiben
+                        objmysqlcom.CommandText = "INSERT INTO t_sage_tbliban (strIBANNr, 
                                                                         strIBANBankName, 
                                                                         strIBANBankAddress1, 
                                                                         strIBANBankAddress2, 
@@ -5981,12 +6047,15 @@ Public Class frmKredDisp
                                                             strBankBIC + "', '" +
                                                             strBankCountry + "', '" +
                                                             strBankClearing + "')"
-                    intRecAffected = objmysqlcom.ExecuteNonQuery()
+                        intRecAffected = objmysqlcom.ExecuteNonQuery()
 
-                    Return 0
+                        Return 0
+                    Else
+                        Return 1
+                    End If
 
                 End If
-            Else
+                Else
                 'Aus Tabelle zurückgeben
                 strBankName = objdtIBAN.Rows(0).Item("strIBANBankName")
                 strBankAddress1 = objdtIBAN.Rows(0).Item("strIBANBankAddress1")
@@ -6110,6 +6179,7 @@ Public Class frmKredDisp
                                            strKredWerbung)
 
             If intPayDefault = 9 Then 'IBAN
+                strZVIBAN = Replace(strZVIBAN, " ", "")
                 If Len(strZVIBAN) > 15 Then
 
                     If Strings.Mid(strZVIBAN, 5, 1) <> "3" Or Strings.Left(strZVIBAN, 2) <> "CH" Then
@@ -6350,7 +6420,7 @@ Public Class frmKredDisp
                 Else
 
                     'Prüfen, ob Aufwandskonto definiert ist
-                    intReturnValue = FcCheckKonto(objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto"),
+                    intReturnValue = FcCheckKonto(IIf(IsDBNull(objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto")), 0, objdtKreditor.Rows(0).Item("Rep_Kred_Aufwandskonto")),
                                                        0,
                                                        0,
                                                        True)
@@ -8178,6 +8248,279 @@ Public Class frmKredDisp
         End Try
 
     End Function
+
+    Friend Function FcGetDZKondSageID(ByVal intDZkond As Int16,
+                                              ByRef intDZKondS200 As Int16) As Int16
+
+        'Returns 0=ok, 1=ZK nicht gefunden, 9=Problem; intDZKond wird mit Sage 200 ZK abgefüllt
+
+        Dim objdsDebitor As New DataSet
+        Dim objDADebitor As New MySqlDataAdapter
+        Dim objdtDZKond As New DataTable("tbllocDZKond")
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objsqlcommandZHDB02 As New MySqlCommand
+
+        Try
+
+            objdbconnZHDB02.Open()
+
+            objsqlcommandZHDB02.Connection = objdbconnZHDB02
+
+            'Zahlungsbedingung suchen
+            'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
+            objsqlcommandZHDB02.CommandText = "Select t_sage_zahlungskondition.SageID " +
+                                                  "FROM t_sage_zahlungskondition " +
+                                                  "WHERE t_sage_zahlungskondition.ID=" + intDZkond.ToString
+            objDADebitor.SelectCommand = objsqlcommandZHDB02
+            objdsDebitor.EnforceConstraints = False
+            objDADebitor.Fill(objdsDebitor)
+
+            If objdsDebitor.Tables(0).Rows.Count > 0 Then
+
+                'ZK existiert
+                If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
+                    intDZKondS200 = objdsDebitor.Tables(0).Rows(0).Item("SageID")
+                Else
+                    'ZK existiert, aber Sage ID nicht definiert
+                    intDZKondS200 = 0
+                End If
+                Return 0
+
+            Else
+
+                'ZK existiert nicht
+                intDZKondS200 = 0
+                Return 1
+
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Debitor - Z-Bedingung - von ZK-Tabelle lesen", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            intDZkond = 0
+            Return 9
+
+        Finally
+            objdbconnZHDB02.Close()
+            objdbconnZHDB02 = Nothing
+            objsqlcommandZHDB02 = Nothing
+            objdtDZKond = Nothing
+            objdsDebitor = Nothing
+            objDADebitor = Nothing
+
+
+        End Try
+
+
+    End Function
+
+    Friend Function FcGetKZkondFromRep(ByVal lngPKNbr As Long,
+                                           ByRef intKZkond As Int16,
+                                           ByVal intAccounting As Int16) As Int16
+
+        'Returns 0=ok, 1=Repbetrieb nicht gefunden, 9=Problem; intDZKond wird abgefüllt
+
+        Dim intKZKondDefault As Int16
+        Dim objdbconnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
+        Dim objsqlcommandZHDB02 As New MySqlCommand
+        Dim objdsDebitor As New DataSet
+        Dim objDADebitor As New MySqlDataAdapter
+        Dim objdtDZKond As New DataTable("tbllocDZKond")
+
+        Try
+
+            objdbconnZHDB02.Open()
+            objsqlcommandZHDB02.Connection = objdbconnZHDB02
+
+            'Standard suchen auf Mandant
+            objsqlcommandZHDB02.CommandText = "SELECT * " +
+                                              "FROM t_payterms_client " +
+                                              "INNER JOIN t_sage_zahlungskondition ON t_payterms_client.ZlgkID=t_sage_zahlungskondition.ID " +
+                                              "WHERE t_payterms_client.MandantID = " + intAccounting.ToString + " " +
+                                              "AND t_payterms_client.K_NR IS NULL " +
+                                              "AND t_payterms_client.RepID IS NULL " +
+                                              "AND t_payterms_client.CustomerID IS NULL " +
+                                              "AND t_payterms_client.IsStandard = true " +
+                                              "AND t_sage_zahlungskondition.IsKredi = false"
+
+            objdtDZKond.Load(objsqlcommandZHDB02.ExecuteReader)
+            If objdtDZKond.Rows.Count > 0 Then
+                intKZKondDefault = objdtDZKond.Rows(0).Item("SageID")
+            Else
+                'Default MSS lesen
+                'Es wird davon ausgegangen, dass der MSS - Standard auf jeden Fall existiert
+                objsqlcommandZHDB02.CommandText = "SELECT * " +
+                                              "FROM t_payterms_client " +
+                                              "INNER JOIN t_sage_zahlungskondition ON t_payterms_client.ZlgkID=t_sage_zahlungskondition.ID " +
+                                              "WHERE t_payterms_client.MandantID IS NULL " +
+                                              "AND t_payterms_client.K_NR IS NULL " +
+                                              "AND t_payterms_client.RepID IS NULL " +
+                                              "AND t_payterms_client.CustomerID IS NULL " +
+                                              "AND t_payterms_client.IsStandard = true " +
+                                              "AND t_sage_zahlungskondition.IsKredi = false"
+                objdtDZKond.Load(objsqlcommandZHDB02.ExecuteReader)
+                intKZKondDefault = objdtDZKond.Rows(0).Item("SageID")
+
+            End If
+
+            'Zahlungsbedingung suchen
+            'Es muss der Weg über ein Dataset genommen werden da sosnt constraint-Meldungen kommen
+            objsqlcommandZHDB02.CommandText = "Select Tab_Repbetriebe.PKNr, t_sage_zahlungskondition.SageID " +
+                                                  "FROM Tab_Repbetriebe INNER JOIN t_sage_zahlungskondition On Tab_Repbetriebe.Rep_Kred_ZKonditionID = t_sage_zahlungskondition.ID " +
+                                                  "WHERE Tab_Repbetriebe.PKNr=" + lngPKNbr.ToString
+            objDADebitor.SelectCommand = objsqlcommandZHDB02
+            objdsDebitor.EnforceConstraints = False
+            objDADebitor.Fill(objdsDebitor)
+
+            If objdsDebitor.Tables(0).Rows.Count > 0 Then
+
+                'Rep-Betrieb existiert
+                If Not IsDBNull(objdsDebitor.Tables(0).Rows(0).Item("SageID")) Then
+                    intKZkond = objdsDebitor.Tables(0).Rows(0).Item("SageID")
+                Else
+                    'Es ist keine Definition vorgenommen worden
+                    intKZkond = intKZKondDefault
+                End If
+                Return 0
+
+            Else
+
+                'Rep-Betrieb existiert nicht
+                intKZkond = intKZKondDefault
+                Return 1
+
+            End If
+
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Kreditor - Z-Bedingung - von Rep lesen", MessageBoxButtons.OK, MessageBoxIcon.Exclamation)
+            intKZkond = intKZKondDefault
+            Return 9
+
+        Finally
+            objdbconnZHDB02.Close()
+            objdbconnZHDB02 = Nothing
+            objsqlcommandZHDB02 = Nothing
+            objdsDebitor = Nothing
+            objDADebitor = Nothing
+            objdtDZKond = Nothing
+
+        End Try
+
+
+    End Function
+
+    Friend Function FcCheckKZKond(ByVal strMandant As String,
+                                         ByVal intKZKond As Int16) As Int16
+
+        'Return 0=definiert, 1=nicht definiert, 9=Problem
+
+        Dim objSQLConnection As New SqlClient.SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
+        Dim objSQLCommand As New SqlClient.SqlCommand
+        Dim objdtKZKond As New DataTable
+
+        Try
+
+            objSQLConnection.Open()
+            objSQLCommand.CommandText = "SELECT kondition.mandid, " +
+                                               "kondition.kondnbr, " +
+                                               "bezeichnung.langtext, " +
+                                               "fi_kond_grp.status, " +
+                                               "fi_kond_grp.valutatage, " +
+                                               "fi_kond_grp.isdebi, " +
+                                               "fi_kond_grp.iskredi, " +
+                                               "kondition.verftage, " +
+                                               "kondition.satz, " +
+                                               "kondition.tolnbr, " +
+                                               "kondition.akzttage " +
+                                        "FROM   kondition INNER JOIN " +
+                                               "fi_kond_grp ON kondition.mandid = fi_kond_grp.mandid AND kondition.kondnbr = fi_kond_grp.kondnbr INNER JOIN " +
+                                               "bezeichnung ON kondition.mandid = bezeichnung.mandid AND kondition.beschrnr = bezeichnung.beschreibungnr " +
+                                        "WHERE kondition.mandid='" + strMandant + "' AND " +
+                                               "fi_kond_grp.iskredi='J' AND " +
+                                               "status=1 AND " +
+                                               "kondition.kondnbr=" + intKZKond.ToString
+
+            objSQLCommand.Connection = objSQLConnection
+            objdtKZKond.Load(objSQLCommand.ExecuteReader)
+
+            If objdtKZKond.Rows.Count >= 1 Then 'Kreditoren - Zahlungskondition gefunden
+                Return 0
+            Else
+                Return 1
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Kreditor - ZKondition lesen")
+            Return 9
+
+        Finally
+            objSQLConnection.Close()
+            objSQLConnection = Nothing
+            objSQLCommand = Nothing
+            objdtKZKond = Nothing
+
+        End Try
+
+
+    End Function
+
+    Friend Function FcGetKZKondDays(ByVal strMandant As String,
+                                         ByVal intKZKond As Int16) As Int16
+
+        'Return verfalltage oder 30
+
+        Dim objSQLConnection As New SqlClient.SqlConnection(System.Configuration.ConfigurationManager.AppSettings("SQLConnectionString"))
+        Dim objSQLCommand As New SqlClient.SqlCommand
+        Dim objdtKZKond As New DataTable
+
+        Try
+
+            objSQLConnection.Open()
+            objSQLCommand.CommandText = "SELECT kondition.mandid, " +
+                                               "kondition.kondnbr, " +
+                                               "bezeichnung.langtext, " +
+                                               "fi_kond_grp.status, " +
+                                               "fi_kond_grp.valutatage, " +
+                                               "fi_kond_grp.isdebi, " +
+                                               "fi_kond_grp.iskredi, " +
+                                               "kondition.verftage, " +
+                                               "kondition.satz, " +
+                                               "kondition.tolnbr, " +
+                                               "kondition.akzttage " +
+                                        "FROM   kondition INNER JOIN " +
+                                               "fi_kond_grp ON kondition.mandid = fi_kond_grp.mandid AND kondition.kondnbr = fi_kond_grp.kondnbr INNER JOIN " +
+                                               "bezeichnung ON kondition.mandid = bezeichnung.mandid AND kondition.beschrnr = bezeichnung.beschreibungnr " +
+                                        "WHERE kondition.mandid='" + strMandant + "' AND " +
+                                               "fi_kond_grp.iskredi='J' AND " +
+                                               "status=1 AND " +
+                                               "kondition.kondnbr=" + intKZKond.ToString
+
+            objSQLCommand.Connection = objSQLConnection
+            objdtKZKond.Load(objSQLCommand.ExecuteReader)
+
+            If objdtKZKond.Rows.Count >= 1 Then 'Kreditoren - Zahlungskondition gefunden
+                Return objdtKZKond.Rows(0).Item("verftage")
+            Else
+                Return 30
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show(ex.Message, "Kreditor - ZKondition Tage lesen")
+            Return 30
+
+        Finally
+            objSQLConnection.Close()
+            objSQLConnection = Nothing
+            objSQLCommand = Nothing
+            objdtKZKond = Nothing
+
+        End Try
+
+
+    End Function
+
+
 
     Private Sub ButDeselect_Click(sender As Object, e As EventArgs) Handles ButDeselect.Click
 

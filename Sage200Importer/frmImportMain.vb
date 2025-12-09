@@ -29,10 +29,10 @@ Friend Class frmImportMain
     'Public REC_SEP_OUT As String
     'Public nID As String
     Public strIdentityName As String
-    Public Const strCurY As String = "2024"
-    Public Const intCurY As Int16 = 2024
-    Public Const strNexY As String = "2025"
-    Public Const intNexY As Int16 = 2025
+    Public Const strCurY As String = "2025"
+    Public Const intCurY As Int16 = 2025
+    Public Const strNexY As String = "2026"
+    Public Const intNexY As Int16 = 2026
 
     Dim objdbConn As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionString"))
     'Public objdbConnZHDB02 As New MySqlConnection(System.Configuration.ConfigurationManager.AppSettings("OwnConnectionStringZHDB02"))
