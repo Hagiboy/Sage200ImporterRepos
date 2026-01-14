@@ -2489,7 +2489,7 @@ Public Class frmDebDisp
                         If row("strPGVType") = "VR" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
-                            row("datDebValDatum") = "2025-01-01"
+                            row("datDebValDatum") = "2026-01-01"
                             booDateChanged = True
                         ElseIf row("strPGVType") = "RV" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString

@@ -1718,7 +1718,7 @@ Public Class frmKredDisp
                 intActRGNbr += 1
                 BgWCheckKredi.ReportProgress(100 / intTotRGs * intActRGNbr)
 
-                If row("lngKredID") = "84687" Then Stop
+                'If row("lngKredID") = "1691164" Then Stop
                 'Runden
                 row("dblKredNetto") = Decimal.Round(row("dblKredNetto"), 2, MidpointRounding.AwayFromZero)
                 row("dblKredMwSt") = Decimal.Round(row("dblKredMwst"), 2, MidpointRounding.AwayFromZero)
@@ -1938,7 +1938,7 @@ Public Class frmKredDisp
                         If row("strPGVType") = "VR" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
-                            row("datKredValDatum") = "2025-01-01" ' Year(row("datKredRGDatum")).ToString + "-01-01"
+                            row("datKredValDatum") = "2026-01-01" ' Year(row("datKredRGDatum")).ToString + "-01-01"
                         ElseIf row("strPGVType") = "RV" Then
                             row("datPGVFrom") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
                             row("datPGVTo") = Year(datValutaSave).ToString + "-" + Month(datValutaSave).ToString + "-" + DateAndTime.Day(datValutaSave).ToString
@@ -2463,6 +2463,7 @@ Public Class frmKredDisp
         Dim intActRGNbr As Int32
         Dim intTotRGs As Int32
         Dim intDaysZK As Int16
+        Dim intKBelegStart As Int32
 
 
         'Dim objFinanz As New SBSXASLib.AXFinanz
@@ -2503,6 +2504,8 @@ Public Class frmKredDisp
             intReturnValue = FcReadFromSettingsIII("Buchh200_Name",
                                                 BgWImportKrediArgsInProc.intMandant,
                                                 strMandant)
+
+            intKBelegStart = Convert.ToInt32(FcReadFromSettingsII("Buchh_KBelegStart", BgWImportKrediArgsInProc.intMandant))
 
 
             intTotRGs = dsKreditoren.Tables("tblKrediHeadsFromUser").Rows.Count
@@ -2548,7 +2551,9 @@ Public Class frmKredDisp
                             row("dblKredBrutto") = row("dblKredBrutto") * -1
                             'Belegsnummer abholen
                             objKrBuha.IncrBelNbr = "J"
+
                             intKredBelegsNummer = objKrBuha.GetNextBelNbr("G")
+
                             objKrBuha.IncrBelNbr = "N"
 
                             intReturnValue = FcCheckKrediExistance(intKredBelegsNummer,
@@ -2562,7 +2567,12 @@ Public Class frmKredDisp
                             'strZahlSperren = "N"
                             'Belegsnummer abholen
                             objKrBuha.IncrBelNbr = "J"
-                            intKredBelegsNummer = objKrBuha.GetNextBelNbr("R")
+                            If intKBelegStart = 0 Then
+                                intKredBelegsNummer = objKrBuha.GetNextBelNbr("R")
+                            Else
+                                intKredBelegsNummer = intKBelegStart
+                            End If
+
                             'Muss auf Nicht hochzählen gesetzt werden da Sage 200 nicht merkt, dass Beleg-Nr. schon vergeben worden sind. => In den Einstellungen muss von Zeit zu Zeit der Zähler geändert werden
                             objKrBuha.IncrBelNbr = "N"
 
@@ -4564,7 +4574,7 @@ Public Class frmKredDisp
 
                 'Zuerst evtl. falsch gesetzte KTR oder Steuer - Sätze prüfen
                 If subrow("lngKto") < 3000 Then
-                    If (subrow("lngKto") <> 1120) And (subrow("lngKto") <> 1121) And (subrow("lngKto") <> 1500) Then 'Ausnahme AW24
+                    If (subrow("lngKto") <> 1120) And (subrow("lngKto") <> 1121) And (subrow("lngKto") <> 1500) And (subrow("lngKto") <> 2197) Then 'Ausnahme AW24
                         subrow("strMwStKey") = Nothing
                     End If
                     subrow("lngKST") = 0
@@ -8560,4 +8570,5 @@ Public Class frmKredDisp
         Me.PRKredi.Value = 0
 
     End Sub
+
 End Class
