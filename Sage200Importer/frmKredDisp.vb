@@ -1508,7 +1508,9 @@ Public Class frmKredDisp
                 objmysqlcomdwritehead.Parameters("@dblKredMwSt").Value = row("dblKredMwSt")
                 objmysqlcomdwritehead.Parameters("@dblKredBrutto").Value = row("dblKredBrutto")
                 objmysqlcomdwritehead.Parameters("@lngKredIdentNbr").Value = row("lngKredIdentNbr")
+                'If row.Table.Columns.Contains("@strKredText") Then
                 objmysqlcomdwritehead.Parameters("@strKredText").Value = Strings.Left(row("strKredText"), 125)
+                'End If
                 objmysqlcomdwritehead.Parameters("@strKredRef").Value = row("strKredRef")
                 objmysqlcomdwritehead.Parameters("@datKredRGDatum").Value = row("datKredRGDatum")
                 objmysqlcomdwritehead.Parameters("@datKredValDatum").Value = row("datKredValDatum")
